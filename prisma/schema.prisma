@@ -1,0 +1,324 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GUILD CONFIGURATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model GuildSettings {
+  id        String   @id @default(cuid())
+  guildId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Module toggles ──────────────────────────────────────────────────────────
+  modEnabled            Boolean @default(false)
+  loggingEnabled        Boolean @default(false)
+  welcomeEnabled        Boolean @default(false)
+  reactionRolesEnabled  Boolean @default(false)
+  levelingEnabled       Boolean @default(false)
+  customCommandsEnabled Boolean @default(false)
+  automodEnabled        Boolean @default(false)
+  translationEnabled    Boolean @default(false)
+
+  // ── Moderation ──────────────────────────────────────────────────────────────
+  modLogChannelId      String?
+  modRoleIds           String[] @default([])
+  muteRoleId           String?
+  // JSON shape: { filterLinks: bool, filterInvites: bool, filterBadWords: bool,
+  //               badWords: string[], spamThreshold: int, massMentionThreshold: int,
+  //               duplicateThreshold: int }
+  automodConfig        Json?
+  // JSON shape: [{ warnCount: int, action: "MUTE"|"KICK"|"BAN", duration: int|null }]
+  infractionEscalation Json?
+
+  // ── Logging channels ────────────────────────────────────────────────────────
+  messageLogChannelId String?
+  memberLogChannelId  String?
+  serverLogChannelId  String?
+  voiceLogChannelId   String?
+  joinLeaveChannelId  String?
+
+  // ── Welcome ─────────────────────────────────────────────────────────────────
+  welcomeChannelId String?
+  // Full EmbedBuilder JSON blob — stored and re-hydrated at runtime
+  welcomeEmbed     Json?
+  welcomeMessage   String?
+  autoroleIds      String[] @default([])
+  // Seconds after join to assign autoroles (0 = immediate)
+  autoroleDelay    Int      @default(0)
+
+  // ── Leveling ────────────────────────────────────────────────────────────────
+  xpEnabled        Boolean @default(false)
+  xpRate           Int     @default(15)
+  xpCooldown       Int     @default(60)
+  xpMultiplier     Float   @default(1.0)
+  levelUpChannelId String?
+  levelUpMessage   String?
+  noXpRoleIds      String[] @default([])
+  noXpChannelIds   String[] @default([])
+  // false = remove lower-tier rewards when a higher one is earned
+  levelRolesStack  Boolean @default(true)
+  voiceXpEnabled   Boolean @default(false)
+  // XP granted per minute in voice (AFK excluded)
+  voiceXpRate      Int     @default(5)
+
+  // ── Relations ───────────────────────────────────────────────────────────────
+  infractions        Infraction[]
+  reactionRoleGroups ReactionRoleGroup[]
+  customTags         CustomTag[]
+  userLevels         UserLevel[]
+  memberCache        GuildMemberCache[]
+  levelRoles         LevelRole[]
+  autoTriggers       AutoTrigger[]
+  translateChannels  TranslateChannel[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum InfractionType {
+  WARN
+  MUTE
+  KICK
+  SOFTBAN
+  BAN
+  UNBAN
+  UNMUTE
+  TIMEOUT
+  NOTE
+}
+
+model Infraction {
+  id           Int            @id @default(autoincrement())
+  // Per-guild case number — enforced unique within guild via @@unique below
+  caseId       Int
+  guildId      String
+  targetUserId String
+  moderatorId  String
+  type         InfractionType
+  reason       String?
+  proofUrl     String?
+  // false after an unmute/unban resolves the infraction
+  active       Boolean        @default(true)
+  // null = permanent; set for timed mutes/bans
+  expiresAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, caseId])
+  @@index([guildId, targetUserId])
+  @@index([guildId, active, expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEVELING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserLevel {
+  id           String    @id @default(cuid())
+  guildId      String
+  userId       String
+  xp           Int       @default(0)
+  level        Int       @default(0)
+  messageCount Int       @default(0)
+  voiceMinutes Int       @default(0)
+  lastXpAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId, xp(sort: Desc)])
+}
+
+model LevelRole {
+  id      String @id @default(cuid())
+  guildId String
+  level   Int
+  roleId  String
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, level])
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REACTION ROLES
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ReactionRoleType {
+  NORMAL
+  UNIQUE
+  VERIFY
+  REVERSE
+}
+
+enum RRLayout {
+  BUTTONS
+  SELECT
+}
+
+model ReactionRoleGroup {
+  id          String           @id @default(cuid())
+  guildId     String
+  channelId   String
+  messageId   String
+  title       String
+  description String?
+  maxRoles    Int?
+  type        ReactionRoleType @default(NORMAL)
+  layout      RRLayout         @default(BUTTONS)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  guild GuildSettings      @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  items ReactionRoleItem[]
+
+  @@index([guildId])
+  @@index([messageId])
+}
+
+model ReactionRoleItem {
+  id       String @id @default(cuid())
+  groupId  String
+  // Colon-namespaced: "rr:groupId:roleId" — parsed by interactionRouter
+  customId String @unique
+  roleId   String
+  label    String
+  emoji    String?
+  // discord.js ButtonStyle enum value: 1=Primary 2=Secondary 3=Success 4=Danger
+  style    Int    @default(1)
+  position Int    @default(0)
+
+  group ReactionRoleGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOM TAGS / COMMANDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CustomTag {
+  id        String   @id @default(cuid())
+  guildId   String
+  name      String
+  content   String   @db.Text
+  createdBy String
+  uses      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // true = content is rendered as an embed description
+  useEmbed  Boolean @default(false)
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, name])
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTO-TRIGGERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TriggerMatchType {
+  CONTAINS
+  EXACT
+  STARTS_WITH
+  ENDS_WITH
+  REGEX
+}
+
+model AutoTrigger {
+  id            String           @id @default(cuid())
+  guildId       String
+  // Pattern or keyword to match against message content
+  trigger       String
+  response      String           @db.Text
+  matchType     TriggerMatchType @default(CONTAINS)
+  caseSensitive Boolean          @default(false)
+  enabled       Boolean          @default(true)
+  // Per-user cooldown in seconds (0 = no cooldown)
+  cooldown      Int              @default(0)
+  deleteMessage Boolean          @default(false)
+  // Empty = all channels; non-empty = only these channels
+  channelIds    String[]         @default([])
+  exemptRoleIds String[]         @default([])
+  uses          Int              @default(0)
+  createdBy     String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([guildId, enabled])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMBER CACHE  (invite tracking / delayed autorole)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTO-TRANSLATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model TranslateChannel {
+  id          String   @id @default(cuid())
+  guildId     String
+  channelId   String
+  targetLangs String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, channelId])
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMBER CACHE  (invite tracking / delayed autorole)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model GuildMemberCache {
+  id         String   @id @default(cuid())
+  guildId    String
+  userId     String
+  joinedAt   DateTime
+  inviterId  String?
+  inviteCode String?
+  createdAt  DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId, inviterId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ECONOMY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserEconomy {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  balance     Int       @default(1000)
+  lastDaily   DateTime?
+  lastPity    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
