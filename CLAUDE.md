@@ -53,6 +53,10 @@ All Discord interactions funnel through `src/handlers/interactionRouter.js`. It 
 
 Defined in `src/config/constants.js` as `PERMISSION_LEVELS`: `MEMBER=0`, `MODERATOR=1`, `ADMIN=2`, `OWNER=3`. Resolved by `src/utils/permissionChecker.js` → checks `BOT_OWNER_ID` env var, then `PermissionFlagsBits.Administrator`, then presence in `GuildSettings.modRoleIds`.
 
+### Module Toggles
+
+`src/config/modules.js` exports `MODULE_FLAGS` — a map of module name → `GuildSettings` toggle field (e.g. `automod → automodEnabled`). Use this when writing permission checks or enable/disable logic so module names stay consistent across the codebase.
+
 ### Data Layer
 
 - **Prisma** (`src/database/client.js`) is the authoritative store. One singleton exported as default.
@@ -66,7 +70,8 @@ Defined in `src/config/constants.js` as `PERMISSION_LEVELS`: `MEMBER=0`, `MODERA
 2. Create event hooks in `src/events/` (or add call sites to existing stubs in `messageCreate.js`, `guildMemberAdd.js`, etc.)
 3. Add any new DB fields to `prisma/schema.prisma` and run `npm run db:migrate`
 4. Add the module toggle boolean to `GuildSettings` and its default to `DEFAULT_MODULE_SETTINGS` in `src/config/constants.js`
-5. Register button/select/modal handlers via `client.*Handlers.set(...)` in the command or a dedicated service file
+5. Add the toggle entry to `MODULE_FLAGS` in `src/config/modules.js`
+6. Register button/select/modal handlers via `client.*Handlers.set(...)` in the command or a dedicated service file
 
 ### Schema Notes
 
@@ -75,6 +80,9 @@ Defined in `src/config/constants.js` as `PERMISSION_LEVELS`: `MEMBER=0`, `MODERA
 - `GuildSettings` uses `String[]` (Postgres array) for `modRoleIds`, `autoroleIds`, `noXpRoleIds`, `noXpChannelIds`.
 - `LevelRole` maps `(guildId, level)` → `roleId` with `@@unique([guildId, level])` — one role reward per level per guild.
 - `Infraction` has a foreign key to `GuildSettings` via `guildId`. Always ensure a `GuildSettings` row exists before creating infractions. `createInfraction()` handles this automatically with an upsert, and `ready.js` upserts settings for all guilds on startup.
+- `UserEconomy` is keyed by `userId` (not `guildId`) — balances are global across all servers.
+- `GuildMemberCache` records join metadata (inviter, invite code, join time) for invite tracking and delayed autorole. Keyed by `@@unique([guildId, userId])`.
+- `TranslateChannel` maps a channel to a list of target language codes for auto-translation. `@@unique([guildId, channelId])`.
 
 ### XP / Leveling (Module E)
 
@@ -100,6 +108,70 @@ Redis keys added:
 - `guild:{guildId}:triggers` — cached `AutoTrigger[]`, TTL 5min
 - `trigger:cd:{guildId}:{triggerId}:{userId}` — per-user cooldown, TTL = `AutoTrigger.cooldown`
 
+### Economy System (`src/services/economyService.js`)
+
+Global (cross-guild) balances stored in `UserEconomy`. Constants: `STARTING_BALANCE=1000`, `DAILY_AMOUNT=200`, `PITY_THRESHOLD=100`, `PITY_AMOUNT=500`.
+
+Key exports:
+- `getOrCreate(userId)` → upserts a `UserEconomy` row; safe to call before any balance read
+- `getBalance(userId)` → returns current balance
+- `applyBet(userId, bet, payout)` → atomically applies a finished wager (`net = payout - bet`), returns updated balance
+- `claimDaily(userId)` → returns `{ claimed, balance?, nextAt? }` with a 24h cooldown
+- `claimPity(userId)` → grants `PITY_AMOUNT` when balance is below `PITY_THRESHOLD`; 12h cooldown; returns `{ claimed, tooRich?, balance?, nextAt? }`
+
+Economy commands live in `src/commands/economy/` (`balance`, `daily`, `pity`). Gambling games (`blackjack`, `roulette`, `slots`) call `applyBet` directly.
+
+### Games (`src/commands/games/`)
+
+All games are `PERMISSION_LEVELS.MEMBER`. Current games:
+
+| Command | Description |
+|---|---|
+| `/blackjack` | Blackjack against the bot (betting) |
+| `/numguess` | Guess a number 1–100 in 7 tries |
+| `/roulette` | Roulette wheel (betting) |
+| `/rps` | Rock, Paper, Scissors |
+| `/slots` | Slot machine (betting) |
+| `/tictactoe` | Tic-Tac-Toe vs another player |
+| `/scrabble` | Full Scrabble vs another player |
+| `/scrabble-play` | Play a word in an active Scrabble game |
+| `/scrabble-help` | Scrabble rules and command reference |
+| `/games` | Browse all available games |
+
+`/games` auto-discovers commands in the `games` category from `client.commands` at runtime. Scrabble sub-commands (`scrabble`, `scrabble-play`, `scrabble-help`) are grouped under a **🔤 Scrabble** section. When adding a new game, add its emoji to the `GAME_EMOJI` map in `games.js`; scrabble-family commands go in `SCRABBLE_COMMANDS`.
+
+Scrabble game state is managed entirely in `src/services/scrabbleService.js` (in-memory `activeGames` map keyed by `channelId`).
+
+### Logging Service (`src/services/loggingService.js`)
+
+Sends structured embeds to per-type log channels configured in `GuildSettings`. Only fires when `loggingEnabled` is `true`.
+
+Key exports:
+- `sendLog(guild, logType, embed, client)` — dispatches an embed to the channel configured for `logType`. Silently no-ops if logging is off or no channel is set.
+- `LOG_TYPES` — maps `MESSAGE | MEMBER | SERVER | VOICE | JOIN_LEAVE | MOD` to their `GuildSettings` channel fields.
+- `extractMentions(message)` — returns an array of mention strings (users + roles + everyone) from a message object; used for ghost-ping detection.
+- `channelTypeLabel(type)` — human-readable label for a `ChannelType` enum value.
+
+### Automod Service (`src/services/automodService.js`)
+
+Called from `messageCreate` when `automodEnabled` is `true`. Checks are configured via `GuildSettings.automodConfig` (JSON).
+
+Available checks: `filterInvites`, `filterLinks` (with `blockedDomains[]`), `filterBadWords` (with `badWords[]` and `badWordPatterns[]` regexes), `massMentionThreshold`, `duplicateThreshold`. Exempt roles and channels are respected.
+
+On a match: deletes the message, posts a temporary warning in-channel (auto-deleted after 6s), logs to the mod channel, then creates a `WARN`/`MUTE`/`KICK`/`BAN` infraction via `createInfraction` based on `cfg.automodAction`.
+
+Redis key: `automod:dup:{guildId}:{userId}` — rolling 10-second window of recent message content for duplicate detection.
+
+### Invite Tracker (`src/services/inviteTracker.js`)
+
+Snapshots guild invites in Redis and diffs them on `guildMemberAdd` to identify which invite was used. Handles vanity URL joins via `guild.fetchVanityData()`.
+
+Key exports:
+- `cacheGuildInvites(guild)` — snapshots current invite use counts; silently skips without `MANAGE_GUILD`.
+- `getUsedInvite(guild)` — compares pre-join snapshot to current invites, refreshes cache, returns the matched `Invite` or `null`.
+
+Redis key: `guild:{guildId}:invites` — `{ [code]: uses }` snapshot, TTL 1 hour (refreshed on every join).
+
 ### Moderation Service (`src/services/moderationService.js`)
 
 Key exports:
@@ -121,12 +193,24 @@ Key exports:
 
 All admin commands (`levelconfig`, `welcome`, `trigger`, `reactionrole`) use `deferReply()` (no ephemeral flag) so all responses post publicly in the channel.
 
-### Welcome Card (`src/utils/welcomeCard.js`)
+### Canvas Utilities
 
-- Requires `assets/fonts/Nunito-Bold.ttf` to be present — without it `@napi-rs/canvas` renders blank text silently. The file is **not** auto-downloaded; ensure it exists after cloning.
-- Card displays: `member.displayName` (server nickname > username) in white, `@member.user.username` in grey, member count in green.
-- Canvas size: 700×250px. Falls back gracefully on avatar load failure (grey circle).
+**Welcome Card** (`src/utils/welcomeCard.js`): 700×250px card sent on member join. Displays `member.displayName` in white, `@username` in grey, member count in green. Falls back gracefully on avatar load failure.
+
+**Profile Card** (`src/utils/profileCard.js`): 900×280px rank card generated by `/rank`. Shows avatar, display name, username, level, total XP, XP progress bar, and leaderboard rank. Same font requirement applies.
+
+Both require `assets/fonts/Nunito-Bold.ttf` — without it `@napi-rs/canvas` renders blank text silently. The file is **not** auto-downloaded; ensure it exists after cloning.
+
+### Utility Helpers
+
+**Paginator** (`src/utils/paginator.js`): `paginate(target, pages, opts)` — sends a multi-page embed with Prev / Stop / Next buttons. `target` can be a `ChatInputCommandInteraction` or a `Message`. Collector idles out after `opts.timeout` (default 60s). Custom IDs are `paginator:prev`, `paginator:next`, `paginator:stop` — don't reuse these names elsewhere.
+
+**Logger** (`src/utils/logger.js`): colored console logger. Levels: `info` (cyan), `warn` (yellow), `error` (red, auto-prints stack traces), `debug` (magenta, suppressed in production), `success` (green). Includes timestamp and shard ID prefix automatically. Import as `import logger from '../../utils/logger.js'`.
+
+**parseDuration** (`src/utils/parseDuration.js`): parses human duration strings like `5m`, `2h`, `7d` into milliseconds.
+
+**placeholderParser** (`src/utils/placeholderParser.js`): replaces `{user}`, `{server}`, `{count}` etc. in welcome messages and custom responses.
 
 ### Embed Conventions
 
-All user-facing embeds must use the factory functions from `src/utils/embedBuilder.js` (`successEmbed`, `errorEmbed`, `infoEmbed`, `warnEmbed`). These enforce the color palette and timestamp. They return an `EmbedBuilder` — pass it to `interaction.reply({ embeds: [...] })`.
+All user-facing embeds must use the factory functions from `src/utils/embedBuilder.js` (`successEmbed`, `errorEmbed`, `infoEmbed`, `warnEmbed`, `neutralEmbed`). These enforce the color palette and timestamp. They return an `EmbedBuilder` — pass it to `interaction.reply({ embeds: [...] })`.
