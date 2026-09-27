@@ -178,12 +178,23 @@ async function boot() {
   manager.on('shardCreate', (shard) => {
     logger.info(`Spawning Shard ${shard.id}...`);
     shard.on('ready',      () => logger.success(`Shard ${shard.id} is ready.`));
-    shard.on('disconnect', () => logger.warn(`Shard ${shard.id} disconnected.`));
     shard.on('reconnecting', () => logger.info(`Shard ${shard.id} reconnecting...`));
     shard.on('error',  (err) => logger.error(`Shard ${shard.id} error`, err));
+    // Fatal close codes arrive here first (see reportFatal in src/bot.js).
     shard.on('message', (message) => {
       const code = message?.[FATAL_MESSAGE_KEY];
       if (FATAL_CLOSE_CODES[code]) park(code);
+    });
+    // discord.js only reports "disconnect" for close codes it will not
+    // reconnect from. The non-fatal ones (e.g. 4011 sharding required) can be
+    // fixed by a fresh start, so exit and let Docker restart us.
+    shard.on('disconnect', () => {
+      if (parked || shuttingDown) {
+        logger.warn(`Shard ${shard.id} disconnected.`);
+        return;
+      }
+      logger.error(`Shard ${shard.id} disconnected and won't reconnect — exiting so Docker restarts the bot (the restart brake paces retries).`);
+      process.exit(1);
     });
     shard.on('death', () => {
       if (shuttingDown) return;
