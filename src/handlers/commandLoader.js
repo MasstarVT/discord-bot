@@ -191,15 +191,22 @@ export async function autoDeployCommands() {
     ? Routes.applicationGuildCommands(clientId, guildId)
     : Routes.applicationCommands(clientId);
 
+  let result;
   try {
-    const result = await rest.put(route, { body: payloads });
-    logger.success(
-      `Auto-deployed ${result.length} command(s) ` +
-      (guildId ? `to guild ${guildId}` : 'globally') + '.'
-    );
-    writeFileSync(HASH_FILE, hash, 'utf8');
+    result = await rest.put(route, { body: payloads });
   } catch (err) {
     logger.error('Auto-deploy failed — bot will still start', err);
     // Don't exit; the bot can run with stale commands rather than not at all
+    return;
+  }
+  logger.success(
+    `Auto-deployed ${result.length} command(s) ` +
+    (guildId ? `to guild ${guildId}` : 'globally') + '.'
+  );
+
+  try {
+    writeFileSync(HASH_FILE, hash, 'utf8');
+  } catch (err) {
+    logger.warn(`Could not save the command hash to ${HASH_FILE} (${err.message}) — the next start will deploy again.`);
   }
 }

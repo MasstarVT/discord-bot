@@ -38,6 +38,7 @@ volumes:
   bot_state:
 ```
 
+- **Env file:** set only the keys you need. Don't copy empty keys or `NODE_ENV=development` from `.env.example`: Compose passes empty values through, and they override what the image sets (`NODE_ENV=production`, `HEALTH_PORT`, `STATE_DIR`, `DEPLOY_HASH_FILE`).
 - **Migrations:** the container runs `prisma migrate deploy` before it starts the bot. Every schema change needs a migration (`npm run db:migrate`), and CI fails when `schema.prisma` and `prisma/migrations/` disagree. Keep migrations additive, because rolling back the image does not roll back the database.
 - **Privileged intents:** enable Server Members, Presence and Message Content under Bot → Privileged Gateway Intents in the Developer Portal. Without them Discord closes the connection with code 4014.
 - **Health endpoints** on `HEALTH_PORT` (default 8081):
