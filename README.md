@@ -43,7 +43,7 @@ volumes:
 - **Health endpoints** on `HEALTH_PORT` (default 8081):
   - `GET /healthz` returns 200 while the process runs. The image's `HEALTHCHECK` uses it.
   - `GET /readyz` returns 200 only when every shard is connected to Discord. Otherwise it returns 503 with a `reason`: `starting`, `brake-delay`, `shard-not-ready` or `parked:<code>`.
-- **Restart brake:** every start is recorded in `STATE_DIR` (`/app/state` in the image; mount a volume there). From the 6th start within an hour, the bot waits 2, 4, 8, 16 and then 30 minutes before connecting, so a crash loop can't use up Discord's 1000 logins per day. A shard that dies ends the process, and Docker's restart policy plus the brake decide when to try again.
+- **Restart brake:** every start is recorded in `STATE_DIR` (`/app/state` in the image; mount a volume there). From the 6th start within an hour, the bot waits 2, 4, 8, 16 and then 30 minutes before connecting, so a crash loop can't use up Discord's 1000 logins per day. A shard that dies, or that Discord disconnects for good with a non-fatal code, ends the process, and Docker's restart policy plus the brake decide when to try again.
 - **Parked:** close codes 4004 (bad token), 4013 and 4014 (invalid or disallowed intents), and missing required environment variables, are never retried. The process stays up, logs what to fix, and `/readyz` returns 503 `parked:<code>`. Fix the cause, then restart the container.
 - **Slash commands:** the command hash lives at `DEPLOY_HASH_FILE` (`/app/state/.deploy-hash` in the image), so restarts don't re-register unchanged commands. Delete it after switching `DEPLOY_GUILD_ID` between one guild and global.
 - **Shutdown:** `SIGTERM` or `SIGINT` disconnects every shard from Discord and exits within 25 s.

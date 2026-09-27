@@ -38,7 +38,7 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 **Process supervision (main thread, `index.js`):**
 - A `node:http` health server (`src/utils/healthServer.js`) starts first: `/healthz` = event loop alive, `/readyz` = every shard `isReady()`.
 - The restart brake (`src/utils/restartBrake.js`) records each start in `STATE_DIR`; more than 5 starts per hour delays the next login (2^(n-5) min, max 30).
-- The ShardingManager uses `respawn: false`. A dead shard exits the process; Docker's restart policy and the brake handle retries.
+- The ShardingManager uses `respawn: false`. A dead shard, or one disconnected for good (non-fatal unrecoverable close such as 4011), exits the process; Docker's restart policy and the brake handle retries.
 - Close codes 4004/4013/4014 are fatal (`src/utils/fatalGateway.js`): the shard reports them via `client.shard.send()` and the main thread parks instead of retrying.
 - `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`), then the process exits within 25 s. Don't add signal handlers elsewhere.
 
