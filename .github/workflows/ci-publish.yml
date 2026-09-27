@@ -83,7 +83,11 @@ jobs:
     permissions:
       contents: read
       packages: write
-    # Shared with rollback.yml so a rollback and a publish never move :latest at the same time.
+    # Shared with rollback.yml so a rollback and a publish never move :latest at
+    # the same time. Test jobs run in parallel, so publish jobs can still arrive
+    # out of push order; the push step therefore only moves :latest for the
+    # current head of main. GitHub keeps one pending job per group: a newer one
+    # cancels the pending one (re-run a cancelled run if its sha- tag is needed).
     concurrency:
       group: ghcr-latest-discord-bot
       cancel-in-progress: false
@@ -169,10 +173,24 @@ jobs:
       - name: Push the tested image
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Push the immutable sha- tag first, then move :latest.
-          for tag in $(printf '%s\n' "$TAGS" | grep -v ':latest$') $(printf '%s\n' "$TAGS" | grep ':latest$' || true); do
+          # The immutable sha- tag is always pushed.
+          for tag in $(printf '%s\n' "$TAGS" | grep -v ':latest$'); do
             docker tag discord-bot:ci "$tag"
             docker push "$tag"
           done
+
+          latest=$(printf '%s\n' "$TAGS" | grep ':latest$' || true)
+          if [ -z "$latest" ]; then exit 0; fi
+
+          # Never move :latest back to an older commit: if the branch has moved
+          # on since this run started, the newer commit's run moves :latest.
+          head=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/${GITHUB_REF#refs/}" --jq .object.sha)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::notice::Not moving :latest: ${GITHUB_REF_NAME} is now at ${head:0:7}, not ${GITHUB_SHA:0:7}. Only the sha- tag was pushed."
+            exit 0
+          fi
+          docker tag discord-bot:ci "$latest"
+          docker push "$latest"

@@ -15,8 +15,11 @@ permissions:
   contents: read
   packages: write
 
-# Same group as the publish job in ci-publish.yml, so an in-flight publish
-# can't move :latest forward again right after a rollback.
+# Same group as the publish job in ci-publish.yml. A rollback started while a
+# publish is running waits for it and then runs, so it has the last word.
+# GitHub keeps only one pending job per group, though: if another publish
+# queues while this rollback is still waiting, the rollback is cancelled.
+# Check that this run finished and re-run it if it shows as cancelled.
 concurrency:
   group: ghcr-latest-discord-bot
   cancel-in-progress: false

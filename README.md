@@ -22,7 +22,7 @@ Production process management is handled via PM2 (`npm run pm2:start`, `pm2:relo
 
 ## Running in Docker / homelab
 
-GitHub Actions tests every push and pull request. Pushes to `main` publish `ghcr.io/masstarvt/discord-bot` as `:latest` and as an immutable `:sha-<7 hex>` tag. The **rollback** workflow points `:latest` back at an older `sha-` tag.
+GitHub Actions tests every push and pull request. Pushes to `main` publish `ghcr.io/masstarvt/discord-bot` as an immutable `:sha-<7 hex>` tag and move `:latest` to it, but only while that commit is still the head of `main` (a run that finishes after a newer push only adds its `sha-` tag), so `:latest` never goes backwards by accident. The **rollback** workflow points `:latest` back at an older `sha-` tag. If a rollback run shows as cancelled (a publish queued up behind it), run it again.
 
 ```yaml
 services:
