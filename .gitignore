@@ -33,3 +33,6 @@ Thumbs.db
 
 # Superpowers
 .claude/superpowers/
+
+# Runtime state (restart brake)
+state/

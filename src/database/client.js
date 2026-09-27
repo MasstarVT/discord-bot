@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import logger from '../utils/logger.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -9,11 +8,14 @@ const prisma = new PrismaClient({
     : ['query', 'info', 'warn', 'error'],
 });
 
-// Graceful shutdown — prevents dangling connections on PM2 reload
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM received — disconnecting Prisma...');
+/**
+ * Closes the Prisma connection pool. Shutdown is coordinated by the single
+ * SIGTERM/SIGINT handler in index.js (which reaches each shard through
+ * client.shutdown() in src/bot.js), so this module registers no signal
+ * handlers of its own.
+ */
+export async function disconnect() {
   await prisma.$disconnect();
-  process.exit(0);
-});
+}
 
 export default prisma;
