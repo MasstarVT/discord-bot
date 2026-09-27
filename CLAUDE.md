@@ -40,6 +40,7 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 - The restart brake (`src/utils/restartBrake.js`) records each start in `STATE_DIR`; more than 5 starts per hour delays the next login (2^(n-5) min, max 30).
 - The ShardingManager uses `respawn: false`. A dead shard, or one disconnected for good (non-fatal unrecoverable close such as 4011), exits the process; Docker's restart policy and the brake handle retries.
 - Close codes 4004/4013/4014 are fatal (`src/utils/fatalGateway.js`): the shard reports them via `client.shard.send()` and the main thread parks instead of retrying.
+- Because a dead shard restarts the whole bot, per-event failures must not kill the worker: `eventLoader.js` catches and logs errors from every event handler, and `bot.js` logs client `error` events and unhandled rejections in the shard (e.g. from collector callbacks). Uncaught synchronous exceptions still end the shard.
 - `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`), then the process exits within 25 s. Don't add signal handlers elsewhere.
 
 **Auto-deploy:** `autoDeployCommands()` in `src/handlers/commandLoader.js` hashes all command payloads and compares against `.deploy-hash` in the project root (or the path in `DEPLOY_HASH_FILE`). It only calls the Discord REST API when the hash changes — safe to run on every restart. Adding a new command file and restarting is all that's needed; no manual deploy step required.

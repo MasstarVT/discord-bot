@@ -56,6 +56,18 @@ function reportFatal(code) {
 
 client.prependListener(Events.ShardDisconnect, (event) => reportFatal(event?.code));
 
+// ── Non-fatal errors ─────────────────────────────────────────────────────────
+// A dying shard ends the whole process (index.js), so one failed event or
+// collector callback must not kill it. The client captures rejections from
+// its async listeners and re-emits them as "error", which would throw with
+// no listener. Other stray rejections (e.g. collector callbacks) land in the
+// worker's own unhandledRejection handler; the main thread's doesn't see them.
+client.on(Events.Error, (err) => logger.error('Discord client error', err));
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Promise Rejection in shard', reason instanceof Error ? reason : new Error(String(reason)));
+});
+
 // ── Shutdown hook ────────────────────────────────────────────────────────────
 // Worker threads don't receive signals. index.js calls this on each shard via
 // eval when it gets SIGTERM/SIGINT.

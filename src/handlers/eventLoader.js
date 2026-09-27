@@ -51,7 +51,15 @@ export async function loadEvents(client) {
       continue;
     }
 
-    const listener = (...args) => mod.execute(...args, client);
+    // Log a failing handler (e.g. Redis or Postgres briefly unreachable)
+    // instead of letting it crash the shard, which restarts the whole bot.
+    const listener = async (...args) => {
+      try {
+        await mod.execute(...args, client);
+      } catch (err) {
+        logger.error(`Event handler "${mod.name}" failed`, err instanceof Error ? err : new Error(String(err)));
+      }
+    };
 
     if (mod.once) {
       client.once(mod.name, listener);
