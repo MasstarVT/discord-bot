@@ -13,7 +13,8 @@ npm run deploy       # Force-register slash commands via Discord REST API, then 
                      #   Note: commands are also auto-deployed on every normal startup
                      #   when the command set has changed (hash-checked, no-op if unchanged)
 
-npm run db:push      # Push schema changes to Postgres without creating a migration file (dev only)
+npm run db:push      # Push schema changes to Postgres without creating a migration file (scratch DBs only;
+                     #   production applies prisma/migrations with `prisma migrate deploy`)
 npm run db:migrate   # Create and apply a named migration (use for production-bound changes)
 npm run db:generate  # Regenerate Prisma client after schema edits
 npm run db:studio    # Open Prisma Studio GUI to inspect/edit data
@@ -24,7 +25,7 @@ npm run pm2:reload   # Zero-downtime reload
 npm run pm2:logs     # Tail PM2 logs
 ```
 
-Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Copy `.env.example`.
+Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Copy `.env.example`. If any is missing the process parks (stays up, `/readyz` returns 503 `parked:missing-env`) instead of exiting. Optional runtime keys: `HEALTH_PORT` (default 8081), `STATE_DIR` (default `./state`), `DEPLOY_HASH_FILE` (default `./.deploy-hash`).
 
 ## Architecture
 
@@ -34,7 +35,14 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 
 `index.js --deploy` short-circuits the boot sequence, calls `deployCommands()` from `commandLoader.js`, and exits.
 
-**Auto-deploy:** `autoDeployCommands()` in `src/handlers/commandLoader.js` hashes all command payloads and compares against `.deploy-hash` in the project root. It only calls the Discord REST API when the hash changes — safe to run on every restart. Adding a new command file and restarting is all that's needed; no manual deploy step required.
+**Process supervision (main thread, `index.js`):**
+- A `node:http` health server (`src/utils/healthServer.js`) starts first: `/healthz` = event loop alive, `/readyz` = every shard `isReady()`.
+- The restart brake (`src/utils/restartBrake.js`) records each start in `STATE_DIR`; more than 5 starts per hour delays the next login (2^(n-5) min, max 30).
+- The ShardingManager uses `respawn: false`. A dead shard exits the process; Docker's restart policy and the brake handle retries.
+- Close codes 4004/4013/4014 are fatal (`src/utils/fatalGateway.js`): the shard reports them via `client.shard.send()` and the main thread parks instead of retrying.
+- `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`), then the process exits within 25 s. Don't add signal handlers elsewhere.
+
+**Auto-deploy:** `autoDeployCommands()` in `src/handlers/commandLoader.js` hashes all command payloads and compares against `.deploy-hash` in the project root (or the path in `DEPLOY_HASH_FILE`). It only calls the Discord REST API when the hash changes — safe to run on every restart. Adding a new command file and restarting is all that's needed; no manual deploy step required.
 
 ### File-System-as-Registry Pattern
 
@@ -68,7 +76,7 @@ Defined in `src/config/constants.js` as `PERMISSION_LEVELS`: `MEMBER=0`, `MODERA
 
 1. Create commands in `src/commands/<category>/command-name.js`
 2. Create event hooks in `src/events/` (or add call sites to existing stubs in `messageCreate.js`, `guildMemberAdd.js`, etc.)
-3. Add any new DB fields to `prisma/schema.prisma` and run `npm run db:migrate`
+3. Add any new DB fields to `prisma/schema.prisma` and run `npm run db:migrate` (commit the generated migration; CI fails on schema/migration drift)
 4. Add the module toggle boolean to `GuildSettings` and its default to `DEFAULT_MODULE_SETTINGS` in `src/config/constants.js`
 5. Add the toggle entry to `MODULE_FLAGS` in `src/config/modules.js`
 6. Register button/select/modal handlers via `client.*Handlers.set(...)` in the command or a dedicated service file
