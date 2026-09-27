@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node index.js",
@@ -26,11 +26,11 @@
     "chalk": "^5.3.0",
     "discord.js": "^14.16.0",
     "dotenv": "^16.4.5",
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.1",
+    "prisma": "5.22.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",
-    "pm2": "^5.4.3",
-    "prisma": "^5.22.0"
+    "pm2": "^5.4.3"
   }
 }
