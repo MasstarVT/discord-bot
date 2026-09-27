@@ -7,7 +7,9 @@ import logger from '../utils/logger.js';
 
 const __dirname    = dirname(fileURLToPath(import.meta.url));
 const COMMANDS_DIR = resolve(__dirname, '../commands');
-const HASH_FILE    = resolve(__dirname, '../../.deploy-hash');
+// DEPLOY_HASH_FILE lets containers keep the hash on a persistent volume, so a
+// restart or redeploy doesn't re-PUT an unchanged command set.
+const HASH_FILE    = process.env.DEPLOY_HASH_FILE || resolve(__dirname, '../../.deploy-hash');
 
 /**
  * Recursively collects all .js file paths under a directory.
