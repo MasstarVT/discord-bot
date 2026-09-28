@@ -52,3 +52,15 @@ volumes:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+### Translation backend
+
+Auto-translate and `/translate` use Google's free endpoint by default. It has no API key, and it rate-limits (HTTP 429) quickly under chat traffic. For steady use, point the bot at a self-hosted [LibreTranslate](https://github.com/LibreTranslate/LibreTranslate) server:
+
+```env
+TRANSLATE_PROVIDER=libretranslate
+LIBRETRANSLATE_URL=http://<host>:5000
+# LIBRETRANSLATE_API_KEY=   # only if the server requires keys
+```
+
+On any HTTP 429 the bot pauses translation (30 min for Google, 1 min for LibreTranslate) instead of retrying on every message, and logs once.
