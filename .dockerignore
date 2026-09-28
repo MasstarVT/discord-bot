@@ -1,0 +1,11 @@
+# Keep assets/ (the canvas font) and prisma/ (schema + migrations) in the context.
+node_modules
+.env
+.env.*
+logs
+.deploy-hash
+state
+.git
+.github
+.claude
+*.log

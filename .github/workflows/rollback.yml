@@ -1,0 +1,62 @@
+name: Roll back :latest
+
+# Points ghcr.io/masstarvt/discord-bot:latest at an earlier build. Watchtower
+# then deploys it like any other update. The next push to main moves :latest
+# forward again. Only users with write access can run workflow_dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Short commit SHA of the build to restore (the 7 hex characters of its sha- tag)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+# Same group as the publish job in ci-publish.yml. A rollback started while a
+# publish is running waits for it and then runs, so it has the last word.
+# GitHub keeps only one pending job per group, though: if another publish
+# queues while this rollback is still waiting, the rollback is cancelled.
+# Check that this run finished and re-run it if it shows as cancelled.
+concurrency:
+  group: ghcr-latest-discord-bot
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/masstarvt/discord-bot
+
+jobs:
+  rollback:
+    name: Retag :latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate the sha input
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          if [[ ! "$SHA" =~ ^[0-9a-f]{7}$ ]]; then
+            echo "::error::sha must be exactly 7 lowercase hex characters, as in the image's sha- tag."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Point :latest at sha-<sha>
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools inspect "$IMAGE:sha-$SHA" > /dev/null
+          docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE:sha-$SHA"
+          digest=$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')
+          echo ":latest now points at sha-$SHA ($digest)"
+          echo "**:latest → sha-$SHA** \`$digest\`" >> "$GITHUB_STEP_SUMMARY"

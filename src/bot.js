@@ -1,7 +1,10 @@
-import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { loadCommands } from './handlers/commandLoader.js';
 import { loadEvents }   from './handlers/eventLoader.js';
 import { registerHandlers as registerRRHandlers } from './services/reactionRoleService.js';
+import { disconnect as disconnectDatabase } from './database/client.js';
+import redis             from './services/redis.js';
+import { FATAL_CLOSE_CODES, FATAL_MESSAGE_KEY, fatalCodeFromError } from './utils/fatalGateway.js';
 import logger            from './utils/logger.js';
 
 const client = new Client({
@@ -38,6 +41,44 @@ client.buttonHandlers     = new Map();
 client.selectHandlers     = new Map();
 client.modalHandlers      = new Map();
 
+// ── Fatal gateway close codes ────────────────────────────────────────────────
+// 4004 / 4013 / 4014 (bad token, invalid or disallowed intents) never fix
+// themselves. Tell the ShardingManager so it parks instead of restarting.
+// prependListener: this must reach the manager before discord.js's own
+// shardDisconnect → "_disconnect" message does.
+let fatalReported = false;
+
+function reportFatal(code) {
+  if (fatalReported || !FATAL_CLOSE_CODES[code]) return;
+  fatalReported = true;
+  client.shard?.send({ [FATAL_MESSAGE_KEY]: code }).catch(() => {});
+}
+
+client.prependListener(Events.ShardDisconnect, (event) => reportFatal(event?.code));
+
+// ── Non-fatal errors ─────────────────────────────────────────────────────────
+// A dying shard ends the whole process (index.js), so one failed event or
+// collector callback must not kill it. The client captures rejections from
+// its async listeners and re-emits them as "error", which would throw with
+// no listener. Other stray rejections (e.g. collector callbacks) land in the
+// worker's own unhandledRejection handler; the main thread's doesn't see them.
+client.on(Events.Error, (err) => logger.error('Discord client error', err));
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Promise Rejection in shard', reason instanceof Error ? reason : new Error(String(reason)));
+});
+
+// ── Shutdown hook ────────────────────────────────────────────────────────────
+// Worker threads don't receive signals. index.js calls this on each shard via
+// eval when it gets SIGTERM/SIGINT.
+client.shutdown = async () => {
+  await client.destroy();
+  await Promise.allSettled([
+    disconnectDatabase(),
+    redis.status === 'ready' ? redis.quit() : redis.disconnect(),
+  ]);
+};
+
 // ── Boot sequence ─────────────────────────────────────────────────────────────
 async function start() {
   // Register persistent component handlers before loading commands so that any
@@ -55,8 +96,15 @@ async function start() {
 }
 
 start().catch((err) => {
-  logger.error('Fatal error during bot startup', err);
-  process.exit(1);
+  const code = fatalCodeFromError(err);
+  if (code) {
+    // Report before exiting so the manager parks rather than restarting.
+    reportFatal(code);
+    logger.error(`Discord login failed with ${code} (${FATAL_CLOSE_CODES[code].name}). ${FATAL_CLOSE_CODES[code].fix}`);
+  } else {
+    logger.error('Fatal error during bot startup', err);
+  }
+  process.exit(1); // ends this worker thread; index.js decides what happens next
 });
 
 export default client;

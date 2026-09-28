@@ -7,7 +7,9 @@ import logger from '../utils/logger.js';
 
 const __dirname    = dirname(fileURLToPath(import.meta.url));
 const COMMANDS_DIR = resolve(__dirname, '../commands');
-const HASH_FILE    = resolve(__dirname, '../../.deploy-hash');
+// DEPLOY_HASH_FILE lets containers keep the hash on a persistent volume, so a
+// restart or redeploy doesn't re-PUT an unchanged command set.
+const HASH_FILE    = process.env.DEPLOY_HASH_FILE || resolve(__dirname, '../../.deploy-hash');
 
 /**
  * Recursively collects all .js file paths under a directory.
@@ -189,15 +191,22 @@ export async function autoDeployCommands() {
     ? Routes.applicationGuildCommands(clientId, guildId)
     : Routes.applicationCommands(clientId);
 
+  let result;
   try {
-    const result = await rest.put(route, { body: payloads });
-    logger.success(
-      `Auto-deployed ${result.length} command(s) ` +
-      (guildId ? `to guild ${guildId}` : 'globally') + '.'
-    );
-    writeFileSync(HASH_FILE, hash, 'utf8');
+    result = await rest.put(route, { body: payloads });
   } catch (err) {
     logger.error('Auto-deploy failed — bot will still start', err);
     // Don't exit; the bot can run with stale commands rather than not at all
+    return;
+  }
+  logger.success(
+    `Auto-deployed ${result.length} command(s) ` +
+    (guildId ? `to guild ${guildId}` : 'globally') + '.'
+  );
+
+  try {
+    writeFileSync(HASH_FILE, hash, 'utf8');
+  } catch (err) {
+    logger.warn(`Could not save the command hash to ${HASH_FILE} (${err.message}) — the next start will deploy again.`);
   }
 }
