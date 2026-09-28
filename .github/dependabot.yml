@@ -9,10 +9,8 @@ updates:
         patterns: ['*']
         update-types: [minor, patch]
     ignore:
-      # The OpenSSL/engine setup in the Dockerfile is verified on Prisma 5 only.
-      - dependency-name: prisma
-        update-types: [version-update:semver-major]
-      - dependency-name: '@prisma/client'
+      # Major versions are upgraded on purpose (patch night), not by Dependabot PRs.
+      - dependency-name: '*'
         update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
