@@ -123,32 +123,111 @@ function cleanContent(content) {
 }
 
 // ── HTTP layer ────────────────────────────────────────────────────────────────
+//
+// Backend is chosen with TRANSLATE_PROVIDER:
+//   google (default)  the free translate.googleapis.com endpoint (no key, but it rate-limits hard)
+//   libretranslate    a LibreTranslate server at LIBRETRANSLATE_URL (optional LIBRETRANSLATE_API_KEY)
+
+const PROVIDER = (process.env.TRANSLATE_PROVIDER || 'google').toLowerCase() === 'libretranslate' ? 'libretranslate' : 'google';
+const LT_URL = (process.env.LIBRETRANSLATE_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const LT_KEY = process.env.LIBRETRANSLATE_API_KEY || '';
+
+// Circuit breaker: after a 429, stop calling the backend for a while instead of
+// hammering it (hammering Google while it rate-limits you only extends the block).
+const PAUSE_ON_429_MS = PROVIDER === 'google' ? 30 * 60_000 : 60_000;
+let pausedUntil = 0;
+
+export function translationPaused() {
+  return Date.now() < pausedUntil;
+}
+
+function assertNotPaused() {
+  if (translationPaused()) {
+    const mins = Math.ceil((pausedUntil - Date.now()) / 60_000);
+    throw new Error(`Translation is paused for ${mins} more minute(s) after a rate limit`);
+  }
+}
+
+function tripOnStatus(status) {
+  if (status !== 429 || translationPaused()) return;
+  pausedUntil = Date.now() + PAUSE_ON_429_MS;
+  logger.warn(`translationService: ${PROVIDER} returned 429; pausing translation for ${PAUSE_ON_429_MS / 60_000} min`);
+}
+
+// Bot language codes follow Google's; LibreTranslate names Chinese and Hebrew differently.
+const TO_LT = { 'zh-cn': 'zh-Hans', 'zh-tw': 'zh-Hant', zh: 'zh-Hans', iw: 'he' };
+const FROM_LT = { 'zh-hans': 'zh-CN', 'zh-hant': 'zh-TW', he: 'iw' };
+const toLt = (code) => TO_LT[code.toLowerCase()] ?? code;
+const fromLt = (code) => FROM_LT[code.toLowerCase()] ?? code;
+
+async function libreTranslatePost(path, body) {
+  assertNotPaused();
+  const res = await fetch(`${LT_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(LT_KEY ? { ...body, api_key: LT_KEY } : body),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    tripOnStatus(res.status);
+    throw new Error(`LibreTranslate returned ${res.status}`);
+  }
+  return res.json();
+}
 
 async function fetchTranslation(text, targetLang, sourceLang = 'auto') {
+  if (PROVIDER === 'libretranslate') {
+    const data = await libreTranslatePost('/translate', {
+      q: text,
+      source: sourceLang === 'auto' ? 'auto' : toLt(sourceLang),
+      target: toLt(targetLang),
+      format: 'text',
+    });
+    const detected = sourceLang === 'auto' ? (data.detectedLanguage?.language ?? 'auto') : sourceLang;
+    return { translatedText: data.translatedText ?? '', detectedLang: fromLt(detected) };
+  }
+
+  assertNotPaused();
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' },
     signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) throw new Error(`Translation API returned ${res.status}`);
+  if (!res.ok) {
+    tripOnStatus(res.status);
+    throw new Error(`Translation API returned ${res.status}`);
+  }
   const data = await res.json();
   const translatedText = data[0]?.map((seg) => seg?.[0] ?? '').join('') ?? '';
   const detectedLang = data[2] ?? sourceLang;
   return { translatedText, detectedLang };
 }
 
+async function fetchDetection(text) {
+  if (PROVIDER === 'libretranslate') {
+    const data = await libreTranslatePost('/detect', { q: text });
+    const best = Array.isArray(data) ? data[0] : null;
+    if (!best?.language) throw new Error('LibreTranslate could not detect the language');
+    return fromLt(best.language);
+  }
+  // Google has no separate detect call; a translation to English reports the source language.
+  const sourceLang = hasCjk(text) ? 'zh-CN' : 'auto';
+  const { detectedLang } = await fetchTranslation(text, 'en', sourceLang);
+  return detectedLang;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function detectLanguage(text) {
-  const sourceLang = hasCjk(text) ? 'zh-CN' : 'auto';
-  const { detectedLang } = await fetchTranslation(text, 'en', sourceLang);
+  const detectedLang = await fetchDetection(text);
   const code = detectedLang.split('-')[0].toLowerCase();
   const name = LANGUAGES[code] ?? detectedLang;
   return { code, name };
 }
 
 export async function translate(text, targetLang) {
-  const sourceLang = hasCjk(text) ? 'zh-CN' : 'auto';
+  // Google misdetects some CJK text, so it gets an explicit hint; LibreTranslate detects ja/zh itself.
+  const sourceLang = PROVIDER === 'google' && hasCjk(text) ? 'zh-CN' : 'auto';
   const { translatedText, detectedLang } = await fetchTranslation(text, targetLang, sourceLang);
   const sourceCode = detectedLang.split('-')[0].toLowerCase();
   const sourceName = LANGUAGES[sourceCode] ?? detectedLang;
@@ -202,6 +281,9 @@ export async function runAutoTranslate(message) {
   const cleaned = cleanContent(message.content);
   if (!cleaned) return;
 
+  // While rate-limited, skip quietly (the breaker already logged once).
+  if (translationPaused()) return;
+
   // Detect source language once
   let sourceCode = 'auto';
   let sourceName = 'Unknown';
@@ -210,7 +292,7 @@ export async function runAutoTranslate(message) {
     sourceCode = detected.code;
     sourceName = detected.name;
   } catch (err) {
-    logger.warn(`translationService: language detection failed in ${message.channelId}: ${err.message}`);
+    if (!translationPaused()) logger.warn(`translationService: language detection failed in ${message.channelId}: ${err.message}`);
     return;
   }
 
@@ -223,6 +305,7 @@ export async function runAutoTranslate(message) {
       const targetName = LANGUAGES[targetLang] ?? targetLang;
       results.push({ flag: langFlag(targetLang), targetLang, translatedText });
     } catch (err) {
+      if (translationPaused()) break;
       logger.warn(`translationService: failed to translate to ${targetLang} in ${message.channelId}: ${err.message}`);
     }
   }
