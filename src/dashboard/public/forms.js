@@ -1,10 +1,10 @@
 // Form controls for the dashboard: one control per field-descriptor type (src/dashboard/schema.js), a form that
-// combines them, and the combobox / popover machinery behind the channel, role, time zone and emoji pickers.
+// combines them, and the combobox / popover machinery behind the channel, role, member, time zone and emoji pickers.
 // Values go in and come out in the wire shapes of the descriptors, so getValues() can be PATCHed as it is.
 //
 // Nothing here touches the DOM, window or storage at import time (the module is import-checked in plain Node);
 // every function does its work only when called. Styles live in forms.css (classes are prefixed `fc-`).
-import { h, icon, slug, createSwitch, paintSwitch } from './lib.js';
+import { h, icon, slug, api as request, avatar, createSwitch, paintSwitch } from './lib.js';
 import { createTemplateEditor } from './embed-editor.js';
 
 /* ------------------------------------------------------------------ */
@@ -96,9 +96,10 @@ function insertAtCaret(input, text, selection) {
 /**
  * A floating panel anchored under (or above) an element. It uses the top layer when the browser has the Popover
  * API, so it is never clipped by an overflow container, and always fixed-positions itself inside the viewport.
- * `root` is the element whose subtree counts as "inside" for outside-click dismissal.
+ * `root` is the element whose subtree counts as "inside" for outside-click dismissal; `align: 'end'` lines the
+ * panel's right edge up with the anchor's (a menu opened from a button at the end of a row).
  */
-function createPopover(anchor, { root, className = '', onDismiss, minWidth = 0, maxHeight = 360 } = {}) {
+export function createPopover(anchor, { root, className = '', onDismiss, minWidth = 0, maxHeight = 360, align = 'start' } = {}) {
   const el = h('div', { class: `fc-pop ${className}`.trim(), hidden: true });
   const topLayer = typeof el.showPopover === 'function';
   if (topLayer) el.setAttribute('popover', 'manual');
@@ -114,7 +115,8 @@ function createPopover(anchor, { root, className = '', onDismiss, minWidth = 0, 
     const gap = 4;
     const edge = 8;
     const width = Math.min(Math.max(rect.width, minWidth), vw - edge * 2);
-    const left = Math.max(edge, Math.min(rect.left, vw - width - edge));
+    const wanted = align === 'end' ? rect.right - width : rect.left;
+    const left = Math.max(edge, Math.min(wanted, vw - width - edge));
     const below = bottomEdge - rect.bottom - gap - edge;
     const above = rect.top - gap - edge;
     // Measure the natural height (the scrolling list inside shrinks to max-height otherwise).
@@ -182,7 +184,8 @@ function createPopover(anchor, { root, className = '', onDismiss, minWidth = 0, 
 
 /**
  * ARIA 1.2 combobox over a text input: a filterable listbox of grouped options in a popover.
- * `getGroups(query)` returns `{ groups: [{ label?, options: [data] }], note? }`; each `data` may carry `disabled`.
+ * `getGroups(query)` returns `{ groups: [{ label?, options: [data] }], note?, status? }`; each `data` may carry `disabled`,
+ * and `status` replaces the text announced to screen readers ("Searching…").
  * Keyboard: Arrow keys move, Enter picks, Escape closes (and is not passed on to a surrounding dialog), Tab leaves.
  */
 function createCombobox({
@@ -239,7 +242,7 @@ function createCombobox({
   }
 
   function render() {
-    const { groups, note } = getGroups(query);
+    const { groups, note, status: announced } = getGroups(query);
     const nodes = [];
     let truncated = false;
     let groupIndex = 0;
@@ -284,7 +287,7 @@ function createCombobox({
       nodes.push(h('div', { class: 'fc-note', role: 'presentation' }, more));
     }
     list.replaceChildren(...nodes);
-    status.textContent = options.length ? `${options.length} ${plural(options.length, 'result')}` : 'No results';
+    status.textContent = announced ?? (options.length ? `${options.length} ${plural(options.length, 'result')}` : 'No results');
     const selected = options.findIndex((o) => isSelected(o.data));
     setActive(query ? nextEnabled(-1, 1) : selected, { scroll: true });
     pop.place();
@@ -1506,6 +1509,432 @@ function buildChooser(desc, st, cfg, multi) {
 }
 
 /* ------------------------------------------------------------------ */
+/* user (member search)                                                 */
+/* ------------------------------------------------------------------ */
+
+const SEARCH_DEBOUNCE_MS = 250;
+const SEARCH_RETRY_MIN_MS = 1000;
+const SEARCH_RETRY_MAX_MS = 10000;
+const MEMBER_CACHE_MAX = 300;
+
+// Members seen by any picker, so a chosen user's name is not fetched twice. Bounded: the oldest entry goes first.
+const memberCache = new Map();
+const memberLookups = new Map(); // in-flight `${guildId}:${userId}` lookups, shared between pickers
+
+const MENTION_RE = /^<@!?(\d{17,20})>$/;
+
+/** The user id in a pasted id or mention (`<@123…>`), else null. */
+function asUserId(text) {
+  const t = String(text ?? '').trim();
+  const mention = MENTION_RE.exec(t);
+  return mention ? mention[1] : (isSnowflake(t) ? t : null);
+}
+
+// The page's CSP only lets Discord's CDN supply images; anything else would be blocked, so it is not requested.
+function cdnImage(url) {
+  try {
+    return new URL(url).hostname === 'cdn.discordapp.com' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A member from GET /api/guilds/:id/members, or null when the entry is malformed. */
+function toMember(raw) {
+  if (!isObject(raw) || !isSnowflake(raw.id)) return null;
+  const text = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
+  const username = text(raw.username);
+  return {
+    id: raw.id,
+    username,
+    name: text(raw.nick) || text(raw.globalName) || username || raw.id,
+    avatarUrl: typeof raw.avatarUrl === 'string' ? cdnImage(raw.avatarUrl) : null,
+    bot: raw.bot === true,
+  };
+}
+
+function rememberMember(guildId, member) {
+  const key = `${guildId}:${member.id}`;
+  memberCache.delete(key);
+  memberCache.set(key, member);
+  if (memberCache.size > MEMBER_CACHE_MAX) memberCache.delete(memberCache.keys().next().value);
+}
+
+const cachedMember = (guildId, id) => memberCache.get(`${guildId}:${id}`) ?? null;
+
+/** Searches the server's members by name; a pasted id finds that one member. Rejects with an ApiError. */
+async function searchMembers(guildId, query) {
+  const data = await request(`/api/guilds/${encodeURIComponent(guildId)}/members?query=${encodeURIComponent(query)}`);
+  const members = (Array.isArray(data?.members) ? data.members : []).map(toMember).filter(Boolean);
+  for (const member of members) rememberMember(guildId, member);
+  return members;
+}
+
+/** One member by id: cached, else looked up once (concurrent callers share the request). Null = not in the server. */
+function findMember(guildId, id) {
+  const hit = cachedMember(guildId, id);
+  if (hit) return Promise.resolve(hit);
+  const key = `${guildId}:${id}`;
+  let pending = memberLookups.get(key);
+  if (!pending) {
+    pending = searchMembers(guildId, id)
+      .then((members) => members.find((m) => m.id === id) ?? null)
+      .finally(() => memberLookups.delete(key));
+    memberLookups.set(key, pending);
+  }
+  return pending;
+}
+
+/** The member's picture, name and (when it differs) @username, as one block. */
+function memberLine(member, { handle = true } = {}) {
+  const pic = avatar(member.name, member.avatarUrl, { size: 'xs', round: true });
+  pic.classList.add('fc-user-av');
+  const showHandle = handle && member.username && member.username !== member.name;
+  return [
+    pic,
+    h('span', { class: 'fc-user-text' },
+      h('span', { class: 'fc-user-name' }, member.name),
+      showHandle ? h('span', { class: 'fc-user-handle' }, `@${member.username}`) : null),
+    member.bot ? h('span', { class: 'fc-bot-tag' }, 'Bot') : null,
+  ];
+}
+
+/**
+ * A server member: a searchable combobox that asks the dashboard's member search while the admin types (debounced),
+ * accepts a pasted user id, and shows the chosen member as a chip. The value is the id (or null).
+ */
+function buildUser(desc, st) {
+  const nullable = desc.nullable === true;
+  const noneLabel = desc.noneLabel ?? 'None';
+  const guildId = () => (typeof st.ctx?.guildId === 'string' && st.ctx.guildId ? st.ctx.guildId : null);
+  let value = isSnowflake(st.value) ? st.value : null;
+  let member = null; // the resolved member of `value`
+  let lookup = 'idle'; // idle | loading | missing (not in the server) | failed
+  let lookupSeq = 0;
+  let results = []; // members found for `resultsQuery`
+  let resultsQuery = null;
+  let searchState = 'idle'; // idle | loading | done | limited | failed
+  let searchError = '';
+  let searchSeq = 0;
+  let searchTimer = 0;
+  let retryTimer = 0;
+  let retriedFor = null;
+  let destroyed = false;
+  let combo = null;
+
+  const input = h('input', {
+    type: 'text',
+    class: 'fc-chooser-input fc-user-input',
+    id: `${st.id}-input`,
+    role: 'combobox',
+    autocomplete: 'off',
+    autocapitalize: 'off',
+    spellcheck: 'false',
+    'aria-autocomplete': 'list',
+    'aria-expanded': 'false',
+    'aria-haspopup': 'listbox',
+    'aria-controls': `${st.id}-list`,
+  });
+  const chipEl = h('span', { class: 'fc-chips' });
+  const caret = h('span', { class: 'fc-caret', 'aria-hidden': 'true' }, icon('chevron'));
+  const box = h('div', { class: 'fc-box fc-chooser fc-user is-multi' }, chipEl, input, caret);
+  const root = h('div', { class: 'fc-picker' }, box);
+  const live = h('div', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+
+  box.addEventListener('click', (event) => {
+    if (event.target.closest('button')) return;
+    input.focus();
+    if (combo.isOpen && event.target !== input) combo.close();
+    else combo.open();
+  });
+
+  /* ---- the chosen member ---- */
+
+  function chip() {
+    const unknown = lookup === 'missing';
+    let body;
+    if (member) {
+      body = memberLine(member);
+    } else {
+      const pic = avatar(unknown ? '?' : value, null, { size: 'xs', round: true });
+      pic.classList.add('fc-user-av');
+      let label = `User ${value}`;
+      if (unknown) label = 'Unknown user';
+      else if (lookup === 'loading') label = 'Loading…';
+      body = [
+        unknown ? icon('alert') : pic,
+        h('span', { class: 'fc-user-text' },
+          h('span', { class: 'fc-user-name' }, label),
+          unknown ? h('span', { class: 'fc-user-handle is-id' }, `(${value})`) : null),
+      ];
+    }
+    const name = member ? member.name : (unknown ? `unknown user ${value}` : `user ${value}`);
+    const title = unknown ? `Unknown user (${value})` : (member ? `${member.name} (${member.id})` : `User ${value}`);
+    return h('span', { class: `fc-chip fc-member${unknown ? ' is-missing' : ''}`, title },
+      body,
+      nullable
+        ? h('button', {
+          type: 'button',
+          class: 'fc-chip-x',
+          'aria-label': `Remove ${name}`,
+          onclick: () => {
+            value = null;
+            member = null;
+            lookup = 'idle';
+            lookupSeq += 1;
+            paint();
+            st.changed();
+            input.focus();
+          },
+        }, icon('x'))
+        : null);
+  }
+
+  function paint() {
+    chipEl.replaceChildren(...(value ? [chip()] : []));
+    if (value) input.placeholder = 'Search to change…';
+    else input.placeholder = nullable ? `${noneLabel} — search or paste an ID` : 'Search members or paste an ID';
+    box.classList.toggle('is-missing', lookup === 'missing');
+  }
+
+  async function resolve(id) {
+    const gid = guildId();
+    const hit = gid ? cachedMember(gid, id) : null;
+    if (hit) {
+      member = hit;
+      lookup = 'idle';
+      paint();
+      return;
+    }
+    member = null;
+    if (!gid) {
+      lookup = 'failed';
+      paint();
+      return;
+    }
+    const seq = (lookupSeq += 1);
+    lookup = 'loading';
+    paint();
+    try {
+      const found = await findMember(gid, id);
+      if (destroyed || seq !== lookupSeq || value !== id) return;
+      member = found;
+      lookup = found ? 'idle' : 'missing';
+    } catch {
+      if (destroyed || seq !== lookupSeq || value !== id) return;
+      lookup = 'failed';
+    }
+    paint();
+  }
+
+  function choose(id, known = null) {
+    value = id;
+    member = known;
+    lookup = 'idle';
+    lookupSeq += 1;
+    paint();
+    if (id && !known) resolve(id);
+    live.textContent = known ? `Selected ${known.name}` : (id ? 'Selected user ID' : `${noneLabel} selected`);
+    st.changed();
+  }
+
+  /* ---- searching ---- */
+
+  function stopSearch() {
+    searchSeq += 1;
+    clearTimeout(searchTimer);
+    clearTimeout(retryTimer);
+    searchTimer = 0;
+    retryTimer = 0;
+  }
+
+  function onQuery(raw) {
+    const q = raw.trim();
+    stopSearch();
+    results = [];
+    resultsQuery = null;
+    const gid = guildId();
+    const pasted = asUserId(q);
+    if (!q || !gid) {
+      searchState = 'idle';
+    } else if (pasted && cachedMember(gid, pasted)) {
+      results = [cachedMember(gid, pasted)];
+      resultsQuery = q;
+      searchState = 'done';
+    } else {
+      searchState = 'loading';
+      searchTimer = setTimeout(() => runSearch(q), SEARCH_DEBOUNCE_MS);
+    }
+    combo.refresh();
+  }
+
+  async function runSearch(q) {
+    const gid = guildId();
+    if (!gid || destroyed) return;
+    const seq = (searchSeq += 1);
+    try {
+      // A mention or id searches by id; a leading "@" (as in @username) is not part of any name.
+      const found = await searchMembers(gid, asUserId(q) ?? (q.replace(/^@+/, '').trim() || q));
+      if (destroyed || seq !== searchSeq) return;
+      results = found;
+      resultsQuery = q;
+      searchState = 'done';
+    } catch (err) {
+      if (destroyed || seq !== searchSeq) return;
+      results = [];
+      resultsQuery = q;
+      if (err?.status === 429) {
+        searchState = 'limited';
+        // One automatic retry once the server's wait is over, while the admin is still looking at this query.
+        if (retriedFor !== q) {
+          retriedFor = q;
+          const wait = Math.min(SEARCH_RETRY_MAX_MS, Math.max(SEARCH_RETRY_MIN_MS, (Number(err.retryAfter) || 2) * 1000));
+          retryTimer = setTimeout(() => {
+            if (destroyed || !combo.isOpen || input.value.trim() !== q) return;
+            searchState = 'loading';
+            combo.refresh();
+            runSearch(q);
+          }, wait);
+        }
+      } else {
+        searchState = 'failed';
+        searchError = err?.status === 401 ? 'Your session has expired. Reload the page.' : 'Could not search members. Try again.';
+      }
+    }
+    combo.refresh();
+  }
+
+  function getGroups(query) {
+    const q = query.trim();
+    const groups = [];
+    if (nullable && !q) groups.push({ options: [{ value: null, label: noneLabel, none: true }] });
+    const pasted = asUserId(q);
+    if (!guildId()) {
+      const note = 'Member search is not available here. Paste a user ID.';
+      if (pasted) return { groups: [{ options: [{ value: pasted, label: `Use user ID ${pasted}`, idOnly: true }] }] };
+      return { groups, note };
+    }
+    if (!q) return { groups, note: 'Type a name or username, or paste a user ID.', status: 'Type to search members' };
+
+    const options = resultsQuery === q ? results.map((m) => ({ value: m.id, member: m })) : [];
+    if (pasted && !options.some((o) => o.value === pasted)) {
+      options.unshift({ value: pasted, label: `Use user ID ${pasted}`, idOnly: true });
+    }
+    if (options.length) groups.push({ options });
+
+    let note = null;
+    let status = null;
+    switch (searchState) {
+      case 'loading':
+        note = 'Searching…';
+        status = 'Searching…';
+        break;
+      case 'limited':
+        note = 'Slow down: too many searches at once. Trying again in a moment.';
+        status = 'Too many searches. Slow down.';
+        break;
+      case 'failed':
+        note = searchError;
+        status = searchError;
+        break;
+      case 'done':
+        if (pasted && !results.some((m) => m.id === pasted)) note = 'Not found in this server. You can still use the ID.';
+        else if (!results.length) note = `No members match "${q.length > 40 ? `${q.slice(0, 40)}…` : q}".`;
+        status = results.length ? `${results.length} ${plural(results.length, 'member')} found` : 'No members found';
+        break;
+      default:
+        break;
+    }
+    return { groups, note, status };
+  }
+
+  function renderOption(d) {
+    const selected = d.value === value;
+    let main;
+    if (d.none) main = h('span', { class: 'fc-opt-label' }, d.label);
+    else if (d.member) main = memberLine(d.member);
+    else main = [h('span', { class: 'fc-opt-label' }, d.label)];
+    return [
+      h('span', { class: `fc-opt-main${d.member ? ' fc-user-opt' : ''}` }, main),
+      selected ? h('span', { class: 'fc-opt-check' }, icon('check')) : null,
+    ];
+  }
+
+  combo = createCombobox({
+    id: st.id,
+    input,
+    anchor: box,
+    root,
+    label: `${desc.label}: member list`,
+    getGroups,
+    renderOption,
+    isSelected: (d) => d.value === value,
+    onPick(d) {
+      input.value = '';
+      combo.close();
+      choose(d.value ?? null, d.member ?? null);
+    },
+    onOpenChange(open) {
+      if (open) {
+        retriedFor = null;
+        return;
+      }
+      stopSearch();
+      searchState = 'idle';
+      results = [];
+      resultsQuery = null;
+      // An id typed or pasted and left behind counts as chosen.
+      const typed = asUserId(input.value);
+      input.value = '';
+      if (typed && typed !== value) choose(typed, guildId() ? cachedMember(guildId(), typed) : null);
+      else paint();
+    },
+    emptyText: 'No members match.',
+  });
+  input.addEventListener('input', () => onQuery(input.value));
+  // A pasted id is taken straight away; the name is looked up afterwards.
+  input.addEventListener('paste', (event) => {
+    const id = asUserId(event.clipboardData?.getData('text'));
+    const replaces = !input.value || (input.selectionStart === 0 && input.selectionEnd === input.value.length);
+    if (!id || !replaces) return;
+    event.preventDefault();
+    input.value = '';
+    combo.close();
+    choose(id, guildId() ? cachedMember(guildId(), id) : null);
+  });
+  root.append(live);
+  paint();
+  if (value) resolve(value);
+
+  return {
+    body: h('div', { class: 'fc-chooser-wrap' }, root),
+    inputs: [input],
+    labelFor: input.id,
+    getValue: () => value,
+    setValue(v) {
+      const next = isSnowflake(v) ? v : null;
+      if (next === value && (member || !next)) return;
+      value = next;
+      member = null;
+      lookup = 'idle';
+      lookupSeq += 1;
+      paint();
+      if (next) resolve(next);
+    },
+    setDisabled(off) {
+      combo.setDisabled(off);
+      if (off) stopSearch();
+    },
+    focus: () => input.focus(),
+    destroy() {
+      destroyed = true;
+      stopSearch();
+      combo.destroy();
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* stringList                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -2200,6 +2629,7 @@ const BUILDERS = {
   channels: (desc, st) => buildChooser(desc, st, channelConfig(desc, st, true), true),
   role: (desc, st) => buildChooser(desc, st, roleConfig(desc, st, false), false),
   roles: (desc, st) => buildChooser(desc, st, roleConfig(desc, st, true), true),
+  user: buildUser,
   stringList: buildStringList,
   datetime: buildDatetime,
   time: buildTime,

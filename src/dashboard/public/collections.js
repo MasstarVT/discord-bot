@@ -1,13 +1,21 @@
 // Per-server record lists of the web dashboard (saved embeds, custom commands, level rewards, ...):
 //   mountCollection(container, { collection, ctx }) -> { destroy(), refresh() }
 // A list with a count and an empty state, an editor dialog built with createForm (forms.js), actions with their own
-// small forms, and delete with a confirmation. API: /api/guilds/:id/records/:key (dashboard contract, section 5).
+// small forms, and delete with a confirmation. Searchable lists get a search box and "Load more" pages; member lists
+// show an avatar per row; actions sit on the row (or in a "⋯" menu) and may be answered by the bot, so a slow
+// request says it is waiting. API: /api/guilds/:id/records/:key (dashboard contract, section 5 and wave 2).
 //
 // Import-safe in plain Node: nothing touches document, window or storage until a function is called.
 
-import { h, icon, api, ApiError, toast, describeError, canonical, slug, safeHref, TOAST_ERROR_MS } from './lib.js';
-import { createForm } from './forms.js';
+import { h, icon, api, ApiError, toast, describeError, canonical, slug, safeHref, avatar, TOAST_ERROR_MS } from './lib.js';
+import { createForm, createPopover } from './forms.js';
 import { templateSummary, sampleText, uiIcon, colorHex } from './embed-editor.js';
+
+const SEARCH_DEBOUNCE_MS = 250;
+const SEARCH_MAX_LENGTH = 100;
+const WAIT_HINT_MS = 1000; // a write slower than this says it is waiting for the bot
+const WAIT_LABEL = 'Waiting for the bot…';
+const ROW_BUTTONS_MAX = 2; // more plain actions than this go into a "⋯" menu
 
 let dialogSeq = 0;
 let openModals = 0;
@@ -135,6 +143,171 @@ function confirmModal({ title, message, confirmLabel = 'Confirm', cancelLabel = 
 }
 
 /* ------------------------------------------------------------------ */
+/* Busy buttons and the row menu                                        */
+/* ------------------------------------------------------------------ */
+
+const waits = new WeakMap(); // button -> its pending "waiting for the bot" hint
+
+/**
+ * Marks a button busy (disabled, spinner). Once the request has taken longer than WAIT_HINT_MS the button says it is
+ * waiting for the bot (dashboard actions run in the bot and can take several seconds); an icon-only button gets the
+ * words next to it instead.
+ */
+function busy(btn, on, { hint = true, announce = null } = {}) {
+  if (!btn) return;
+  const before = waits.get(btn);
+  if (before) {
+    clearTimeout(before.timer);
+    before.restore();
+    waits.delete(btn);
+  }
+  btn.disabled = on;
+  btn.classList.toggle('is-busy', on);
+  if (on) btn.setAttribute('aria-busy', 'true');
+  else btn.removeAttribute('aria-busy');
+  if (!on || !hint) return;
+  const entry = { timer: 0, restore() {} };
+  entry.timer = setTimeout(() => {
+    if (!btn.isConnected) return;
+    announce?.(WAIT_LABEL);
+    if (btn.classList.contains('icon-btn')) {
+      const tag = h('span', { class: 'cl-wait' }, WAIT_LABEL);
+      btn.before(tag);
+      entry.restore = () => tag.remove();
+      return;
+    }
+    const saved = [...btn.childNodes];
+    const label = document.createTextNode(WAIT_LABEL);
+    btn.replaceChildren(label);
+    // The caller may have repainted the button meanwhile (a new label): then leave it alone.
+    entry.restore = () => {
+      if (btn.firstChild === label && btn.childNodes.length === 1) btn.replaceChildren(...saved);
+    };
+  }, WAIT_HINT_MS);
+  waits.set(btn, entry);
+}
+
+function moreIcon() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('class', 'icon');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  for (const x of [5, 12, 19]) {
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    dot.setAttribute('d', `M${x} 12h.01`);
+    svg.append(dot);
+  }
+  return svg;
+}
+
+/**
+ * A menu button ("⋯") with a popup menu of actions (WAI-ARIA menu button pattern): Enter, Space or the arrow keys open it
+ * and focus an item, arrows/Home/End/first letters move, Enter or Space picks, Escape closes and returns to the button,
+ * Tab or a click elsewhere just closes.
+ * @param {{ id: string, label: string, entries: { label: string, description?: string, danger?: boolean,
+ *   run: () => void }[] }} opts
+ * @returns {{ el: HTMLElement, button: HTMLButtonElement, close: (opts?: { restoreFocus?: boolean }) => void }}
+ */
+function createRowMenu({ id, label, entries }) {
+  const button = h('button', {
+    type: 'button',
+    class: 'icon-btn cl-menu-btn',
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    'aria-controls': id,
+    'aria-label': label,
+    title: 'Actions',
+  }, moreIcon());
+  const list = h('div', { class: 'cl-menu', role: 'menu', id, 'aria-label': label });
+  const wrap = h('span', { class: 'cl-menu-wrap' }, button);
+  const pop = createPopover(button, {
+    root: wrap, className: 'cl-menu-pop', onDismiss: () => close({ restoreFocus: false }), minWidth: 210, align: 'end',
+  });
+  pop.el.append(list);
+  // Keep the focus where it is while the pointer works the menu (Safari does not focus clicked buttons).
+  pop.el.addEventListener('mousedown', (event) => event.preventDefault());
+  wrap.append(pop.el);
+
+  const items = [];
+  let separated = false;
+  for (const entry of entries) {
+    if (entry.danger && !separated && items.length) {
+      list.append(h('div', { class: 'cl-menu-sep', role: 'separator' }));
+      separated = true;
+    }
+    const item = h('button', {
+      type: 'button',
+      class: `cl-menu-item${entry.danger ? ' is-danger' : ''}`,
+      role: 'menuitem',
+      tabindex: '-1',
+      title: entry.description || null,
+    }, entry.label);
+    item.addEventListener('click', () => {
+      // Focus goes back to the button first, so a dialog the action opens returns there when it closes.
+      close();
+      entry.run();
+    });
+    items.push(item);
+    list.append(item);
+  }
+
+  function close({ restoreFocus = true } = {}) {
+    if (!pop.isOpen) return;
+    pop.close();
+    button.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) button.focus();
+  }
+  function open(at = 0) {
+    if (pop.isOpen || button.disabled) return;
+    pop.open();
+    button.setAttribute('aria-expanded', 'true');
+    items[at === -1 ? items.length - 1 : at]?.focus();
+  }
+  button.addEventListener('click', () => (pop.isOpen ? close() : open()));
+  button.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      open(event.key === 'ArrowUp' ? -1 : 0);
+    }
+  });
+  list.addEventListener('keydown', (event) => {
+    const at = items.indexOf(document.activeElement);
+    let next = null;
+    switch (event.key) {
+      case 'ArrowDown': next = (at + 1) % items.length; break;
+      case 'ArrowUp': next = (at - 1 + items.length) % items.length; break;
+      case 'Home': next = 0; break;
+      case 'End': next = items.length - 1; break;
+      case 'Escape':
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        return;
+      case 'Tab':
+        close({ restoreFocus: false });
+        return;
+      default:
+        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          const letter = event.key.toLowerCase();
+          const order = [...items.slice(at + 1), ...items.slice(0, at + 1)];
+          next = items.indexOf(order.find((i) => i.textContent.trim().toLowerCase().startsWith(letter)));
+          if (next === -1) next = null;
+        }
+        break;
+    }
+    if (next === null) return;
+    event.preventDefault();
+    items[next].focus();
+  });
+  wrap.addEventListener('focusout', (event) => {
+    if (!event.relatedTarget || !wrap.contains(event.relatedTarget)) close({ restoreFocus: false });
+  });
+
+  return { el: wrap, button, close };
+}
+
+/* ------------------------------------------------------------------ */
 /* Value formatting                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -224,7 +397,8 @@ function formatValue(desc, value, ctx, look = lookups(ctx)) {
 /* ------------------------------------------------------------------ */
 
 // Where a failed write is shown: 'reload' (session gone), 'field' (a form field), 'status' (next to the dialog's
-// buttons; without a dialog, in an error toast). Discord's refusals (502, e.g. a missing permission) are 'status'.
+// buttons; without a dialog, in an error toast). Discord's refusals (502, e.g. a missing permission) and the bot's
+// (422, `action_failed`) are 'status'.
 function writeError(err, c, limit) {
   if (!(err instanceof ApiError)) return { where: 'status', message: 'Something went wrong. Please try again.' };
   const msg = err.serverMessage;
@@ -236,11 +410,13 @@ function writeError(err, c, limit) {
     }
     case 409: return {
       where: 'status',
-      message: msg || (err.code === 'limit'
+      message: msg || (err.code === 'limit' && Number.isInteger(limit)
         ? `You have reached the limit of ${limit} ${c.label.toLowerCase()}.`
         : 'That conflicts with an existing entry.'),
     };
     case 502: return { where: 'status', message: msg || "Discord refused the request. Check the bot's permissions and try again." };
+    // The bot ran the action and refused it ("That member is above the bot."): its reason is the message.
+    case 422: return { where: 'status', message: msg || 'The bot could not do that.' };
     case 404: return {
       where: 'status',
       gone: err.code === 'not_found',
@@ -266,9 +442,12 @@ function normalizeCollection(raw) {
     label: String(c.label ?? 'Items'),
     singular: String(c.singular ?? 'item'),
     description: String(c.description ?? ''),
-    limit: Number.isInteger(c.limit) ? c.limit : null,
+    limit: Number.isInteger(c.limit) ? c.limit : null, // null = no cap per server: the list shows just a count
     titleField: String(c.titleField ?? 'id'),
     subtitleField: c.subtitleField ? String(c.subtitleField) : null,
+    avatarField: c.avatarField ? String(c.avatarField) : null,
+    searchable: c.searchable === true,
+    searchPlaceholder: c.searchPlaceholder ? String(c.searchPlaceholder) : null,
     canCreate: c.canCreate !== false,
     canEdit: c.canEdit !== false,
     canDelete: c.canDelete !== false,
@@ -294,17 +473,22 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
   const tplField = c.fields.find((f) => f.type === 'template' || f.type === 'embed') ?? null;
   const fieldByName = new Map([...c.fields, ...c.readOnly].map((f) => [f.field, f]));
   const publishable = c.readOnly.some((f) => f.field === 'channelId') && c.readOnly.some((f) => f.field === 'messageId');
-  const rowAction = c.actions.find((a) => !a.danger) ?? null;
   const isPosted = (item) => Boolean(item?.channelId && item?.messageId);
   // Actions on the posted copy (update it, delete it) mean nothing for a draft.
   const actionApplies = (a, item) => !(publishable && !isPosted(item) && ['refresh', 'unpublish', 'update'].includes(a.id));
+  const placeholder = c.searchPlaceholder || `Search ${c.label.toLowerCase()}`;
   let items = [];
   let limit = c.limit;
+  let query = ''; // the applied search text
+  let nextCursor = null; // set while the server has more pages
   let phase = 'loading'; // loading | ready | error
   let loadErr = null;
   let destroyed = false;
   let loadSeq = 0;
+  let loadingMore = false;
   let formSeq = 0;
+  let searchTimer = 0;
+  const menus = []; // the row menus of the rendered rows
   const modals = new Set();
   let editor = null; // the open editor (see openEditor)
 
@@ -318,27 +502,82 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
   const createBtn = h('button', { type: 'button', class: 'btn btn-primary btn-sm cl-create' }, icon('plus'), `New ${c.singular}`);
   const listEl = h('ul', { class: 'cl-list', 'aria-label': c.label });
   const bodyEl = h('div', { class: 'cl-body' });
+  const liveEl = h('div', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const announce = (text) => {
+    liveEl.textContent = text;
+  };
+
+  const searchInput = c.searchable
+    ? h('input', {
+      type: 'search',
+      class: 'cl-search-input',
+      id: `${idBase}-search`,
+      placeholder,
+      'aria-label': placeholder,
+      autocomplete: 'off',
+      autocapitalize: 'off',
+      spellcheck: 'false',
+      enterkeyhint: 'search',
+      maxlength: String(SEARCH_MAX_LENGTH),
+    })
+    : null;
+  const searchClear = c.searchable
+    ? h('button', { type: 'button', class: 'icon-btn cl-search-clear', 'aria-label': 'Clear search', hidden: true }, icon('x'))
+    : null;
+  const searchEl = c.searchable
+    ? h('div', { class: 'cl-search', role: 'search', 'aria-label': `Search ${c.label.toLowerCase()}` },
+      icon('search'), searchInput, searchClear)
+    : null;
+  const moreBtn = h('button', { type: 'button', class: 'btn btn-secondary cl-more-btn' }, 'Load more');
+  const moreEl = h('div', { class: 'cl-more', hidden: true }, moreBtn);
   const root = h(
     'div',
     { class: 'cl', 'data-collection': c.key },
     h('div', { class: 'cl-toolbar' },
       countEl, limitNote, h('span', { class: 'cl-spacer' }), reloadBtn, c.canCreate ? createBtn : null),
+    searchEl,
     bodyEl,
+    moreEl,
+    liveEl,
   );
   container.append(root);
   reloadBtn.addEventListener('click', () => load());
   createBtn.addEventListener('click', () => openEditor(null));
+  moreBtn.addEventListener('click', () => loadMore());
 
-  const atLimit = () => Number.isInteger(limit) && items.length >= limit;
+  // A list with a cap counts "n / limit"; one without ("limit: null") just counts. A search counts its matches. The "+"
+  // marks a list with more pages than are loaded.
+  const atLimit = () => Number.isInteger(limit) && !query && !nextCursor && items.length >= limit;
+
+  function countText() {
+    const n = items.length;
+    const more = nextCursor ? '+' : '';
+    const one = n === 1 && !more;
+    if (query) return `${n}${more} ${one ? 'match' : 'matches'}`;
+    if (Number.isInteger(limit)) return `${n}${more} / ${limit}`;
+    return `${n}${more} ${one ? c.singular : c.label.toLowerCase()}`;
+  }
 
   function paintToolbar() {
-    const counted = Number.isInteger(limit) ? `${items.length} / ${limit}` : String(items.length);
-    countEl.textContent = phase === 'ready' ? counted : '';
+    countEl.textContent = phase === 'ready' ? countText() : '';
     const full = phase === 'ready' && atLimit();
     createBtn.disabled = phase !== 'ready' || full;
     limitNote.hidden = !full;
     limitNote.textContent = full ? 'Limit reached. Delete one to add another.' : '';
     reloadBtn.disabled = phase === 'loading';
+    if (searchEl) {
+      searchClear.hidden = !searchInput.value;
+      searchEl.classList.toggle('has-text', Boolean(searchInput.value));
+    }
+  }
+
+  function paintMore() {
+    moreEl.hidden = !(phase === 'ready' && nextCursor);
+    moreBtn.disabled = loadingMore;
+    moreBtn.classList.toggle('is-busy', loadingMore);
+    moreBtn.textContent = loadingMore ? 'Loading…' : 'Load more';
+    if (loadingMore) moreBtn.setAttribute('aria-busy', 'true');
+    else moreBtn.removeAttribute('aria-busy');
   }
 
   /* ---- rows ---- */
@@ -388,6 +627,45 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     return mini;
   }
 
+  // A round picture (member lists); initials when the item has none or it does not load.
+  function rowAvatar(item, title) {
+    if (!c.avatarField) return null;
+    const url = typeof item[c.avatarField] === 'string' ? item[c.avatarField] : null;
+    return h('span', { class: 'cl-row-avatar' }, avatar(title, url, { size: 'md', round: true }));
+  }
+
+  // The actions on a row: every plain (non-danger) action as a button while there are at most two of them, else a
+  // "⋯" menu with all of them, dangerous ones last. Dangerous actions are always in the details dialog too.
+  function rowActions(item, title, titleId) {
+    const applicable = c.actions.filter((a) => actionApplies(a, item));
+    const plain = applicable.filter((a) => !a.danger);
+    if (!plain.length) return null;
+    if (plain.length <= ROW_BUTTONS_MAX) {
+      return {
+        menu: false,
+        el: h('div', { class: 'cl-row-actions' }, plain.map((a) => {
+          const btn = h('button', {
+            type: 'button',
+            class: 'btn btn-secondary btn-sm cl-row-action',
+            'aria-describedby': titleId,
+            title: a.description || null,
+          }, a.id === 'publish' ? uiIcon('send') : null, a.label);
+          btn.addEventListener('click', () => runAction(a, item, btn));
+          return btn;
+        })),
+      };
+    }
+    const sorted = [...plain, ...applicable.filter((a) => a.danger)];
+    const menu = createRowMenu({
+      id: `${titleId}-menu`,
+      label: `Actions for ${title}`,
+      entries: sorted.map((a) => ({
+        label: a.label, description: a.description, danger: a.danger, run: () => runAction(a, item, menu.button),
+      })),
+    });
+    return { menu, el: h('div', { class: 'cl-row-actions' }, menu.el) };
+  }
+
   function rowFor(item, look) {
     const title = itemTitle(item);
     const titleId = `${idBase}-r-${slug(item.id)}`;
@@ -396,31 +674,25 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     const main = h(
       'button',
       { type: 'button', class: 'cl-row-main', 'aria-labelledby': titleId, title: c.canEdit ? `Edit ${title}` : `View ${title}` },
-      miniPreview(item),
+      rowAvatar(item, title) ?? miniPreview(item),
       h('span', { class: 'cl-row-text' },
         h('span', { class: 'cl-row-title', id: titleId }, title),
         sub || badges.length ? h('span', { class: 'cl-row-sub' }, badges, sub) : null),
       h('span', { class: 'cl-row-chevron', 'aria-hidden': 'true' }, icon('forward')),
     );
     main.addEventListener('click', () => openEditor(item));
-    const actionBtn = rowAction
-      ? h(
-        'button',
-        {
-          type: 'button', class: 'btn btn-secondary btn-sm cl-row-action', 'aria-describedby': titleId, title: rowAction.description || null,
-        },
-        rowAction.id === 'publish' ? uiIcon('send') : null,
-        rowAction.label,
-      )
-      : null;
-    actionBtn?.addEventListener('click', () => runAction(rowAction, item, actionBtn));
-    return h('li', { class: 'cl-row', 'data-id': item.id }, main,
-      actionBtn ? h('div', { class: 'cl-row-actions' }, actionBtn) : null);
+    const actions = rowActions(item, title, titleId);
+    if (actions?.menu) menus.push(actions.menu);
+    return h('li', { class: `cl-row${actions?.menu ? ' has-menu' : ''}`, 'data-id': item.id }, main, actions?.el);
+  }
+
+  function closeMenus() {
+    for (const menu of menus.splice(0)) menu.close({ restoreFocus: false });
   }
 
   function skeleton() {
     return h('ul', { class: 'cl-list', 'aria-hidden': 'true' }, [0, 1, 2].map(() => h('li', { class: 'cl-row is-skeleton' },
-      h('span', { class: 'skeleton cl-skel-mini' }),
+      h('span', { class: `skeleton ${c.avatarField ? 'cl-skel-avatar' : 'cl-skel-mini'}` }),
       h('span', { class: 'cl-skel-text' },
         h('span', { class: 'skeleton skeleton-line w-50' }),
         h('span', { class: 'skeleton skeleton-line w-30' })))));
@@ -440,10 +712,28 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     );
   }
 
+  function noMatchesState() {
+    return h(
+      'div',
+      { class: 'cl-empty is-search' },
+      h('span', { class: 'cl-empty-icon', 'aria-hidden': 'true' }, icon('search')),
+      h('p', { class: 'cl-empty-title' }, 'No matches'),
+      h('p', { class: 'cl-empty-text' }, `Nothing in ${c.label.toLowerCase()} matches "${clampQuery(query)}".`),
+      h('button', { type: 'button', class: 'btn btn-secondary btn-sm', onclick: () => clearSearch() }, 'Clear search'),
+    );
+  }
+
+  const clampQuery = (text) => (text.length > 40 ? `${text.slice(0, 40)}…` : text);
+
   function render({ focusId = null } = {}) {
     if (destroyed) return;
+    closeMenus();
     paintToolbar();
+    paintMore();
     root.setAttribute('aria-busy', phase === 'loading' ? 'true' : 'false');
+    listEl.classList.remove('is-stale');
+    listEl.removeAttribute('aria-busy');
+    searchEl?.classList.remove('is-busy');
     if (phase === 'loading') {
       bodyEl.replaceChildren(skeleton());
       return;
@@ -456,7 +746,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       return;
     }
     if (!items.length) {
-      bodyEl.replaceChildren(emptyState());
+      bodyEl.replaceChildren(query ? noMatchesState() : emptyState());
       return;
     }
     const look = lookups(ctx);
@@ -465,16 +755,40 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     if (focusId !== null) listEl.querySelector(`[data-id="${CSS.escape(focusId)}"] .cl-row-main`)?.focus();
   }
 
-  async function load() {
+  const readItems = (data) => (Array.isArray(data?.items) ? data.items.filter((x) => isObj(x) && typeof x.id === 'string') : []);
+  const readCursor = (data) => (typeof data?.nextCursor === 'string' && data.nextCursor ? data.nextCursor : null);
+
+  function listUrl(cursor = null) {
+    const params = [];
+    if (query) params.push(`query=${encodeURIComponent(query)}`);
+    if (cursor) params.push(`cursor=${encodeURIComponent(cursor)}`);
+    return params.length ? `${base}?${params.join('&')}` : base;
+  }
+
+  /**
+   * Loads the first page (of the current search). `fresh`: the request is about a different question than the list on
+   * screen (a new search), so a failure replaces the list by an error instead of leaving stale rows.
+   */
+  async function load({ fresh = false } = {}) {
     const seq = ++loadSeq;
-    phase = items.length ? phase : 'loading';
-    if (!items.length) render();
+    loadingMore = false;
+    if (!items.length || phase === 'error') {
+      phase = 'loading';
+      render();
+    } else {
+      // Keep the rows on screen (dimmed) while the answer is on its way.
+      listEl.classList.add('is-stale');
+      listEl.setAttribute('aria-busy', 'true');
+      searchEl?.classList.add('is-busy');
+      moreEl.hidden = true;
+    }
     reloadBtn.disabled = true;
     try {
-      const data = await api(base);
+      const data = await api(listUrl());
       if (destroyed || seq !== loadSeq) return;
-      items = Array.isArray(data?.items) ? data.items.filter((x) => isObj(x) && typeof x.id === 'string') : [];
-      if (Number.isInteger(data?.limit)) limit = data.limit;
+      items = readItems(data);
+      nextCursor = readCursor(data);
+      if (data && Object.hasOwn(data, 'limit')) limit = Number.isInteger(data.limit) ? data.limit : null;
       phase = 'ready';
       loadErr = null;
     } catch (err) {
@@ -483,14 +797,92 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         location.reload();
         return;
       }
-      if (phase !== 'ready') {
+      if (phase !== 'ready' || fresh) {
         phase = 'error';
         loadErr = err;
+        items = [];
+        nextCursor = null;
       } else {
         notify(`Could not reload ${c.label.toLowerCase()}: ${describeError(err).message}`, { kind: 'error', ms: TOAST_ERROR_MS });
       }
     }
     render({ focusId: focusedRowId() });
+  }
+
+  // Appends the next page below the rows on screen; focus moves to its first row.
+  async function loadMore() {
+    if (loadingMore || !nextCursor || phase !== 'ready') return;
+    const seq = loadSeq;
+    loadingMore = true;
+    paintMore();
+    try {
+      const data = await api(listUrl(nextCursor));
+      if (destroyed || seq !== loadSeq) return;
+      const known = new Set(items.map((x) => x.id));
+      const added = readItems(data).filter((x) => !known.has(x.id));
+      items.push(...added);
+      nextCursor = readCursor(data);
+      loadingMore = false;
+      const look = lookups(ctx);
+      const rows = added.map((item) => rowFor(item, look));
+      listEl.append(...rows);
+      paintToolbar();
+      paintMore();
+      announce(`${added.length} more loaded. ${countText()}`);
+      rows[0]?.querySelector('.cl-row-main')?.focus();
+    } catch (err) {
+      if (destroyed || seq !== loadSeq) return;
+      loadingMore = false;
+      if (err instanceof ApiError && err.status === 401) {
+        location.reload();
+        return;
+      }
+      const reason = describeError(err).message;
+      notify(`Could not load more ${c.label.toLowerCase()}: ${reason}`, { kind: 'error', ms: TOAST_ERROR_MS });
+      paintMore();
+    }
+  }
+
+  /* ---- search ---- */
+
+  const normalizeQuery = (text) => text.replace(/\s+/g, ' ').trim().slice(0, SEARCH_MAX_LENGTH);
+
+  // Applies the search text (same text = nothing to do); an empty text is the normal list.
+  function setQuery(text) {
+    clearTimeout(searchTimer);
+    searchTimer = 0;
+    const next = normalizeQuery(text);
+    paintToolbar();
+    if (next === query) return;
+    query = next;
+    load({ fresh: true });
+  }
+
+  function clearSearch() {
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.focus();
+    }
+    setQuery('');
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      paintToolbar();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => setQuery(searchInput.value), SEARCH_DEBOUNCE_MS);
+    });
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        setQuery(searchInput.value);
+      } else if (event.key === 'Escape' && searchInput.value) {
+        event.preventDefault();
+        event.stopPropagation();
+        clearSearch();
+      }
+    });
+    searchClear.addEventListener('click', () => clearSearch());
   }
 
   const focusedRowId = () => (listEl.contains(document.activeElement)
@@ -541,22 +933,43 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
 
   /* ---- actions ---- */
 
+  // The bot answers `still working` (HTTP 200 with that message) when a task outlasted the dashboard's wait.
+  const isPending = (res, message) => res?.pending === true || res?.status === 'pending' || /\bstill working\b/i.test(message);
+
+  function toastResult(res, fallback) {
+    const message = typeof res?.message === 'string' && res.message ? res.message : fallback;
+    if (isPending(res, message)) notify(message, { kind: 'info', ms: TOAST_ERROR_MS });
+    else notify(message, { kind: 'success' });
+  }
+
   async function postAction(action, item, data) {
     const url = `${base}/${encodeURIComponent(item.id)}/actions/${encodeURIComponent(action.id)}`;
     const res = await api(url, { method: 'POST', body: { data } });
-    const updated = isObj(res?.item) ? res.item : item;
-    upsert(updated);
-    if (editor && editor.itemId() === updated.id) editor.updateItem(updated);
-    notify(res?.message || `${action.label}: done.`, { kind: 'success' });
-    return updated;
+    toastResult(res, `${action.label}: done.`);
+    if (isObj(res?.item)) {
+      upsert(res.item);
+      if (editor && editor.itemId() === res.item.id) editor.updateItem(res.item);
+      return res.item;
+    }
+    if (res && res.item === null) {
+      // The answer carries no item (the action may have removed it): ask the server what the list looks like now.
+      resync(item.id);
+      return null;
+    }
+    upsert(item);
+    return item;
   }
 
-  function busy(btn, on) {
-    if (!btn) return;
-    btn.disabled = on;
-    btn.classList.toggle('is-busy', on);
-    if (on) btn.setAttribute('aria-busy', 'true');
-    else btn.removeAttribute('aria-busy');
+  // Reloads the list; an editor still open on an item that is gone (in a list that is not searched or paged) closes.
+  async function resync(itemId) {
+    await load();
+    const gone = phase === 'ready' && !query && !nextCursor && !items.some((x) => x.id === itemId);
+    if (!destroyed && gone && editor && editor.itemId() === itemId) editor.close();
+  }
+
+  // After a dialog that started from a row: the row may have been redrawn, so make sure focus is not lost.
+  function keepFocus(itemId) {
+    if (itemId && (!document.activeElement || document.activeElement === document.body)) focusRow(itemId);
   }
 
   async function runAction(action, item, trigger, { fromEditor = null } = {}) {
@@ -573,16 +986,18 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         });
         if (!ok) return;
       }
-      busy(trigger, true);
+      busy(trigger, true, { announce });
       try {
         await postAction(action, target, {});
       } catch (err) {
         const info = writeError(err, c, limit);
         if (info.where === 'reload') location.reload();
+        else if (fromEditor) fromEditor.showError(info.message); // the dialog shows the refusal next to its buttons
         else notify(info.message, { kind: 'error', ms: TOAST_ERROR_MS });
         if (info.gone) load();
       } finally {
-        if (trigger?.isConnected) busy(trigger, false);
+        busy(trigger, false);
+        if (!fromEditor) keepFocus(item.id);
       }
       return;
     }
@@ -630,10 +1045,11 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       try {
         form.setErrors([]);
       } catch { /* ignore */ }
-      busy(run, true);
+      busy(run, true, { announce });
       try {
         await postAction(action, item, form.getValues());
         close();
+        keepFocus(item.id);
       } catch (err) {
         const info = writeError(err, c, limit);
         if (info.where === 'reload') {
@@ -648,7 +1064,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         }
         if (info.gone) load();
       } finally {
-        if (run.isConnected) busy(run, false);
+        busy(run, false);
       }
     });
     queueFocus(modal.body.querySelector('input, select, textarea, button, [tabindex]') ?? run);
@@ -656,7 +1072,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
 
   /* ---- delete ---- */
 
-  async function deleteItem(item, trigger) {
+  async function deleteItem(item, trigger, { fromEditor = null } = {}) {
     const title = itemTitle(item);
     const posted = publishable && isPosted(item);
     const ok = await confirmModal({
@@ -667,7 +1083,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       danger: true,
     });
     if (!ok) return false;
-    busy(trigger, true);
+    busy(trigger, true, { announce });
     try {
       await api(`${base}/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
       dropItem(item.id);
@@ -676,6 +1092,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     } catch (err) {
       const info = writeError(err, c, limit);
       if (info.where === 'reload') location.reload();
+      else if (fromEditor) fromEditor.showError(info.message);
       else notify(info.message, { kind: 'error', ms: TOAST_ERROR_MS });
       if (info.gone) {
         dropItem(item.id);
@@ -683,7 +1100,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       }
       return false;
     } finally {
-      if (trigger?.isConnected) busy(trigger, false);
+      busy(trigger, false);
     }
   }
 
@@ -724,7 +1141,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     saveBtn.addEventListener('click', () => save());
     deleteBtn.addEventListener('click', async () => {
       if (!current) return;
-      const gone = await deleteItem(current, deleteBtn);
+      const gone = await deleteItem(current, deleteBtn, { fromEditor: ctl });
       if (gone) finish();
     });
 
@@ -736,13 +1153,23 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       if (mode === 'edit') saveBtn.disabled = saving || !dirty;
     }
 
+    // A collection whose items cannot be edited opens a details view: the facts and the actions, no form.
+    const detailsOnly = () => mode === 'edit' && !c.canEdit;
+
     function infoSection() {
       if (mode !== 'edit' || !current) return null;
       const look = lookups(ctx);
       const rows = [];
-      for (const d of c.readOnly) {
+      const shownFields = detailsOnly()
+        ? [
+          ...c.fields.filter((f) => current[f.field] !== undefined && !c.readOnly.some((r) => r.field === f.field)),
+          ...c.readOnly,
+        ]
+        : c.readOnly;
+      for (const d of shownFields) {
         const v = current[d.field];
-        if (v === null || v === undefined || v === '') continue;
+        if (v === null || v === undefined || v === '' || d.field === c.avatarField) continue;
+        if (c.avatarField && d.field === c.titleField) continue; // the header above shows the name
         let shown;
         if (d.type === 'url') {
           const href = safeHref(String(v));
@@ -750,11 +1177,17 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
           shown = href ? h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, text, uiIcon('external')) : '—';
         } else if (d.field === 'status' && publishable) {
           shown = statusNode(current, look);
+        } else if (d.type === 'text' && !/Id$/.test(d.field)) {
+          shown = String(v).slice(0, 2000); // free text (a reason, a note) in full, wrapped
+        } else if (d.type === 'stringList' && Array.isArray(v) && v.length) {
+          shown = v.slice(0, 50).map(String).join('\n'); // every entry (poll options), one per line
         } else {
           shown = formatValue(d, v, ctx, look);
         }
         const mono = d.type === 'text' && /Id$/.test(d.field);
-        rows.push(h('div', { class: 'cl-info-row' }, h('dt', {}, d.label), h('dd', { class: mono ? 'is-mono' : null }, shown)));
+        const wrap = (d.type === 'text' && !mono) || d.type === 'stringList';
+        rows.push(h('div', { class: `cl-info-row${wrap ? ' is-wide' : ''}` },
+          h('dt', {}, d.label), h('dd', { class: `${mono ? 'is-mono' : ''}${wrap ? ' is-wrap' : ''}`.trim() || null }, shown)));
       }
       const actions = c.actions.filter((a) => actionApplies(a, current)).map((a) => {
         const btn = h('button', {
@@ -766,7 +1199,14 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         return btn;
       });
       if (!rows.length && !actions.length) return null;
+      const picture = typeof current[c.avatarField] === 'string' ? current[c.avatarField] : null;
+      const who = c.avatarField
+        ? h('div', { class: 'cl-info-who' },
+          avatar(itemTitle(current), picture, { size: 'md', round: true }),
+          h('span', { class: 'cl-info-name' }, itemTitle(current)))
+        : null;
       return h('section', { class: 'cl-info', 'aria-label': 'Details' },
+        who,
         rows.length ? h('dl', { class: 'cl-info-list' }, rows) : null,
         actions.length ? h('div', { class: 'cl-info-actions' }, actions) : null);
     }
@@ -783,40 +1223,44 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
       const parts = [];
       infoEl = infoSection();
       if (infoEl) parts.push(infoEl);
-      const lockedFields = mode === 'edit' ? c.fields.filter((f) => c.createOnly.includes(f.field)) : [];
-      const editable = mode === 'edit' ? c.fields.filter((f) => !c.createOnly.includes(f.field)) : c.fields;
+      const detailsView = detailsOnly();
+      const lockedFields = mode === 'edit' && !detailsView ? c.fields.filter((f) => c.createOnly.includes(f.field)) : [];
+      const editable = detailsView ? [] : (mode === 'edit' ? c.fields.filter((f) => !c.createOnly.includes(f.field)) : c.fields);
       const valueOf = (f) => (mode === 'edit' && current && current[f.field] !== undefined
         ? clone(current[f.field])
         : clone(f.default ?? null));
       formSeq += 1;
       const prefix = `${idBase}-e${formSeq}`;
       try {
-        if (lockedFields.length) {
-          const locked = createForm({
-            fields: lockedFields,
-            values: Object.fromEntries(lockedFields.map((f) => [f.field, valueOf(f)])),
+        if (detailsView) {
+          if (!infoEl) parts.push(h('p', { class: 'cl-hint' }, icon('info'), `This ${c.singular} has no details to show.`));
+        } else {
+          if (lockedFields.length) {
+            const locked = createForm({
+              fields: lockedFields,
+              values: Object.fromEntries(lockedFields.map((f) => [f.field, valueOf(f)])),
+              ctx,
+              disabled: true,
+              idPrefix: `${prefix}-locked`,
+            });
+            forms.push({ form: locked, names: new Set(lockedFields.map((f) => f.field)) });
+            parts.push(h('div', { class: 'cl-locked' }, locked.el,
+              h('p', { class: 'cl-hint' }, icon('lock'),
+                `${lockedFields.map((f) => f.label).join(', ')} cannot be changed after creation.`)));
+          }
+          mainForm = createForm({
+            fields: editable,
+            values: Object.fromEntries(editable.map((f) => [f.field, valueOf(f)])),
             ctx,
-            disabled: true,
-            idPrefix: `${prefix}-locked`,
+            idPrefix: prefix,
+            onChange: () => {
+              setStatus(status, '');
+              paintDirty();
+            },
           });
-          forms.push({ form: locked, names: new Set(lockedFields.map((f) => f.field)) });
-          parts.push(h('div', { class: 'cl-locked' }, locked.el,
-            h('p', { class: 'cl-hint' }, icon('lock'),
-              `${lockedFields.map((f) => f.label).join(', ')} cannot be changed after creation.`)));
+          forms.push({ form: mainForm, names: new Set(editable.map((f) => f.field)) });
+          parts.push(h('div', { class: 'cl-form' }, mainForm.el));
         }
-        mainForm = createForm({
-          fields: editable,
-          values: Object.fromEntries(editable.map((f) => [f.field, valueOf(f)])),
-          ctx,
-          disabled: mode === 'edit' && !c.canEdit,
-          idPrefix: prefix,
-          onChange: () => {
-            setStatus(status, '');
-            paintDirty();
-          },
-        });
-        forms.push({ form: mainForm, names: new Set(editable.map((f) => f.field)) });
-        parts.push(h('div', { class: 'cl-form' }, mainForm.el));
       } catch {
         parts.push(h('p', { class: 'cl-dlg-status' }, 'This form could not be displayed. Reload the page and try again.'));
       }
@@ -826,14 +1270,15 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
 
       saveBtn.replaceChildren(icon(mode === 'create' ? 'plus' : 'check'), mode === 'create' ? `Create ${c.singular}` : 'Save changes');
       const canSave = mode === 'create' || c.canEdit;
-      modal.foot.replaceChildren(
+      // (replaceChildren turns a null argument into the text "null": leave the missing buttons out.)
+      modal.foot.replaceChildren(...[
         mode === 'edit' && c.canDelete ? deleteBtn : null,
         h('span', { class: 'cl-foot-spacer' }),
         status,
         dirtyNote,
         cancelBtn,
         canSave && mainForm ? saveBtn : null,
-      );
+      ].filter(Boolean));
       cancelBtn.textContent = canSave ? 'Cancel' : 'Close';
       paintDirty();
     }
@@ -890,16 +1335,19 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         request = { method: 'PATCH', url: `${base}/${encodeURIComponent(current.id)}`, data };
       }
       saving = true;
-      busy(saveBtn, true);
+      busy(saveBtn, true, { announce });
       cancelBtn.disabled = true;
       try {
         const res = await api(request.url, { method: request.method, body: { data: request.data } });
-        const saved = isObj(res?.item) ? res.item : current;
         const created = mode === 'create';
-        upsert(saved, { prepend: created });
-        current = saved;
-        notify(created ? `Created "${itemTitle(saved)}".` : 'Changes saved.', { kind: 'success' });
-        if (created && c.actions.length && !modal.closed) {
+        const saved = isObj(res?.item) ? res.item : (created ? null : current);
+        if (saved) upsert(saved, { prepend: created });
+        else load(); // the bot did the work and returned no item: show what it made
+        current = saved ?? current;
+        toastResult(res, created
+          ? (saved ? `Created "${itemTitle(saved)}".` : `${c.singular[0].toUpperCase()}${c.singular.slice(1)} created.`)
+          : 'Changes saved.');
+        if (created && saved && c.canEdit && c.actions.length && !modal.closed) {
           // Stay open in edit mode, so the new item can be posted or used right away.
           mode = 'edit';
           modal.setTitle(`Edit ${c.singular}`, itemTitle(saved));
@@ -928,7 +1376,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         return null;
       } finally {
         saving = false;
-        if (saveBtn.isConnected) busy(saveBtn, false);
+        busy(saveBtn, false);
         cancelBtn.disabled = false;
         paintDirty();
       }
@@ -951,11 +1399,13 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         modal.setTitle(`${c.canEdit ? 'Edit' : 'View'} ${c.singular}`, itemTitle(next));
         refreshInfo();
       },
+      showError: (message) => setStatus(status, message),
       close: finish,
     };
     editor = ctl;
     build();
-    queueFocus(modal.body.querySelector('input:not([disabled]), textarea:not([disabled]), select:not([disabled])') ?? saveBtn);
+    queueFocus(modal.body.querySelector('input:not([disabled]), textarea:not([disabled]), select:not([disabled])')
+      ?? modal.body.querySelector('.cl-info-actions button') ?? (mainForm ? saveBtn : cancelBtn));
   }
 
   /* ---- start ---- */
@@ -968,6 +1418,8 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     destroy() {
       destroyed = true;
       loadSeq += 1;
+      clearTimeout(searchTimer);
+      closeMenus();
       for (const m of [...modals]) m.close({ restoreFocus: false });
       modals.clear();
       editor = null;

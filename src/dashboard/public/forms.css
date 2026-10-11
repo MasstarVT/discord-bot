@@ -519,6 +519,51 @@
   border-top: 1px solid var(--border);
 }
 
+/* ---------- Member picker (user) ---------- */
+
+.fc-user .fc-chooser-input { flex: 1 1 140px; min-width: 120px; }
+.fc-member {
+  gap: 8px;
+  min-height: 34px;
+  padding: 2px 10px 2px 4px;
+}
+.fc-member > .icon { margin-left: 6px; }
+.fc-member > .fc-chip-x { margin: 0 -6px 0 2px; }
+.fc-user.is-missing .fc-chooser-input { color: var(--text); }
+.fc-user-av.avatar { --size: 24px; }
+.fc-user-text { display: grid; min-width: 0; line-height: 1.25; }
+.fc-user-name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-user-handle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-user-handle.is-id { font-family: var(--font-mono); font-size: 11px; }
+.fc-member.is-missing .fc-user-handle { color: inherit; opacity: 0.85; }
+.fc-user-opt { min-height: 32px; }
+.fc-bot-tag {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
 /* ---------- Emoji ---------- */
 
 .fc-emoji { position: relative; max-width: 640px; min-width: 0; }
@@ -638,6 +683,7 @@ fieldset.fc-field--object > .fc-label { padding: 0 var(--space-2); font-weight: 
   .fc-box,
   .fc-chooser-input,
   .fc-taginput { font-size: 16px; }
+  .fc-member .fc-user-handle:not(.is-id) { display: none; }
   .fc-check-grid { grid-template-columns: 1fr; }
   .fc-datetime { width: 100%; }
   .fc-item-head { flex-wrap: wrap; }
