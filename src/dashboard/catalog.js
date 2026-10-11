@@ -1,6 +1,11 @@
-// What the dashboard shows and may change: module categories, one-line descriptions and the boolean
-// sub-settings of each module. Pure: imports only the module registry.
+// What the dashboard shows and may change: module categories, one-line descriptions, every module's settings groups
+// (src/dashboard/fields.js), its record lists (src/dashboard/collections/index.js) and the placeholder tokens.
+// Pure: imports only registries.
 import { MODULES, MODULE_NAMES } from '../config/modules.js';
+import { PLACEHOLDERS } from '../utils/placeholderParser.js';
+import { GENERAL_GROUPS, MODULE_GROUPS, SETTINGS_FIELDS } from './fields.js';
+import { COLLECTION_LIST, publicCollection } from './collections/index.js';
+import { publicDescriptor } from './schema.js';
 
 /** The dashboard's groups, in display order. Every MODULES key appears in exactly one. */
 export const CATEGORIES = Object.freeze([
@@ -62,51 +67,34 @@ export const DESCRIPTIONS = Object.freeze({
   liverole: 'Gives members a role while they stream. Switching it off here leaves it on current streamers; /liverole disable in Discord removes it too.',
 });
 
-const sub = (field, defaultValue, label, description) => Object.freeze({ field, label, description, default: defaultValue });
-
-/**
- * Boolean GuildSettings columns shown inside each module (defaults match prisma/schema.prisma).
- * Never exposed: levelingEnabled (deprecated), captchaLockdownPrior (bot-managed state).
- */
-export const SUB_TOGGLES = Object.freeze({
-  moderation: Object.freeze([
-    sub('modDmTargets', true, 'DM members when punished', 'Members get a direct message when they are warned, timed out, kicked or banned.'),
-  ]),
-  welcome: Object.freeze([
-    sub('welcomeMessageEnabled', true, 'Welcome message in a channel', 'Posts the welcome message in the welcome channel when someone joins.'),
-    sub('welcomeUseEmbed', true, 'Welcome message as an embed', 'Sends the channel welcome as an embed; off sends plain text.'),
-    sub('welcomeDmEnabled', false, 'Welcome DM', 'Also sends new members a private welcome message.'),
-    sub('welcomeDmCard', false, 'Welcome card in the DM', 'Attaches the welcome card image to the welcome DM.'),
-    sub('goodbyeEnabled', false, 'Goodbye message', 'Posts a message in the goodbye channel when a member leaves.'),
-    sub('goodbyeUseEmbed', false, 'Goodbye message as an embed', 'Sends the goodbye message as an embed; off sends plain text.'),
-  ]),
-  leveling: Object.freeze([
-    sub('voiceXpEnabled', false, 'Voice XP', 'Members also earn XP for time spent in voice channels.'),
-    sub('levelUpUseEmbed', false, 'Level-up message as an embed', 'Sends level-up announcements as an embed; off sends plain text.'),
-    sub('levelRolesStack', true, 'Keep lower reward roles', 'Members keep earlier reward roles when they earn a higher one; off keeps only the highest.'),
-    sub('levelRolesSyncOnDemotion', true, 'Remove rewards on XP loss', 'Members who lose XP also lose the reward roles above their new level.'),
-  ]),
-  customcommands: Object.freeze([
-    sub('autoTriggersEnabled', true, 'Auto-responder triggers', 'Replies automatically when a message matches one of your /trigger keywords.'),
-  ]),
-  birthdays: Object.freeze([
-    sub('birthdayRequireYear', false, 'Require birth year', 'Members must include the year when they save their birthday.'),
-  ]),
-  achievements: Object.freeze([
-    sub('achievementUseEmbed', false, 'Announcement as an embed', 'Sends achievement unlock announcements as an embed; off sends plain text.'),
-  ]),
-  economy: Object.freeze([
-    sub('economyImportGlobal', true, 'Copy the legacy global balance', "New accounts start once with the member's balance from the old global wallet."),
-  ]),
-  search: Object.freeze([
-    sub('urbanNsfwOnly', true, '/urban only in age-restricted channels', 'Urban Dictionary lookups only work in age-restricted channels.'),
-  ]),
+/** The boolean sub-settings of each module (their descriptors live in fields.js). */
+const SUB_TOGGLE_FIELDS = Object.freeze({
+  moderation: ['modDmTargets'],
+  welcome: ['welcomeMessageEnabled', 'welcomeUseEmbed', 'welcomeDmEnabled', 'welcomeDmCard', 'goodbyeEnabled', 'goodbyeUseEmbed'],
+  leveling: ['voiceXpEnabled', 'levelUpUseEmbed', 'levelRolesStack', 'levelRolesSyncOnDemotion'],
+  customcommands: ['autoTriggersEnabled'],
+  birthdays: ['birthdayRequireYear'],
+  achievements: ['achievementUseEmbed'],
+  economy: ['economyImportGlobal'],
+  search: ['urbanNsfwOnly'],
 });
 
-/** Most changes one PATCH may carry. */
+const sub = (field) => {
+  const d = SETTINGS_FIELDS[field];
+  return Object.freeze({ field, label: d.label, description: d.description, default: d.default });
+};
+
+/**
+ * Boolean GuildSettings columns shown as switches inside each module (the `subToggles` of the catalog; they are also
+ * fields of the module's groups). Never exposed: levelingEnabled (deprecated), captchaLockdownPrior (bot-managed state).
+ */
+export const SUB_TOGGLES = Object.freeze(Object.fromEntries(Object.entries(SUB_TOGGLE_FIELDS)
+  .map(([key, fields]) => [key, Object.freeze(fields.map(sub))])));
+
+/** Most changes one toggles-only body may carry (validateChanges; settings PATCHes use fields.js). */
 export const MAX_CHANGES = 60;
 
-/** field -> default value, for every toggle the dashboard exposes. */
+/** field -> default value, for every module flag and sub-toggle. */
 export const TOGGLE_DEFAULTS = Object.freeze(Object.fromEntries([
   ...MODULE_NAMES.map((key) => [MODULES[key].flag, MODULES[key].default === true]),
   ...Object.values(SUB_TOGGLES).flat().map((t) => [t.field, t.default]),
@@ -121,14 +109,30 @@ function readOnlySet(values) {
   return Object.freeze(set);
 }
 
-/** Every GuildSettings field the dashboard may write: each module flag and each sub-toggle. Read-only. */
+/** The boolean switches: each module flag and each sub-toggle (every editable field: SETTINGS_FIELDS). Read-only. */
 export const TOGGLE_FIELDS = readOnlySet(Object.keys(TOGGLE_DEFAULTS));
+
+const GENERAL_DESCRIPTION = 'Time zone, embed colour and the custom command prefix: settings every module uses.';
+
+/** The group of a placeholder token for the browser's token picker. */
+const placeholderGroup = (token) => {
+  const ns = /^\{(user|server|channel)\b/.exec(token)?.[1];
+  return ns ?? 'other';
+};
+
+const publicGroup = (g) => ({
+  id: g.id,
+  title: g.title,
+  ...(g.description ? { description: g.description } : {}),
+  fields: g.fields.map(publicDescriptor),
+});
 
 let catalogCache = null;
 
 /**
- * The GET /api/catalog payload. Built once and deep-frozen.
- * @returns {{ categories: object[], modules: Record<string, object> }}
+ * The GET /api/catalog payload. Built once; JSON-safe and deep-frozen.
+ * @returns {{ categories: object[], modules: Record<string, object>, general: object, collections: Record<string, object>,
+ *   placeholders: { token: string, description: string, group: string }[] }}
  */
 export function buildCatalog() {
   if (catalogCache) return catalogCache;
@@ -136,7 +140,7 @@ export function buildCatalog() {
   for (const category of CATEGORIES) {
     for (const key of category.modules) {
       const mod = MODULES[key];
-      modules[key] = Object.freeze({
+      modules[key] = {
         key,
         label: mod.label,
         emoji: mod.emoji,
@@ -144,15 +148,30 @@ export function buildCatalog() {
         description: DESCRIPTIONS[key],
         configCommand: mod.configCommand,
         default: mod.default === true,
-        subToggles: Object.freeze((SUB_TOGGLES[key] ?? []).map((t) => Object.freeze({ ...t }))),
-      });
+        subToggles: (SUB_TOGGLES[key] ?? []).map((t) => ({ ...t })),
+        groups: MODULE_GROUPS[key].map(publicGroup),
+        collections: COLLECTION_LIST.filter((c) => c.module === key).map((c) => c.key),
+      };
     }
   }
-  catalogCache = Object.freeze({
-    categories: Object.freeze(CATEGORIES.map((c) => Object.freeze({ ...c, modules: Object.freeze([...c.modules]) }))),
-    modules: Object.freeze(modules),
-  });
+  const catalog = {
+    categories: CATEGORIES.map((c) => ({ ...c, modules: [...c.modules] })),
+    modules,
+    general: { title: 'General', description: GENERAL_DESCRIPTION, groups: GENERAL_GROUPS.map(publicGroup) },
+    collections: Object.fromEntries(COLLECTION_LIST.map((c) => [c.key, publicCollection(c)])),
+    placeholders: Object.entries(PLACEHOLDERS).map(([token, description]) => ({ token, description, group: placeholderGroup(token) })),
+  };
+  // Served as is: a JSON round trip drops anything JSON cannot carry, so the payload equals what the browser parses.
+  catalogCache = deepFreeze(JSON.parse(JSON.stringify(catalog)));
   return catalogCache;
+}
+
+function deepFreeze(v) {
+  if (v && typeof v === 'object') {
+    for (const child of Object.values(v)) deepFreeze(child);
+    Object.freeze(v);
+  }
+  return v;
 }
 
 /**
@@ -178,8 +197,9 @@ const isPlainObject = (v) => {
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 /**
- * Validates a PATCH body `{ changes: { [field]: boolean } }`: 1..MAX_CHANGES entries, every key a
- * TOGGLE_FIELDS field, every value strictly boolean, nothing else in the body.
+ * Validates a toggles-only body `{ changes: { [field]: boolean } }`: 1..MAX_CHANGES entries, every key a
+ * TOGGLE_FIELDS field, every value strictly boolean, nothing else in the body. (The settings PATCH accepts every
+ * field: validateSettingsChanges in fields.js.)
  * @param {unknown} body parsed JSON
  * @returns {{ ok: true, changes: Record<string, boolean> } | { ok: false, message: string }}
  */

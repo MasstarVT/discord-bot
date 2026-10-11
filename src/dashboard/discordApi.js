@@ -1,10 +1,12 @@
 // Discord REST access for the dashboard: the logged-in user's profile and guild list (user token, cached),
-// whether the bot is in a guild (bot token, cached), the invite URL and CDN image URLs.
+// whether the bot is in a guild, a guild's channels, roles and emojis, and message writes (bot token), the invite URL
+// and CDN image URLs.
 // Every call has a timeout and every cache is bounded; the only timer is the short unref'd wait before a
 // rate-limited bot-guild page is retried, so nothing keeps the process alive.
 import { createHash } from 'node:crypto';
 import { PermissionFlagsBits, RouteBases, Routes } from 'discord.js';
 import { exchangeCode, revokeToken } from './auth.js';
+import { channelKind } from './schema.js';
 
 export const REQUEST_TIMEOUT_MS = 10_000;
 export const USER_GUILDS_TTL_MS = 60_000;
@@ -14,6 +16,8 @@ export const BOT_GUILDS_TTL_MS = 60_000;
 export const BOT_GUILDS_MAX_PAGES = 100;
 export const BOT_GUILDS_MAX_RETRIES = 3;
 export const BOT_GUILDS_MAX_WAIT_SECONDS = 10;
+export const RESOURCES_TTL_MS = 30_000;
+export const RESOURCES_CACHE_MAX = 500;
 const BOT_MISS_TTL_MS = 5_000;
 const BOT_MISS_MAX = 1_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
@@ -27,18 +31,29 @@ export const INVITE_PERMISSIONS = [
   'ManageNicknames', 'ManageThreads', 'MoveMembers', 'Connect', 'Speak',
 ].reduce((bits, name) => bits | PermissionFlagsBits[name], 0n);
 
-/** A Discord REST failure. `code`: unauthenticated (401), forbidden, not_found, rate_limited or unavailable. */
+/** Permissions a role the bot hands out must not carry (checkAssignableRole in src/utils/interactionHelpers.js). */
+export const DANGEROUS_PERMISSIONS = [
+  'Administrator', 'ManageGuild', 'ManageRoles', 'BanMembers', 'KickMembers',
+  'ManageChannels', 'ManageWebhooks', 'MentionEveryone', 'ModerateMembers', 'ManageMessages',
+].reduce((bits, name) => bits | PermissionFlagsBits[name], 0n);
+
+/**
+ * A Discord REST failure. `code`: unauthenticated (401), forbidden, not_found, rate_limited or unavailable;
+ * `discordCode`: Discord's JSON error code when it sent one (10003 unknown channel, 10008 unknown message,
+ * 50001 missing access, 50013 missing permissions, 50035 invalid form body, ...).
+ */
 export class DiscordApiError extends Error {
   /**
    * @param {string} message
-   * @param {{ status?: number, code: string, retryAfter?: number }} info retryAfter in whole seconds
+   * @param {{ status?: number, code: string, retryAfter?: number, discordCode?: number }} info retryAfter in whole seconds
    */
-  constructor(message, { status = 0, code, retryAfter } = {}) {
+  constructor(message, { status = 0, code, retryAfter, discordCode } = {}) {
     super(message);
     this.name = 'DiscordApiError';
     this.status = status;
     this.code = code;
     if (retryAfter !== undefined) this.retryAfter = retryAfter;
+    if (Number.isInteger(discordCode)) this.discordCode = discordCode;
   }
 }
 
@@ -50,8 +65,7 @@ const codeForStatus = (status) => {
   return 'unavailable';
 };
 
-async function retryAfterSeconds(res) {
-  const body = await res.json().catch(() => null);
+function retryAfterSeconds(res, body) {
   const fromBody = Number(body?.retry_after);
   const fromHeader = Number(res.headers?.get?.('retry-after'));
   const seconds = Number.isFinite(fromBody) && fromBody > 0 ? fromBody : Number.isFinite(fromHeader) && fromHeader > 0 ? fromHeader : 1;
@@ -59,14 +73,24 @@ async function retryAfterSeconds(res) {
 }
 
 /**
- * GET a Discord API route and parse the JSON body.
+ * Calls a Discord API route and parses the JSON answer (null for 204 No Content).
+ * @param {typeof fetch} fetchImpl
+ * @param {string} method
+ * @param {string} route
+ * @param {string} authorization
+ * @param {object} [body] sent as JSON
  * @throws {DiscordApiError}
  */
-async function getJson(fetchImpl, route, authorization) {
+async function requestJson(fetchImpl, method, route, authorization, body) {
+  const where = `${method} ${route.split('?')[0]}`;
+  const headers = { Authorization: authorization, Accept: 'application/json' };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
   let res;
   try {
     res = await fetchImpl(`${RouteBases.api}${route}`, {
-      headers: { Authorization: authorization, Accept: 'application/json' },
+      method,
+      headers,
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       redirect: 'error',
     });
@@ -74,18 +98,27 @@ async function getJson(fetchImpl, route, authorization) {
     throw new DiscordApiError(`Discord request failed: ${err?.name === 'TimeoutError' ? 'timed out' : err?.message ?? err}`, { code: 'unavailable' });
   }
   if (!res.ok) {
-    const retryAfter = res.status === 429 ? await retryAfterSeconds(res) : undefined;
-    if (res.status !== 429) await res.body?.cancel?.().catch(() => {});
-    throw new DiscordApiError(`Discord returned HTTP ${res.status} for ${route.split('?')[0]}`, {
-      status: res.status, code: codeForStatus(res.status), retryAfter,
+    const data = await res.json().catch(() => null);
+    throw new DiscordApiError(`Discord returned HTTP ${res.status} for ${where}`, {
+      status: res.status,
+      code: codeForStatus(res.status),
+      retryAfter: res.status === 429 ? retryAfterSeconds(res, data) : undefined,
+      discordCode: Number.isInteger(data?.code) ? data.code : undefined,
     });
+  }
+  if (res.status === 204) {
+    await res.body?.cancel?.().catch(() => {});
+    return null;
   }
   try {
     return await res.json();
   } catch {
-    throw new DiscordApiError(`Discord returned invalid JSON for ${route.split('?')[0]}`, { status: res.status, code: 'unavailable' });
+    throw new DiscordApiError(`Discord returned invalid JSON for ${where}`, { status: res.status, code: 'unavailable' });
   }
 }
+
+/** GET a Discord API route and parse the JSON body. @throws {DiscordApiError} */
+const getJson = (fetchImpl, route, authorization) => requestJson(fetchImpl, 'GET', route, authorization);
 
 const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms).unref(); });
 
@@ -126,6 +159,138 @@ export function guildIconUrl(guild) {
   return `${RouteBases.cdn}/icons/${guild.id}/${guild.icon}.webp?size=128`;
 }
 
+const compareIds = (a, b) => {
+  const x = BigInt(a);
+  const y = BigInt(b);
+  return x < y ? -1 : x > y ? 1 : 0;
+};
+const nameCollator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+const VOICE_TYPES = new Set([2, 13]);
+const isInt = (v) => Number.isInteger(v);
+
+/**
+ * Channels in Discord's sidebar order: channels without a category first, then each category followed by its
+ * channels; inside a parent, text-like channels before voice-like ones, then by position and id.
+ * @param {object[]} channels mapped channels ({ id, type, kind, parentId, position })
+ */
+export function sortChannels(channels) {
+  const inParent = (a, b) => (Number(VOICE_TYPES.has(a.type)) - Number(VOICE_TYPES.has(b.type)))
+    || a.position - b.position || compareIds(a.id, b.id);
+  const categories = channels.filter((c) => c.kind === 'category').sort((a, b) => a.position - b.position || compareIds(a.id, b.id));
+  const catIds = new Set(categories.map((c) => c.id));
+  const children = new Map(categories.map((c) => [c.id, []]));
+  const top = [];
+  for (const c of channels) {
+    if (c.kind === 'category') continue;
+    if (c.parentId && catIds.has(c.parentId)) children.get(c.parentId).push(c);
+    else top.push(c);
+  }
+  return [...top.sort(inParent), ...categories.flatMap((cat) => [cat, ...children.get(cat.id).sort(inParent)])];
+}
+
+const roleColor = (n) => (isInt(n) && n > 0 && n <= 0xffffff ? `#${n.toString(16).padStart(6, '0').toUpperCase()}` : null);
+
+/** The REST answers of one guild in the shapes of getGuildResources. */
+function mapGuildResources(guildId, botUserId, guild, rawChannels, rawRoles, rawEmojis, botMember) {
+  const roleList = (Array.isArray(rawRoles) ? rawRoles : [])
+    .filter((r) => typeof r?.id === 'string' && SNOWFLAKE_RE.test(r.id));
+  const positionOf = new Map(roleList.map((r) => [r.id, isInt(r.position) ? r.position : 0]));
+  const botRoleIds = Array.isArray(botMember?.roles) ? botMember.roles.filter((id) => positionOf.has(id)) : [];
+  const topRolePosition = Math.max(0, ...botRoleIds.map((id) => positionOf.get(id)));
+  const permsOf = (r) => {
+    try { return BigInt(r?.permissions ?? 0); } catch { return 0n; }
+  };
+  const everyone = roleList.find((r) => r.id === guildId);
+  const botPerms = [everyone, ...botRoleIds.map((id) => roleList.find((r) => r.id === id))]
+    .reduce((bits, r) => bits | permsOf(r), 0n);
+  const has = (flag) => (botPerms & PermissionFlagsBits.Administrator) !== 0n || (botPerms & flag) === flag;
+
+  const roles = roleList.map((r) => {
+    const position = positionOf.get(r.id);
+    const managed = r.managed === true;
+    const isEveryone = r.id === guildId;
+    return {
+      id: r.id,
+      name: typeof r.name === 'string' ? r.name : 'unknown role',
+      color: roleColor(r.color),
+      position,
+      managed,
+      everyone: isEveryone,
+      mentionable: r.mentionable === true,
+      assignable: !managed && !isEveryone && position < topRolePosition,
+      dangerous: (permsOf(r) & DANGEROUS_PERMISSIONS) !== 0n,
+    };
+  }).sort((a, b) => b.position - a.position || compareIds(a.id, b.id));
+
+  const channels = sortChannels((Array.isArray(rawChannels) ? rawChannels : [])
+    .filter((c) => typeof c?.id === 'string' && SNOWFLAKE_RE.test(c.id) && isInt(c.type))
+    .map((c) => ({
+      id: c.id,
+      name: typeof c.name === 'string' ? c.name : 'unknown',
+      type: c.type,
+      kind: channelKind(c.type),
+      parentId: typeof c.parent_id === 'string' && SNOWFLAKE_RE.test(c.parent_id) ? c.parent_id : null,
+      position: isInt(c.position) ? c.position : 0,
+      nsfw: c.nsfw === true,
+    })));
+
+  const emojis = (Array.isArray(rawEmojis) ? rawEmojis : [])
+    .filter((e) => typeof e?.id === 'string' && SNOWFLAKE_RE.test(e.id) && typeof e.name === 'string')
+    .map((e) => ({ id: e.id, name: e.name, animated: e.animated === true }))
+    .sort((a, b) => nameCollator.compare(a.name, b.name) || compareIds(a.id, b.id));
+
+  const count = guild?.approximate_member_count ?? guild?.member_count;
+  return deepFreeze({
+    guild: {
+      id: guildId,
+      name: typeof guild?.name === 'string' ? guild.name : 'Unknown server',
+      icon: typeof guild?.icon === 'string' && IMAGE_HASH_RE.test(guild.icon) ? guild.icon : null,
+      memberCount: isInt(count) ? count : null,
+      ownerId: typeof guild?.owner_id === 'string' && SNOWFLAKE_RE.test(guild.owner_id) ? guild.owner_id : null,
+      premiumTier: isInt(guild?.premium_tier) ? guild.premium_tier : 0,
+      premiumSubscriptionCount: isInt(guild?.premium_subscription_count) ? guild.premium_subscription_count : 0,
+      verificationLevel: isInt(guild?.verification_level) ? guild.verification_level : 0,
+    },
+    channels,
+    roles,
+    emojis,
+    bot: { userId: botUserId, topRolePosition, manageRoles: has(PermissionFlagsBits.ManageRoles) },
+  });
+}
+
+function deepFreeze(v) {
+  if (v && typeof v === 'object') {
+    for (const child of Object.values(v)) deepFreeze(child);
+    Object.freeze(v);
+  }
+  return v;
+}
+
+/** allowed_mentions for a dashboard write: never @everyone/@here; nothing at all unless the caller lists it. */
+function safeMentions(payload) {
+  const am = payload?.allowed_mentions;
+  const parse = Array.isArray(am?.parse) ? am.parse.filter((p) => p === 'users' || p === 'roles') : [];
+  const ids = (list) => (Array.isArray(list) ? list.filter((id) => typeof id === 'string' && SNOWFLAKE_RE.test(id)).slice(0, 100) : undefined);
+  const out = { parse };
+  const users = parse.includes('users') ? undefined : ids(am?.users);
+  const roles = parse.includes('roles') ? undefined : ids(am?.roles);
+  if (users) out.users = users;
+  if (roles) out.roles = roles;
+  if (am?.replied_user === true) out.replied_user = true;
+  return { ...payload, allowed_mentions: out };
+}
+
+function messageRef(data, channelId) {
+  if (typeof data?.id !== 'string' || !SNOWFLAKE_RE.test(data.id)) {
+    throw new DiscordApiError('Discord returned an unexpected message', { code: 'unavailable' });
+  }
+  return { id: data.id, channelId: typeof data.channel_id === 'string' ? data.channel_id : channelId };
+}
+
+const assertSnowflake = (id, what) => {
+  if (typeof id !== 'string' || !SNOWFLAKE_RE.test(id)) throw new DiscordApiError(`Invalid ${what} id`, { code: 'not_found' });
+};
+
 /**
  * Creates the dashboard's Discord client.
  * @param {{ config: { clientId: string, clientSecret: string, botToken: string, redirectUri: string },
@@ -145,6 +310,29 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
   let botInflight = null;
   /** guildId -> expiry of a recent "bot is not there" answer. */
   const botMisses = new Map();
+
+  /** guildId -> { value, at }; insertion order = age. */
+  const resources = new Map();
+  /** guildId -> Promise of a load in flight. */
+  const resourcesInflight = new Map();
+
+  async function loadGuildResources(guildId) {
+    const [guild, channels, botMember] = await Promise.all([
+      getJson(fetchImpl, `${Routes.guild(guildId)}?with_counts=true`, bot),
+      getJson(fetchImpl, Routes.guildChannels(guildId), bot),
+      getJson(fetchImpl, Routes.guildMember(guildId, config.clientId), bot),
+    ]);
+    // GET /guilds/{id} carries the roles and emojis; the list routes are only asked when it does not.
+    const [roles, emojis] = await Promise.all([
+      Array.isArray(guild?.roles) ? guild.roles : getJson(fetchImpl, Routes.guildRoles(guildId), bot),
+      Array.isArray(guild?.emojis) ? guild.emojis : getJson(fetchImpl, Routes.guildEmojis(guildId), bot),
+    ]);
+    const value = mapGuildResources(guildId, config.clientId, guild, channels, roles, emojis, botMember);
+    resources.delete(guildId);
+    resources.set(guildId, { value, at: now() });
+    while (resources.size > RESOURCES_CACHE_MAX) resources.delete(resources.keys().next().value);
+    return value;
+  }
 
   function rememberUserGuilds(userId, entry) {
     userGuilds.delete(userId);
@@ -311,6 +499,98 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
       }
       botGuilds?.add(guildId);
       return true;
+    },
+
+    /**
+     * A guild's channels (Discord sidebar order), roles (highest first), emojis (by name) and the bot's highest role
+     * position, cached for RESOURCES_TTL_MS per guild (at most RESOURCES_CACHE_MAX guilds); concurrent callers share one
+     * load. `fresh` skips the cache (and refreshes it). Role entries also carry `mentionable` and `dangerous` (a permission
+     * the bot never hands out), the bot `manageRoles`, for the role checks of the server and the stores; the guild
+     * carries `ownerId`, `premiumTier`, `premiumSubscriptionCount` and `verificationLevel`.
+     * @param {string} guildId
+     * @param {{ fresh?: boolean }} [opts]
+     * @returns {Promise<Readonly<{ guild: object, channels: object[], roles: object[], emojis: object[],
+     *   bot: { userId: string, topRolePosition: number, manageRoles: boolean } }>>}
+     * @throws {DiscordApiError}
+     */
+    async getGuildResources(guildId, { fresh = false } = {}) {
+      assertSnowflake(guildId, 'server');
+      const hit = resources.get(guildId);
+      if (!fresh && hit && now() - hit.at < RESOURCES_TTL_MS) return hit.value;
+      // A plain caller may share a fresh load in flight; a fresh caller never reuses a plain one.
+      const key = fresh ? `${guildId}:fresh` : guildId;
+      let pending = resourcesInflight.get(key) ?? (fresh ? undefined : resourcesInflight.get(`${guildId}:fresh`));
+      if (!pending) {
+        pending = loadGuildResources(guildId).finally(() => resourcesInflight.delete(key));
+        resourcesInflight.set(key, pending);
+      }
+      return pending;
+    },
+
+    /**
+     * A member's role ids (bot token), or null when the user is not in the guild. Not cached.
+     * @param {string} guildId
+     * @param {string} userId
+     * @returns {Promise<{ roles: string[] } | null>}
+     * @throws {DiscordApiError}
+     */
+    async getMember(guildId, userId) {
+      assertSnowflake(guildId, 'server');
+      assertSnowflake(userId, 'user');
+      try {
+        const m = await getJson(fetchImpl, Routes.guildMember(guildId, userId), bot);
+        return { roles: Array.isArray(m?.roles) ? m.roles.filter((id) => typeof id === 'string' && SNOWFLAKE_RE.test(id)) : [] };
+      } catch (err) {
+        if (err instanceof DiscordApiError && err.code === 'not_found') return null;
+        throw err;
+      }
+    },
+
+    /**
+     * Posts a message as the bot. `payload` is Discord REST message JSON; its allowed_mentions never allow
+     * @everyone/@here and default to no pings at all.
+     * @param {string} channelId
+     * @param {object} payload
+     * @returns {Promise<{ id: string, channelId: string }>}
+     * @throws {DiscordApiError}
+     */
+    async sendMessage(channelId, payload) {
+      assertSnowflake(channelId, 'channel');
+      const data = await requestJson(fetchImpl, 'POST', Routes.channelMessages(channelId), bot, safeMentions(payload));
+      return messageRef(data, channelId);
+    },
+
+    /**
+     * Edits a message the bot posted (same payload rules as sendMessage).
+     * @param {string} channelId
+     * @param {string} messageId
+     * @param {object} payload
+     * @returns {Promise<{ id: string, channelId: string }>}
+     * @throws {DiscordApiError}
+     */
+    async editMessage(channelId, messageId, payload) {
+      assertSnowflake(channelId, 'channel');
+      assertSnowflake(messageId, 'message');
+      const data = await requestJson(fetchImpl, 'PATCH', Routes.channelMessage(channelId, messageId), bot, safeMentions(payload));
+      return messageRef(data, channelId);
+    },
+
+    /**
+     * Deletes a message. A message (or channel) that is already gone counts as deleted.
+     * @param {string} channelId
+     * @param {string} messageId
+     * @returns {Promise<void>}
+     * @throws {DiscordApiError}
+     */
+    async deleteMessage(channelId, messageId) {
+      assertSnowflake(channelId, 'channel');
+      assertSnowflake(messageId, 'message');
+      try {
+        await requestJson(fetchImpl, 'DELETE', Routes.channelMessage(channelId, messageId), bot);
+      } catch (err) {
+        if (err instanceof DiscordApiError && err.code === 'not_found') return;
+        throw err;
+      }
     },
 
     /**

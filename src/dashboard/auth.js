@@ -275,7 +275,7 @@ function isHttpOrigin(value) {
 }
 
 /**
- * CSRF guard for state-changing requests: POST/PATCH only, a JSON content type, `X-Dashboard: 1`,
+ * CSRF guard for state-changing requests: POST/PATCH/DELETE only, a JSON content type, `X-Dashboard: 1`,
  * an Origin (when sent) equal to the dashboard's origin, and Sec-Fetch-Site (when sent) same-origin or none.
  * A different but well-formed http(s) Origin gets a message naming the configured origin (never the request's).
  * @param {import('node:http').IncomingMessage} req
@@ -283,7 +283,7 @@ function isHttpOrigin(value) {
  * @returns {{ ok: true } | { ok: false, status: number, error: string, message: string }}
  */
 export function checkWriteRequest(req, config) {
-  if (req.method !== 'POST' && req.method !== 'PATCH') {
+  if (req.method !== 'POST' && req.method !== 'PATCH' && req.method !== 'DELETE') {
     return { ok: false, status: 405, error: 'method_not_allowed', message: 'Method not allowed.' };
   }
   const contentType = String(header(req, 'content-type') ?? '').trim().toLowerCase();

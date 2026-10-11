@@ -1,6 +1,7 @@
-// The dashboard's HTTP server: JSON API, OAuth2 login, static UI files and security headers.
+// The dashboard's HTTP server: JSON API (settings, server resources, per-server records), OAuth2 login, static UI
+// files and security headers.
 // createDashboardServer() returns a node:http Server that is not listening yet; dashboard.js (repo root)
-// starts it. Settings and Discord access are injected through `deps`, so this file never opens Redis
+// starts it. Settings, records and Discord access are injected through `deps`, so this file never opens Redis
 // or Postgres connections itself.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -12,15 +13,23 @@ import {
   buildAuthorizeUrl, canManageGuild, checkWriteRequest, clearCookie, createOAuthState, deriveSessionKey,
   parseCookies, sealSession, serializeCookie, statesMatch, unsealSession,
 } from './auth.js';
-import { buildCatalog, pickToggleValues, validateChanges } from './catalog.js';
+import { buildCatalog } from './catalog.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
+import { FieldError, checkRefs, collectStoredRefs } from './schema.js';
+import { collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
+import { COLLECTIONS, RECORD_ID_RE, validateRecordInput } from './collections/index.js';
+import { RecordError } from './collections/errors.js';
 
 export const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
-export const BODY_LIMIT_BYTES = 16 * 1024;
+/** Body limit of a settings PATCH (a full page of messages and embeds fits). */
+export const BODY_LIMIT_BYTES = 256 * 1024;
+/** Body limit of a record write. */
+export const RECORD_BODY_LIMIT_BYTES = 128 * 1024;
 export const PROPAGATION_SECONDS = 30;
 export const WRITE_RATE_LIMIT = Object.freeze({ max: 20, windowMs: 10_000 });
 const RATE_LIMIT_KEYS_MAX = 10_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
+const ACTION_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
 const LOGIN_FAILED = '/?error=login_failed';
 const STATE_PATH = '/auth';
 
@@ -79,6 +88,38 @@ const formatColor = (n) => (Number.isInteger(n) && n >= 0 && n <= 0xffffff
   ? `#${n.toString(16).padStart(6, '0').toUpperCase()}`
   : null);
 
+/** RecordError code -> the `error` of the answer. */
+const RECORD_ERROR_CODES = Object.freeze({
+  invalid: 'invalid_request', not_found: 'not_found', conflict: 'conflict', limit: 'limit', discord: 'discord_failed',
+  unavailable: 'unavailable',
+});
+
+/** The GET /api/guilds/:id/resources payload: getGuildResources without the server-only parts. */
+function publicResources(res) {
+  return {
+    channels: res.channels.map((c) => ({
+      id: c.id, name: c.name, type: c.type, kind: c.kind, parentId: c.parentId, position: c.position, nsfw: c.nsfw,
+    })),
+    roles: res.roles.map((r) => ({
+      id: r.id, name: r.name, color: r.color, position: r.position, managed: r.managed, everyone: r.everyone,
+      mentionable: r.mentionable, assignable: r.assignable,
+    })),
+    emojis: res.emojis.map((e) => ({ id: e.id, name: e.name, animated: e.animated })),
+    bot: { userId: res.bot.userId, topRolePosition: res.bot.topRolePosition },
+  };
+}
+
+/** getGuildResources in the shape schema.checkRefs takes. */
+function refResources(res) {
+  return {
+    channels: new Map(res.channels.map((c) => [c.id, { kind: c.kind }])),
+    roles: new Map(res.roles.map((r) => [r.id, r])),
+  };
+}
+
+const knowsAll = (refs, map, keep) => refs.channels.every((r) => map.channels.has(r.id) || keep.channels.has(r.id))
+  && refs.roles.every((r) => map.roles.has(r.id) || keep.roles.has(r.id));
+
 function isValidSession(s) {
   return s !== null && typeof s === 'object'
     && typeof s.uid === 'string' && SNOWFLAKE_RE.test(s.uid)
@@ -126,15 +167,18 @@ function readBody(req, limit) {
  * @param {{
  *   discord: ReturnType<import('./discordApi.js').createDiscordApi>,
  *   settings: { readGuildSettings: (guildId: string) => Promise<object>,
- *               writeToggles: (guildId: string, changes: Record<string, boolean>) => Promise<object> },
+ *               writeSettings: (guildId: string, changes: object, ctx: object) => Promise<{ row: object, notices?: string[] }> },
+ *   records?: ReturnType<import('./recordsBridge.js').createRecordsBridge>,
+ *   collections?: { COLLECTIONS: Record<string, object>, validateRecordInput: Function },
  *   now?: () => number,
- * }} opts.deps
+ * }} opts.deps  collections: the record registry (tests inject one; default src/dashboard/collections/index.js)
  * @param {object} [opts.logger] info/warn/error, defaults to the bot's logger
  * @param {string} [opts.publicDir] directory of the static UI files
  * @returns {import('node:http').Server}
  */
 export function createDashboardServer({ config, deps, logger = defaultLogger, publicDir = PUBLIC_DIR }) {
-  const { discord, settings } = deps;
+  const { discord, settings, records = null } = deps;
+  const registry = deps.collections ?? { COLLECTIONS, validateRecordInput };
   const now = deps.now ?? Date.now;
   const sessionKey = deriveSessionKey(config.sessionSecret);
   const secure = config.secureCookies === true;
@@ -348,6 +392,85 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     json(ctx, 200, { guilds: list });
   }
 
+  /** Answers 429 and returns false when the user is over the write rate limit. */
+  function withinWriteLimit(ctx, session) {
+    const limited = limitWrites(session.uid);
+    if (limited.ok) return true;
+    fail(ctx, 429, 'rate_limited', `Too many changes at once. Try again in ${limited.retryAfter} s.`,
+      { retryAfter: limited.retryAfter }, { 'Retry-After': String(limited.retryAfter) });
+    return false;
+  }
+
+  /** Reads and parses a JSON body; on failure answers and returns undefined. */
+  async function readJson(ctx, limit, { optional = false } = {}) {
+    const body = await readBody(ctx.req, limit);
+    if (!body.ok) {
+      if (body.status === 413) fail(ctx, 413, 'invalid_request', 'The request body is too large.', {}, { Connection: 'close' });
+      else fail(ctx, 400, 'invalid_request', 'The request body could not be read.');
+      return undefined;
+    }
+    if (optional && body.text.trim() === '') return {};
+    try {
+      return JSON.parse(body.text);
+    } catch {
+      fail(ctx, 400, 'invalid_request', 'The request body is not valid JSON.');
+      return undefined;
+    }
+  }
+
+  /**
+   * Checks the channel and role ids of a write against the server: they must exist with the right kind (ids the stored
+   * value already held may stay), and a role the bot will give must be one it can give and one the user could give
+   * (checkAssignableRole). Answers and returns false on a problem.
+   * @param {import('./schema.js').Refs} refs
+   * @param {{ channels: Set<string>, roles: Set<string> }} keep
+   */
+  async function verifyRefs(ctx, session, guildId, refs, keep) {
+    if (refs.channels.length === 0 && refs.roles.length === 0) return true;
+    let res;
+    try {
+      res = await discord.getGuildResources(guildId);
+      // An id the cached lists do not know may be a channel or role created in the last few seconds.
+      if (!knowsAll(refs, refResources(res), keep)) res = await discord.getGuildResources(guildId, { fresh: true });
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return false;
+    }
+    const map = refResources(res);
+    try {
+      checkRefs(refs, map, { keepChannels: keep.channels, keepRoles: keep.roles });
+    } catch (err) {
+      if (!(err instanceof FieldError)) throw err;
+      fail(ctx, 400, 'invalid_request', err.message, { path: err.path });
+      return false;
+    }
+
+    const given = refs.roles.filter((r) => r.assignable && !keep.roles.has(r.id) && map.roles.has(r.id));
+    if (given.length === 0) return true;
+    const problem = (ref, message) => {
+      fail(ctx, 400, 'invalid_request', message, { path: ref.path });
+      return false;
+    };
+    if (!res.bot.manageRoles) return problem(given[0], 'The bot needs the Manage Roles permission to give roles.');
+    for (const ref of given) {
+      if (map.roles.get(ref.id).dangerous) {
+        return problem(ref, 'That role has moderator or admin permissions (such as Administrator, Manage Server, Ban or Kick Members). '
+          + 'The bot does not hand those out; pick a role without them.');
+      }
+    }
+    if (res.guild.ownerId === session.uid || (config.botOwnerId && config.botOwnerId === session.uid)) return true;
+    let member;
+    try {
+      member = await discord.getMember(guildId, session.uid);
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return false;
+    }
+    const top = Math.max(0, ...(member?.roles ?? []).map((id) => map.roles.get(id)?.position ?? 0));
+    const above = given.find((ref) => map.roles.get(ref.id).position >= top);
+    return above ? problem(above, 'That role is not below your highest role, so you cannot have the bot give it.') : true;
+  }
+
   async function guildSettings(ctx, guildId) {
     if (!allow(ctx, ['GET', 'PATCH'])) return;
     if (ctx.req.method === 'PATCH') {
@@ -363,20 +486,25 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       fail(ctx, 400, 'invalid_request', 'That is not a valid server id.');
       return;
     }
-    if (ctx.req.method === 'GET') {
-      const guild = await managedGuild(ctx, session, guildId);
-      if (!guild) return;
-      let row;
+    const loadRow = async () => {
       try {
-        row = await settings.readGuildSettings(guildId);
+        return { row: await settings.readGuildSettings(guildId) };
       } catch (err) {
         logger.warn(`Dashboard: could not load settings for guild ${guildId}: ${err?.message ?? err}`);
         fail(ctx, 503, 'settings_unavailable', 'The settings could not be loaded. Try again in a moment.');
-        return;
+        return null;
       }
+    };
+
+    if (ctx.req.method === 'GET') {
+      const guild = await managedGuild(ctx, session, guildId);
+      if (!guild) return;
+      const loaded = await loadRow();
+      if (!loaded) return;
+      const { row } = loaded;
       json(ctx, 200, {
         guild: { id: guild.id, name: guild.name, iconUrl: guildIconUrl(guild) },
-        values: pickToggleValues(row),
+        values: readSettingsValues(row),
         general: {
           timezone: typeof row?.timezone === 'string' ? row.timezone : 'UTC',
           customPrefix: typeof row?.customPrefix === 'string' ? row.customPrefix : '!',
@@ -388,43 +516,193 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     }
 
     // PATCH
-    const limited = limitWrites(session.uid);
-    if (!limited.ok) {
-      fail(ctx, 429, 'rate_limited', `Too many changes at once. Try again in ${limited.retryAfter} s.`,
-        { retryAfter: limited.retryAfter }, { 'Retry-After': String(limited.retryAfter) });
-      return;
-    }
-    const body = await readBody(ctx.req, BODY_LIMIT_BYTES);
-    if (!body.ok) {
-      if (body.status === 413) fail(ctx, 413, 'invalid_request', 'The request body is too large.', {}, { Connection: 'close' });
-      else fail(ctx, 400, 'invalid_request', 'The request body could not be read.');
-      return;
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(body.text);
-    } catch {
-      fail(ctx, 400, 'invalid_request', 'The request body is not valid JSON.');
-      return;
-    }
-    const valid = validateChanges(parsed);
+    if (!withinWriteLimit(ctx, session)) return;
+    const parsed = await readJson(ctx, BODY_LIMIT_BYTES);
+    if (parsed === undefined) return;
+    const valid = validateSettingsChanges(parsed);
     if (!valid.ok) {
-      fail(ctx, 400, 'invalid_request', valid.message);
+      fail(ctx, 400, 'invalid_request', valid.message, valid.path ? { path: valid.path } : {});
       return;
     }
     const guild = await managedGuild(ctx, session, guildId);
     if (!guild) return;
-    let row;
+    if (valid.refs.channels.length > 0 || valid.refs.roles.length > 0) {
+      const loaded = await loadRow();
+      if (!loaded) return;
+      if (!await verifyRefs(ctx, session, guildId, valid.refs, collectSettingsRefs(loaded.row))) return;
+    }
+    let result;
     try {
-      row = await settings.writeToggles(guildId, valid.changes);
+      result = await settings.writeSettings(guildId, valid.changes, { discord, logger, userId: session.uid });
     } catch (err) {
+      if (err instanceof FieldError) {
+        fail(ctx, 400, 'invalid_request', err.message, { path: err.path });
+        return;
+      }
       logger.error(`Dashboard: saving settings for guild ${guildId} failed`, err);
       fail(ctx, 500, 'save_failed', 'The change could not be saved. Try again in a moment.');
       return;
     }
-    const summary = Object.entries(valid.changes).map(([field, value]) => `${field}=${value}`).join(', ');
-    logger.info(`Dashboard: user ${session.uid} changed guild ${guildId}: ${summary}`);
-    json(ctx, 200, { values: pickToggleValues(row) });
+    // Field names only: values can be long or private.
+    logger.info(`Dashboard: user ${session.uid} changed guild ${guildId}: ${Object.keys(valid.changes).join(', ')}`);
+    const notices = Array.isArray(result?.notices) ? result.notices.filter((n) => typeof n === 'string') : [];
+    json(ctx, 200, { values: readSettingsValues(result?.row), ...(notices.length ? { notices } : {}) });
+  }
+
+  async function guildResources(ctx, guildId) {
+    if (!allow(ctx, ['GET'])) return;
+    const session = requireSession(ctx);
+    if (!session) return;
+    if (!SNOWFLAKE_RE.test(guildId)) {
+      fail(ctx, 400, 'invalid_request', 'That is not a valid server id.');
+      return;
+    }
+    const fresh = ctx.query.get('fresh') === '1';
+    // A forced reload costs Discord requests, so it counts towards the per-user limit.
+    if (fresh && !withinWriteLimit(ctx, session)) return;
+    const guild = await managedGuild(ctx, session, guildId);
+    if (!guild) return;
+    let res;
+    try {
+      res = await discord.getGuildResources(guildId, { fresh });
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return;
+    }
+    json(ctx, 200, publicResources(res));
+  }
+
+  /** Answers a failed record operation. */
+  function recordFailure(ctx, err, { write, what }) {
+    if (err instanceof FieldError) return fail(ctx, 400, 'invalid_request', err.message, err.path ? { path: err.path } : {});
+    if (err instanceof RecordError) {
+      if (err.code === 'discord') logger.warn(`Dashboard: ${what}: ${err.message}`);
+      return fail(ctx, err.status, RECORD_ERROR_CODES[err.code], err.message, err.path ? { path: err.path } : {});
+    }
+    if (err instanceof DiscordApiError) {
+      logger.warn(`Dashboard: ${what}: ${err.message}`);
+      return fail(ctx, 502, 'discord_failed', 'Discord refused the change. Check the bot\'s permissions and try again.');
+    }
+    logger.error(`Dashboard: ${what} failed`, err);
+    return write
+      ? fail(ctx, 500, 'save_failed', 'The change could not be saved. Try again in a moment.')
+      : fail(ctx, 503, 'unavailable', 'The list could not be loaded. Try again in a moment.');
+  }
+
+  /** Every channel and role id a stored record holds (checkRefs' keep sets). */
+  function recordRefs(collection, item) {
+    const out = { channels: new Set(), roles: new Set() };
+    for (const desc of [...collection.fields, ...(collection.readOnly ?? [])]) collectStoredRefs(desc, item?.[desc.field], out);
+    return out;
+  }
+
+  async function guildRecords(ctx, guildId, key, itemId, actionId) {
+    const method = ctx.req.method;
+    const methods = actionId !== undefined ? ['POST'] : itemId !== undefined ? ['GET', 'PATCH', 'DELETE'] : ['GET', 'POST'];
+    if (!allow(ctx, methods)) return;
+    const write = method !== 'GET';
+    if (write) {
+      const check = checkWriteRequest(ctx.req, config);
+      if (!check.ok) {
+        fail(ctx, check.status, check.error, check.message);
+        return;
+      }
+    }
+    const session = requireSession(ctx);
+    if (!session) return;
+    if (!SNOWFLAKE_RE.test(guildId)) {
+      fail(ctx, 400, 'invalid_request', 'That is not a valid server id.');
+      return;
+    }
+    const collection = Object.hasOwn(registry.COLLECTIONS, key) ? registry.COLLECTIONS[key] : null;
+    if (!collection) {
+      fail(ctx, 404, 'not_found', 'Unknown list.');
+      return;
+    }
+    if (itemId !== undefined && !RECORD_ID_RE.test(itemId)) {
+      fail(ctx, 400, 'invalid_request', 'That is not a valid item id.');
+      return;
+    }
+    if (actionId !== undefined && (!ACTION_ID_RE.test(actionId) || !(collection.actions ?? []).some((a) => a.id === actionId))) {
+      fail(ctx, 404, 'not_found', 'Unknown action.');
+      return;
+    }
+    if (!records) {
+      fail(ctx, 503, 'unavailable', 'Lists cannot be managed right now.');
+      return;
+    }
+    let data;
+    if (write) {
+      if (!withinWriteLimit(ctx, session)) return;
+      const parsed = await readJson(ctx, RECORD_BODY_LIMIT_BYTES, { optional: method === 'DELETE' });
+      if (parsed === undefined) return;
+      if (method !== 'DELETE') {
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).some((k) => k !== 'data')) {
+          fail(ctx, 400, 'invalid_request', 'The body must be { "data": { ... } }.');
+          return;
+        }
+        data = parsed.data;
+      }
+    }
+    const guild = await managedGuild(ctx, session, guildId);
+    if (!guild) return;
+
+    const label = `${key}${itemId ? `/${itemId}` : ''}${actionId ? `!${actionId}` : ''}`;
+    const what = `${method} ${label} in guild ${guildId}`;
+    // The acting admin, for the stores' placeholders ({user.*}) and ping rules (owner / permissions of the OAuth entry).
+    const user = {
+      userId: session.uid,
+      user: { id: session.uid, username: session.username, globalName: session.globalName, avatar: session.avatar },
+      member: { owner: guild.owner === true, permissions: guild.permissions },
+    };
+    try {
+      if (method === 'GET' && itemId === undefined) {
+        const items = await records.list(guildId, key);
+        json(ctx, 200, { items: Array.isArray(items) ? items : [], limit: collection.limit });
+        return;
+      }
+      if (method === 'GET') {
+        const item = await records.get(guildId, key, itemId);
+        if (!item) fail(ctx, 404, 'not_found', `That ${collection.singular} does not exist any more.`);
+        else json(ctx, 200, { item });
+        return;
+      }
+      if (method === 'DELETE') {
+        await records.remove(guildId, key, itemId, user);
+        logger.info(`Dashboard: user ${session.uid} deleted ${label} in guild ${guildId}`);
+        send(ctx, 204, undefined, { 'Cache-Control': 'no-store' });
+        return;
+      }
+
+      let current = null;
+      if (itemId !== undefined) {
+        current = await records.get(guildId, key, itemId);
+        if (!current) {
+          fail(ctx, 404, 'not_found', `That ${collection.singular} does not exist any more.`);
+          return;
+        }
+      }
+      const mode = actionId !== undefined ? 'action' : itemId !== undefined ? 'update' : 'create';
+      const valid = registry.validateRecordInput(key, data, { mode, actionId, current });
+      const keep = current ? recordRefs(collection, current) : { channels: new Set(), roles: new Set() };
+      if (!await verifyRefs(ctx, session, guildId, valid.refs, keep)) return;
+
+      if (mode === 'create') {
+        const item = await records.create(guildId, key, valid.data, user);
+        logger.info(`Dashboard: user ${session.uid} created ${key}/${item?.id ?? '?'} in guild ${guildId}`);
+        json(ctx, 201, { item });
+      } else if (mode === 'update') {
+        const item = await records.update(guildId, key, itemId, valid.data, user);
+        logger.info(`Dashboard: user ${session.uid} changed ${label} in guild ${guildId}: ${Object.keys(valid.data).join(', ')}`);
+        json(ctx, 200, { item });
+      } else {
+        const result = await records.action(guildId, key, itemId, actionId, valid.data, user);
+        logger.info(`Dashboard: user ${session.uid} ran ${label} in guild ${guildId}`);
+        json(ctx, 200, { item: result?.item ?? null, ...(typeof result?.message === 'string' ? { message: result.message } : {}) });
+      }
+    } catch (err) {
+      recordFailure(ctx, err, { write, what });
+    }
   }
 
   async function staticFile(ctx, [file, type]) {
@@ -454,6 +732,10 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (path === '/api/guilds') return guildList(ctx);
     const settingsMatch = /^\/api\/guilds\/([^/]{1,32})\/settings$/.exec(path);
     if (settingsMatch) return guildSettings(ctx, settingsMatch[1]);
+    const resourcesMatch = /^\/api\/guilds\/([^/]{1,32})\/resources$/.exec(path);
+    if (resourcesMatch) return guildResources(ctx, resourcesMatch[1]);
+    const recordsMatch = /^\/api\/guilds\/([^/]{1,32})\/records\/([^/]{1,64})(?:\/([^/]{1,64})(?:\/actions\/([^/]{1,64}))?)?$/.exec(path);
+    if (recordsMatch) return guildRecords(ctx, recordsMatch[1], recordsMatch[2], recordsMatch[3], recordsMatch[4]);
     const file = STATIC_FILES.get(path);
     if (file) return staticFile(ctx, file);
     return fail(ctx, 404, 'not_found', path.startsWith('/api/') ? 'Unknown API route.' : 'Not found.');
