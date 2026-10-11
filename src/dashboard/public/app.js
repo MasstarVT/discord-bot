@@ -1513,6 +1513,8 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     user: state.user,
     resources,
     placeholders: Array.isArray(catalog.placeholders) ? catalog.placeholders : [],
+    // Previews of embeds without their own colour use the server's embed colour, like the bot does.
+    defaultEmbedColor: Number.isInteger(data?.values?.embedColor) ? data.values.embedColor : null,
     reloadResources: () => reloadResources(),
   };
 

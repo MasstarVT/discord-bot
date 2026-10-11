@@ -60,6 +60,7 @@ export const collection = Object.freeze({
       description: 'Server and channel variables work. Reminders have no member, so {user} variables are posted as written.',
       requireContent: true,
       placeholders: [],
+      placeholderGroups: ['server', 'channel', 'other'],
       default: DEFAULT_REMINDER_TEMPLATE,
     },
     { field: 'mode', type: 'enum', label: 'Repeat', options: MODE_OPTIONS, default: 'TIME_OF_DAY' },

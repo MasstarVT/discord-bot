@@ -878,7 +878,12 @@ function placeholderGroups(desc, st) {
     else if (isObject(e)) add('field', e.token, e.description);
   }
   const builtins = Array.isArray(st.ctx?.placeholders) ? st.ctx.placeholders : [];
-  for (const p of builtins) add(PLACEHOLDER_GROUPS.some(([k]) => k === p.group) ? p.group : 'other', p.token, p.description);
+  // `placeholderGroups` limits the built-ins, e.g. ['server', 'channel', 'other'] for a message sent without a member.
+  const only = Array.isArray(desc.placeholderGroups) ? new Set(desc.placeholderGroups) : null;
+  for (const p of builtins) {
+    const group = PLACEHOLDER_GROUPS.some(([k]) => k === p.group) ? p.group : 'other';
+    if (!only || only.has(group)) add(group, p.token, p.description);
+  }
   return [...out.values()].filter((g) => g.items.length);
 }
 

@@ -68,6 +68,7 @@ export const collection = Object.freeze({
       maxLength: FEED_MESSAGE_MAX,
       nullable: true,
       placeholders: [...FEED_PLACEHOLDERS],
+      placeholderGroups: ['server', 'channel', 'other'],
       default: null,
     },
     { field: 'includeReposts', type: 'boolean', label: 'Include reposts', description: 'Bluesky only: also post reposts.', default: false },
