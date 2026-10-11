@@ -23,6 +23,10 @@ npm run db:seed      # Insert a minimal GuildSettings row for local testing (TES
 npm run pm2:start    # Launch under PM2 (production)
 npm run pm2:reload   # Zero-downtime reload
 npm run pm2:logs     # Tail PM2 logs
+
+npm run dashboard     # Start the web dashboard (dashboard.js, its own process)
+npm run dashboard:dev # Same, with nodemon (auto-restart on file changes)
+npm run pm2:dashboard # Launch the dashboard under PM2 (app discord-bot-dashboard)
 ```
 
 ## Environment
@@ -38,6 +42,8 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 | `HTTP_CONTACT` | `n/a` | contact in the User-Agent of every `safeFetch` request |
 | `REDDIT_USER_AGENT`, `BSKY_APPVIEW_URL` | `DEFAULT_USER_AGENT`, `https://public.api.bsky.app` | Reddit feed User-Agent; Bluesky AppView |
 | `TEST_GUILD_ID`, `TEST_DATABASE_URL` | 0, none | `db:seed` guild; opt-in DB tests |
+| `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET` | none (required by `dashboard.js`) | web dashboard: OAuth2 client secret; session cookie key (at least 32 characters) |
+| `DASHBOARD_URL`, `DASHBOARD_PORT`, `DASHBOARD_HOST` | `http://localhost:8080`, 8080, `0.0.0.0` | web dashboard: public origin (https: Secure cookies, HSTS); listen port and interface |
 
 ## Architecture
 
@@ -53,7 +59,7 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 - The ShardingManager uses `respawn: false`. A dead shard, or one disconnected for good (non-fatal unrecoverable close such as 4011), exits the process; Docker's restart policy and the brake handle retries.
 - Close codes 4004/4013/4014 are fatal (`src/utils/fatalGateway.js`): the shard reports them via `client.shard.send()` and the main thread parks instead of retrying.
 - Because a dead shard restarts the whole bot, per-event failures must not kill the worker: `eventLoader.js` catches and logs errors from every event handler, and `bot.js` logs client `error` events and unhandled rejections in the shard (e.g. from collector callbacks). Uncaught synchronous exceptions still end the shard.
-- `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`: stops the scheduler, flushes the audit-log queue, `client.destroy()`, closes Prisma and Redis), then the process exits within 25 s. Don't add signal handlers elsewhere.
+- `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`: stops the scheduler, flushes the audit-log queue, `client.destroy()`, closes Prisma and Redis), then the process exits within 25 s. The web dashboard's `dashboard.js` is the one other entry point with its own handlers (see Web dashboard below). Don't add signal handlers elsewhere.
 
 **Auto-deploy:** `autoDeployCommands()` in `src/handlers/commandLoader.js` hashes `CLIENT_ID`, `DEPLOY_GUILD_ID` and all command payloads and compares against `DEPLOY_HASH_FILE`. It only calls Discord when the hash changes; adding a command file and restarting is all that is needed. `buildCommandPayload` registers commands for servers only (`contexts: [0]`, `integration_types: [0]`) unless the command exports `allowInDMs = true`.
 
@@ -233,6 +239,22 @@ Every model with a `guildId` has an FK to `GuildSettings(guildId)` with `onDelet
 - **Moderation commands** `deferReply({ ephemeral: true })`, then on success `deleteReply()` + public `followUp()` (subject to `modVisibility`); errors `editReply` (`/purge` always replies privately). **Admin config commands** use a public `deferReply()`; exceptions: `/settings` validation errors and `/automod words|patterns` replies are ephemeral.
 - **Timers and collectors catch everything** (a stray rejection must not kill the shard). `logger` only, never `console`. Check bot permissions before Discord writes and answer friendly. REST codes 10003, 10008, 10011, 50001, 50013 (unknown channel/message/role, missing access/permission) mean "gone": degrade and clean up, do not retry.
 
+### Web dashboard (`dashboard.js`)
+
+A separate process: `npm run dashboard` (`dashboard:dev` with nodemon, `pm2:dashboard` under PM2). It shares Postgres and Redis with the bot and adds no dependencies. Its SIGTERM/SIGINT handlers close the server, Prisma and Redis, then exit within 10 s.
+- `dashboard.js` (repo root): entry point. `loadDashboardConfig()` runs once; missing or invalid keys park it (`createParkedServer`: `/healthz` 200, everything else 503 naming the keys, never values). `settingsBridge.js` is imported only after the config is valid, because importing it opens Redis.
+- `src/dashboard/config.js`: parses every env key the dashboard reads (`DASHBOARD_*`, `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET`, plus `CLIENT_ID`, `DISCORD_TOKEN`, `DATABASE_URL`, `REDIS_URL`, `BOT_OWNER_ID`). Pure: nothing is read at import.
+- `src/dashboard/server.js`: `createDashboardServer` (router, static files from `src/dashboard/public/`, security headers with a strict CSP). Routes: `/healthz`, `/auth/login|callback|logout`, `/api/me`, `/api/catalog`, `/api/guilds`, `/api/guilds/:id/settings` (GET, PATCH).
+- `src/dashboard/auth.js`: Discord OAuth2 (`identify guilds`), AES-256-GCM sealed session cookie (7 d max, no refresh token), OAuth `state` cookie, CSRF guard (`X-Dashboard: 1`, JSON content type, same-origin `Origin`), `canManageGuild`.
+- `src/dashboard/discordApi.js`: Discord REST: the current user, the user's guilds and the bot's guild ids (both lists cached 60 s), invite URL.
+- `src/dashboard/catalog.js`: categories, module descriptions, boolean sub-toggles, `TOGGLE_FIELDS`.
+- `src/dashboard/settingsBridge.js`: the dashboard's only path to `GuildSettings`, through `settingsService` (reads `fresh: true`, writes `updateSettings`). Turning `voiceXpEnabled` or `xpEnabled` off also drops open voice sessions (`voice:start:{g}:*`), as `/levelconfig` does.
+- `src/dashboard/public/` (`index.html`, `styles.css`, `app.js`, `favicon.svg`): front end, no build step.
+- Access: `canManageGuild` allows the guild owner, Administrator or Manage Server holders (from the OAuth guild list) and `BOT_OWNER_ID`. Rechecked on every request against a guild list cached at most 60 s. Without the bot in the guild, the dashboard offers an invite link instead.
+- Write whitelist: the catalog. `validateChanges` accepts only `TOGGLE_FIELDS` (module flags and sub-toggles). A new boolean setting needs a catalog entry; a new module needs a category. `test/dashboard.test.js` checks that every `MODULES` key sits in exactly one category and that each module flag and sub-toggle is a Boolean `GuildSettings` column whose `@default` matches.
+- Propagation: the bot memoises settings for 30 s per shard, so a dashboard change reaches it within about 30 s; no restart.
+- Front-end rules: no inline scripts or styles (CSP `style-src 'self'`; `index.html` loads `app.js` as a module) and no `innerHTML` in `src/dashboard/public/`. `app.js` starts only when `document` exists, so it stays import-safe in Node (`test/smoke.test.js` imports every source file, and the repo-rule scans cover it too); it must not use `console`, `setInterval` or `process.env`.
+
 ## Feature modules
 
 One subsection per module in `MODULE_NAMES` order, then the core commands. Hooks are written `event:hookId`; Redis keys are in the table above.
@@ -392,6 +414,6 @@ One subsection per module in `MODULE_NAMES` order, then the core commands. Hooks
 
 ## Testing
 
-`npm test` runs every `test/*.test.js` with `node --test`, offline (fake `DATABASE_URL`/`REDIS_URL`, outbound network blocked); run one with `node --test test/<file>.test.js`. `test/smoke.test.js`, `test/registry.test.js`, `test/utils.test.js` and `test/foundation.test.js` cover loading, payload limits, registries, router, plugin loader and shared services; `test/<feature>.test.js` one feature each.
+`npm test` runs every `test/*.test.js` with `node --test`, offline (fake `DATABASE_URL`/`REDIS_URL`, outbound network blocked); run one with `node --test test/<file>.test.js`. `test/smoke.test.js`, `test/registry.test.js`, `test/utils.test.js` and `test/foundation.test.js` cover loading, payload limits, registries, router, plugin loader and shared services; `test/<feature>.test.js` one feature each (`test/dashboard.test.js` covers the web dashboard offline: catalog, config, sessions, access and CSRF rules, and the HTTP API against fake Discord and settings dependencies).
 - `test/integration.test.js`: the 76-command table (module, gating, level), hook/customId/job registries against the real plugins, repo rules (no `console`/`setInterval`, thin events, single settings gateway, env vars documented) and a runtime install of all plugins. **It fails when a command, module, job, plugin or env var is added without updating `README.md`, this file and `.env.example`**; backticked `src/...`/`test/...` paths in the two docs must exist.
 - **Database tests (opt-in):** set `TEST_DATABASE_URL` to a migrated throw-away Postgres (CI: its service container after `prisma migrate deploy`) and run `node --test --test-concurrency=1 "test/*.test.js"`; per-feature DB cases are otherwise skipped. `test/db.test.js` runs every exported `RAW_SQL` statement in a rolled-back transaction; its samples use guild `'0'`, so upsert that `GuildSettings` row before INSERT builders (foreign key). Use guild ids unique to your file and delete what you create.

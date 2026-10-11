@@ -4,7 +4,7 @@ A self-hosted, MEE6-style multi-purpose Discord bot built on discord.js, with Po
 
 ## Features
 
-Each bullet is a module you can turn on or off with `/module`; the MEE6 plugin it mirrors is in brackets. Modules marked *off by default* are switched on with `/module enable <name>`; their setup commands work while the module is off, so you can configure first.
+Each bullet except the web dashboard is a module you can turn on or off with `/module`; the MEE6 plugin it mirrors is in brackets. Modules marked *off by default* are switched on with `/module enable <name>`; their setup commands work while the module is off, so you can configure first.
 
 - 🔨 **Moderation** (MEE6: Moderator) — `/ban` (also temporary), `/kick`, `/softban`, `/timeout` (over 28 days uses a mute role), `/unmute`, `/unban`, `/warn` with automatic escalation, `/history view|clear`, `/case`, `/purge` with filters, `/slowmode`; immune and moderator roles, a case log channel and public or private replies via `/modconfig`. Temporary bans expire through a durable scheduler.
 - 🤖 **Auto-Moderation** (MEE6: Moderator › Auto-moderation) — *off by default.* Ten rules (bad words and regexes, repeated text, invites, links, caps, emojis, spoilers, mentions, zalgo, spam rate), each with its own action (delete, warn, timeout, kick, ban) and role/channel scope; staff are exempt.
@@ -32,6 +32,7 @@ Each bullet is a module you can turn on or off with `/module`; the MEE6 plugin i
 - 📰 **Social Feeds** (MEE6: RSS / YouTube / Reddit / Bluesky / Podcast alerts) — post new RSS, YouTube channel, Reddit, Bluesky and podcast items to a channel, keyless.
 - 🔎 **Search Anything** (MEE6: Search Anything) — `/anime`, `/manga` (AniList), `/pokemon`, `/urban`, keyless.
 - 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API).
+- 🖥️ **Web Dashboard** — log in with Discord and switch each server's modules and their options on or off in a browser; a separate process, see [Web dashboard](#web-dashboard).
 
 **Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`.
 
@@ -155,6 +156,8 @@ Required: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Everything 
 | `REDDIT_USER_AGENT` | standard User-Agent | User-Agent for Reddit feeds |
 | `BSKY_APPVIEW_URL` | `https://public.api.bsky.app` | Bluesky AppView |
 | `TEST_DATABASE_URL` | none | opt-in database tests |
+| `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET` | none | web dashboard only, required there (below): OAuth2 client secret; session cookie key of at least 32 characters |
+| `DASHBOARD_URL`, `DASHBOARD_PORT`, `DASHBOARD_HOST` | `http://localhost:8080`, 8080, `0.0.0.0` | web dashboard only (below): public URL (https makes cookies Secure), listen port and interface |
 
 ## Running in Docker / homelab
 
@@ -184,6 +187,47 @@ volumes:
 - **Parked:** close codes 4004 (bad token), 4013 and 4014 (invalid or disallowed intents), and missing required environment variables, are never retried. The process stays up, logs what to fix, and `/readyz` returns 503 `parked:<code>`. Fix the cause, then restart the container.
 - **Slash commands:** the command hash lives at `DEPLOY_HASH_FILE` (`/app/state/.deploy-hash` in the image), so restarts don't re-register unchanged commands. It also covers `CLIENT_ID` and `DEPLOY_GUILD_ID`, so switching between a guild and global registration re-registers on the next start.
 - **Shutdown:** `SIGTERM` or `SIGINT` stops the job scheduler, flushes queued audit-log messages, disconnects every shard from Discord and exits within 25 s.
+
+## Web dashboard
+
+Server admins can log in with Discord and switch each module on or off, and change the options inside it, for every server they manage. The dashboard is a separate process, `dashboard.js`, that runs next to the bot. It uses the bot's PostgreSQL database and Redis, and adds no dependencies.
+
+**Setup**
+
+1. In the [Discord Developer Portal](https://discord.com/developers/applications), open your application, go to **OAuth2**, copy the **Client Secret**, and add `<DASHBOARD_URL>/auth/callback` under **Redirects** (for example `http://localhost:8080/auth/callback`). The redirect must match `DASHBOARD_URL` exactly.
+2. Add these keys to the bot's env file (see [Configuration](#configuration)):
+   - `DISCORD_CLIENT_SECRET`: the client secret from step 1.
+   - `DASHBOARD_SESSION_SECRET`: at least 32 characters. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Changing it logs everyone out.
+   - `DASHBOARD_URL`: the public address people open in the browser, origin only with no path. Default `http://localhost:8080`.
+   - `DASHBOARD_PORT` (default `8080`) and `DASHBOARD_HOST` (default `0.0.0.0`) are optional.
+
+   The dashboard also uses the bot's `CLIENT_ID`, `DISCORD_TOKEN`, `DATABASE_URL`, `REDIS_URL` and `BOT_OWNER_ID`. Its database must already be migrated (`npx prisma migrate deploy`; the Docker image does this when the bot starts). If a required key is missing or invalid, the dashboard does not start: `/healthz` still answers 200, and every other page answers 503 and names the keys to fix (names only).
+3. Start it:
+   - **npm:** `npm run dashboard`, or `npm run dashboard:dev` to restart on file changes.
+   - **PM2:** `npm run pm2:dashboard` starts the `discord-bot-dashboard` app; `npm run pm2:start` still starts only the bot. Logs go to `./logs/pm2-dashboard-out.log` and `./logs/pm2-dashboard-error.log`. Reload with `pm2 reload discord-bot-dashboard`.
+   - **Docker:** the same image runs the dashboard with `node dashboard.js`. Add this service under `services:`, next to `discord-bot`, and point it at the same env file as the bot (with the dashboard keys added to it):
+
+     ```yaml
+       dashboard:
+         image: ghcr.io/masstarvt/discord-bot:latest
+         command: ["node", "dashboard.js"]
+         env_file: discord-bot.env
+         environment:
+           HEALTH_PORT: "8080"
+         ports:
+           - "8080:8080"
+         depends_on:
+           - discord-bot
+         restart: unless-stopped
+     ```
+
+     Setting `HEALTH_PORT` to `8080` makes the image's `HEALTHCHECK` probe the dashboard's `/healthz`, and the port is published on 8080. The dashboard container runs no migrations; `depends_on` starts it after the bot container, which applies them.
+
+- **Who can log in:** any Discord user can sign in, but a server is shown only if they are in it and either own it, have Administrator or Manage Server (the bot's Admin level), or are the `BOT_OWNER_ID` user. Discord's server list is checked on every request and cached for up to a minute. A login lasts at most 7 days, then the user signs in again. If the bot is not in a server, the dashboard offers an invite link instead of its settings.
+- **What you can change:** the 26 module switches that `/module` toggles, and 16 on/off options inside modules, such as the welcome DM, the goodbye message, voice XP, level-up embeds and the birthday year requirement. Timezone, custom-command prefix and embed colour are shown read-only; change them with `/settings`. Everything else is still set with the slash commands (see [Commands](#commands)).
+- **Propagation:** the bot keeps each server's settings in memory for 30 seconds, so a change reaches it within about 30 seconds. No restart is needed.
+- **HTTPS:** run the dashboard behind an HTTPS reverse proxy in production, and set `DASHBOARD_URL` to the public `https://` address. That makes the login cookie `Secure` and turns on HSTS. If the proxy runs on the same machine (not in Docker), set `DASHBOARD_HOST=127.0.0.1` so the port is reachable only through the proxy.
+- **Secrets:** keep `DASHBOARD_SESSION_SECRET` and `DISCORD_CLIENT_SECRET` out of version control. Pages are served with a strict Content-Security-Policy, and cross-site writes are refused.
 
 ## Translation backend
 

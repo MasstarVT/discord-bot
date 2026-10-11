@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Bot Dashboard</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div id="app" aria-busy="true">
+    <!-- Static first paint; app.js replaces it as soon as /api/me answers. -->
+    <div class="app boot" aria-hidden="true">
+      <div class="topbar">
+        <span class="skeleton boot-logo"></span>
+        <span class="skeleton boot-title"></span>
+        <span class="topbar-spacer"></span>
+        <span class="skeleton boot-pill"></span>
+      </div>
+      <div class="boot-body">
+        <span class="skeleton boot-heading"></span>
+        <div class="boot-grid">
+          <span class="skeleton boot-card"></span>
+          <span class="skeleton boot-card"></span>
+          <span class="skeleton boot-card"></span>
+        </div>
+      </div>
+    </div>
+    <noscript>
+      <p class="noscript">This dashboard needs JavaScript. Please enable it and reload the page.</p>
+    </noscript>
+  </div>
+</body>
+</html>
