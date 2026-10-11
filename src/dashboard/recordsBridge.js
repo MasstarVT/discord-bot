@@ -59,7 +59,7 @@ export function createRecordsBridge({ discord, logger, tasks = createTaskRunner(
   });
   return {
     // Reads get a context too (no actor): stores show member names and avatars through ctx.discord.
-    list: (guildId, key, opts = {}) => storeFor(key).list(guildId, opts, { guildId, discord, logger }),
+    list: (guildId, key, opts = {}) => storeFor(key).list(guildId, { ...opts, discord, logger }, { guildId, discord, logger }),
     get: (guildId, key, id) => storeFor(key).get(guildId, id, { guildId, discord, logger }),
     create: (guildId, key, data, actor) => storeFor(key).create(guildId, data, ctx(guildId, actor)),
     update: (guildId, key, id, data, actor) => storeFor(key).update(guildId, id, data, ctx(guildId, actor)),
