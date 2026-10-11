@@ -29,7 +29,13 @@ const STATIC_FILES = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+  ['/lib.js', ['lib.js', 'text/javascript; charset=utf-8']],
+  ['/forms.js', ['forms.js', 'text/javascript; charset=utf-8']],
+  ['/collections.js', ['collections.js', 'text/javascript; charset=utf-8']],
+  ['/embed-editor.js', ['embed-editor.js', 'text/javascript; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
+  ['/forms.css', ['forms.css', 'text/css; charset=utf-8']],
+  ['/collections.css', ['collections.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
 ]);
 
