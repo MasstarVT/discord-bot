@@ -22,7 +22,7 @@ const skipDb = DB ? false : 'TEST_DATABASE_URL not set';
 const { LIMITS } = await import('../src/config/constants.js');
 const { MODULES } = await import('../src/config/modules.js');
 const { FieldError } = await import('../src/dashboard/schema.js');
-const { RecordError } = await import('../src/dashboard/collections/errors.js');
+const { RecordError, unwrapResult } = await import('../src/dashboard/collections/errors.js');
 const registry = await import('../src/dashboard/collections/index.js');
 const { COLLECTIONS, lintCollections, publicCollection, validateRecordInput } = registry;
 const rrd = await import('../src/dashboard/collections/reactionRoles.js');
@@ -943,8 +943,14 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
 
   before(async () => {
     settingsSvc = await import('../src/services/settingsService.js');
-    rrStore = (await import('../src/dashboard/collections/reactionRoles.store.js')).store;
-    tkStore = (await import('../src/dashboard/collections/ticketPanels.store.js')).store;
+    // Creates and updates may carry the bot's note (withMessage); these tests look at the item.
+    const items = (store) => ({
+      ...store,
+      create: async (...args) => unwrapResult(await store.create(...args)).item,
+      update: async (...args) => unwrapResult(await store.update(...args)).item,
+    });
+    rrStore = items((await import('../src/dashboard/collections/reactionRoles.store.js')).store);
+    tkStore = items((await import('../src/dashboard/collections/ticketPanels.store.js')).store);
   });
 
   test('every store has the full interface and its raw statements run', async () => {

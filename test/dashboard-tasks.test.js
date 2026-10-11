@@ -13,7 +13,7 @@ const shared = await import('../src/services/dashboardTasks/shared.js');
 const { TASKS, executeTask } = await import('../src/services/dashboardTasks/index.js');
 const { PermanentJobError } = await import('../src/services/scheduler.js');
 const { createTaskRunner } = await import('../src/dashboard/tasks.js');
-const { JOB_TYPES } = await import('../src/config/jobTypes.js');
+const { JOB_TYPES, INTERACTIVE_JOB_TYPES } = await import('../src/config/jobTypes.js');
 const { plugin } = await import('../src/plugins/dashboard-tasks.js');
 const { default: redis } = await import('../src/services/redis.js');
 const { default: prisma } = await import('../src/database/client.js');
@@ -31,7 +31,9 @@ const job = (kind, payload = {}) => ({ id: 'job1', guildId: GUILD, payload: { ki
 
 describe('bot side', () => {
   test('the job type and plugin are registered', () => {
-    assert.deepEqual(JOB_TYPES['dashboard.task'], { owner: 'dashboard-tasks', recurring: false, dedupe: 'dashboard.task:{taskId}' });
+    assert.deepEqual(JOB_TYPES['dashboard.task'],
+      { owner: 'dashboard-tasks', recurring: false, dedupe: 'dashboard.task:{taskId}', interactive: true });
+    assert.deepEqual([...INTERACTIVE_JOB_TYPES], ['dashboard.task'], 'claimed by their own fast loop');
     assert.equal(plugin.id, 'dashboard-tasks');
     assert.equal(plugin.module, null);
     assert.deepEqual(plugin.jobs.map((j) => j.type), [shared.TASK_JOB_TYPE]);

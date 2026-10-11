@@ -14,13 +14,16 @@ export const JOB_TYPES = Object.freeze({
   "birthday.tick": Object.freeze({ owner: "birthdays", recurring: true, dedupe: "birthday.tick:{guildId}" }),
   "feed.poll": Object.freeze({ owner: "feeds", recurring: true, dedupe: "feed.poll:{feedId}" }),
   "levels.voiceSweep": Object.freeze({ owner: "levels", recurring: true, dedupe: "levels.voiceSweep:{guildId}" }),
-  "dashboard.task": Object.freeze({ owner: "dashboard-tasks", recurring: false, dedupe: "dashboard.task:{taskId}" }),
+  "dashboard.task": Object.freeze({ owner: "dashboard-tasks", recurring: false, dedupe: "dashboard.task:{taskId}", interactive: true }),
 });
 
 /** @returns {boolean} true when `type` is a registered job type */
 export function isJobType(type) {
   return typeof type === 'string' && Object.hasOwn(JOB_TYPES, type);
 }
+
+// Jobs someone is waiting for (the dashboard's actions): claimed by their own fast loop, and failed rather than run late.
+export const INTERACTIVE_JOB_TYPES = Object.freeze(Object.keys(JOB_TYPES).filter((t) => JOB_TYPES[t].interactive === true));
 
 // Used by guildDelete.js to cancel a departed guild's recurring jobs.
 export const RECURRING_JOB_TYPES = Object.freeze(Object.keys(JOB_TYPES).filter((t) => JOB_TYPES[t].recurring));

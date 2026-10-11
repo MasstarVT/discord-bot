@@ -13,7 +13,7 @@ import prisma from '../../database/client.js';
 import { LIMITS } from '../../config/constants.js';
 import { ensureGuildSettings } from '../../services/settingsService.js';
 import * as rr from '../../services/reactionRoleService.js';
-import { RecordError, taskOutcome } from './errors.js';
+import { RecordError, taskOutcome, withMessage } from './errors.js';
 import { isDiscordApiError } from './embeds.js';
 import {
   DEFAULT_TITLE, UNPOSTED_MESSAGE_ID, collection, diffPanelItems, emojiKey, normalizeItems, panelItem,
@@ -152,11 +152,12 @@ export const store = Object.freeze({
     await rr.invalidatePanelIndex(guildId);
     ctx.logger?.info?.(`Dashboard reaction role panel ${id} created in ${guildId} by ${ctx.userId}`);
 
-    await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'post' }, {
+    const posted = await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'post' }, {
       lead: 'The panel was saved, but it was not posted:',
       hint: 'Fix that, close this window, then use "Repost" on the panel in the list.',
     });
-    return getItem(guildId, id);
+    // The bot's note (where it posted, any reaction it could not add) replaces the plain "Created" toast.
+    return withMessage(await getItem(guildId, id), posted?.message);
   },
 
   async update(guildId, id, data, ctx) {
@@ -212,14 +213,15 @@ export const store = Object.freeze({
     // mode or limit also reaches the bot's panel index through the task, so it applies at once.
     const messageChanged = ['title', 'description', 'messageContent', 'plainText', 'type', 'maxRoles', 'placeholder'].some((k) => k in patch);
     const unposted = row.messageId === UNPOSTED_MESSAGE_ID;
+    let synced = null;
     if (diff?.changed || (!row.attached && messageChanged) || 'type' in patch || 'maxRoles' in patch || unposted) {
-      await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'sync', removedEmojis: diff?.removedEmojis ?? [] }, {
+      synced = await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'sync', removedEmojis: diff?.removedEmojis ?? [] }, {
         lead: 'Your changes were saved, but the posted panel was not fully updated:',
         hint: 'Use "Repost" to post the panel again.',
       });
     }
     ctx.logger?.info?.(`Dashboard reaction role panel ${id} updated in ${guildId} by ${ctx.userId}`);
-    return getItem(guildId, id);
+    return withMessage(await getItem(guildId, id), synced?.message);
   },
 
   async remove(guildId, id, ctx) {

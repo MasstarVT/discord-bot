@@ -807,3 +807,19 @@ test('db: presets, and the per-server cap', { skip: skipDb }, async () => {
   assert.equal((await store.list(GUILD)).length, LIMITS.AUTOMATIONS);
   await prisma.automation.deleteMany({ where: { guildId: GUILD } });
 });
+
+test('a role kept in a Take action is checked again once it becomes a Give action (server role checks key by type)', () => {
+  const take = '400000000000000002';
+  const give = '400000000000000005';
+  const item = { actions: [{ type: 'TAKE_ROLES', roleIds: [take] }, { type: 'GIVE_ROLES', roleIds: [give] }] };
+  const collection = A.collection;
+  const keys = collection.refKeys(item, new Set([`actions.roleIds|${take}`, `actions.roleIds|${give}`, 'conditions.roleIds|1']));
+  assert.ok(keys.has('conditions.roleIds|1'), 'other fields keep their keys');
+  assert.equal([...keys].some((k) => k.startsWith('actions.roleIds|')), false, 'no untyped action keys remain');
+  const data = { actions: [{ type: 'GIVE_ROLES', roleIds: [take] }, { type: 'GIVE_ROLES', roleIds: [give] }] };
+  assert.equal(keys.has(collection.refKeyOf({ path: 'actions.0.roleIds.0', id: take }, data)), false, 'Take turned Give: checked');
+  assert.equal(keys.has(collection.refKeyOf({ path: 'actions.1.roleIds.0', id: give }, data)), true, 'still a Give: kept');
+  const unchanged = { actions: item.actions };
+  assert.equal(keys.has(collection.refKeyOf({ path: 'actions.0.roleIds.0', id: take }, unchanged)), true, 'still a Take: kept');
+  assert.equal(collection.refKeyOf({ path: 'conditions.0.roleIds.0', id: '1' }, data), 'conditions.roleIds|1');
+});

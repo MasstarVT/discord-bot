@@ -85,7 +85,7 @@ export const store = Object.freeze({
     requireTasks(ctx);
     const payload = actionPayload(data);
     const outcome = taskOutcome(await ctx.runTask('mod.action', payload));
-    if (outcome.status === 'pending') throw new RecordError('unavailable', PENDING_CREATE);
+    if (outcome.status === 'pending') throw new RecordError('unavailable', PENDING_CREATE, { saved: true });
     ctx.logger?.info?.(`Dashboard moderation ${payload.action} of ${payload.userId} in ${guildId} by ${ctx.userId}: ${outcome.message}`);
     const caseId = Number.isInteger(outcome.data?.caseId) ? outcome.data.caseId : null;
     let row = caseId ? await findCase(guildId, caseId) : null;
@@ -106,7 +106,7 @@ export const store = Object.freeze({
     if (Object.keys(payload).length === 1) return (await toItems([row], ctx?.discord, ctx?.logger))[0];
     requireTasks(ctx);
     const outcome = taskOutcome(await ctx.runTask('mod.editCase', payload));
-    if (outcome.status === 'pending') throw new RecordError('unavailable', outcome.message);
+    if (outcome.status === 'pending') throw new RecordError('unavailable', outcome.message, { saved: true });
     return itemFor(guildId, caseId, ctx);
   },
 

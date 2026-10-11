@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 import prisma, { SQL_NOW } from '../database/client.js';
 import logger from '../utils/logger.js';
 import { mapLimit, withTimeout } from '../utils/async.js';
-import { isJobType } from '../config/jobTypes.js';
+import { INTERACTIVE_JOB_TYPES, isJobType } from '../config/jobTypes.js';
 import { ensureGuildSettings } from './settingsService.js';
 
 /** Throw from a handler to fail the job without retries. */
@@ -18,6 +18,10 @@ export class PermanentJobError extends Error {
 }
 
 export const POLL_INTERVAL_MS = 5_000;
+/** Interactive jobs (INTERACTIVE_JOB_TYPES: someone waits for them) have their own loop, so slow jobs never delay them. */
+export const INTERACTIVE_POLL_INTERVAL_MS = 1_000;
+/** An interactive job this late is failed instead of run: whoever asked has given up waiting. */
+export const INTERACTIVE_MAX_LATE_MS = 60_000;
 export const CLAIM_BATCH = 25;
 export const JOB_CONCURRENCY = 5;
 export const JOB_TIMEOUT_MS = 60_000;
@@ -38,14 +42,17 @@ const warnedMissing = new Set();
 const inflight = new Set();
 let started = false;
 let pollTimer = null;
+let interactiveTimer = null;
 let gcTimer = null;
 
 // ── Raw SQL ───────────────────────────────────────────────────────────────────
 
-const claimSql = (guildIds, owner) => Prisma.sql`
+// `interactive`: only the interactive job types (their own loop), otherwise every other type.
+const claimSql = (guildIds, owner, { interactive = false } = {}) => Prisma.sql`
   WITH due AS (
     SELECT id FROM "ScheduledJob"
     WHERE "guildId" = ANY(${guildIds}::text[])
+      AND ${interactive ? Prisma.sql`type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[])` : Prisma.sql`NOT (type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[]))`}
       AND "runAt" <= ${SQL_NOW}
       AND (status = 'PENDING' OR (status = 'RUNNING' AND "lockedUntil" < ${SQL_NOW}))
     ORDER BY "runAt" ASC
@@ -68,6 +75,7 @@ const gcSql = () => Prisma.sql`
 /** One entry per raw statement, with sample parameters (01-foundation §1). */
 export const RAW_SQL = Object.freeze([
   { name: 'scheduler.claim', build: () => claimSql(['0'], '0:0:0') },
+  { name: 'scheduler.claimInteractive', build: () => claimSql(['0'], '0:0:0', { interactive: true }) },
   { name: 'scheduler.lockDedupe', build: () => lockDedupeSql('sample') },
   { name: 'scheduler.gc', build: () => gcSql() },
 ]);
@@ -278,7 +286,15 @@ async function runJob(client, row) {
     return;
   }
 
+  const interactive = INTERACTIVE_JOB_TYPES.includes(job.type);
+  /** Fails an interactive job instead of letting it run later: whoever asked has been told it did not happen. */
+  const refuse = (lastError) => settle(job, { status: 'FAILED', lastError, lockedBy: null, lockedUntil: null });
+
   const handler = handlers.get(job.type);
+  if (!handler && interactive) {
+    await refuse('This bot version cannot do that yet. Update the bot, then try again.');
+    return;
+  }
   if (!handler) {
     // A plugin may not have landed yet: wait without spending an attempt.
     await release(job, { runAt: new Date(Date.now() + NO_HANDLER_BACKOFF_MS) });
@@ -291,12 +307,20 @@ async function runJob(client, row) {
 
   const guild = client.guilds.cache.get(job.guildId);
   if (!guild || guild.available === false) {
+    if (interactive) {
+      await refuse('Discord has this server unavailable right now, so nothing was done. Try again in a few minutes.');
+      return;
+    }
     // The claim filter skips the guild until it is available again; runAt stays as it was.
     await release(job);
     return;
   }
 
   const ctx = { client, guild, lateByMs: Math.max(0, Date.now() - new Date(job.runAt).getTime()), attempt: job.attempts };
+  if (interactive && ctx.lateByMs > INTERACTIVE_MAX_LATE_MS) {
+    await refuse('This request waited too long for the bot and was dropped, so nothing was done. Try again.');
+    return;
+  }
   let result;
   try {
     result = await withTimeout(Promise.resolve().then(() => handler(job, ctx)), JOB_TIMEOUT_MS, `job ${job.type}`);
@@ -329,11 +353,11 @@ async function runJob(client, row) {
   }
 }
 
-async function runTick(client) {
+async function runTick(client, { interactive = false } = {}) {
   try {
     const guildIds = availableGuildIds(client);
     if (!guildIds.length) return 0;
-    const rows = await prisma.$queryRaw(claimSql(guildIds, ownerOf(client)));
+    const rows = await prisma.$queryRaw(claimSql(guildIds, ownerOf(client), { interactive }));
     if (!rows.length) return 0;
     await mapLimit(rows, JOB_CONCURRENCY, (row) => runJob(client, row));
     return rows.length;
@@ -346,10 +370,12 @@ async function runTick(client) {
 /**
  * One claim-and-execute cycle (exported for tests). Never throws.
  * @param {import('discord.js').Client} client
+ * @param {{ interactive?: boolean }} [opts] interactive: claim only INTERACTIVE_JOB_TYPES (their own loop); otherwise
+ *   every other type
  * @returns {Promise<number>} jobs claimed
  */
-export function tick(client) {
-  const run = runTick(client);
+export function tick(client, opts = {}) {
+  const run = runTick(client, opts);
   inflight.add(run);
   const done = () => inflight.delete(run);
   run.then(done, done);
@@ -371,7 +397,8 @@ export async function gc() {
 const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4));
 
 /**
- * Starts the poll loop (a setTimeout chain, not setInterval, ±20 % jitter). Idempotent. On the
+ * Starts the poll loops (setTimeout chains, not setInterval, ±20 % jitter): every ~5 s for ordinary jobs and every ~1 s
+ * for interactive ones. Idempotent. On the
  * shard whose ids include 0 (or with no sharding) it also starts the hourly GC.
  * @param {import('discord.js').Client} client
  */
@@ -392,6 +419,22 @@ export function start(client) {
     pollTimer.unref?.();
   };
   poll();
+
+  // Interactive jobs (someone waits for them) are claimed by their own, faster loop, never behind a slow batch.
+  const pollInteractive = () => {
+    if (!started) return;
+    interactiveTimer = setTimeout(async () => {
+      try {
+        await tick(client, { interactive: true });
+      } catch (err) {
+        logger.error('Scheduler poll failed', err);
+      } finally {
+        pollInteractive();
+      }
+    }, jitter(INTERACTIVE_POLL_INTERVAL_MS));
+    interactiveTimer.unref?.();
+  };
+  pollInteractive();
 
   if (!client.shard || client.shard.ids?.includes(0)) {
     const sweep = () => {
@@ -416,8 +459,10 @@ export function start(client) {
 export async function stop({ timeoutMs = 5000 } = {}) {
   started = false;
   if (pollTimer) clearTimeout(pollTimer);
+  if (interactiveTimer) clearTimeout(interactiveTimer);
   if (gcTimer) clearTimeout(gcTimer);
   pollTimer = null;
+  interactiveTimer = null;
   gcTimer = null;
   if (!inflight.size) return;
   let timer;

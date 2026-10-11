@@ -7,6 +7,7 @@
 import { LIMITS } from '../../config/constants.js';
 import { validateRegex, MAX_PATTERN_LENGTH } from '../../utils/safeRegex.js';
 import { SLUG_MESSAGE, SLUG_PATTERN } from './embeds.js';
+import { refKey } from '../schema.js';
 
 // ── Restated from src/services/automationService.js (drift-tested) ───────────
 
@@ -732,7 +733,31 @@ export const collection = Object.freeze({
     },
   ]),
   check: checkAutomation,
+  // An action's `roleIds` are given or taken depending on its type, so the server's "may this admin give that role"
+  // checks key them by type: a role kept in a Take action and turned into a Give action is checked like a new one
+  // (server.js verifyRefs). Server-only, never sent to the browser.
+  refKeys: actionRoleKeys,
+  refKeyOf: actionRoleKeyOf,
 });
+
+const ACTION_ROLE_PATH_RE = /^actions\.(\d+)\.roleIds\.\d+$/;
+const actionRoleKey = (type, id) => `actions.${String(type)}.roleIds|${id}`;
+
+/** The stored keys of an automation item: the generic ones, with action roles keyed by their action's type. */
+function actionRoleKeys(item, keys) {
+  const out = new Set([...keys].filter((k) => !k.startsWith('actions.roleIds|')));
+  for (const action of Array.isArray(item?.actions) ? item.actions : []) {
+    for (const id of Array.isArray(action?.roleIds) ? action.roleIds : []) out.add(actionRoleKey(action.type, id));
+  }
+  return out;
+}
+
+/** The key of a role in a request: an action role by the type that action has in the request. */
+function actionRoleKeyOf(ref, data) {
+  const m = ACTION_ROLE_PATH_RE.exec(ref.path);
+  if (!m) return refKey(ref.path, ref.id);
+  return actionRoleKey(data?.actions?.[Number(m[1])]?.type, ref.id);
+}
 
 // ── Form <-> stored shapes ───────────────────────────────────────────────────
 

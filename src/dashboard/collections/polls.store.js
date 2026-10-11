@@ -161,7 +161,7 @@ export const store = Object.freeze({
     if (!item) {
       throw new RecordError('unavailable', out.status === 'pending'
         ? out.message
-        : 'The poll was posted, but it could not be loaded. Reload the list.');
+        : 'The poll was posted, but it could not be loaded. Reload the list.', { saved: true });
     }
     return item;
   },

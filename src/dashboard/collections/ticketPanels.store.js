@@ -16,7 +16,7 @@ import {
   createPanel, invalidatePanel, parseOptionEmoji, templateUsesToken, updatePanelFields, validateNameFormat,
 } from '../../services/ticketService.js';
 import { normalizeTemplate } from '../../utils/customEmbed.js';
-import { RecordError, taskOutcome } from './errors.js';
+import { RecordError, taskOutcome, withMessage } from './errors.js';
 import { isDiscordApiError, memberFor, pingRoleProblem } from './embeds.js';
 import {
   DEFAULT_INTRO_TEMPLATE, collection, defaultPanelTemplate, diffOptions, isDefaultTemplate, isEmptyTemplate, normalizeOptions, panelItem,
@@ -228,13 +228,15 @@ export const store = Object.freeze({
     }
     ctx.logger?.info?.(`Dashboard ticket panel ${id} created in ${guildId} by ${ctx.userId}`);
 
+    let published = null;
     if (data.channelId) {
-      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: data.channelId }, {
+      published = await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: data.channelId }, {
         lead: 'The panel was saved, but it was not published:',
         hint: 'Fix that, close this window, then use "Publish" on the panel in the list.',
       });
     }
-    return getItem(guildId, id);
+    // The bot's note (where it published, e.g. a missing manager role warning) replaces the plain "Created" toast.
+    return withMessage(await getItem(guildId, id), published?.message);
   },
 
   async update(guildId, id, data, ctx) {
@@ -322,19 +324,20 @@ export const store = Object.freeze({
     const published = Boolean(row.channelId && row.messageId);
     const refreshMessage = published && !publishTo && Boolean('style' in patch || 'template' in patch || (plan && showsOnPanel(plan)));
     const managersChanged = managersAdded.length + managersRemoved.length > 0;
+    const notes = [];
     if (publishTo) {
-      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: publishTo }, {
+      notes.push((await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: publishTo }, {
         lead: 'Your changes were saved, but the panel was not published in the new channel:',
         hint: 'Use "Publish" to try again.',
-      });
+      }))?.message);
     }
     if (refreshMessage || managersChanged) {
-      await runAfterSave(ctx, 'ticket.refresh', { panelId: id, message: refreshMessage, managersAdded, managersRemoved }, {
+      notes.push((await runAfterSave(ctx, 'ticket.refresh', { panelId: id, message: refreshMessage, managersAdded, managersRemoved }, {
         lead: 'Your changes were saved, but the published panel was not fully updated:',
         hint: 'Use "Update posted message" to try again.',
-      });
+      }))?.message);
     }
-    return getItem(guildId, id);
+    return withMessage(await getItem(guildId, id), notes.filter(Boolean).join(' '));
   },
 
   async remove(guildId, id, ctx) {

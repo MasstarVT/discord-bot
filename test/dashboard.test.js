@@ -2229,7 +2229,31 @@ describe('HTTP role checks across fields', () => {
     ],
     createOnly: [], readOnly: [], actions: [],
   });
-  const items = new Map([['p1', { id: 'p1', name: 'One', pingRoleIds: [RL.admin, RL.mid], roleId: null, rewardRoleId: null }]]);
+  // Actions whose roles are given or taken by type, with the type-aware keys automations use.
+  const ACTS = Object.freeze({
+    key: 'acts', module: 'embeds', label: 'Acts', singular: 'act', description: '', limit: 5, titleField: 'id',
+    fields: [{
+      field: 'actions', type: 'objectList', label: 'Actions', maxItems: 5, default: [],
+      itemFields: [
+        { field: 'type', type: 'enum', label: 'Type', options: [{ value: 'GIVE', label: 'Give' }, { value: 'TAKE', label: 'Take' }], default: 'GIVE' },
+        { field: 'roleIds', type: 'roles', label: 'Roles', assignable: true, maxItems: 5, default: [] },
+      ],
+    }],
+    createOnly: [], readOnly: [], actions: [],
+    refKeys: (item, keys) => {
+      const out = new Set([...keys].filter((k) => !k.startsWith('actions.roleIds|')));
+      for (const a of item.actions ?? []) for (const id of a.roleIds ?? []) out.add(`actions.${a.type}|${id}`);
+      return out;
+    },
+    refKeyOf: (ref, data) => {
+      const m = /^actions\.(\d+)\.roleIds\.\d+$/.exec(ref.path);
+      return m ? `actions.${data.actions[Number(m[1])].type}|${ref.id}` : schema.refKey(ref.path, ref.id);
+    },
+  });
+  const items = new Map([
+    ['p1', { id: 'p1', name: 'One', pingRoleIds: [RL.admin, RL.mid], roleId: null, rewardRoleId: null }],
+    ['a1', { id: 'a1', actions: [{ type: 'TAKE', roleIds: [RL.mid] }, { type: 'GIVE', roleIds: [RL.admin] }] }],
+  ]);
   const records = {
     async get(guildId, key, id) { return items.get(id) ?? null; },
     async update(guildId, key, id, data) {
@@ -2241,7 +2265,8 @@ describe('HTTP role checks across fields', () => {
   const validateRecordInput = (key, data) => {
     const refs = schema.emptyRefs();
     const out = {};
-    for (const f of PERKS.fields) if (Object.hasOwn(data, f.field)) out[f.field] = schema.validateValue(f, data[f.field], f.field, refs);
+    const list = key === 'acts' ? ACTS.fields : PERKS.fields;
+    for (const f of list) if (Object.hasOwn(data, f.field)) out[f.field] = schema.validateValue(f, data[f.field], f.field, refs);
     return { data: out, refs };
   };
   let server;
@@ -2249,7 +2274,7 @@ describe('HTTP role checks across fields', () => {
   before(async () => {
     server = createDashboardServer({
       config, logger: recordingLogger(),
-      deps: { discord: fakes.discord, settings: fakes.settings, records, collections: { COLLECTIONS: { perks: PERKS }, validateRecordInput } },
+      deps: { discord: fakes.discord, settings: fakes.settings, records, collections: { COLLECTIONS: { perks: PERKS, acts: ACTS }, validateRecordInput } },
     });
     port = await listen(server);
   });
@@ -2289,6 +2314,18 @@ describe('HTTP role checks across fields', () => {
     const reward = await send('PATCH', path, { data: { rewardRoleId: RL.admin } });
     assert.equal(reward.status, 200, reward.json?.message);
     assert.equal(items.get('p1').rewardRoleId, RL.admin);
+  });
+
+  test('a collection can key kept roles by item type: a Take role turned into a Give role is checked again', async () => {
+    const path = `/api/guilds/${G.zeta}/records/acts/a1`;
+    // RL.mid is at the member's highest role: kept while it stays a Take action...
+    const kept = await send('PATCH', path, { data: { actions: [{ type: 'TAKE', roleIds: [RL.mid] }, { type: 'GIVE', roleIds: [RL.admin] }] } });
+    assert.equal(kept.status, 200, kept.json?.message);
+    // ...and checked like a new role once the action gives it.
+    const flipped = await send('PATCH', path, { data: { actions: [{ type: 'GIVE', roleIds: [RL.mid] }, { type: 'GIVE', roleIds: [RL.admin] }] } });
+    assert.equal(flipped.status, 400);
+    assert.equal(flipped.json.path, 'actions.0.roleIds.0');
+    assert.match(flipped.json.message, /not below your highest role/);
   });
 
   test('an empty required text says so', () => {

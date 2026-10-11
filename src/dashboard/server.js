@@ -18,7 +18,7 @@ import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
 import { FieldError, checkRefs, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
 import { collectSettingsRefKeys, collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
 import { COLLECTIONS, RECORD_ID_RE, validateRecordInput } from './collections/index.js';
-import { RecordError } from './collections/errors.js';
+import { RecordError, unwrapResult } from './collections/errors.js';
 
 export const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 /** Body limit of a settings PATCH (a full page of messages and embeds fits). */
@@ -434,7 +434,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
    * @param {import('./schema.js').Refs} refs
    * @param {{ channels: Set<string>, roles: Set<string>, keys: Set<string> }} keep stored ids, and their refKeys
    */
-  async function verifyRefs(ctx, session, guildId, refs, keep) {
+  async function verifyRefs(ctx, session, guildId, refs, keep, keyOf = (r) => refKey(r.path, r.id)) {
     if (refs.channels.length === 0 && refs.roles.length === 0) return true;
     let res;
     try {
@@ -454,7 +454,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       return false;
     }
 
-    const given = refs.roles.filter((r) => r.assignable && !keep.keys.has(refKey(r.path, r.id)) && map.roles.has(r.id));
+    const given = refs.roles.filter((r) => r.assignable && !keep.keys.has(keyOf(r)) && map.roles.has(r.id));
     if (given.length === 0) return true;
     const problem = (ref, message) => {
       fail(ctx, 400, 'invalid_request', message, { path: ref.path });
@@ -640,6 +640,9 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       collectStoredRefs(desc, item?.[desc.field], out);
       storedRefKeys(desc, item?.[desc.field], desc.field, out.keys);
     }
+    // A collection whose field means something else per item type (an automation action's roles are given or taken)
+    // refines the keys, so a role moved from one meaning to the other is checked like a new one.
+    if (typeof collection.refKeys === 'function') out.keys = collection.refKeys(item, out.keys);
     return out;
   }
 
@@ -706,6 +709,15 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       if (method === 'GET' && itemId === undefined) {
         // Searchable collections take ?query= (what to look for) and ?cursor= (the page after a previous answer).
         const query = (ctx.query.get('query') ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, LIST_QUERY_MAX);
+        // A search may ask Discord (member names), so it shares the member search's per-user limit.
+        if (query) {
+          const limited = limitSearches(session.uid);
+          if (!limited.ok) {
+            fail(ctx, 429, 'rate_limited', `Too many searches at once. Try again in ${limited.retryAfter} s.`,
+              { retryAfter: limited.retryAfter }, { 'Retry-After': String(limited.retryAfter) });
+            return;
+          }
+        }
         const rawCursor = ctx.query.get('cursor') ?? '';
         const cursor = LIST_CURSOR_RE.test(rawCursor) ? rawCursor : '';
         const result = await records.list(guildId, key, { query, cursor });
@@ -739,16 +751,19 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       const mode = actionId !== undefined ? 'action' : itemId !== undefined ? 'update' : 'create';
       const valid = registry.validateRecordInput(key, data, { mode, actionId, current });
       const keep = current ? recordRefs(collection, current) : { channels: new Set(), roles: new Set(), keys: new Set() };
-      if (!await verifyRefs(ctx, session, guildId, valid.refs, keep)) return;
+      const keyOf = typeof collection.refKeyOf === 'function'
+        ? (r) => collection.refKeyOf(r, valid.data)
+        : (r) => refKey(r.path, r.id);
+      if (!await verifyRefs(ctx, session, guildId, valid.refs, keep, keyOf)) return;
 
       if (mode === 'create') {
-        const item = await records.create(guildId, key, valid.data, user);
+        const { item, message } = unwrapResult(await records.create(guildId, key, valid.data, user));
         logger.info(`Dashboard: user ${session.uid} created ${key}/${item?.id ?? '?'} in guild ${guildId}`);
-        json(ctx, 201, { item });
+        json(ctx, 201, { item, ...(message ? { message } : {}) });
       } else if (mode === 'update') {
-        const item = await records.update(guildId, key, itemId, valid.data, user);
+        const { item, message } = unwrapResult(await records.update(guildId, key, itemId, valid.data, user));
         logger.info(`Dashboard: user ${session.uid} changed ${label} in guild ${guildId}: ${Object.keys(valid.data).join(', ')}`);
-        json(ctx, 200, { item });
+        json(ctx, 200, { item, ...(message ? { message } : {}) });
       } else {
         const result = await records.action(guildId, key, itemId, actionId, valid.data, user);
         logger.info(`Dashboard: user ${session.uid} ran ${label} in guild ${guildId}`);

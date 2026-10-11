@@ -645,6 +645,47 @@ test('DB: scheduleJob dedupe modes, re-seeding of dead jobs, races and cancelJob
   }
 });
 
+const interactiveSeen = [];
+scheduler.registerJobHandler('dashboard.task', async (job) => { interactiveSeen.push(job.id); });
+
+test('DB: interactive jobs have their own claim loop and are failed rather than run late', { skip: skipDb }, async () => {
+  const gid = ID(311);
+  await cleanup(gid);
+  const { scheduleJob, tick, getJob } = scheduler;
+  const task = (key, runAt) => scheduleJob({ guildId: gid, type: 'dashboard.task', runAt, dedupeKey: `dashboard.task:${gid}:${key}`, maxAttempts: 1 });
+  try {
+    interactiveSeen.length = 0;
+    const due = await task('due', inSeconds(-2));
+    assert.equal(await tick(fakeClient([gid])), 0, 'the ordinary loop leaves interactive jobs alone');
+    assert.equal(await tick(fakeClient([gid]), { interactive: true }), 1);
+    assert.deepEqual(interactiveSeen, [due.id]);
+    assert.equal(await getJob(`dashboard.task:${gid}:due`), null);
+
+    await scheduleJob({ guildId: gid, type: 'mod.unban', runAt: inSeconds(-5), dedupeKey: `${gid}:ordinary`, payload: { mode: 'ok' } });
+    assert.equal(await tick(fakeClient([gid]), { interactive: true }), 0, 'the interactive loop leaves ordinary jobs alone');
+    assert.equal(await tick(fakeClient([gid])), 1);
+
+    // Too late: whoever asked was told it did not happen, so it never runs.
+    interactiveSeen.length = 0;
+    await task('late', inSeconds(-(scheduler.INTERACTIVE_MAX_LATE_MS / 1000 + 30)));
+    assert.equal(await tick(fakeClient([gid]), { interactive: true }), 1);
+    let row = await getJob(`dashboard.task:${gid}:late`);
+    assert.equal(row.status, 'FAILED');
+    assert.match(row.lastError, /waited too long/);
+    assert.deepEqual(interactiveSeen, []);
+
+    // The guild is not in this shard's cache: failed instead of released for later.
+    await task('gone', inSeconds(-1));
+    assert.equal(await tick(fakeClient([gid], { cacheMiss: true }), { interactive: true }), 1);
+    row = await getJob(`dashboard.task:${gid}:gone`);
+    assert.equal(row.status, 'FAILED');
+    assert.match(row.lastError, /unavailable/);
+    assert.deepEqual(interactiveSeen, []);
+  } finally {
+    await cleanup(gid);
+  }
+});
+
 test('DB: claim, execute, reschedule, retry, fail and release', { skip: skipDb }, async () => {
   const gid = ID(301);
   const gid2 = ID(302);

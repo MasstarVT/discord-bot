@@ -45,3 +45,18 @@ export function taskOutcome(result) {
   if (result?.status === 'offline') throw new RecordError('unavailable', result.message);
   return { status: result?.status === 'pending' ? 'pending' : 'done', message: result?.message ?? 'Done.', data: result?.data ?? null };
 }
+
+const RESULT = Symbol('dashboard.recordResult');
+
+/**
+ * A store's create or update answer with a note for the admin, shown instead of the plain "Saved" toast (e.g. the bot's
+ * warnings after posting a panel). Without a message the item is returned as is.
+ * @param {object} item
+ * @param {string|null|undefined} message
+ */
+export const withMessage = (item, message) => (message ? { [RESULT]: true, item, message: String(message) } : item);
+
+/** `{ item, message }` of a store's create or update answer (message null when the store gave none). */
+export const unwrapResult = (value) => (value && value[RESULT] === true
+  ? { item: value.item, message: value.message }
+  : { item: value, message: null });

@@ -157,7 +157,7 @@ export const store = Object.freeze({
     if (!item) {
       throw new RecordError('unavailable', out.status === 'pending'
         ? out.message
-        : 'The giveaway was started, but it could not be loaded. Reload the list.');
+        : 'The giveaway was started, but it could not be loaded. Reload the list.', { saved: true });
     }
     return item;
   },

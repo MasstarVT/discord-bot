@@ -93,7 +93,7 @@ export const store = Object.freeze({
   /** Gives XP to a member (/xp give) and answers their row. */
   async create(guildId, data, ctx) {
     const { item, message, status } = await adjust(guildId, data.userId, { op: 'give', amount: data.amount }, ctx);
-    if (status === 'pending') throw new RecordError('unavailable', PENDING_CREATE);
+    if (status === 'pending') throw new RecordError('unavailable', PENDING_CREATE, { saved: true });
     ctx.logger?.info?.(`Dashboard XP give ${data.amount} to ${data.userId} in ${guildId} by ${ctx.userId}: ${message}`);
     return item;
   },
