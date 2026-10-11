@@ -32,7 +32,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 📰 **Social Feeds** (MEE6: RSS / YouTube / Reddit / Bluesky / Podcast alerts) — post new RSS, YouTube channel, Reddit, Bluesky and podcast items to a channel, keyless.
 - 🔎 **Search Anything** (MEE6: Search Anything) — `/anime`, `/manga` (AniList), `/pokemon`, `/urban`, keyless.
 - 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API).
-- 🖥️ **Web Dashboard** — log in with Discord and switch each server's modules and their options on or off in a browser; a separate process, see [Web dashboard](#web-dashboard).
+- 🖥️ **Web Dashboard** — log in with Discord and change each server's settings in a browser: every module's switch and options, the time zone, embed colour and command prefix, and lists such as saved embeds, custom commands, reminders and feeds; a separate process, see [Web dashboard](#web-dashboard).
 
 **Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`.
 
@@ -190,7 +190,7 @@ volumes:
 
 ## Web dashboard
 
-Server admins can log in with Discord and switch each module on or off, and change the options inside it, for every server they manage. The dashboard is a separate process, `dashboard.js`, that runs next to the bot. It uses the bot's PostgreSQL database and Redis, and adds no dependencies.
+Server admins can log in with Discord and change the settings of every server they manage: each module's on/off switch and the options inside it, the server's general settings, and its lists. The dashboard is a separate process, `dashboard.js`, that runs next to the bot. It uses the bot's PostgreSQL database and Redis, and adds no dependencies.
 
 **Setup**
 
@@ -224,8 +224,10 @@ Server admins can log in with Discord and switch each module on or off, and chan
      Setting `HEALTH_PORT` to `8080` makes the image's `HEALTHCHECK` probe the dashboard's `/healthz`, and the port is published on 8080. The dashboard container runs no migrations; `depends_on` starts it after the bot container, which applies them.
 
 - **Who can log in:** any Discord user can sign in, but a server is shown only if they are in it and either own it, have Administrator or Manage Server (the bot's Admin level), or are the `BOT_OWNER_ID` user. Discord's server list is checked on every request and cached for up to a minute. A login lasts at most 7 days, then the user signs in again. If the bot is not in a server, the dashboard offers an invite link instead of its settings.
-- **What you can change:** the 26 module switches that `/module` toggles, and 16 on/off options inside modules, such as the welcome DM, the goodbye message, voice XP, level-up embeds and the birthday year requirement. Timezone, custom-command prefix and embed colour are shown read-only; change them with `/settings`. Everything else is still set with the slash commands (see [Commands](#commands)).
-- **Propagation:** the bot keeps each server's settings in memory for 30 seconds, so a change reaches it within about 30 seconds. No restart is needed.
+- **What you can change:** every module's switch and its options (channels, roles, messages and embeds, amounts and limits, automod rules, warning escalation, card styles and so on), and the general settings: time zone, embed colour and custom-command prefix. Channel and role choices are checked against the server before a save.
+- **Lists:** saved embeds (create and edit with a live preview; post, move, update or take down the posted message), custom commands, auto-responders, reminders (edit, pause, send a test), social feeds (check now), level rewards, shop items, coin boosts, achievements, starboards, auto-translate channels, voice hubs and counter channels. A new level reward is given to members who reach that level later; `/levelconfig role sync` in Discord gives it to members already past it. Deleting a saved embed does not delete its posted message, so take that down first.
+- **Not in the dashboard:** automations, giveaways, polls, reaction-role and ticket panels, moderation actions, member XP and coin balances, and posting the verification panel (the dashboard edits one that is already posted). The dashboard never creates or deletes Discord channels or roles: voice hubs and counter channels use a channel that already exists, and deleting one leaves its channel in place. Everything not listed here is still set with the slash commands (see [Commands](#commands)).
+- **Propagation:** the bot keeps each server's settings in memory for 30 seconds, so a change reaches it within about 30 seconds. Custom commands and auto-responders take up to a minute, starboards a minute, achievements and auto-translate channels 30 seconds, and voice hubs about 5 minutes. Counter channels are renamed about every 10 minutes, and Discord limits how often a channel can be renamed; "Update the counters now" asks for an update within about a minute. Feeds are checked every 5 to 30 minutes, depending on the source. Reminders, feeds, saved embeds, shop items, coin boosts and level rewards apply as soon as they are saved. No restart is needed.
 - **HTTPS:** run the dashboard behind an HTTPS reverse proxy in production, and set `DASHBOARD_URL` to the public `https://` address. That makes the login cookie `Secure` and turns on HSTS. If the proxy runs on the same machine (not in Docker), set `DASHBOARD_HOST=127.0.0.1` so the port is reachable only through the proxy.
 - **Secrets:** keep `DASHBOARD_SESSION_SECRET` and `DISCORD_CLIENT_SECRET` out of version control. Pages are served with a strict Content-Security-Policy, and cross-site writes are refused.
 
