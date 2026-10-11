@@ -17,11 +17,20 @@ import { collection as translateChannels } from './translateChannels.js';
 import { collection as tempVoiceHubs } from './tempVoiceHubs.js';
 import { collection as statChannels } from './statChannels.js';
 import { collection as economyBoosts } from './economyBoosts.js';
+import { collection as cases } from './cases.js';
+import { collection as levels } from './levels.js';
+import { collection as balances } from './balances.js';
+import { collection as giveaways } from './giveaways.js';
+import { collection as polls } from './polls.js';
+import { collection as reactionRoles } from './reactionRoles.js';
+import { collection as ticketPanels } from './ticketPanels.js';
+import { collection as automations } from './automations.js';
 
 /** Display order. */
 export const COLLECTION_LIST = Object.freeze([
   embeds, tags, triggers, reminders, feeds, levelRoles, shopItems, achievements, starboards, translateChannels,
-  tempVoiceHubs, statChannels, economyBoosts,
+  tempVoiceHubs, statChannels, economyBoosts, cases, levels, balances, giveaways, polls, reactionRoles, ticketPanels,
+  automations,
 ]);
 
 /** key -> collection descriptor. */
@@ -50,6 +59,9 @@ export function publicCollection(c) {
     canCreate: c.canCreate !== false,
     canEdit: c.canEdit !== false,
     canDelete: c.canDelete !== false,
+    // The list takes ?query= (a search box) and may answer in pages (`nextCursor`).
+    searchable: c.searchable === true,
+    searchPlaceholder: c.searchPlaceholder ?? null,
     fields: Object.freeze(c.fields.map(publicDescriptor)),
     createOnly: Object.freeze([...(c.createOnly ?? [])]),
     readOnly: Object.freeze((c.readOnly ?? []).map(publicDescriptor)),

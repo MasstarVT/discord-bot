@@ -84,7 +84,7 @@ const PACKAGE_IDS = Object.freeze([
   'automod', 'logging', 'welcome', 'levels', 'invites', 'settings', 'translation-fixes', 'games-fixes',
   'embeds', 'reminders', 'giveaways', 'polls', 'starboard', 'reaction-roles', 'tickets', 'temp-voice',
   'stat-channels', 'birthdays', 'custom-commands', 'economy', 'economy-casino', 'achievements', 'automations',
-  'captcha', 'feeds', 'search', 'liverole', 'emojis', 'integration',
+  'captcha', 'feeds', 'search', 'liverole', 'emojis', 'dashboard-tasks', 'integration',
 ]);
 // Owners that are not plugins. They may own collector/field prefixes, and only the
 // persistent prefixes that registerCoreComponents() registers (today: 'noop').
@@ -97,7 +97,7 @@ const EXPECTED_PLUGIN_MODULE = Object.freeze({
   starboard: 'starboard', 'reaction-roles': 'reactionroles', tickets: 'tickets',
   'temp-voice': 'tempvoice', 'stat-channels': 'stats', birthdays: 'birthdays',
   'custom-commands': 'customcommands', economy: 'economy', achievements: 'achievements',
-  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole',
+  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole', 'dashboard-tasks': null,
 });
 // Only these files may call ctx.stop() (automod and custom-commands).
 const STOP_ALLOWED_FILES = Object.freeze([

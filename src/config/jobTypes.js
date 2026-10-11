@@ -14,6 +14,7 @@ export const JOB_TYPES = Object.freeze({
   "birthday.tick": Object.freeze({ owner: "birthdays", recurring: true, dedupe: "birthday.tick:{guildId}" }),
   "feed.poll": Object.freeze({ owner: "feeds", recurring: true, dedupe: "feed.poll:{feedId}" }),
   "levels.voiceSweep": Object.freeze({ owner: "levels", recurring: true, dedupe: "levels.voiceSweep:{guildId}" }),
+  "dashboard.task": Object.freeze({ owner: "dashboard-tasks", recurring: false, dedupe: "dashboard.task:{taskId}" }),
 });
 
 /** @returns {boolean} true when `type` is a registered job type */

@@ -18,6 +18,10 @@ export const BOT_GUILDS_MAX_RETRIES = 3;
 export const BOT_GUILDS_MAX_WAIT_SECONDS = 10;
 export const RESOURCES_TTL_MS = 30_000;
 export const RESOURCES_CACHE_MAX = 500;
+export const USERS_TTL_MS = 60 * 60_000;
+export const USERS_CACHE_MAX = 5_000;
+export const MEMBER_SEARCH_MAX = 25;
+const USER_LOOKUP_CONCURRENCY = 4;
 const BOT_MISS_TTL_MS = 5_000;
 const BOT_MISS_MAX = 1_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
@@ -287,6 +291,20 @@ function messageRef(data, channelId) {
   return { id: data.id, channelId: typeof data.channel_id === 'string' ? data.channel_id : channelId };
 }
 
+/** A member or user as the dashboard shows it (from a guild member object or a bare user object). */
+function memberProfile(m) {
+  const u = m?.user ?? m;
+  if (typeof u?.id !== 'string' || !SNOWFLAKE_RE.test(u.id)) return null;
+  return {
+    id: u.id,
+    username: typeof u.username === 'string' ? u.username : 'unknown',
+    globalName: typeof u.global_name === 'string' ? u.global_name : null,
+    nick: typeof m?.nick === 'string' ? m.nick : null,
+    avatarUrl: userAvatarUrl({ id: u.id, avatar: typeof u.avatar === 'string' ? u.avatar : null }),
+    bot: u.bot === true,
+  };
+}
+
 const assertSnowflake = (id, what) => {
   if (typeof id !== 'string' || !SNOWFLAKE_RE.test(id)) throw new DiscordApiError(`Invalid ${what} id`, { code: 'not_found' });
 };
@@ -315,6 +333,23 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
   const resources = new Map();
   /** guildId -> Promise of a load in flight. */
   const resourcesInflight = new Map();
+  /** userId -> { value: profile|null, at }; insertion order = age. */
+  const users = new Map();
+
+  async function lookupUser(userId) {
+    const hit = users.get(userId);
+    if (hit && now() - hit.at < USERS_TTL_MS) return hit.value;
+    let value = null;
+    try {
+      value = memberProfile(await getJson(fetchImpl, Routes.user(userId), bot));
+    } catch (err) {
+      if (!(err instanceof DiscordApiError) || err.code !== 'not_found') throw err;
+    }
+    users.delete(userId);
+    users.set(userId, { value, at: now() });
+    while (users.size > USERS_CACHE_MAX) users.delete(users.keys().next().value);
+    return value;
+  }
 
   async function loadGuildResources(guildId) {
     const [guild, channels, botMember] = await Promise.all([
@@ -544,6 +579,55 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
         if (err instanceof DiscordApiError && err.code === 'not_found') return null;
         throw err;
       }
+    },
+
+    /**
+     * Members whose username or nickname starts with `query` (Discord's member search), or the one member when `query`
+     * is a user id.
+     * @param {string} guildId
+     * @param {string} query 1..100 characters
+     * @param {number} [limit] at most MEMBER_SEARCH_MAX
+     * @returns {Promise<{ id: string, username: string, globalName: string|null, nick: string|null, avatarUrl: string,
+     *   bot: boolean }[]>}
+     * @throws {DiscordApiError}
+     */
+    async searchMembers(guildId, query, limit = MEMBER_SEARCH_MAX) {
+      assertSnowflake(guildId, 'server');
+      const q = String(query ?? '').trim().slice(0, 100);
+      if (!q) return [];
+      if (SNOWFLAKE_RE.test(q)) {
+        try {
+          const one = memberProfile(await getJson(fetchImpl, Routes.guildMember(guildId, q), bot));
+          return one ? [one] : [];
+        } catch (err) {
+          if (err instanceof DiscordApiError && err.code === 'not_found') return [];
+          throw err;
+        }
+      }
+      const n = Math.min(Math.max(1, Math.trunc(limit) || 1), MEMBER_SEARCH_MAX);
+      const data = await getJson(fetchImpl, `${Routes.guildMembersSearch(guildId)}?${new URLSearchParams({ query: q, limit: String(n) })}`, bot);
+      return (Array.isArray(data) ? data : []).map(memberProfile).filter(Boolean);
+    },
+
+    /**
+     * Names and avatars of users by id (for lists such as the XP leaderboard), cached for an hour. Unknown ids map to
+     * null. At most 100 ids per call.
+     * @param {string[]} ids
+     * @returns {Promise<Map<string, object|null>>}
+     * @throws {DiscordApiError} when Discord cannot answer
+     */
+    async getUsers(ids) {
+      const wanted = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === 'string' && SNOWFLAKE_RE.test(id)))].slice(0, 100);
+      const out = new Map();
+      let next = 0;
+      const worker = async () => {
+        while (next < wanted.length) {
+          const id = wanted[next++];
+          out.set(id, await lookupUser(id));
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(USER_LOOKUP_CONCURRENCY, wanted.length) }, worker));
+      return out;
     },
 
     /**

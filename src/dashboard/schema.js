@@ -26,7 +26,9 @@ import { isHttpUrl, normalizeTemplate, validateTemplate } from '../utils/customE
  *   role     assignable? allowEveryone? allowDangerous?
  *                                   a role id of this server; assignable: the bot must be able to give it (and, unless
  *                                   allowDangerous, the role carries no moderator/admin permissions)
- *   roles    assignable? allowEveryone? maxItems
+ *   roles    assignable? allowEveryone? allowDangerous? maxItems
+ *   user                            a user id (the browser offers a member search, /api/guilds/:id/members);
+ *                                   whether that user is in the server is checked by the code that acts on it
  *   template requireContent?        a MessageTemplate { content, embed, buttons } (src/utils/customEmbed.js);
  *                                   requireContent (default true): an empty message is refused
  *   embed                           an EmbedSpec (the `embed` of a template) or null
@@ -43,7 +45,7 @@ import { isHttpUrl, normalizeTemplate, validateTemplate } from '../utils/customE
  */
 export const FIELD_TYPES = Object.freeze([
   'boolean', 'int', 'float', 'text', 'enum', 'multiEnum', 'color', 'timezone', 'channel', 'channels', 'role', 'roles',
-  'template', 'embed', 'stringList', 'object', 'objectList', 'datetime', 'time', 'emoji', 'url',
+  'user', 'template', 'embed', 'stringList', 'object', 'objectList', 'datetime', 'time', 'emoji', 'url',
 ]);
 
 /** Discord channel type numbers per channel kind (threads are never offered). */
@@ -234,6 +236,10 @@ export function validateValue(desc, value, path = desc.field ?? '', refs = empty
     case 'roles':
       return uniqueIds(desc, value, path, checkRole, refs);
 
+    case 'user':
+      if (!isSnowflake(value)) throw new FieldError(path, `${name} must be a member of this server (pick one, or paste a user id).`);
+      return value;
+
     case 'template': {
       if (!isPlainObject(value)) throw new FieldError(path, `${name} must be a message.`);
       const tpl = normalizeTemplate(value);
@@ -361,6 +367,7 @@ export function readValue(desc, raw) {
         return Array.isArray(raw) ? raw.filter(isSnowflake) : clone(desc.default ?? []);
       case 'channel':
       case 'role':
+      case 'user':
         return isSnowflake(raw) ? raw : clone(desc.default ?? null);
       case 'color': {
         const n = parseColorValue(raw);
@@ -537,7 +544,7 @@ export function lintDescriptors(fields, where = '') {
     for (const kind of d.channelTypes ?? []) if (!Object.hasOwn(CHANNEL_KINDS, kind)) problems.push(`${at}: unknown channel kind ${kind}`);
     if (d.type === 'object') problems.push(...lintDescriptors(d.fields ?? [], `${at}.`));
     if (d.type === 'objectList') problems.push(...lintDescriptors(d.itemFields ?? [], `${at}[].`));
-    if (d.default !== undefined && d.default !== null && !['template', 'embed', 'channel', 'channels', 'role', 'roles'].includes(d.type)) {
+    if (d.default !== undefined && d.default !== null && !['template', 'embed', 'channel', 'channels', 'role', 'roles', 'user'].includes(d.type)) {
       try {
         validateValue(d, d.default, at);
       } catch (err) {

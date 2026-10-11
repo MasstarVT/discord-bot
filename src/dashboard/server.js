@@ -27,6 +27,8 @@ export const BODY_LIMIT_BYTES = 256 * 1024;
 export const RECORD_BODY_LIMIT_BYTES = 128 * 1024;
 export const PROPAGATION_SECONDS = 30;
 export const WRITE_RATE_LIMIT = Object.freeze({ max: 20, windowMs: 10_000 });
+/** Member searches (user pickers search as the admin types). */
+export const SEARCH_RATE_LIMIT = Object.freeze({ max: 30, windowMs: 10_000 });
 const RATE_LIMIT_KEYS_MAX = 10_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 const ACTION_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
@@ -89,9 +91,13 @@ const formatColor = (n) => (Number.isInteger(n) && n >= 0 && n <= 0xffffff
   : null);
 
 /** RecordError code -> the `error` of the answer. */
+/** A records list's ?query= (searchable collections) and ?cursor= (the next page). */
+const LIST_QUERY_MAX = 100;
+const LIST_CURSOR_RE = /^[A-Za-z0-9_:.-]{1,200}$/;
+
 const RECORD_ERROR_CODES = Object.freeze({
   invalid: 'invalid_request', not_found: 'not_found', conflict: 'conflict', limit: 'limit', discord: 'discord_failed',
-  unavailable: 'unavailable',
+  failed: 'action_failed', unavailable: 'unavailable',
 });
 
 /** The GET /api/guilds/:id/resources payload: getGuildResources without the server-only parts. */
@@ -187,6 +193,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     : { ...SECURITY_HEADERS };
   const catalogJson = JSON.stringify(buildCatalog());
   const limitWrites = createRateLimiter({ ...WRITE_RATE_LIMIT, now });
+  const limitSearches = createRateLimiter({ ...SEARCH_RATE_LIMIT, now });
 
   // ── Response helpers ────────────────────────────────────────────────────────
 
@@ -576,6 +583,38 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     json(ctx, 200, publicResources(res));
   }
 
+  /** GET /api/guilds/:id/members?query=: member search for the user pickers (Discord's search, or one id). */
+  async function guildMembers(ctx, guildId) {
+    if (!allow(ctx, ['GET'])) return;
+    const session = requireSession(ctx);
+    if (!session) return;
+    if (!SNOWFLAKE_RE.test(guildId)) {
+      fail(ctx, 400, 'invalid_request', 'That is not a valid server id.');
+      return;
+    }
+    const query = (ctx.query.get('query') ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, LIST_QUERY_MAX);
+    if (!query) {
+      json(ctx, 200, { members: [] });
+      return;
+    }
+    const limited = limitSearches(session.uid);
+    if (!limited.ok) {
+      fail(ctx, 429, 'rate_limited', `Too many searches at once. Try again in ${limited.retryAfter} s.`,
+        { retryAfter: limited.retryAfter }, { 'Retry-After': String(limited.retryAfter) });
+      return;
+    }
+    const guild = await managedGuild(ctx, session, guildId);
+    if (!guild) return;
+    let members;
+    try {
+      members = await discord.searchMembers(guildId, query);
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return;
+    }
+    json(ctx, 200, { members });
+  }
+
   /** Answers a failed record operation. */
   function recordFailure(ctx, err, { write, what }) {
     if (err instanceof FieldError) return fail(ctx, 400, 'invalid_request', err.message, err.path ? { path: err.path } : {});
@@ -664,8 +703,15 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     };
     try {
       if (method === 'GET' && itemId === undefined) {
-        const items = await records.list(guildId, key);
-        json(ctx, 200, { items: Array.isArray(items) ? items : [], limit: collection.limit });
+        // Searchable collections take ?query= (what to look for) and ?cursor= (the page after a previous answer).
+        const query = (ctx.query.get('query') ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, LIST_QUERY_MAX);
+        const rawCursor = ctx.query.get('cursor') ?? '';
+        const cursor = LIST_CURSOR_RE.test(rawCursor) ? rawCursor : '';
+        const result = await records.list(guildId, key, { query, cursor });
+        const items = Array.isArray(result) ? result : Array.isArray(result?.items) ? result.items : [];
+        const nextCursor = !Array.isArray(result) && typeof result?.nextCursor === 'string' && LIST_CURSOR_RE.test(result.nextCursor)
+          ? result.nextCursor : null;
+        json(ctx, 200, { items, limit: collection.limit, ...(nextCursor ? { nextCursor } : {}) });
         return;
       }
       if (method === 'GET') {
@@ -741,6 +787,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (settingsMatch) return guildSettings(ctx, settingsMatch[1]);
     const resourcesMatch = /^\/api\/guilds\/([^/]{1,32})\/resources$/.exec(path);
     if (resourcesMatch) return guildResources(ctx, resourcesMatch[1]);
+    const membersMatch = /^\/api\/guilds\/([^/]{1,32})\/members$/.exec(path);
+    if (membersMatch) return guildMembers(ctx, membersMatch[1]);
     const recordsMatch = /^\/api\/guilds\/([^/]{1,32})\/records\/([^/]{1,64})(?:\/([^/]{1,64})(?:\/actions\/([^/]{1,64}))?)?$/.exec(path);
     if (recordsMatch) return guildRecords(ctx, recordsMatch[1], recordsMatch[2], recordsMatch[3], recordsMatch[4]);
     const file = STATIC_FILES.get(path);
