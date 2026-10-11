@@ -1,59 +1,77 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
-import { PERMISSION_LEVELS } from '../../config/constants.js';
-import { createInfraction, assertHierarchy } from '../../services/moderationService.js';
-import { successEmbed, errorEmbed } from '../../utils/embedBuilder.js';
+import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import prisma from '../../database/client.js';
+import { PERMISSION_LEVELS } from '../../config/constants.js';
+import { TIER_ACTION_LABEL, deliverModReply, executeModAction, replyModError } from '../../services/moderationService.js';
+import { getSettingsSafe } from '../../services/settingsService.js';
+import logger from '../../utils/logger.js';
+import { clampText } from '../../utils/text.js';
 
+export const module = 'moderation';
 export const permissionLevel = PERMISSION_LEVELS.MODERATOR;
+
+const reasonOpt = (o, desc = 'Reason (audit log and DM)') => o.setName('reason').setDescription(desc).setMaxLength(512);
+const proofOpt = (o) => o.setName('proof').setDescription('Proof link (http/https)').setMaxLength(1000);
 
 export const data = new SlashCommandBuilder()
   .setName('warn')
-  .setDescription('Issue a formal warning to a member.')
+  .setDescription('Warn a member; warnings can trigger automatic actions (MEE6 /warn).')
   .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
   .addUserOption((o) => o.setName('user').setDescription('Member to warn').setRequired(true))
-  .addStringOption((o) => o.setName('reason').setDescription('Reason for the warning').setRequired(true))
-  .addStringOption((o) => o.setName('proof').setDescription('Proof URL'));
+  .addStringOption((o) => reasonOpt(o, 'Reason for the warning').setRequired(true))
+  .addStringOption((o) => proofOpt(o));
 
-export async function execute(interaction, client) {
-  await interaction.deferReply({ ephemeral: true });
+const tagOf = (user) => clampText(String(user?.tag ?? user?.username ?? user?.id ?? 'unknown').replace(/`/g, "'"), 100);
 
-  const target   = interaction.options.getUser('user', true);
-  const reason   = interaction.options.getString('reason', true);
-  const proofUrl = interaction.options.getString('proof') ?? undefined;
-  const guild    = interaction.guild;
+/**
+ * /warn: records an active WARN (the service runs escalation) and reports the active total and any
+ * escalation that fired.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @returns {Promise<void>}
+ */
+export async function execute(interaction) {
+  await interaction.deferReply({ ephemeral: true }); // errors stay private
 
-  const targetMember = await guild.members.fetch(target.id).catch(() => null);
-  if (!targetMember) {
-    return interaction.editReply({ embeds: [errorEmbed('Not Found', 'That user is not in this server.')] });
+  const user = interaction.options.getUser('user', true);
+  const settings = await getSettingsSafe(interaction.guildId);
+  const res = await executeModAction({
+    guild: interaction.guild,
+    target: user,
+    moderator: interaction.user,
+    action: 'WARN',
+    reason: interaction.options.getString('reason', true),
+    proofUrl: interaction.options.getString('proof'),
+    source: 'command',
+  });
+  if (!res.ok) {
+    await replyModError(interaction, res);
+    return;
   }
+
+  // The count follows the action, so it includes this warning (and ignores pardoned ones).
+  let active = null;
   try {
-    assertHierarchy(guild, targetMember, interaction.member);
+    active = await prisma.infraction.count({
+      where: { guildId: interaction.guildId, targetUserId: user.id, type: 'WARN', active: true },
+    });
   } catch (err) {
-    return interaction.editReply({ embeds: [errorEmbed('Hierarchy Error', err.message)] });
+    logger.warn(`/warn: could not count active warnings: ${err?.message ?? err}`);
   }
 
-  try {
-    const infraction = await createInfraction(guild, target, interaction.user, 'WARN', {
-      reason,
-      proofUrl,
-      client,
-    });
+  const inf = res.infraction;
+  const lines = [
+    `**User:** <@${user.id}> \`${tagOf(user)}\``,
+    `**Reason:** ${clampText(inf.reason, 1000)}`,
+  ];
+  if (active !== null) lines.push(`**Active warnings:** ${active}`);
+  lines.push(`**Case:** #${inf.caseId}`);
 
-    // Fetch total warn count for display
-    const totalWarns = await prisma.infraction.count({
-      where: { guildId: guild.id, targetUserId: target.id, type: 'WARN' },
-    });
-
-    const desc = [
-      `**User:** <@${target.id}> \`${target.tag}\``,
-      `**Reason:** ${reason}`,
-      `**Total Warnings:** ${totalWarns}`,
-      `**Case:** #${infraction.caseId}`,
-    ].join('\n');
-
-    await interaction.deleteReply();
-    await interaction.followUp({ embeds: [successEmbed('Warning Issued', desc)] });
-  } catch (err) {
-    await interaction.editReply({ embeds: [errorEmbed('Warn Failed', err.message)] });
+  const warnings = [...(res.dm === 'failed' ? ["I couldn't DM the user."] : []), ...(res.warnings ?? [])];
+  const e = res.escalation;
+  if (e?.ok) {
+    lines.push(`**Escalation T${e.tierId}:** ${TIER_ACTION_LABEL[e.action] ?? e.action} applied (case #${e.caseId})`);
+  } else if (e) {
+    warnings.push(`Escalation T${e.tierId} (${TIER_ACTION_LABEL[e.action] ?? e.action}) could not be applied: ${clampText(e.error ?? 'unknown error', 300)}`);
   }
+
+  await deliverModReply(interaction, settings, { title: 'Warning Issued', lines, warnings });
 }

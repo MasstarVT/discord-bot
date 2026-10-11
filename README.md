@@ -1,24 +1,160 @@
 # Discord Bot
 
-A production-grade, multi-purpose Discord bot built on discord.js, with Postgres (via Prisma) for persistence and Redis for caching, and PM2 for process management.
+A self-hosted, MEE6-style multi-purpose Discord bot built on discord.js, with Postgres (via Prisma) for persistence, Redis for caching, and PM2 or Docker for process management. Moderation, auto-moderation, audit logs, welcome and goodbye messages, levels, custom commands, automations, reaction roles, economy, games, social feeds and more are separate modules, and every module can be switched on or off per server with `/module`. There is no premium tier and no API key to buy: every built-in feature runs on Discord data or public, keyless endpoints.
 
 ## Features
 
-- **Moderation, Admin & Utility** commands alongside **Economy**, **Leveling**, **Fun**, and **Games** modules
-- Slash commands, auto-deployed on startup when the command set changes (hash-checked)
-- Sharded via `discord.js`'s `ShardingManager` (`totalShards: 'auto'`)
-- Prisma ORM for database access and migrations
+Each bullet is a module you can turn on or off with `/module`; the MEE6 plugin it mirrors is in brackets. Modules marked *off by default* are switched on with `/module enable <name>`; their setup commands work while the module is off, so you can configure first.
+
+- 🔨 **Moderation** (MEE6: Moderator) — `/ban` (also temporary), `/kick`, `/softban`, `/timeout` (over 28 days uses a mute role), `/unmute`, `/unban`, `/warn` with automatic escalation, `/history view|clear`, `/case`, `/purge` with filters, `/slowmode`; immune and moderator roles, a case log channel and public or private replies via `/modconfig`. Temporary bans expire through a durable scheduler.
+- 🤖 **Auto-Moderation** (MEE6: Moderator › Auto-moderation) — *off by default.* Ten rules (bad words and regexes, repeated text, invites, links, caps, emojis, spoilers, mentions, zalgo, spam rate), each with its own action (delete, warn, timeout, kick, ban) and role/channel scope; staff are exempt.
+- 📜 **Audit Logs** (MEE6: Moderator › Audit logging) — *off by default.* Per-type log channels and individually toggled events for messages, members, voice, channels, threads, roles, emojis, invites and the server, batched to respect rate limits.
+- 👋 **Welcome & Goodbye** (MEE6: Welcome & Goodbye) — *off by default.* Join message, optional welcome card with a custom background, welcome DM, goodbye message, delayed autoroles that respect Rules Screening, built from one shared placeholder set.
+- 🛡️ **Verification** (MEE6: Welcome › Captcha verification) — *off by default.* Image-code or one-button captcha for new members, with a timeout that kicks members who never verify.
+- 🎭 **Reaction Roles** (MEE6: Reaction Roles) — role panels as buttons, a dropdown or plain emoji reactions, on bot posts or on an existing message.
+- ⭐ **Levels** (MEE6: Levels) — *off by default.* Message and voice XP (15 to 25 per message by default), level-up announcements, reward roles, XP boost roles, `/rank` card, `/leaderboard`, `/xp` management.
+- 🏷️ **Custom Commands** (MEE6: Custom Commands) — *off by default.* `/tag` commands (also run as `!name`), multi-action responses, random replies, argument placeholders, plus `/trigger` auto-responders.
+- ⚙️ **Automations** (MEE6: Automations) — *off by default.* When → If → Do rules over messages, reactions, voice, joins and threads, with presets and JSON export and import.
+- 🌐 **Auto-Translate** (beyond MEE6) — *off by default; beyond MEE6.* Translate a channel's messages into up to five languages; `/translate`, `/detectlanguage`, `/languages` work everywhere.
+- 📨 **Invite Tracker** (MEE6: Invite Tracker) — who invited whom, `/invites` leaderboard and personal invite links.
+- 🧱 **Embed Messages** (MEE6: Embed Messages) — build, save, publish and edit embeds with fields and link buttons; presets for welcome channels.
+- ⏰ **Reminders** (MEE6: Reminder (Reminders/Timers)) — scheduled channel messages: time of day, interval or one-shot, in the server's time zone.
+- 🎉 **Giveaways** (MEE6: Giveaways) — button-entry giveaways with role requirements, weighted odds, reroll and XP or coin prizes.
+- 📊 **Polls** (MEE6: Polls) — single or multiple choice polls with live results and an end time.
+- 🌟 **Starboards** (MEE6: Starboards) — repost popular messages to a channel; several boards per server.
+- 🎫 **Ticketing** (MEE6: Ticketing) — ticket panels with buttons or a dropdown, categories, staff claim, HTML transcripts.
+- 🔊 **Temporary Channels** (MEE6: Temporary Channels) — join-to-create voice hubs with owner controls (`/voice lock|limit|rename|...`).
+- 📈 **Statistics Channels** (MEE6: Statistics Channels) — counter channels for members, bots, online, peak online, boosts, channels, roles and more.
+- 🎂 **Birthdays** (MEE6: Birthdays) — `/birthday`, announcements at a chosen hour in the server's time zone and an optional birthday role.
+- 🏆 **Achievements** (MEE6: Achievements) — *off by default.* Tiered achievements for messages, reactions, levels, boosts and purchases, with role, XP or coin rewards.
+- 🪙 **Economy** (MEE6: Economy) — a separate wallet per server: `/daily` streaks, `/work`, `/pay`, `/shop`, `/inventory`, `/use`, `/richest`, boosts, plus the casino games `/blackjack`, `/roulette` and `/slots` with escrowed bets.
+- 🎮 **Games** (MEE6: Economy › games (+ ours)) — Rock-Paper-Scissors, number guess, Tic-Tac-Toe and a full two-player Scrabble (beyond MEE6).
+- 📰 **Social Feeds** (MEE6: RSS / YouTube / Reddit / Bluesky / Podcast alerts) — post new RSS, YouTube channel, Reddit, Bluesky and podcast items to a channel, keyless.
+- 🔎 **Search Anything** (MEE6: Search Anything) — `/anime`, `/manga` (AniList), `/pokemon`, `/urban`, keyless.
+- 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API).
+
+**Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`.
+
+**Beyond MEE6:** Auto-Translate, the Scrabble and other free games, and a per-server economy without premium limits. **Research only:** Twitch, YouTube Data API, Reddit API, X, Instagram, TikTok and Kick alerts, social counters, music and AI features are written up in [docs/external-api-research.md](docs/external-api-research.md) but not built.
+
+## Commands
+
+76 slash commands, registered automatically on startup when the command set changes (hash-checked). Commands of a module that is switched off are refused with a pointer to `/module`; an admin's configuration command for that module still works so it can be set up first. Admin commands are hidden from regular members by Discord permissions (Manage Server) and re-checked by the bot.
+
+| Command | Module | Who | Description |
+|---|---|---|---|
+| `/ban` | 🔨 Moderation | Moderators | Ban a user, optionally for a set time (MEE6 /ban, /tempban). |
+| `/case` | 🔨 Moderation | Moderators | View or edit a moderation case. |
+| `/history` | 🔨 Moderation | Moderators (clear: Admins) | View or clear a member's infractions (MEE6 /infractions, /clear-all-infractions). |
+| `/kick` | 🔨 Moderation | Moderators | Kick a member from the server (MEE6 /kick). |
+| `/modconfig` | 🔨 Moderation | Admins | Moderator settings: escalation, immune and mod roles, mute role, case log, visibility. |
+| `/purge` | 🔨 Moderation | Moderators | Bulk-delete recent messages in this channel (MEE6 /clear) |
+| `/slowmode` | 🔨 Moderation | Moderators | Set or remove a channel's slowmode (MEE6 /slowmode) |
+| `/softban` | 🔨 Moderation | Moderators | Ban and instantly unban a user to delete their recent messages. |
+| `/timeout` | 🔨 Moderation | Moderators | Time out a member; over 28 days uses the mute role (MEE6 /mute, /tempmute). |
+| `/unban` | 🔨 Moderation | Moderators | Lift a ban by user ID (MEE6 /unban). |
+| `/unmute` | 🔨 Moderation | Moderators | Remove a member's timeout or mute role (MEE6 /unmute). |
+| `/warn` | 🔨 Moderation | Moderators | Warn a member; warnings can trigger automatic actions (MEE6 /warn). |
+| `/automod` | 🤖 Auto-Moderation | Admins | Auto-moderation rules, actions and exemptions (MEE6 Moderator › Auto-moderation). |
+| `/logging` | 📜 Audit Logs | Admins | Audit logs: turn on/off, pick log channels, toggle events (MEE6 Moderator › Audit logs). |
+| `/goodbye` | 👋 Welcome & Goodbye | Admins | Goodbye message when a member leaves (MEE6 Goodbye message). |
+| `/welcome` | 👋 Welcome & Goodbye | Admins | Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye). |
+| `/captcha` | 🛡️ Verification | Admins | Captcha verification for new members (MEE6 Welcome › Captcha verification). |
+| `/reactionrole` | 🎭 Reaction Roles | Admins | Role panels with buttons, a dropdown or emoji reactions (MEE6 Reaction Roles) |
+| `/leaderboard` | ⭐ Levels | Everyone | Show the server XP leaderboard (MEE6 /levels). |
+| `/levelconfig` | ⭐ Levels | Admins | Levels settings: XP, level-up messages, role rewards, rank card (MEE6 Levels). |
+| `/rank` | ⭐ Levels | Everyone | Show your rank card or a member's (MEE6 /rank). |
+| `/xp` | ⭐ Levels | Admins | Manage member XP (MEE6 /give-xp, /remove-xp). |
+| `/tag` | 🏷️ Custom Commands | Everyone (some subcommands: Admins) | Custom commands (MEE6 !name): run, create and manage this server's commands. |
+| `/trigger` | 🏷️ Custom Commands | Admins | Auto-responders for matching messages (custom commands). |
+| `/automation` | ⚙️ Automations | Admins | Automations: When → If → Do rules (MEE6 Automations) |
+| `/autotranslate` | 🌐 Auto-Translate | Admins | Set up auto-translation for a channel (up to 5 target languages). |
+| `/invites` | 📨 Invite Tracker | Everyone | Invite Tracker: /invites, /inviter, /invites-leaderboard and personal links |
+| `/embed` | 🧱 Embed Messages | Admins | Embed Messages: build, publish and edit saved embeds (fields, link buttons) |
+| `/reminder` | ⏰ Reminders | Admins | Scheduled channel messages (MEE6 Reminders/Timers) |
+| `/giveaway` | 🎉 Giveaways | Moderators | Run giveaways with a Participate button (MEE6 Giveaways, /reroll) |
+| `/poll` | 📊 Polls | Moderators | Create and manage polls (MEE6 /poll, /poll-end). |
+| `/starboard` | 🌟 Starboards | Admins | Starboards: repost popular messages to a channel (MEE6 Starboards). |
+| `/ticket` | 🎫 Ticketing | Everyone | Manage the ticket in this channel (MEE6 /ticket-claim, -close, -reopen, -delete). |
+| `/ticket-panel` | 🎫 Ticketing | Admins | Set up ticket panels: options, managers, categories, transcripts (MEE6 Ticketing). |
+| `/voice` | 🔊 Temporary Channels | Everyone | Control your temporary voice channel (MEE6 /voice-* commands). |
+| `/voice-hub` | 🔊 Temporary Channels | Admins | Join-to-create voice hubs (MEE6 Temporary Channels). |
+| `/stats` | 📈 Statistics Channels | Admins | Counter channels with live server stats (MEE6 Statistics Channels). |
+| `/birthday` | 🎂 Birthdays | Everyone | Share and see birthdays (MEE6 /remember-birthdays, /birthday, /next-birthdays). |
+| `/birthday-config` | 🎂 Birthdays | Admins | Configure birthday announcements and the birthday role (MEE6 Birthdays). |
+| `/achievement-config` | 🏆 Achievements | Admins | Set up achievements (MEE6 Achievements, /achievements-reset) |
+| `/achievements` | 🏆 Achievements | Everyone | Show a member's achievements, badges and progress (MEE6 /achievements) |
+| `/balance` | 🪙 Economy | Everyone | Show your or a member's coins on this server (MEE6 /coins). |
+| `/blackjack` | 🪙 Economy | Everyone | Play blackjack against the dealer for coins. |
+| `/daily` | 🪙 Economy | Everyone | Claim your daily coins; claim on consecutive days for a streak bonus (MEE6 /daily). |
+| `/economy-admin` | 🪙 Economy | Admins | Manage the economy: coins, shop items, settings and reset (MEE6 economy admin). |
+| `/economy-boost` | 🪙 Economy | Admins | Manage coin boosts for /daily and /work (MEE6 boosts, up to 10). |
+| `/inventory` | 🪙 Economy | Everyone | Show your or a member's items (MEE6 /items). |
+| `/pay` | 🪙 Economy | Everyone | Give some of your coins to another member (MEE6 /give-coins). |
+| `/pity` | 🪙 Economy | Everyone | Get 500 coins when your balance is below 100 (12-hour cooldown). |
+| `/richest` | 🪙 Economy | Everyone | Show the richest members of this server (MEE6 /richest). |
+| `/roulette` | 🪙 Economy | Everyone | Bet coins on the European roulette wheel (MEE6 /roulette). |
+| `/shop` | 🪙 Economy | Everyone | Browse and buy items from this server's shop (MEE6 /shop /buy). |
+| `/slots` | 🪙 Economy | Everyone | Spin the 3×3 slot machine for coins. |
+| `/use` | 🪙 Economy | Everyone | Use an item from your inventory (MEE6 /use). |
+| `/work` | 🪙 Economy | Everyone | Work a shift to earn coins (MEE6 /work). |
+| `/games` | 🎮 Games | Everyone | Browse all games available to play. |
+| `/numguess` | 🎮 Games | Everyone | Guess the bot's number (1–100) in 7 tries! |
+| `/rps` | 🎮 Games | Everyone | Play Rock, Paper, Scissors against the bot! |
+| `/scrabble` | 🎮 Games | Everyone | Challenge another player to a game of Scrabble! |
+| `/scrabble-help` | 🎮 Games | Everyone | Learn how to play Scrabble and use its commands. |
+| `/scrabble-play` | 🎮 Games | Everyone | Scrabble move: word, pass, exchange or resign |
+| `/tictactoe` | 🎮 Games | Everyone | Challenge another player to Tic-Tac-Toe! |
+| `/feed` | 📰 Social Feeds | Admins | RSS, YouTube, Reddit, Bluesky and podcast alerts (MEE6 social alerts) |
+| `/anime` | 🔎 Search Anything | Everyone | Search AniList for an anime: score, episodes, status, genres. |
+| `/manga` | 🔎 Search Anything | Everyone | Search AniList for a manga: score, chapters, status, genres. |
+| `/pokemon` | 🔎 Search Anything | Everyone | Look up a Pokémon on PokeAPI: types, abilities, stats. |
+| `/urban` | 🔎 Search Anything | Everyone | Look up a word or phrase on Urban Dictionary. |
+| `/liverole` | 🔴 Live Role | Admins | Give a role while members stream (MEE6 Twitch Alerts live-streaming role). |
+| `/detectlanguage` | Core | Everyone | Detect the language of a piece of text. |
+| `/emoji` | Core | Admins | Add, list or delete emojis (MEE6 /add_emoji) |
+| `/help` | Core | Everyone | Show the commands you can use here. |
+| `/info` | Core | Everyone | User, server and role info (MEE6 /user-info /server-info /role-info) |
+| `/languages` | Core | Everyone | List all supported translation language codes. |
+| `/module` | Core | Admins | Turn bot modules on or off for this server. |
+| `/settings` | Core | Admins | Server settings: timezone, embed colour, custom-command prefix, /urban (MEE6 Settings). |
+| `/translate` | Core | Everyone | Translate text into another language. |
 
 ## Setup
+
+Requires Node.js 22 or newer, PostgreSQL 12 or newer and Redis.
 
 ```bash
 npm install
 cp .env.example .env   # fill in DISCORD_TOKEN, CLIENT_ID, DATABASE_URL, REDIS_URL
-npm run db:migrate     # apply prisma/migrations (and create one after editing the schema)
-npm run dev             # start with auto-restart
+npx prisma migrate deploy   # apply the committed migrations (new or existing database)
+npm run dev                 # start with auto-restart
 ```
 
-Production process management is handled via PM2 (`npm run pm2:start`, `pm2:reload`, `pm2:logs`).
+- **Migrations:** `npx prisma migrate deploy` applies everything in `prisma/migrations/` and is what production (and the Docker image) runs. Developers who change `prisma/schema.prisma` run `npm run db:migrate` to create a new migration; CI fails when the schema and the migrations disagree. The `20261010120000_mee6_parity` migration is additive and turns on the modules that already worked before module toggles existed (moderation, reaction roles, and custom commands for servers that already had tags). Existing global economy balances are copied once, lazily, into each server's own balance the first time a member uses the economy there.
+- **Font:** `assets/fonts/Nunito-Bold.ttf` must exist (it is committed). Without it the welcome and rank cards render blank text.
+- **Privileged gateway intents:** enable **Server Members**, **Presence** and **Message Content** under Bot → Privileged Gateway Intents in the Developer Portal; without them Discord closes the connection with code 4014. Server Members powers welcome messages, autoroles, invite tracking and member counters. Presence powers the online and peak statistics counters and the Live Role. Message Content powers auto-moderation, XP, custom commands and triggers, and auto-translate.
+- **Permissions:** the bot checks what it needs before each action and tells you which permission is missing. Giving it a role with the permissions of the modules you use (Manage Roles, Manage Channels, Ban/Kick/Moderate Members, Manage Messages, Manage Server for invite tracking) is enough; role-based features need the bot's top role above the roles it manages.
+- **Production:** `npm run pm2:start`, `pm2:reload`, `pm2:logs`.
+- **Scrabble dictionary (optional):** put a word list at `assets/dictionaries/words.txt` (one word per line, for example the public-domain ENABLE list; not shipped; about 10-15 MB of RAM per shard) to have `/scrabble-play` validate words. Without it moves are not checked against a dictionary. `/scrabble-play` takes `word`, `pass`, `exchange` or `resign`; `?X` plays a blank as the letter X, and a missed turn (3 minutes) forfeits. Scrabble games live in memory, so a restart ends them.
+
+### Configuration
+
+Required: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Everything else is optional and commented out in `.env.example`.
+
+| Key | Default | Purpose |
+|---|---|---|
+| `DEPLOY_GUILD_ID` | global | register commands to one guild instantly (global registration takes up to an hour) |
+| `BOT_OWNER_ID` | none | your user id: OWNER permission level everywhere |
+| `HEALTH_PORT` | 8081 | health endpoints |
+| `STATE_DIR` | `./state` | restart-brake history |
+| `DEPLOY_HASH_FILE` | `./.deploy-hash` | command hash |
+| `PRISMA_LOG_QUERIES` | off | `1` logs every Prisma query |
+| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY` | `google` | translation backend (below) |
+| `HTTP_CONTACT` | `n/a` | contact added to the User-Agent of feed and search requests |
+| `REDDIT_USER_AGENT` | standard User-Agent | User-Agent for Reddit feeds |
+| `BSKY_APPVIEW_URL` | `https://public.api.bsky.app` | Bluesky AppView |
+| `TEST_DATABASE_URL` | none | opt-in database tests |
 
 ## Running in Docker / homelab
 
@@ -39,21 +175,17 @@ volumes:
 ```
 
 - **Env file:** set only the keys you need. Don't copy empty keys or `NODE_ENV=development` from `.env.example`: Compose passes empty values through, and they override what the image sets (`NODE_ENV=production`, `HEALTH_PORT`, `STATE_DIR`, `DEPLOY_HASH_FILE`).
-- **Migrations:** the container runs `prisma migrate deploy` before it starts the bot. Every schema change needs a migration (`npm run db:migrate`), and CI fails when `schema.prisma` and `prisma/migrations/` disagree. Keep migrations additive, because rolling back the image does not roll back the database.
-- **Privileged intents:** enable Server Members, Presence and Message Content under Bot → Privileged Gateway Intents in the Developer Portal. Without them Discord closes the connection with code 4014.
+- **Migrations:** the container runs `prisma migrate deploy` before it starts the bot (PostgreSQL 12 or newer). Every schema change needs an additive migration (`npm run db:migrate`), and CI fails when `schema.prisma` and `prisma/migrations/` disagree. Rolling back the image does not roll back the database.
+- **Privileged intents:** enable Server Members, Presence and Message Content under Bot → Privileged Gateway Intents in the Developer Portal. Without them Discord closes the connection with code 4014. The Presence intent is used by the statistics counters (online and peak) and the Live Role.
 - **Health endpoints** on `HEALTH_PORT` (default 8081):
   - `GET /healthz` returns 200 while the process runs. The image's `HEALTHCHECK` uses it.
   - `GET /readyz` returns 200 only when every shard is connected to Discord. Otherwise it returns 503 with a `reason`: `starting`, `brake-delay`, `shard-not-ready` or `parked:<code>`.
 - **Restart brake:** every start is recorded in `STATE_DIR` (`/app/state` in the image; mount a volume there). From the 6th start within an hour, the bot waits 2, 4, 8, 16 and then 30 minutes before connecting, so a crash loop can't use up Discord's 1000 logins per day. A shard that dies, or that Discord disconnects for good with a non-fatal code, ends the process, and Docker's restart policy plus the brake decide when to try again.
 - **Parked:** close codes 4004 (bad token), 4013 and 4014 (invalid or disallowed intents), and missing required environment variables, are never retried. The process stays up, logs what to fix, and `/readyz` returns 503 `parked:<code>`. Fix the cause, then restart the container.
-- **Slash commands:** the command hash lives at `DEPLOY_HASH_FILE` (`/app/state/.deploy-hash` in the image), so restarts don't re-register unchanged commands. Delete it after switching `DEPLOY_GUILD_ID` between one guild and global.
-- **Shutdown:** `SIGTERM` or `SIGINT` disconnects every shard from Discord and exits within 25 s.
+- **Slash commands:** the command hash lives at `DEPLOY_HASH_FILE` (`/app/state/.deploy-hash` in the image), so restarts don't re-register unchanged commands. It also covers `CLIENT_ID` and `DEPLOY_GUILD_ID`, so switching between a guild and global registration re-registers on the next start.
+- **Shutdown:** `SIGTERM` or `SIGINT` stops the job scheduler, flushes queued audit-log messages, disconnects every shard from Discord and exits within 25 s.
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-### Translation backend
+## Translation backend
 
 Auto-translate and `/translate` use Google's free endpoint by default. It has no API key, and it rate-limits (HTTP 429) quickly under chat traffic. For steady use, point the bot at a self-hosted [LibreTranslate](https://github.com/LibreTranslate/LibreTranslate) server:
 
@@ -63,4 +195,31 @@ LIBRETRANSLATE_URL=http://<host>:5000
 # LIBRETRANSLATE_API_KEY=   # only if the server requires keys
 ```
 
-On any HTTP 429 the bot pauses translation (30 min for Google, 1 min for LibreTranslate) instead of retrying on every message, and logs once.
+`TRANSLATE_PROVIDER` is `google` or `libretranslate`; any other value logs a warning and uses Google. On an HTTP 429 the bot pauses translation (30 minutes for Google, 1 minute for LibreTranslate, or the server's `Retry-After` when that is longer, capped at 6 hours) instead of retrying on every message, and logs once. The pause is shared between shards through Redis. Auto-translate translates the first 1,000 characters of a message and shows up to 1,000 characters per language. Traditional Chinese is `zh-tw`; the aliases `iw`, `nb`, `zh-cn`, `zh-hant` and `fil` are accepted.
+
+## External services
+
+No built-in feature needs an API key. Outbound requests go through an SSRF-safe fetcher with size and time limits and a User-Agent that carries `HTTP_CONTACT`.
+
+- **Built, keyless:** RSS and Atom feeds, YouTube channel feeds (the public Atom feed; YouTube sometimes answers 404 for it, and the bot backs off and eventually disables a feed that keeps failing), Reddit subreddit `.rss` feeds (set `REDDIT_USER_AGENT`, Reddit throttles generic agents), Bluesky accounts through the public AppView, podcasts (iTunes Search plus the RSS feed), `/anime` and `/manga` (AniList), `/pokemon` (PokeAPI), `/urban` (Urban Dictionary; answers only in age-restricted channels unless an admin allows it with `/settings urban`), and the Live Role, which uses Discord's streaming presence rather than the Twitch API. Details and limits: `docs/external-api-research.md`.
+- **Research only, not integrated:** Twitch alerts (Helix/EventSub), YouTube Data API, the Reddit Data API, X/Twitter, Instagram, TikTok, Kick, social counters, music and AI features. Each needs a key, an OAuth app, a paid plan or unstable scraping; the trade-offs are written up in [docs/external-api-research.md](docs/external-api-research.md).
+
+## Upgrading from earlier versions
+
+- `/history` is now `/history view` and `/history clear`; `/scrabble-play` is now `word`, `pass`, `exchange` and `resign` subcommands.
+- Custom commands answer to `<prefix><name>` (default `!`) as well as `/tag use`; `/settings prefix off` disables the prefix. Servers that already had tags are switched to the Custom Commands module by the migration, so their tags start answering to the prefix.
+- Economy balances are per server. Level-up messages use the MEE6 placeholder set (`{user}` is a mention, `{user.name}` the name; old messages are rewritten by the migration). The single `xpRate` became an `xpMin`/`xpMax` range (15 to 25 by default).
+- Slash commands are registered for servers only, except `/translate`, `/detectlanguage` and `/languages`, which also work in DMs.
+
+## Development and tests
+
+```bash
+npm test                      # every test/*.test.js, fully offline
+node --test test/economy.test.js   # one file
+```
+
+The suite needs no Discord, Postgres, Redis or network. `test/integration.test.js` also fails when a command, module, job type, plugin or environment variable is added without updating this README, `CLAUDE.md` and `.env.example`. To run the database tests too, point `TEST_DATABASE_URL` at a migrated throw-away Postgres and run `node --test --test-concurrency=1 "test/*.test.js"`. CI (`.github/workflows/ci-publish.yml`) syntax-checks every file, validates the Prisma schema, runs the offline suite, applies the migrations to an empty PostgreSQL 17, runs the suite again with the database tests, and fails on schema/migration drift. `CLAUDE.md` documents the architecture for contributors.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

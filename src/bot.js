@@ -1,9 +1,13 @@
 import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { loadCommands } from './handlers/commandLoader.js';
 import { loadEvents }   from './handlers/eventLoader.js';
-import { registerHandlers as registerRRHandlers } from './services/reactionRoleService.js';
+import { createHandlerMaps, registerCoreComponents } from './handlers/componentRegistry.js';
+import { collectPlugins, installPlugins } from './handlers/pluginLoader.js';
 import { disconnect as disconnectDatabase } from './database/client.js';
 import redis             from './services/redis.js';
+import { flushLogQueue } from './services/loggingService.js';
+import { stop as stopScheduler } from './services/scheduler.js';
+import { withTimeout } from './utils/async.js';
 import { FATAL_CLOSE_CODES, FATAL_MESSAGE_KEY, fatalCodeFromError } from './utils/fatalGateway.js';
 import logger            from './utils/logger.js';
 
@@ -17,7 +21,7 @@ const client = new Client({
     GatewayIntentBits.GuildWebhooks,
     GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildPresences,        // Privileged
+    GatewayIntentBits.GuildPresences,        // Privileged; used by stat-channels (ONLINE) and liverole (R208)
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.DirectMessages,
@@ -30,16 +34,17 @@ const client = new Client({
     Partials.GuildMember,
     Partials.User,
   ],
+  // Bot replies and logs can quote user text: never let it ping roles or @everyone (admin-configured
+  // messages that must ping a role opt in per message), and don't ping the author on replies.
+  allowedMentions: { parse: ['users'], repliedUser: false },
 });
 
 // ── Component handler registries ─────────────────────────────────────────────
-// Modules register their handlers here at startup or lazily.
-// Keys follow the customId namespace: "action" from "action:param1:param2"
+// Plugins and commands register their handlers here at startup. Keys follow the customId
+// namespace: "prefix" from "prefix:param1:param2". The maps refuse a duplicate prefix.
 client.commands           = new Collection();
 client.commandCategories  = new Map();
-client.buttonHandlers     = new Map();
-client.selectHandlers     = new Map();
-client.modalHandlers      = new Map();
+createHandlerMaps(client); // client.buttonHandlers / selectHandlers / modalHandlers
 
 // ── Fatal gateway close codes ────────────────────────────────────────────────
 // 4004 / 4013 / 4014 (bad token, invalid or disallowed intents) never fix
@@ -68,10 +73,25 @@ process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Promise Rejection in shard', reason instanceof Error ? reason : new Error(String(reason)));
 });
 
+const LOG_FLUSH_TIMEOUT_MS = 4000;
+
 // ── Shutdown hook ────────────────────────────────────────────────────────────
 // Worker threads don't receive signals. index.js calls this on each shard via
 // eval when it gets SIGTERM/SIGINT.
 client.shutdown = async () => {
+  // Stop claiming jobs and let the running ones finish (bounded) before the client goes away.
+  try {
+    await stopScheduler({ timeoutMs: 5000 });
+  } catch (err) {
+    logger.error('Scheduler did not stop cleanly', err);
+  }
+  // Audit-log embeds are coalesced in a per-channel queue (about 1 s): post what is waiting while the client can
+  // still send. Bounded, so a stuck channel cannot hold the shutdown (index.js force-exits after 25 s).
+  try {
+    await withTimeout(flushLogQueue(), LOG_FLUSH_TIMEOUT_MS, 'log queue flush');
+  } catch (err) {
+    logger.warn(`Log queue was not flushed before shutdown: ${err?.message ?? err}`);
+  }
   await client.destroy();
   await Promise.allSettled([
     disconnectDatabase(),
@@ -81,9 +101,11 @@ client.shutdown = async () => {
 
 // ── Boot sequence ─────────────────────────────────────────────────────────────
 async function start() {
-  // Register persistent component handlers before loading commands so that any
-  // command's registerHandlers() call can safely overwrite or extend these.
-  registerRRHandlers(client);
+  // Plugins first: their hooks, persistent components, job handlers and reward providers must exist
+  // before any event can fire. registerCoreComponents then adds the core's own handlers.
+  const collected = await collectPlugins();
+  installPlugins(client, collected);
+  registerCoreComponents(client);
 
   logger.info('Loading commands...');
   await loadCommands(client);

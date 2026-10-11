@@ -2,7 +2,8 @@ import { readdirSync, statSync, readFileSync, writeFileSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { createHash } from 'crypto';
-import { REST, Routes } from 'discord.js';
+import { ApplicationIntegrationType, InteractionContextType, REST, Routes } from 'discord.js';
+import { isModuleKey } from '../config/modules.js';
 import logger from '../utils/logger.js';
 
 const __dirname    = dirname(fileURLToPath(import.meta.url));
@@ -28,6 +29,65 @@ function walkDir(dir) {
     }
   }
   return files;
+}
+
+/**
+ * The payload Discord receives for a command module. Unless the module opts in with
+ * `allowInDMs = true`, the command is registered for servers only (contexts [Guild],
+ * integration types [GuildInstall]): the router assumes a cached guild for every other command
+ * (R123, R124, R271). A command that sets its own contexts or integration types keeps them.
+ * @param {{ data: { toJSON(): object }, allowInDMs?: boolean }} mod
+ * @returns {object}
+ */
+export function buildCommandPayload(mod) {
+  const json = mod.data.toJSON();
+  if (mod.allowInDMs !== true) {
+    json.contexts ??= [InteractionContextType.Guild];                    // 0
+    json.integration_types ??= [ApplicationIntegrationType.GuildInstall]; // 0
+  }
+  return json;
+}
+
+/**
+ * Hash of the command set AND where it is deployed, so changing CLIENT_ID or DEPLOY_GUILD_ID
+ * forces a deploy even when the commands themselves are unchanged (R270). Sorted by name, so payload
+ * order never causes a false positive. deployCommands() and autoDeployCommands() both use it.
+ * @param {string} clientId
+ * @param {string|undefined} guildId
+ * @param {object[]} payloads
+ * @returns {string} hex sha256
+ */
+export function computeDeployHash(clientId, guildId, payloads) {
+  const sorted = [...payloads].sort((a, b) => a.name.localeCompare(b.name));
+  return createHash('sha256')
+    .update(`${clientId}|${guildId || 'global'}|`)
+    .update(JSON.stringify(sorted))
+    .digest('hex');
+}
+
+/**
+ * Imports every command file and returns its deploy payload (files that fail to import are logged and skipped).
+ * @param {string} skipLabel what to say when a file is skipped
+ * @returns {Promise<object[]>}
+ */
+async function collectPayloads(skipLabel) {
+  let files;
+  try {
+    files = walkDir(COMMANDS_DIR);
+  } catch {
+    files = [];
+  }
+
+  const payloads = [];
+  for (const file of files) {
+    try {
+      const mod = await import(pathToFileURL(file).href);
+      if (mod.data?.toJSON) payloads.push(buildCommandPayload(mod));
+    } catch (err) {
+      logger.error(`Skipping ${file} during ${skipLabel}`, err);
+    }
+  }
+  return payloads;
 }
 
 /**
@@ -65,6 +125,12 @@ export async function loadCommands(client) {
       continue;
     }
 
+    // A wrong `module` is reported but not fatal; the router then treats the command as gated by a
+    // module that can never be enabled, which test/registry.test.js catches.
+    if (mod.module !== undefined && mod.module !== null && !isModuleKey(mod.module)) {
+      logger.warn(`Command "${name}" (${file}) declares module ${JSON.stringify(mod.module)}, which is not a MODULES key.`);
+    }
+
     client.commands.set(name, mod);
 
     // Tag each command with its subfolder name so /help can group by category
@@ -73,7 +139,8 @@ export async function loadCommands(client) {
     const category = cmdIdx !== -1 && cmdIdx + 2 < parts.length ? parts[cmdIdx + 1] : 'general';
     client.commandCategories.set(name, category);
 
-    // Allow commands to self-register button/select/modal handlers
+    // Allow commands to self-register button/select/modal handlers (legacy; plugins are the
+    // preferred route). The guarded handler maps refuse a duplicate prefix.
     if (typeof mod.registerHandlers === 'function') {
       mod.registerHandlers(client);
     }
@@ -99,23 +166,8 @@ export async function deployCommands() {
     process.exit(1);
   }
 
-  let files;
-  try {
-    files = walkDir(COMMANDS_DIR);
-  } catch {
-    logger.warn('Commands directory empty — deploying 0 commands.');
-    files = [];
-  }
-
-  const payloads = [];
-  for (const file of files) {
-    try {
-      const mod = await import(pathToFileURL(file).href);
-      if (mod.data?.toJSON) payloads.push(mod.data.toJSON());
-    } catch (err) {
-      logger.error(`Skipping ${file} during deploy`, err);
-    }
-  }
+  const payloads = await collectPayloads('deploy');
+  if (payloads.length === 0) logger.warn('No command payloads found — deploying 0 commands.');
 
   logger.info(`Deploying ${payloads.length} command(s)...`);
   logger.debug('Payload:', JSON.stringify(payloads, null, 2));
@@ -135,11 +187,18 @@ export async function deployCommands() {
     logger.error('Command deployment failed', err);
     process.exit(1);
   }
+
+  // Record what is now live, so the next start does not re-PUT the same set (R270).
+  try {
+    writeFileSync(HASH_FILE, computeDeployHash(clientId, guildId, payloads), 'utf8');
+  } catch (err) {
+    logger.warn(`Could not save the command hash to ${HASH_FILE} (${err.message}) — the next start will deploy again.`);
+  }
 }
 
 /**
  * Hashes the current command payloads and deploys to Discord only when the
- * set of commands has changed since the last deploy. Safe to call on every
+ * set of commands (or the deploy target) has changed since the last deploy. Safe to call on every
  * startup — no-ops when nothing changed, so it won't burn rate-limit budget.
  */
 export async function autoDeployCommands() {
@@ -150,26 +209,10 @@ export async function autoDeployCommands() {
     return;
   }
 
-  let files;
-  try {
-    files = walkDir(COMMANDS_DIR);
-  } catch {
-    files = [];
-  }
-
-  const payloads = [];
-  for (const file of files) {
-    try {
-      const mod = await import(pathToFileURL(file).href);
-      if (mod.data?.toJSON) payloads.push(mod.data.toJSON());
-    } catch (err) {
-      logger.error(`Skipping ${file} during auto-deploy hash`, err);
-    }
-  }
-
-  // Sort by name so payload order doesn't trigger false positives
+  const guildId  = process.env.DEPLOY_GUILD_ID;
+  const payloads = await collectPayloads('auto-deploy hash');
   payloads.sort((a, b) => a.name.localeCompare(b.name));
-  const hash = createHash('sha256').update(JSON.stringify(payloads)).digest('hex');
+  const hash = computeDeployHash(clientId, guildId, payloads);
 
   let storedHash = '';
   try {
@@ -185,7 +228,6 @@ export async function autoDeployCommands() {
 
   logger.info(`Commands changed (${payloads.length} total) — deploying...`);
 
-  const guildId = process.env.DEPLOY_GUILD_ID;
   const rest    = new REST({ version: '10' }).setToken(token);
   const route   = guildId
     ? Routes.applicationGuildCommands(clientId, guildId)

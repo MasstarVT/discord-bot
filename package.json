@@ -11,6 +11,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "deploy": "node index.js --deploy",
+    "test": "node --test \"test/*.test.js\"",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -26,6 +27,7 @@
     "chalk": "^5.3.0",
     "discord.js": "^14.27.0",
     "dotenv": "^16.4.5",
+    "fast-xml-parser": "^5.11.2",
     "ioredis": "^5.4.1",
     "prisma": "5.22.0"
   },

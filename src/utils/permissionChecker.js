@@ -3,19 +3,31 @@ import { PERMISSION_LEVELS } from '../config/constants.js';
 
 /**
  * Resolves a numeric permission level for a guild member.
+ * OWNER = BOT_OWNER_ID; ADMIN = guild owner, Administrator or Manage Server;
+ * MODERATOR = a role in GuildSettings.modRoleIds, or Kick/Ban/Moderate Members (R056-R059).
  * @param {import('discord.js').GuildMember} member
- * @param {object} guildSettings - Row from GuildSettings table
+ * @param {object|null} guildSettings - Row from GuildSettings table (null when unavailable)
  * @returns {number} One of PERMISSION_LEVELS
  */
 export function resolvePermissionLevel(member, guildSettings) {
+  if (!member) return PERMISSION_LEVELS.MEMBER;
   if (member.id === process.env.BOT_OWNER_ID) return PERMISSION_LEVELS.OWNER;
 
-  if (member.permissions.has(PermissionFlagsBits.Administrator)) {
+  const perms = member.permissions; // PermissionsBitField (cached member)
+  if (member.guild?.ownerId === member.id) return PERMISSION_LEVELS.ADMIN;
+  if (perms?.has(PermissionFlagsBits.Administrator) || perms?.has(PermissionFlagsBits.ManageGuild)) {
     return PERMISSION_LEVELS.ADMIN;
   }
 
-  const modRoles = guildSettings?.modRoleIds ?? [];
-  if (modRoles.some((roleId) => member.roles.cache.has(roleId))) {
+  const roleIds = member.roles?.cache ?? null;
+  if ((guildSettings?.modRoleIds ?? []).some((id) => roleIds?.has(id))) return PERMISSION_LEVELS.MODERATOR;
+
+  // R058: the Discord permissions every moderation command already advertises.
+  if (
+    perms?.has(PermissionFlagsBits.KickMembers) ||
+    perms?.has(PermissionFlagsBits.BanMembers) ||
+    perms?.has(PermissionFlagsBits.ModerateMembers)
+  ) {
     return PERMISSION_LEVELS.MODERATOR;
   }
 

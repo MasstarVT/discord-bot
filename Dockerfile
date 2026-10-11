@@ -38,5 +38,7 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:${HEALTH_PORT:-8081}/healthz',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
 
-# Apply pending migrations, then replace the shell with node so it gets signals.
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && exec node index.js"]
+# Apply pending migrations only when DATABASE_URL is set (a missing URL then parks the
+# process instead of crash-looping the container), then replace the shell with node so it
+# gets signals.
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then node_modules/.bin/prisma migrate deploy || exit 1; fi; exec node index.js"]
