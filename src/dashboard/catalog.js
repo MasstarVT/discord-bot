@@ -1,7 +1,7 @@
 // What the dashboard shows and may change: module categories, one-line descriptions, every module's settings groups
 // (src/dashboard/fields.js), its record lists (src/dashboard/collections/index.js) and the placeholder tokens.
 // Pure: imports only registries.
-import { MODULES, MODULE_NAMES } from '../config/modules.js';
+import { MODULES } from '../config/modules.js';
 import { PLACEHOLDERS } from '../utils/placeholderParser.js';
 import { GENERAL_GROUPS, MODULE_GROUPS, SETTINGS_FIELDS } from './fields.js';
 import { COLLECTION_LIST, publicCollection } from './collections/index.js';
@@ -91,27 +91,6 @@ const sub = (field) => {
 export const SUB_TOGGLES = Object.freeze(Object.fromEntries(Object.entries(SUB_TOGGLE_FIELDS)
   .map(([key, fields]) => [key, Object.freeze(fields.map(sub))])));
 
-/** Most changes one toggles-only body may carry (validateChanges; settings PATCHes use fields.js). */
-export const MAX_CHANGES = 60;
-
-/** field -> default value, for every module flag and sub-toggle. */
-export const TOGGLE_DEFAULTS = Object.freeze(Object.fromEntries([
-  ...MODULE_NAMES.map((key) => [MODULES[key].flag, MODULES[key].default === true]),
-  ...Object.values(SUB_TOGGLES).flat().map((t) => [t.field, t.default]),
-]));
-
-function readOnlySet(values) {
-  const set = new Set(values);
-  const refuse = () => { throw new TypeError('TOGGLE_FIELDS is read-only'); };
-  set.add = refuse;
-  set.delete = refuse;
-  set.clear = refuse;
-  return Object.freeze(set);
-}
-
-/** The boolean switches: each module flag and each sub-toggle (every editable field: SETTINGS_FIELDS). Read-only. */
-export const TOGGLE_FIELDS = readOnlySet(Object.keys(TOGGLE_DEFAULTS));
-
 const GENERAL_DESCRIPTION = 'Time zone, embed colour and the custom command prefix: settings every module uses.';
 
 /** The group of a placeholder token for the browser's token picker. */
@@ -172,55 +151,4 @@ function deepFreeze(v) {
     Object.freeze(v);
   }
   return v;
-}
-
-/**
- * The toggle values of a GuildSettings row. A missing or non-boolean value reads as the catalog default.
- * @param {object|null|undefined} row
- * @returns {Record<string, boolean>} one entry per TOGGLE_FIELDS field
- */
-export function pickToggleValues(row) {
-  const values = {};
-  for (const field of TOGGLE_FIELDS) {
-    const value = row?.[field];
-    values[field] = typeof value === 'boolean' ? value : TOGGLE_DEFAULTS[field];
-  }
-  return values;
-}
-
-const isPlainObject = (v) => {
-  if (v === null || typeof v !== 'object' || Array.isArray(v)) return false;
-  const proto = Object.getPrototypeOf(v);
-  return proto === Object.prototype || proto === null;
-};
-
-const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
-/**
- * Validates a toggles-only body `{ changes: { [field]: boolean } }`: 1..MAX_CHANGES entries, every key a
- * TOGGLE_FIELDS field, every value strictly boolean, nothing else in the body. (The settings PATCH accepts every
- * field: validateSettingsChanges in fields.js.)
- * @param {unknown} body parsed JSON
- * @returns {{ ok: true, changes: Record<string, boolean> } | { ok: false, message: string }}
- */
-export function validateChanges(body) {
-  if (!isPlainObject(body)) return { ok: false, message: 'The body must be a JSON object.' };
-  const extra = Object.keys(body).filter((k) => k !== 'changes');
-  if (extra.length > 0) return { ok: false, message: 'The body may only contain "changes".' };
-  const input = body.changes;
-  if (!isPlainObject(input)) return { ok: false, message: '"changes" must be an object of field: true/false.' };
-
-  const keys = Object.keys(input);
-  if (keys.length === 0) return { ok: false, message: '"changes" is empty.' };
-  if (keys.length > MAX_CHANGES) return { ok: false, message: `At most ${MAX_CHANGES} changes per request.` };
-
-  const changes = {};
-  for (const key of keys) {
-    if (FORBIDDEN_KEYS.has(key) || !TOGGLE_FIELDS.has(key)) {
-      return { ok: false, message: `"${key.slice(0, 64)}" is not a setting the dashboard can change.` };
-    }
-    if (typeof input[key] !== 'boolean') return { ok: false, message: `"${key}" must be true or false.` };
-    changes[key] = input[key];
-  }
-  return { ok: true, changes };
 }

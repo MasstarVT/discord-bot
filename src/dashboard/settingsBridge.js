@@ -133,7 +133,8 @@ async function refreshCaptchaPanel(guildId, row, discord) {
  *   - a new moderation log channel: a confirmation is posted there (/modconfig logchannel);
  *   - Auto-Moderation switched on: the stored config is rewritten in the current format (/automod enable);
  *   - the welcome embed changed: the welcome text that was in effect is kept (welcomeService.materialiseWelcome).
- * A failed side effect never undoes the save; it is logged and reported in `notices`.
+ * A failed side effect never undoes the save: it is logged. Side effects that have something to tell the admin (e.g. balances
+ * lowered to a new maximum) add a line to `notices`.
  * @param {string} guildId
  * @param {Record<string, unknown>} changes
  * @param {{ discord?: object|null, logger?: object }} [ctx] discord: src/dashboard/discordApi.js (for Discord writes)

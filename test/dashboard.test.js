@@ -6,7 +6,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,7 @@ const { LIMITS } = await import('../src/config/constants.js');
 const { PLACEHOLDERS } = await import('../src/utils/placeholderParser.js');
 const { PermissionFlagsBits } = await import('discord.js');
 
-const { TOGGLE_FIELDS, TOGGLE_DEFAULTS, SUB_TOGGLES, CATEGORIES, DESCRIPTIONS, buildCatalog, pickToggleValues, validateChanges } = catalog;
+const { SUB_TOGGLES, CATEGORIES, DESCRIPTIONS, buildCatalog } = catalog;
 const { DiscordApiError } = discordApi;
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
@@ -146,64 +146,6 @@ describe('catalog', () => {
       assert.ok(col, `${MODULES[key].flag} is not a Boolean column`);
       assert.equal(col.default, MODULES[key].default, `${MODULES[key].flag}`);
     }
-  });
-
-  test('TOGGLE_FIELDS holds the module flags and sub-toggles only, and is read-only', () => {
-    assert.equal(TOGGLE_FIELDS.size, MODULE_NAMES.length + 16);
-    for (const key of MODULE_NAMES) assert.ok(TOGGLE_FIELDS.has(MODULES[key].flag));
-    for (const field of ['levelingEnabled', 'captchaLockdownPrior', 'xpRate', 'guildId', 'timezone', 'customPrefix']) {
-      assert.equal(TOGGLE_FIELDS.has(field), false, `${field} must not be a toggle`);
-    }
-    assert.throws(() => TOGGLE_FIELDS.add('levelingEnabled'), TypeError);
-    assert.throws(() => TOGGLE_FIELDS.delete('modEnabled'), TypeError);
-    assert.equal(TOGGLE_FIELDS.has('levelingEnabled'), false);
-    assert.equal(Object.keys(TOGGLE_DEFAULTS).length, TOGGLE_FIELDS.size);
-  });
-
-  test('pickToggleValues returns every toggle, falling back to the default', () => {
-    const fromNull = pickToggleValues(null);
-    assert.deepEqual(Object.keys(fromNull).sort(), [...TOGGLE_FIELDS].sort());
-    assert.deepEqual(fromNull, { ...TOGGLE_DEFAULTS });
-    const values = pickToggleValues({ modEnabled: false, xpEnabled: 'yes', voiceXpEnabled: true, levelingEnabled: true });
-    assert.equal(values.modEnabled, false);
-    assert.equal(values.xpEnabled, false); // non-boolean: the default
-    assert.equal(values.voiceXpEnabled, true);
-    assert.equal('levelingEnabled' in values, false);
-  });
-
-  test('validateChanges accepts strict booleans for known fields', () => {
-    assert.deepEqual(validateChanges({ changes: { modEnabled: false, voiceXpEnabled: true } }),
-      { ok: true, changes: { modEnabled: false, voiceXpEnabled: true } });
-    const all = Object.fromEntries([...TOGGLE_FIELDS].map((f) => [f, true]));
-    assert.equal(validateChanges({ changes: all }).ok, true);
-  });
-
-  test('validateChanges rejects bad bodies', () => {
-    const bad = [
-      null, [], 'x', 1,
-      {},
-      { changes: null },
-      { changes: [] },
-      { changes: {} },
-      { changes: { modEnabled: 'true' } },
-      { changes: { modEnabled: 1 } },
-      { changes: { modEnabled: null } },
-      { changes: { notAField: true } },
-      { changes: { levelingEnabled: true } },
-      { changes: { captchaLockdownPrior: false } },
-      { changes: { modEnabled: true }, extra: 1 },
-      { changes: Object.fromEntries(Array.from({ length: 61 }, (_, i) => [`f${i}`, true])) },
-      JSON.parse('{"changes":{"__proto__":true}}'),
-      JSON.parse('{"changes":{"constructor":true}}'),
-      JSON.parse('{"__proto__":{"polluted":true},"changes":{"modEnabled":true}}'),
-    ];
-    for (const body of bad) {
-      const r = validateChanges(body);
-      assert.equal(r.ok, false, `accepted ${JSON.stringify(body)}`);
-      assert.equal(typeof r.message, 'string');
-    }
-    assert.equal(({}).polluted, undefined);
-    assert.match(validateChanges({ changes: Object.fromEntries(Array.from({ length: 61 }, (_, i) => [`f${i}`, true])) }).message, /60/);
   });
 
   test('the catalog carries the general page, every module\'s groups and lists, every collection and the placeholders', () => {
@@ -774,6 +716,40 @@ describe('settings registry agrees with the bot services', () => {
 });
 
 // ── Configuration ────────────────────────────────────────────────────────────
+
+// ── Front end ────────────────────────────────────────────────────────────────
+
+describe('front end', () => {
+  const PUBLIC = join(ROOT, 'src/dashboard/public');
+  const sources = readdirSync(PUBLIC).filter((f) => f.endsWith('.js')).map((f) => [f, readFileSync(join(PUBLIC, f), 'utf8')]);
+
+  test('never parses HTML strings, evaluates code or sets inline styles (strict CSP, no XSS sinks)', () => {
+    const banned = [
+      [/\.(?:inner|outer)HTML\b/, 'innerHTML/outerHTML'],
+      [/\binsertAdjacentHTML\b/, 'insertAdjacentHTML'],
+      [/\bdocument\.write\b/, 'document.write'],
+      [/\bcreateContextualFragment\b/, 'createContextualFragment'],
+      [/\beval\s*\(|\bnew Function\s*\(/, 'eval / new Function'],
+      [/setAttribute\(\s*['"]style['"]|['"]?\bstyle['"]?\s*:\s*['"`]/, 'an inline style attribute'],
+      [/\bprocess\.env\b/, 'process.env'],
+    ];
+    const problems = [];
+    for (const [file, code] of sources) {
+      for (const [re, what] of banned) if (re.test(code)) problems.push(`${file}: ${what}`);
+    }
+    assert.deepEqual(problems, []);
+    assert.ok(sources.length >= 5, 'the page modules were found');
+  });
+
+  test('index.html has no inline script or style and loads only files the server serves', () => {
+    const html = readFileSync(join(PUBLIC, 'index.html'), 'utf8');
+    assert.equal(/<script(?![^>]*\bsrc=)[^>]*>/.test(html), false, 'inline <script>');
+    assert.equal(/<style\b|\sstyle=/.test(html), false, 'inline style');
+    for (const [, ref] of html.matchAll(/(?:src|href)="(\/[^"]*)"/g)) {
+      assert.ok(existsSync(join(PUBLIC, ref.slice(1))), `${ref} is referenced but missing`);
+    }
+  });
+});
 
 describe('config', () => {
   test('reports every missing required key', () => {
@@ -1686,7 +1662,8 @@ describe('HTTP server', () => {
     assert.deepEqual(Object.keys(r.json).sort(), ['general', 'guild', 'propagationSeconds', 'values']);
     assert.deepEqual(r.json.guild, { id: G.zeta, name: 'zeta', iconUrl: null });
     assert.deepEqual(Object.keys(r.json.values).sort(), Object.keys(fields.SETTINGS_FIELDS).sort(), 'every field');
-    for (const field of TOGGLE_FIELDS) assert.equal(typeof r.json.values[field], 'boolean', field);
+    const switches = [...MODULE_NAMES.map((key) => MODULES[key].flag), ...Object.values(SUB_TOGGLES).flat().map((t) => t.field)];
+    for (const field of switches) assert.equal(typeof r.json.values[field], 'boolean', field);
     assert.equal(r.json.values.modEnabled, true);
     assert.equal(r.json.values.voiceXpEnabled, true);
     assert.equal(r.json.values.welcomeUseEmbed, true, 'missing column reads as the default');
