@@ -1571,7 +1571,9 @@ describe('guildMembers', () => {
   });
 
   it('times out and reports errors', async () => {
-    const hung = { id: 'gm-hung', memberCount: 1, members: { fetch: () => new Promise(() => {}) } };
+    // The fetch outlives the 20 ms timeout on a ref'd timer: the helper's own timer is unref'd, so a promise
+    // that never settles would leave the event loop empty and the test runner would cancel the file (Linux CI).
+    const hung = { id: 'gm-hung', memberCount: 1, members: { fetch: () => new Promise((resolve) => setTimeout(resolve, 300)) } };
     assert.deepEqual(await fetchAllMembers(hung, { timeoutMs: 20 }), { ok: false, reason: 'timeout' });
     const broken = { id: 'gm-broken', memberCount: 1, members: { fetch: async () => { throw new Error('boom'); } } };
     assert.deepEqual(await fetchAllMembers(broken), { ok: false, reason: 'error' });
