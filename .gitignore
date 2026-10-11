@@ -31,8 +31,8 @@ Thumbs.db
 *.swo
 .deploy-hash
 
-# Superpowers
-.claude/superpowers/
+# Claude Code local files
+.claude/
 
 # Runtime state (restart brake)
 state/
