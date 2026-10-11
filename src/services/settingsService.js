@@ -1,8 +1,9 @@
 // The only way to read or write GuildSettings (00-overview rule 8; 01-foundation §5).
 // Rows are versioned in Redis, memoised per shard for 30 s, deep-frozen, and written through.
 // Feature code never calls cache.del('guild:…:settings') itself.
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
-import prisma from '../database/client.js';
+import prisma, { SQL_NOW } from '../database/client.js';
 import { cache } from './redis.js';
 import logger from '../utils/logger.js';
 import { createThrottle } from '../utils/async.js';
@@ -184,7 +185,13 @@ export function peekSettings(guildId) {
  */
 export async function ensureGuildSettings(guildId) {
   if (ensured.has(guildId)) return;
-  await prisma.guildSettings.upsert({ where: { guildId }, update: {}, create: { guildId } });
+  try {
+    await prisma.guildSettings.upsert({ where: { guildId }, update: {}, create: { guildId } });
+  } catch (err) {
+    // Prisma's upsert is not atomic: a concurrent first write for the same guild can win the insert
+    // and this one fails with a unique violation. The row exists either way.
+    if (err?.code !== 'P2002') throw err;
+  }
   markEnsured(guildId);
 }
 
@@ -205,11 +212,14 @@ function writeThrough(guildId, row) {
  * @throws on DB or validation failure
  */
 export async function updateSettings(guildId, data) {
-  const row = await prisma.guildSettings.upsert({
-    where: { guildId },
-    update: data,
-    create: { guildId, ...data },
-  });
+  let row;
+  try {
+    row = await prisma.guildSettings.upsert({ where: { guildId }, update: data, create: { guildId, ...data } });
+  } catch (err) {
+    // Lost the insert race to a concurrent first write (see ensureGuildSettings): the row exists now.
+    if (err?.code !== 'P2002') throw err;
+    row = await prisma.guildSettings.update({ where: { guildId }, data });
+  }
   const cached = withMarker(row);
   const revived = writeThrough(guildId, row);
   await cache.set(settingsKey(guildId), cached, SETTINGS_TTL_SECONDS);
@@ -218,9 +228,19 @@ export async function updateSettings(guildId, data) {
 
 const LOCK_ROW = (guildId) => Prisma.sql`SELECT 1 FROM "GuildSettings" WHERE "guildId" = ${guildId} FOR UPDATE`;
 
+// Creates the row only when it is missing, for use inside a transaction. Prisma's upsert is not atomic:
+// two first writes for the same guild race into a unique violation (P2002), and inside a transaction that
+// aborts it. ON CONFLICT makes the losing insert a no-op. id/updatedAt are Prisma-side defaults, so they
+// are set here.
+const INSERT_IF_MISSING = (guildId) => Prisma.sql`
+  INSERT INTO "GuildSettings" ("id", "guildId", "createdAt", "updatedAt")
+  VALUES (${randomUUID()}, ${guildId}, ${SQL_NOW}, ${SQL_NOW})
+  ON CONFLICT ("guildId") DO NOTHING`;
+
 /** One entry per raw statement, with sample parameters (01-foundation §1). */
 export const RAW_SQL = Object.freeze([
   { name: 'settings.lockRow', build: () => LOCK_ROW('0') },
+  { name: 'settings.insertIfMissing', build: () => INSERT_IF_MISSING('0') },
 ]);
 
 /**
@@ -235,7 +255,7 @@ export const RAW_SQL = Object.freeze([
  */
 export async function updateSettingsWith(guildId, mutator) {
   const row = await prisma.$transaction(async (tx) => {
-    await tx.guildSettings.upsert({ where: { guildId }, update: {}, create: { guildId } });
+    await tx.$executeRaw(INSERT_IF_MISSING(guildId));
     await tx.$queryRaw(LOCK_ROW(guildId));
     const current = await tx.guildSettings.findUnique({ where: { guildId } });
     const data = await mutator(structuredClone(current));
