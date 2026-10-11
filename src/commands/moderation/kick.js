@@ -1,54 +1,58 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
-import { createInfraction, assertHierarchy } from '../../services/moderationService.js';
-import { successEmbed, errorEmbed } from '../../utils/embedBuilder.js';
+import { deliverModReply, executeModAction, replyModError } from '../../services/moderationService.js';
+import { getSettingsSafe } from '../../services/settingsService.js';
+import { clampText } from '../../utils/text.js';
 
+export const module = 'moderation';
 export const permissionLevel = PERMISSION_LEVELS.MODERATOR;
+
+const reasonOpt = (o, desc = 'Reason (audit log and DM)') => o.setName('reason').setDescription(desc).setMaxLength(512);
+const proofOpt = (o) => o.setName('proof').setDescription('Proof link (http/https)').setMaxLength(1000);
 
 export const data = new SlashCommandBuilder()
   .setName('kick')
-  .setDescription('Kick a member from the server.')
+  .setDescription('Kick a member from the server (MEE6 /kick).')
   .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
   .addUserOption((o) => o.setName('user').setDescription('Member to kick').setRequired(true))
-  .addStringOption((o) => o.setName('reason').setDescription('Reason for the kick'))
-  .addStringOption((o) => o.setName('proof').setDescription('Proof URL'));
+  .addStringOption((o) => reasonOpt(o))
+  .addStringOption((o) => proofOpt(o));
 
-export async function execute(interaction, client) {
-  await interaction.deferReply({ ephemeral: true });
+const tagOf = (user) => clampText(String(user?.tag ?? user?.username ?? user?.id ?? 'unknown').replace(/`/g, "'"), 100);
 
-  const target   = interaction.options.getUser('user', true);
-  const reason   = interaction.options.getString('reason') ?? 'No reason provided';
-  const proofUrl = interaction.options.getString('proof') ?? undefined;
-  const guild    = interaction.guild;
+/**
+ * /kick: the Discord action runs first inside executeModAction; nothing is recorded when it fails.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @returns {Promise<void>}
+ */
+export async function execute(interaction) {
+  await interaction.deferReply({ ephemeral: true }); // errors stay private
 
-  const targetMember = await guild.members.fetch(target.id).catch(() => null);
-  if (!targetMember) {
-    return interaction.editReply({ embeds: [errorEmbed('Not Found', 'That user is not in this server.')] });
+  const user = interaction.options.getUser('user', true);
+  const settings = await getSettingsSafe(interaction.guildId);
+  const res = await executeModAction({
+    guild: interaction.guild,
+    target: user,
+    moderator: interaction.user,
+    action: 'KICK',
+    reason: interaction.options.getString('reason'),
+    proofUrl: interaction.options.getString('proof'),
+    source: 'command',
+  });
+  if (!res.ok) {
+    await replyModError(interaction, res);
+    return;
   }
-  try {
-    assertHierarchy(guild, targetMember, interaction.member);
-  } catch (err) {
-    return interaction.editReply({ embeds: [errorEmbed('Hierarchy Error', err.message)] });
-  }
 
-  try {
-    const infraction = await createInfraction(guild, target, interaction.user, 'KICK', {
-      reason,
-      proofUrl,
-      client,
-    });
-
-    await targetMember.kick(`[Case #${infraction.caseId}] ${reason} — ${interaction.user.tag}`);
-
-    const desc = [
-      `**User:** <@${target.id}> \`${target.tag}\``,
-      `**Reason:** ${reason}`,
-      `**Case:** #${infraction.caseId}`,
-    ].join('\n');
-
-    await interaction.deleteReply();
-    await interaction.followUp({ embeds: [successEmbed('User Kicked', desc)] });
-  } catch (err) {
-    await interaction.editReply({ embeds: [errorEmbed('Kick Failed', err.message)] });
-  }
+  const inf = res.infraction;
+  const warnings = [...(res.dm === 'failed' ? ["I couldn't DM the user."] : []), ...(res.warnings ?? [])];
+  await deliverModReply(interaction, settings, {
+    title: 'Member Kicked',
+    lines: [
+      `**User:** <@${user.id}> \`${tagOf(user)}\``,
+      `**Reason:** ${clampText(inf.reason, 1000)}`,
+      `**Case:** #${inf.caseId}`,
+    ],
+    warnings,
+  });
 }

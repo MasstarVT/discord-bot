@@ -1,58 +1,50 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
-import { createInfraction, resolveInfractions } from '../../services/moderationService.js';
-import { successEmbed, errorEmbed } from '../../utils/embedBuilder.js';
+import { deliverModReply, executeUnban, replyModError } from '../../services/moderationService.js';
+import { getSettingsSafe } from '../../services/settingsService.js';
+import { clampText } from '../../utils/text.js';
 
+export const module = 'moderation';
 export const permissionLevel = PERMISSION_LEVELS.MODERATOR;
+
+const reasonOpt = (o, desc = 'Reason (audit log and DM)') => o.setName('reason').setDescription(desc).setMaxLength(512);
 
 export const data = new SlashCommandBuilder()
   .setName('unban')
-  .setDescription('Remove a ban from a user by their ID.')
+  .setDescription('Lift a ban by user ID (MEE6 /unban).')
   .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
-  .addStringOption((o) =>
-    o.setName('user_id').setDescription('The Discord user ID of the banned user').setRequired(true)
-  )
-  .addStringOption((o) => o.setName('reason').setDescription('Reason for the unban'));
+  .addStringOption((o) => o.setName('user_id').setDescription('ID or mention of the banned user').setRequired(true).setMinLength(17).setMaxLength(32))
+  .addStringOption((o) => reasonOpt(o));
 
-export async function execute(interaction, client) {
-  // Defer ephemeral so validation errors stay private; success will followUp publicly
-  await interaction.deferReply({ ephemeral: true });
+/**
+ * /unban: a relief action (no immunity check). The service validates the ID, lifts the ban, closes the
+ * ban records, cancels a pending expiry job and records the UNBAN.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @returns {Promise<void>}
+ */
+export async function execute(interaction) {
+  await interaction.deferReply({ ephemeral: true }); // errors stay private
 
-  const userId = interaction.options.getString('user_id', true).trim();
-  const reason = interaction.options.getString('reason') ?? 'No reason provided';
-  const guild  = interaction.guild;
-
-  // Validate it looks like a snowflake
-  if (!/^\d{17,19}$/.test(userId)) {
-    return interaction.editReply({ embeds: [errorEmbed('Invalid ID', 'Please provide a valid Discord user ID (17–19 digits).')] });
+  const userId = interaction.options.getString('user_id', true).replace(/[<@!>\s]/g, '');
+  const settings = await getSettingsSafe(interaction.guildId);
+  const res = await executeUnban({
+    guild: interaction.guild,
+    userId,
+    moderator: interaction.user,
+    reason: interaction.options.getString('reason'),
+    source: 'command',
+  });
+  if (!res.ok) {
+    await replyModError(interaction, res);
+    return;
   }
 
-  // Verify the ban exists
-  const ban = await guild.bans.fetch(userId).catch(() => null);
-  if (!ban) {
-    return interaction.editReply({ embeds: [errorEmbed('Not Banned', `User \`${userId}\` is not currently banned in this server.`)] });
-  }
-
-  try {
-    await guild.bans.remove(userId, `[Unban] ${reason} — ${interaction.user.tag}`);
-
-    await resolveInfractions(guild.id, userId, ['BAN', 'SOFTBAN']);
-
-    const infraction = await createInfraction(guild, ban.user, interaction.user, 'UNBAN', {
-      reason,
-      client,
-      silent: true,
-    });
-
-    const desc = [
-      `**User:** <@${userId}> \`${ban.user.tag}\``,
-      `**Reason:** ${reason}`,
-      `**Case:** #${infraction.caseId}`,
-    ].join('\n');
-
-    await interaction.deleteReply();
-    await interaction.followUp({ embeds: [successEmbed('User Unbanned', desc)] });
-  } catch (err) {
-    await interaction.editReply({ embeds: [errorEmbed('Unban Failed', err.message)] });
-  }
+  const tag = clampText(String(res.user?.tag ?? res.user?.username ?? userId).replace(/`/g, "'"), 100);
+  const lines = [
+    `**User:** <@${userId}> \`${tag}\``,
+    `**Reason:** ${clampText(res.infraction.reason, 1000)}`,
+    `**Case:** #${res.infraction.caseId}`,
+  ];
+  if (res.cleared > 1) lines.push(`**Ban records closed:** ${res.cleared}`);
+  await deliverModReply(interaction, settings, { title: 'User Unbanned', lines });
 }

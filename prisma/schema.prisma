@@ -1,3 +1,32 @@
+// ═════════════════════════════════════════════════════════════════════════════
+// PROPOSED prisma/schema.prisma after the whole MEE6-parity build.
+//
+// Rules this file obeys (see 00-overview.md §5 and 01-foundation.md §2):
+//   * Purely additive relative to HEAD: no model, column or enum value is
+//     removed or renamed and no column type changes. Two existing column
+//     DEFAULTS change (modEnabled, reactionRolesEnabled: false → true); the
+//     migration also runs data UPDATEs for them and for the other upgrade
+//     rules listed in 01-foundation.md §2.3 (the "data block").
+//   * Requires PostgreSQL 12 or newer (ALTER TYPE ... ADD VALUE runs inside
+//     the migration's transaction).
+//   * DateTime columns are timestamp(3) WITHOUT time zone holding UTC. Raw SQL
+//     must use SQL_NOW / sqlUtc() from src/database/client.js, never bare now().
+//   * Exactly ONE value is added to an EXISTING enum: RRLayout.REACTIONS. It is
+//     never used as a default and never referenced by the migration's data
+//     statements (Postgres cannot use a value added by ALTER TYPE ... ADD VALUE
+//     in the same transaction). Every other enum below is brand new (CREATE
+//     TYPE), so its values may be used as defaults in the same migration.
+//   * Every model that has a guildId column has a relation to
+//     GuildSettings(guildId) with onDelete: Cascade. Child tables that do not
+//     need a guildId (entries, votes, options) only reference their parent.
+//   * Coins and XP stay Int (Postgres int4, max 2,147,483,647). All writes go
+//     through economyService / xpService, which clamp in SQL with bigint maths
+//     (economyMaxBalance default 1e9; XP_MAX 1e9). Never sum Int columns into
+//     an Int in SQL without ::bigint.
+//   * Only the `foundation` package edits prisma/schema.prisma or the
+//     migration. Feature packages report missing fields; foundation re-runs.
+// ═════════════════════════════════════════════════════════════════════════════
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,67 +46,329 @@ model GuildSettings {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ── Module toggles ──────────────────────────────────────────────────────────
-  modEnabled            Boolean @default(false)
+  // ── Module toggles (MODULES registry in src/config/modules.js) ─────────────
+  // CHANGED DEFAULT false → true; migration also sets every existing row true.
+  modEnabled            Boolean @default(true)
   loggingEnabled        Boolean @default(false)
+  // Plugin toggle for Welcome & Goodbye (channel message, DM, goodbye).
   welcomeEnabled        Boolean @default(false)
-  reactionRolesEnabled  Boolean @default(false)
+  // CHANGED DEFAULT false → true; migration also sets every existing row true.
+  reactionRolesEnabled  Boolean @default(true)
+  // DEPRECATED, never read or written. The leveling toggle is xpEnabled.
   levelingEnabled       Boolean @default(false)
+  // Module flag for custom commands: /tag, prefix invocation and the /trigger auto-responders.
+  // Migration sets true for guilds that already have at least one CustomTag
+  // (after copying the old value into autoTriggersEnabled, below).
   customCommandsEnabled Boolean @default(false)
+  // Sub-switch for the /trigger auto-responders only (/trigger enable|disable).
+  // Triggers run when customCommandsEnabled AND autoTriggersEnabled. The migration
+  // copies the pre-upgrade customCommandsEnabled into it, so triggers an admin had
+  // switched off stay off when tags are switched on.
+  autoTriggersEnabled   Boolean @default(true)
   automodEnabled        Boolean @default(false)
   translationEnabled    Boolean @default(false)
+  captchaEnabled        Boolean @default(false)
+  invitesEnabled        Boolean @default(true)
+  embedsEnabled         Boolean @default(true)
+  remindersEnabled      Boolean @default(true)
+  giveawaysEnabled      Boolean @default(true)
+  pollsEnabled          Boolean @default(true)
+  starboardEnabled      Boolean @default(true)
+  ticketsEnabled        Boolean @default(true)
+  tempVoiceEnabled      Boolean @default(true)
+  statsEnabled          Boolean @default(true)
+  birthdaysEnabled      Boolean @default(true)
+  achievementsEnabled   Boolean @default(false)
+  automationsEnabled    Boolean @default(false)
+  economyEnabled        Boolean @default(true)
+  gamesEnabled          Boolean @default(true)
+  feedsEnabled          Boolean @default(true)
+  searchEnabled         Boolean @default(true)
+  liveRoleEnabled       Boolean @default(false)
+
+  // ── General (/settings) ────────────────────────────────────────────────────
+  // IANA zone name, validated with Intl.DateTimeFormat before saving.
+  timezone     String @default("UTC")
+  // 0xRRGGBB applied to info/neutral embeds by applyGuildColor(); null = default.
+  embedColor   Int?
+  // Prefix for message-invoked custom commands (MEE6 "!name args").
+  // Empty string = prefix invocation is off (/settings prefix off).
+  customPrefix String @default("!")
 
   // ── Moderation ──────────────────────────────────────────────────────────────
   modLogChannelId      String?
-  modRoleIds           String[] @default([])
+  // MODERATOR permission level (MEE6 "Bot Master"-style roles).
+  modRoleIds           String[]      @default([])
+  // Role-based mute (for mutes longer than Discord's 28-day timeout).
   muteRoleId           String?
-  // JSON shape: { filterLinks: bool, filterInvites: bool, filterBadWords: bool,
-  //               badWords: string[], spamThreshold: int, massMentionThreshold: int,
-  //               duplicateThreshold: int }
+  // Shape owned by src/services/automodService.js (normalizeConfig; pkg-automod.md §3.2), v2:
+  // { version: 2,
+  //   rules: { [rule]: { action: "off"|"delete"|"warn"|"delete_warn"|"timeout"|"kick"|"ban", threshold?,
+  //                      timeoutSeconds, roleMode: "except"|"only", roleIds, channelMode: "except"|"only", channelIds } },
+  //   badWords: string[], badWordPatterns: string[], blockedDomains: string[], allowedDomains: string[],
+  //   exemptRoleIds: string[], exemptChannelIds: string[] }
+  // [rule] is one of badWords, repeatedText, invites, links, caps, emojis, spoilers, mentions, zalgo, spam. `threshold`
+  // exists only for the rules that have one (not badWords, invites or links); timeoutSeconds is 60..2419200 (default 600);
+  // roleIds / channelIds are at most 50 snowflakes. Words are lower-cased (2-64 characters), domains are punycode hosts,
+  // and a missing allowedDomains key is seeded with the default allowlist (an explicit [] stays empty).
+  // normalizeConfig never throws: anything malformed is dropped or reset to its default.
+  // A row without `version` is v1 ({ filterInvites, filterLinks, filterBadWords, massMentionThreshold, duplicateThreshold,
+  // spamThreshold, automodAction, badWords, ... }); automodService upgrades it on read (upgradeV1).
   automodConfig        Json?
-  // JSON shape: [{ warnCount: int, action: "MUTE"|"KICK"|"BAN", duration: int|null }]
+  // Shape owned by the moderation package (pkg-moderation.md §3.2), v2:
+  // [{ id: int (stable tier id, shown as T<id>), warnCount: int 1..100, withinSeconds: int|null,
+  //    action: "TIMEOUT"|"MUTE"|"KICK"|"TEMPBAN"|"BAN", durationSeconds: int|null,
+  //    countFrom: ISO-8601 string|null (WARNs created before it never count toward this tier) }]
+  // Legacy rows [{ warnCount, action, duration }] are read as withinSeconds=null, durationSeconds=duration,
+  // and a legacy BAN with a duration as TEMPBAN. The migration stamps countFrom = migration time on every
+  // legacy tier, because those tiers never fired before (WARNs were stored inactive).
   infractionEscalation Json?
+  // Roles immune to automod and to manual moderation by the bot.
+  immuneRoleIds        String[]      @default([])
+  // MEE6 command visibility: PUBLIC / ANONYMOUS (moderator hidden) / PRIVATE.
+  modVisibility        ModVisibility @default(PUBLIC)
+  // DM the target on warn/timeout/kick/ban.
+  modDmTargets         Boolean       @default(true)
 
   // ── Logging channels ────────────────────────────────────────────────────────
-  messageLogChannelId String?
-  memberLogChannelId  String?
-  serverLogChannelId  String?
-  voiceLogChannelId   String?
-  joinLeaveChannelId  String?
+  messageLogChannelId  String?
+  memberLogChannelId   String?
+  serverLogChannelId   String?
+  voiceLogChannelId    String?
+  joinLeaveChannelId   String?
+  // LOG_EVENTS keys (src/services/loggingService.js) that are switched off.
+  disabledLogEvents    String[] @default([])
+  // Channels whose message events are never logged.
+  logIgnoredChannelIds String[] @default([])
 
-  // ── Welcome ─────────────────────────────────────────────────────────────────
-  welcomeChannelId String?
-  // Full EmbedBuilder JSON blob — stored and re-hydrated at runtime
-  welcomeEmbed     Json?
-  welcomeMessage   String?
-  autoroleIds      String[] @default([])
-  // Seconds after join to assign autoroles (0 = immediate)
-  autoroleDelay    Int      @default(0)
+  // ── Welcome & Goodbye ───────────────────────────────────────────────────────
+  welcomeChannelId      String?
+  // Legacy shape { title, description, color, thumbnail, footer, card } or a
+  // MessageTemplate.embed (src/utils/customEmbed.js). normalizeLegacyEmbed() reads both.
+  welcomeEmbed          Json?
+  // Plain text sent with (or instead of) the embed. MEE6 default:
+  // "Hey {user}, welcome to **{server}**!"
+  welcomeMessage        String?
+  autoroleIds           String[] @default([])
+  // Seconds after join to assign autoroles (0 = immediate). Max 7 days (604800).
+  autoroleDelay         Int      @default(0)
+  // Sub-toggle: send the channel message (the module toggle is welcomeEnabled).
+  welcomeMessageEnabled Boolean  @default(true)
+  // true = embed (+ welcomeMessage as content), false = welcomeMessage text only.
+  welcomeUseEmbed       Boolean  @default(true)
+  // { v: 1, enabled: boolean (the welcome-card on/off flag), background: "#RRGGBB",
+  //   backgroundUrl: string|null, textColor, accentColor, overlayOpacity: 0..1 }
+  welcomeCardStyle      Json?
+  welcomeDmEnabled      Boolean  @default(false)
+  // MEE6 default: "Have a great time here in **{server}**!"
+  welcomeDmMessage      String?  @db.Text
+  welcomeDmEmbed        Json?
+  welcomeDmCard         Boolean  @default(false)
+  goodbyeEnabled        Boolean  @default(false)
+  goodbyeChannelId      String?
+  // MEE6 default: "**{user.idname}** just left the server"
+  goodbyeMessage        String?  @db.Text
+  goodbyeEmbed          Json?
+  goodbyeUseEmbed       Boolean  @default(false)
+
+  // ── Captcha verification ────────────────────────────────────────────────────
+  captchaChannelId      String?
+  captchaMessageId      String?
+  // Role granted on successful verification.
+  captchaRoleId         String?
+  captchaMode           CaptchaMode @default(IMAGE)
+  // Kick members who have not verified after N minutes (0 = never).
+  captchaTimeoutMinutes Int         @default(0)
+  // MessageTemplate for the verification panel.
+  captchaTemplate       Json?
+  // null = no lock-down by the bot is active. Otherwise whether @everyone had View Channels
+  // before /captcha lock on, so /captcha lock off restores exactly that state.
+  captchaLockdownPrior  Boolean?
 
   // ── Leveling ────────────────────────────────────────────────────────────────
-  xpEnabled        Boolean @default(false)
-  xpRate           Int     @default(15)
-  xpCooldown       Int     @default(60)
-  xpMultiplier     Float   @default(1.0)
-  levelUpChannelId String?
-  levelUpMessage   String?
-  noXpRoleIds      String[] @default([])
-  noXpChannelIds   String[] @default([])
+  // Module toggle for leveling (MODULES.leveling.flag).
+  xpEnabled                Boolean      @default(false)
+  // LEGACY base rate; only read by the migration to derive xpMin/xpMax.
+  xpRate                   Int          @default(15)
+  xpCooldown               Int          @default(60)
+  xpMultiplier             Float        @default(1.0)
+  levelUpChannelId         String?
+  // MEE6 default: "GG {player}, you just advanced to level {level}!"
+  // Migration rewrites the legacy token {user} (= username) to {user.name}.
+  levelUpMessage           String?
+  noXpRoleIds              String[]     @default([])
+  noXpChannelIds           String[]     @default([])
   // false = remove lower-tier rewards when a higher one is earned
-  levelRolesStack  Boolean @default(true)
-  voiceXpEnabled   Boolean @default(false)
+  levelRolesStack          Boolean      @default(true)
+  voiceXpEnabled           Boolean      @default(false)
   // XP granted per minute in voice (AFK excluded)
-  voiceXpRate      Int     @default(5)
+  voiceXpRate              Int          @default(5)
+  // MEE6: Disabled / Current channel / Private message / Custom channel.
+  // Migration sets CHANNEL where levelUpChannelId is set.
+  levelUpMode              AnnounceMode @default(CURRENT)
+  // false = plain text (MEE6 default for new guilds). The migration sets true on existing
+  // rows, because every legacy level-up was an embed.
+  levelUpUseEmbed          Boolean      @default(false)
+  // Random XP per message (MEE6 15–25). Migration derives these from xpRate when xpRate <> 15.
+  xpMin                    Int          @default(15)
+  xpMax                    Int          @default(25)
+  // Re-sync reward roles when a member loses XP (/xp remove|set|reset).
+  levelRolesSyncOnDemotion Boolean      @default(true)
+  // [{ roleId: string, multiplier: number (1.0–5.0) }] — highest applicable wins.
+  xpBoostRoles             Json?
+  // { background: "#RRGGBB", backgroundUrl: string|null, accentColor, textColor, overlayOpacity }
+  rankCardStyle            Json?
+
+  // ── Statistics channels ─────────────────────────────────────────────────────
+  // Category new stat channels are created in (null = top level).
+  statsCategoryId String?
+
+  // ── Birthdays ───────────────────────────────────────────────────────────────
+  birthdayChannelId   String?
+  birthdayRoleId      String?
+  // Local hour (0–23, guild timezone) the announcement is posted.
+  birthdayHour        Int     @default(9)
+  // Used when the birth year is unknown. Default "Happy birthday {user}! 🎂"
+  birthdayMessage     String? @db.Text
+  // Used when the birth year is known. Default "Happy birthday {user}! They are now {age}! 🎂"
+  birthdayMessageAge  String? @db.Text
+  birthdayRequireYear Boolean @default(false)
+
+  // ── Economy (per server) ────────────────────────────────────────────────────
+  currencyName           String          @default("coins")
+  currencyEmoji          String          @default("🪙")
+  // Balance of a brand-new account that has no global UserEconomy row to copy.
+  economyStartingBalance Int             @default(1000)
+  // Hard cap per account (must stay < 2,147,483,647).
+  economyMaxBalance      Int             @default(1000000000)
+  // 0 = no limit beyond the balance.
+  economyMaxBet          Int             @default(0)
+  dailyMin               Int             @default(50)
+  dailyMax               Int             @default(120)
+  workMin                Int             @default(100)
+  workMax                Int             @default(300)
+  workCooldownMinutes    Int             @default(60)
+  // Casino channel list (empty = everywhere). ALLOW = only these channels; DENY = everywhere except these.
+  economyGameChannelIds  String[]        @default([])
+  economyGameChannelMode ChannelListMode @default(ALLOW)
+  // Maximum net winnings of one casino game (0 = no limit beyond economyMaxBalance).
+  economyMaxPayout       Int             @default(0)
+  // false after a full "/economy-admin reset coins": accounts created later start at
+  // economyStartingBalance instead of copying the legacy global UserEconomy balance.
+  economyImportGlobal    Boolean         @default(true)
+
+  // ── Achievements ────────────────────────────────────────────────────────────
+  achievementAnnounceMode AnnounceMode @default(CURRENT)
+  achievementChannelId    String?
+  // Default "🏆 {player} unlocked **{achievement}**!"
+  achievementMessage      String?      @db.Text
+  // true = the announcement is rendered as an embed description (MEE6 option).
+  achievementUseEmbed     Boolean      @default(false)
+
+  // ── Search ──────────────────────────────────────────────────────────────────
+  // /urban only in age-restricted channels. Written by /settings urban.
+  urbanNsfwOnly Boolean @default(true)
+
+  // ── Live-streaming role (Twitch via Discord presence) ───────────────────────
+  liveRoleId             String?
+  // Only members with this role get the live role (null = everyone).
+  liveRoleRequiredRoleId String?
 
   // ── Relations ───────────────────────────────────────────────────────────────
-  infractions        Infraction[]
-  reactionRoleGroups ReactionRoleGroup[]
-  customTags         CustomTag[]
-  userLevels         UserLevel[]
-  memberCache        GuildMemberCache[]
-  levelRoles         LevelRole[]
-  autoTriggers       AutoTrigger[]
-  translateChannels  TranslateChannel[]
+  infractions          Infraction[]
+  reactionRoleGroups   ReactionRoleGroup[]
+  customTags           CustomTag[]
+  userLevels           UserLevel[]
+  memberCache          GuildMemberCache[]
+  levelRoles           LevelRole[]
+  autoTriggers         AutoTrigger[]
+  translateChannels    TranslateChannel[]
+  scheduledJobs        ScheduledJob[]
+  personalInvites      PersonalInvite[]
+  savedEmbeds          SavedEmbed[]
+  reminders            Reminder[]
+  giveaways            Giveaway[]
+  polls                Poll[]
+  starboards           Starboard[]
+  ticketPanels         TicketPanel[]
+  tickets              Ticket[]
+  tempVoiceHubs        TempVoiceHub[]
+  tempVoiceChannels    TempVoiceChannel[]
+  statChannels         StatChannel[]
+  birthdays            Birthday[]
+  achievements         Achievement[]
+  achievementProgress  AchievementProgress[]
+  automations          Automation[]
+  economyAccounts      EconomyAccount[]
+  economyBoosts        EconomyBoost[]
+  shopItems            ShopItem[]
+  inventoryItems       InventoryItem[]
+  feeds                Feed[]
+  captchaVerifications CaptchaVerification[]
+}
+
+// New enums (CREATE TYPE in the migration — safe to use as defaults).
+
+enum ModVisibility {
+  PUBLIC
+  ANONYMOUS
+  PRIVATE
+}
+
+enum AnnounceMode {
+  OFF
+  CURRENT
+  DM
+  CHANNEL
+}
+
+enum CaptchaMode {
+  BUTTON
+  IMAGE
+}
+
+enum ChannelListMode {
+  ALLOW
+  DENY
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULER  (src/services/scheduler.js — owned by foundation)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+model ScheduledJob {
+  id          String    @id @default(cuid())
+  guildId     String
+  // A key of JOB_TYPES in src/config/jobTypes.js, e.g. "giveaway.end".
+  type        String
+  // Optional idempotency key, e.g. "giveaway.end:<giveawayId>". Unique globally.
+  dedupeKey   String?   @unique
+  runAt       DateTime
+  payload     Json      @default("{}")
+  status      JobStatus @default(PENDING)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  lastError   String?   @db.Text
+  // "<shardId>:<pid>" of the claiming shard; null when not running.
+  lockedBy    String?
+  lockedUntil DateTime?
+  // Bumped on every reschedule/replace so a finishing run can detect it was superseded.
+  version     Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([status, runAt])
+  @@index([guildId, type])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,7 +389,8 @@ enum InfractionType {
 
 model Infraction {
   id           Int            @id @default(autoincrement())
-  // Per-guild case number — enforced unique within guild via @@unique below
+  // Per-guild case number — enforced unique within guild via @@unique below.
+  // Allocated under pg_advisory_xact_lock (moderationService), never MAX+1 unlocked.
   caseId       Int
   guildId      String
   targetUserId String
@@ -106,9 +398,10 @@ model Infraction {
   type         InfractionType
   reason       String?
   proofUrl     String?
-  // false after an unmute/unban resolves the infraction
+  // WARN: true until pardoned (/history clear). BAN/TIMEOUT/MUTE: true until
+  // resolved or expired. Migration sets existing WARN rows to true.
   active       Boolean        @default(true)
-  // null = permanent; set for timed mutes/bans
+  // null = permanent; set for timed mutes/bans (temp-ban expiry job reads it)
   expiresAt    DateTime?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -128,6 +421,7 @@ model UserLevel {
   id           String    @id @default(cuid())
   guildId      String
   userId       String
+  // Clamped to XP_MAX (1e9) by xpService.
   xp           Int       @default(0)
   level        Int       @default(0)
   messageCount Int       @default(0)
@@ -168,20 +462,32 @@ enum ReactionRoleType {
 enum RRLayout {
   BUTTONS
   SELECT
+  // ADDED to an existing enum (ALTER TYPE ... ADD VALUE). Never use it as a
+  // column default and never reference it in this migration's SQL.
+  REACTIONS
 }
 
 model ReactionRoleGroup {
-  id          String           @id @default(cuid())
-  guildId     String
-  channelId   String
-  messageId   String
-  title       String
-  description String?
-  maxRoles    Int?
-  type        ReactionRoleType @default(NORMAL)
-  layout      RRLayout         @default(BUTTONS)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id               String           @id @default(cuid())
+  guildId          String
+  channelId        String
+  messageId        String
+  title            String
+  description      String?
+  maxRoles         Int?
+  type             ReactionRoleType @default(NORMAL)
+  layout           RRLayout         @default(BUTTONS)
+  // true = panel is plain text (messageContent) instead of an embed (MEE6 text/embed choice).
+  plainText        Boolean          @default(false)
+  messageContent   String?          @db.Text
+  // true = bound to an existing message via /reactionrole attach (bot never edits its content).
+  attached         Boolean          @default(false)
+  // SELECT layout: placeholder of the dropdown (≤ 150 chars; null = per-type default).
+  placeholder      String?
+  // Set by the messageDelete hook when the panel message is deleted; cleared by /reactionrole repost.
+  messageMissingAt DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   guild GuildSettings      @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
   items ReactionRoleItem[]
@@ -191,16 +497,21 @@ model ReactionRoleGroup {
 }
 
 model ReactionRoleItem {
-  id       String @id @default(cuid())
-  groupId  String
-  // Colon-namespaced: "rr:groupId:roleId" — parsed by interactionRouter
-  customId String @unique
-  roleId   String
-  label    String
-  emoji    String?
+  id          String  @id @default(cuid())
+  groupId     String
+  // Colon-namespaced: "rr:groupId:roleId" — routed to the reaction-roles plugin.
+  // Also generated (unused) for REACTIONS-layout items to keep the column non-null.
+  customId    String  @unique
+  roleId      String
+  label       String
+  // Unicode emoji or "<:name:id>" / "<a:name:id>". Required for REACTIONS layout;
+  // the reaction key is the custom emoji id or the unicode string.
+  emoji       String?
   // discord.js ButtonStyle enum value: 1=Primary 2=Secondary 3=Success 4=Danger
-  style    Int    @default(1)
-  position Int    @default(0)
+  style       Int     @default(1)
+  position    Int     @default(0)
+  // SELECT layout: option description (≤ 100 chars).
+  description String?
 
   group ReactionRoleGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
@@ -210,6 +521,12 @@ model ReactionRoleItem {
 // ─────────────────────────────────────────────────────────────────────────────
 // CUSTOM TAGS / COMMANDS
 // ─────────────────────────────────────────────────────────────────────────────
+
+enum CooldownScope {
+  NONE
+  SERVER
+  USER
+}
 
 model CustomTag {
   id        String   @id @default(cuid())
@@ -222,7 +539,24 @@ model CustomTag {
   updatedAt DateTime @updatedAt
 
   // true = content is rendered as an embed description
-  useEmbed  Boolean @default(false)
+  useEmbed Boolean @default(false)
+
+  // ── MEE6 custom-command upgrade (pkg-custom-commands.md) ──
+  // Shown in /help and /tag list.
+  description      String?
+  enabled          Boolean       @default(true)
+  // Action list, e.g. [{ type: "reply", dm: false, responses: ["..."] }, { type: "send", channelId, responses },
+  // { type: "addRole", roleId }, { type: "removeRole", roleId }, { type: "toggleRole", roleId }].
+  // null = legacy behaviour (reply with content).
+  actions          Json?
+  allowRoleIds     String[]      @default([])
+  denyRoleIds      String[]      @default([])
+  allowChannelIds  String[]      @default([])
+  denyChannelIds   String[]      @default([])
+  cooldownScope    CooldownScope @default(NONE)
+  cooldownSeconds  Int           @default(0)
+  // Delete the "!name args" message after running.
+  deleteInvocation Boolean       @default(false)
 
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
@@ -231,7 +565,7 @@ model CustomTag {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AUTO-TRIGGERS
+// AUTO-TRIGGERS (legacy auto-responders; superseded by Automation but kept)
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum TriggerMatchType {
@@ -245,7 +579,7 @@ enum TriggerMatchType {
 model AutoTrigger {
   id            String           @id @default(cuid())
   guildId       String
-  // Pattern or keyword to match against message content
+  // Pattern or keyword to match against message content (REGEX validated by safeRegex)
   trigger       String
   response      String           @db.Text
   matchType     TriggerMatchType @default(CONTAINS)
@@ -254,7 +588,7 @@ model AutoTrigger {
   // Per-user cooldown in seconds (0 = no cooldown)
   cooldown      Int              @default(0)
   deleteMessage Boolean          @default(false)
-  // Empty = all channels; non-empty = only these channels
+  // Empty = all channels; non-empty = only these channels (threads match their parent)
   channelIds    String[]         @default([])
   exemptRoleIds String[]         @default([])
   uses          Int              @default(0)
@@ -267,10 +601,6 @@ model AutoTrigger {
   @@index([guildId])
   @@index([guildId, enabled])
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MEMBER CACHE  (invite tracking / delayed autorole)
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTO-TRANSLATION
@@ -291,17 +621,20 @@ model TranslateChannel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MEMBER CACHE  (invite tracking / delayed autorole)
+// MEMBER CACHE  (invite tracking)
 // ─────────────────────────────────────────────────────────────────────────────
 
 model GuildMemberCache {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   guildId    String
   userId     String
   joinedAt   DateTime
   inviterId  String?
   inviteCode String?
-  createdAt  DateTime @default(now())
+  // Set by the invites plugin on guildMemberRemove; cleared on rejoin.
+  // MEE6 rule: an invite is valid if the member is still here or stayed >= 24 h.
+  leftAt     DateTime?
+  createdAt  DateTime  @default(now())
 
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
@@ -309,16 +642,785 @@ model GuildMemberCache {
   @@index([guildId, inviterId])
 }
 
+model PersonalInvite {
+  id        String   @id @default(cuid())
+  guildId   String
+  userId    String
+  // Permanent invite created by /invites link (maxAge 0, unique).
+  code      String   @unique
+  channelId String
+  createdAt DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMBED MESSAGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SavedEmbed {
+  id        String   @id @default(cuid())
+  guildId   String
+  name      String
+  // MessageTemplate: { content?, embed?: EmbedSpec, buttons?: LinkButtonSpec[] } (src/utils/customEmbed.js)
+  template  Json
+  // Where it was last published (null = draft).
+  channelId String?
+  messageId String?
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, name])
+  @@index([messageId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REMINDERS / TIMERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ReminderMode {
+  // MEE6 "Single": at timeOfDay on the selected weekdays (guild timezone).
+  TIME_OF_DAY
+  // MEE6 "Recurring": every intervalMinutes on the selected weekdays inside [windowStart, windowEnd).
+  INTERVAL
+  // Fires once at runAt, then disables itself.
+  ONE_SHOT
+}
+
+model Reminder {
+  id              String       @id @default(cuid())
+  guildId         String
+  name            String
+  channelId       String
+  // MessageTemplate. MEE6 default content: "Hey, I'm a reminder!"
+  template        Json
+  mode            ReminderMode
+  // 0 = Sunday … 6 = Saturday. Empty = every day.
+  weekdays        Int[]        @default([])
+  // "HH:MM" 24 h, guild timezone (TIME_OF_DAY).
+  timeOfDay       String?
+  // INTERVAL mode; minimum 5.
+  intervalMinutes Int?
+  windowStart     String?
+  windowEnd       String?
+  // ONE_SHOT mode.
+  runAt           DateTime?
+  // MEE6 anti-spam: skip unless a non-bot message was sent since the last reminder.
+  requireActivity Boolean      @default(false)
+  pingRoleId      String?
+  lastSentAt      DateTime?
+  lastMessageId   String?
+  enabled         Boolean      @default(true)
+  createdBy       String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, name])
+  @@index([guildId, channelId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GIVEAWAYS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum GiveawayStatus {
+  // MEE6: deleting the giveaway message moves it back to draft.
+  DRAFT
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+model Giveaway {
+  id              String         @id @default(cuid())
+  guildId         String
+  channelId       String
+  messageId       String?
+  hostId          String
+  prize           String
+  description     String?        @db.Text
+  // 1–90 (MEE6 limit).
+  winnerCount     Int            @default(1)
+  // Members must hold ALL of these roles to enter (MEE6 "required role").
+  requiredRoleIds String[]       @default([])
+  // Members holding ANY of these roles cannot enter (MEE6 deny roles).
+  deniedRoleIds   String[]       @default([])
+  // MEE6 "adjust odds by role": [{ roleId, weight: 1..10 }]; highest matching weight applies.
+  roleWeights     Json?
+  // Optional automatic prizes paid through src/services/rewards.js.
+  xpPrize         Int?
+  coinPrize       Int?
+  pingRoleId      String?
+  embedColor      Int?
+  endsAt          DateTime
+  endedAt         DateTime?
+  status          GiveawayStatus @default(ACTIVE)
+  winnerIds       String[]       @default([])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  guild   GuildSettings   @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  entries GiveawayEntry[]
+
+  @@index([guildId, status])
+  @@index([messageId])
+}
+
+model GiveawayEntry {
+  id         String   @id @default(cuid())
+  giveawayId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  giveaway Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+
+  @@unique([giveawayId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PollStatus {
+  ACTIVE
+  ENDED
+}
+
+model Poll {
+  id             String     @id @default(cuid())
+  guildId        String
+  channelId      String
+  messageId      String?
+  authorId       String
+  question       String
+  // 2–20 option labels (each ≤ 80 chars).
+  options        String[]
+  // 1 = single choice; >1 = up to N choices per voter.
+  maxChoices     Int        @default(1)
+  allowedRoleIds String[]   @default([])
+  deniedRoleIds  String[]   @default([])
+  // Hide live counts until the poll ends.
+  hideResults    Boolean    @default(false)
+  endsAt         DateTime?
+  status         PollStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([guildId, status])
+  @@index([messageId])
+}
+
+model PollVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  userId      String
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  poll Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId, optionIndex])
+  @@index([pollId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STARBOARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Starboard {
+  id                   String   @id @default(cuid())
+  guildId              String
+  name                 String
+  channelId            String
+  // Emoji keys (custom emoji id or unicode). Empty = every reaction counts (MEE6).
+  emojis               String[] @default(["⭐"])
+  threshold            Int      @default(3)
+  // Count the author's own reaction.
+  selfStar             Boolean  @default(false)
+  ignoreBots           Boolean  @default(true)
+  removeBelowThreshold Boolean  @default(true)
+  // Bot reacts with the first emoji on the repost.
+  autoReact            Boolean  @default(false)
+  // Ignore messages older than N days (0 = no limit).
+  maxMessageAgeDays    Int      @default(0)
+  allowNsfw            Boolean  @default(false)
+  ignoredChannelIds    String[] @default([])
+  // MEE6 "remove self-stars": the bot removes the author's own qualifying reaction (needs Manage Messages).
+  removeSelfStars      Boolean  @default(false)
+  enabled              Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  guild   GuildSettings    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  entries StarboardEntry[]
+
+  @@unique([guildId, name])
+  @@index([guildId])
+}
+
+model StarboardEntry {
+  id              String   @id @default(cuid())
+  starboardId     String
+  sourceChannelId String
+  sourceMessageId String
+  authorId        String
+  boardMessageId  String?
+  count           Int      @default(0)
+  // true = staff deleted the repost by hand; the message is never reposted again.
+  blocked         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  starboard Starboard @relation(fields: [starboardId], references: [id], onDelete: Cascade)
+
+  @@unique([starboardId, sourceMessageId])
+  @@index([sourceMessageId])
+  @@index([boardMessageId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TICKETING
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TicketPanelStyle {
+  BUTTONS
+  SELECT
+}
+
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  CLOSED
+  DELETED
+}
+
+model TicketPanel {
+  id                  String           @id @default(cuid())
+  guildId             String
+  name                String
+  // Where the panel is published.
+  channelId           String?
+  messageId           String?
+  // MessageTemplate for the panel. MEE6 default heading "How can we help?".
+  template            Json?
+  style               TicketPanelStyle @default(BUTTONS)
+  // Up to 10 Ticket Manager roles.
+  managerRoleIds      String[]         @default([])
+  openCategoryId      String?
+  claimedCategoryId   String?
+  closedCategoryId    String?
+  // MessageTemplate posted in a new ticket.
+  introTemplate       Json?
+  transcriptChannelId String?
+  dmTranscript        Boolean          @default(false)
+  maxOpenPerUser      Int              @default(1)
+  // Placeholders: {number} {user.name} {user.id}
+  channelNameFormat   String           @default("ticket-{number}")
+  // Ask for a reason in a modal before opening.
+  askReason           Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  guild   GuildSettings       @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  options TicketPanelOption[]
+  tickets Ticket[]
+
+  @@unique([guildId, name])
+}
+
+model TicketPanelOption {
+  id            String  @id @default(cuid())
+  panelId       String
+  // Button label / select option label. MEE6 default "Open Ticket".
+  label         String
+  // MEE6 default ✉️
+  emoji         String?
+  // Select-menu option description.
+  description   String?
+  // ButtonStyle 1..4 (Blue/Grey/Green/Red).
+  buttonStyle   Int     @default(1)
+  position      Int     @default(0)
+  // Overrides the panel's introTemplate / openCategoryId for this option.
+  introTemplate Json?
+  categoryId    String?
+
+  panel   TicketPanel @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([panelId])
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  guildId      String
+  panelId      String?
+  optionId     String?
+  // Per-guild sequential number (allocated under pg_advisory_xact_lock).
+  number       Int
+  channelId    String       @unique
+  ownerId      String
+  status       TicketStatus @default(OPEN)
+  claimedById  String?
+  closedById   String?
+  closedAt     DateTime?
+  reason       String?      @db.Text
+  // Extra members added with /ticket add.
+  addedUserIds String[]     @default([])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  guild  GuildSettings      @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  panel  TicketPanel?       @relation(fields: [panelId], references: [id], onDelete: SetNull)
+  option TicketPanelOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  @@unique([guildId, number])
+  @@index([guildId, ownerId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMPORARY VOICE CHANNELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model TempVoiceHub {
+  id                     String   @id @default(cuid())
+  guildId                String
+  // The join-to-create voice channel.
+  channelId              String   @unique
+  // Category for created channels (null = the hub's own parent).
+  categoryId             String?
+  // Placeholders {index} {username} {user.name}. MEE6 default.
+  nameFormat             String   @default("#{index} - {username}'s Channel")
+  // 0 = unlimited.
+  userLimit              Int      @default(0)
+  // Bits per second (Discord unit); null = Discord default (64 kbps); clamped to guild.maximumBitrate on create.
+  bitrate                Int?
+  // Minutes an empty channel survives (0 = delete immediately).
+  keepAliveMinutes       Int      @default(0)
+  // Minutes after the owner leaves before someone can /voice claim.
+  ownershipLockMinutes   Int      @default(0)
+  // Copy the category's permission overwrites onto created channels.
+  syncPermissions        Boolean  @default(true)
+  createTextChannel      Boolean  @default(false)
+  // Companion text channel visible only to current voice members.
+  textChannelMembersOnly Boolean  @default(true)
+  // MEE6 Ignored Roles: /voice commands do not affect members with these roles (they cannot be
+  // kicked or banned, and lock/hide do not shut them out).
+  ignoredRoleIds         String[] @default([])
+  // Members with these roles can use every /voice command on any temp channel.
+  moderatorRoleIds       String[] @default([])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  guild    GuildSettings      @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  channels TempVoiceChannel[]
+
+  @@index([guildId])
+}
+
+model TempVoiceChannel {
+  id               String    @id @default(cuid())
+  guildId          String
+  hubId            String
+  channelId        String    @unique
+  textChannelId    String?
+  // Pinned control-panel message (voice:* buttons).
+  controlMessageId String?
+  ownerId          String
+  index            Int
+  locked           Boolean   @default(false)
+  hidden           Boolean   @default(false)
+  bannedUserIds    String[]  @default([])
+  ownerLeftAt      DateTime?
+  emptySince       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  hub   TempVoiceHub  @relation(fields: [hubId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([hubId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATISTICS CHANNELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum StatKind {
+  MEMBERS
+  HUMANS
+  BOTS
+  ONLINE
+  PEAK_ONLINE
+  TEXT_CHANNELS
+  VOICE_CHANNELS
+  TOTAL_CHANNELS
+  ROLES
+  ROLE_MEMBERS
+  BOOSTS
+}
+
+model StatChannel {
+  id            String    @id @default(cuid())
+  guildId       String
+  channelId     String    @unique
+  kind          StatKind
+  // ROLE_MEMBERS only.
+  roleId        String?
+  // Must contain {count}, e.g. "Members: {count}". ≤ 100 chars after rendering.
+  template      String
+  lastValue     Int?
+  // Discord allows ~2 renames per 10 min per channel; the refresher never
+  // renames more often than every 5 minutes.
+  lastRenamedAt DateTime?
+  // PEAK_ONLINE only: highest online count seen.
+  peakValue     Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BIRTHDAYS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Birthday {
+  id                String    @id @default(cuid())
+  guildId           String
+  userId            String
+  month             Int
+  day               Int
+  year              Int?
+  // Year (guild-local) of the last announcement, so restarts never double-post.
+  lastAnnouncedYear Int?
+  // When the birthday role was granted (removed on the next local day).
+  roleGrantedAt     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId, month, day])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACHIEVEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AchievementTrigger {
+  MESSAGES
+  REACTIONS
+  LEVEL
+  BOOST
+  PURCHASES
+}
+
+model Achievement {
+  id                String             @id @default(cuid())
+  guildId           String
+  name              String
+  description       String?
+  // Badge emoji shown in /achievements.
+  emoji             String?
+  trigger           AchievementTrigger
+  // [{ name: "Bronze", goal: 10, rewards: [{ type: "ROLE_ADD"|"ROLE_REMOVE"|"XP"|"COINS", roleId?, amount? }] }, ...]
+  // 1–4 tiers (MEE6 V2: Bronze > Silver > Gold > Diamond), goals strictly increasing.
+  tiers             Json
+  // false = MEE6 "don't track past progress" (start counting from creation).
+  trackPastProgress Boolean            @default(true)
+  deadline          DateTime?
+  enabled           Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  guild    GuildSettings         @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  progress AchievementProgress[]
+
+  @@unique([guildId, name])
+  @@index([guildId, trigger, enabled])
+}
+
+model AchievementProgress {
+  id             String    @id @default(cuid())
+  guildId        String
+  achievementId  String
+  userId         String
+  progress       Int       @default(0)
+  // Number of tiers completed (0 = none).
+  tier           Int       @default(0)
+  // MEE6 "almost there" notification sent for the next tier.
+  almostNotified Boolean   @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  guild       GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  achievement Achievement   @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([achievementId, userId])
+  @@index([guildId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTOMATIONS  (When → If → Do)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AutomationTrigger {
+  MESSAGE_SENT
+  MESSAGE_DELETED
+  MESSAGE_EDITED
+  BUTTON_CLICKED
+  REACTION_ADDED
+  ROLE_GAINED
+  ROLE_LOST
+  VOICE_JOINED
+  VOICE_LEFT
+  THREAD_CREATED
+  MEMBER_JOINED
+}
+
+model Automation {
+  id              String            @id @default(cuid())
+  guildId         String
+  name            String
+  trigger         AutomationTrigger
+  // [{ type: "<CONDITION_TYPE>", ...params }] — all must pass (AND). Shape in pkg-automations.md.
+  conditions      Json              @default("[]")
+  // [{ type: "<ACTION_TYPE>", ...params }] — 1..10, run in order.
+  actions         Json              @default("[]")
+  enabled         Boolean           @default(true)
+  // Per-user cooldown (0 = none).
+  cooldownSeconds Int               @default(0)
+  // Monotonic counter for automation-button numbers (a removed button's number is never reused).
+  buttonSeq       Int               @default(0)
+  uses            Int               @default(0)
+  createdBy       String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, name])
+  @@index([guildId, trigger, enabled])
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ECONOMY
 // ─────────────────────────────────────────────────────────────────────────────
 
+// LEGACY global wallet. Kept (never dropped). Read once per (guild, user) by
+// economyService.getAccount() to seed the per-server EconomyAccount; never written after the build.
 model UserEconomy {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  balance     Int       @default(1000)
-  lastDaily   DateTime?
-  lastPity    DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  balance   Int       @default(1000)
+  lastDaily DateTime?
+  lastPity  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model EconomyAccount {
+  id             String    @id @default(cuid())
+  guildId        String
+  userId         String
+  // 0 ≤ balance ≤ GuildSettings.economyMaxBalance (enforced in SQL by economyService).
+  balance        Int       @default(0)
+  dailyStreak    Int       @default(0)
+  lastDaily      DateTime?
+  lastWork       DateTime?
+  lastPity       DateTime?
+  // true when the balance was copied from the global UserEconomy row on creation.
+  importedGlobal Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId, balance(sort: Desc)])
+}
+
+enum BoostPeriod {
+  // Once per member, ever.
+  ONE_TIME
+  // Once per member per guild-local day / ISO week / calendar month (GuildSettings.timezone).
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+// MEE6 coin boosts (≤ LIMITS.ECONOMY_BOOSTS per guild). The highest qualifying boost that the
+// member has not used in the current period multiplies one /daily or /work payout by (100 + percent) %.
+model EconomyBoost {
+  id        String      @id @default(cuid())
+  guildId   String
+  name      String
+  // null = every member qualifies.
+  roleId    String?
+  // 1..500
+  percent   Int
+  period    BoostPeriod
+  enabled   Boolean     @default(true)
+  createdBy String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  guild GuildSettings     @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  uses  EconomyBoostUse[]
+
+  @@unique([guildId, name])
+}
+
+model EconomyBoostUse {
+  id        String   @id @default(cuid())
+  boostId   String
+  userId    String
+  // 'once' | 'D:YYYY-MM-DD' | 'W:YYYY-Www' | 'M:YYYY-MM' (guild timezone).
+  periodKey String
+  createdAt DateTime @default(now())
+
+  boost EconomyBoost @relation(fields: [boostId], references: [id], onDelete: Cascade)
+
+  @@unique([boostId, userId, periodKey])
+}
+
+enum ShopItemType {
+  ROLE
+  USABLE
+  STATIC
+}
+
+model ShopItem {
+  id             String       @id @default(cuid())
+  guildId        String
+  name           String
+  description    String?
+  // 1 ≤ price ≤ 1e9.
+  price          Int
+  type           ShopItemType @default(STATIC)
+  // ROLE items.
+  roleId         String?
+  imageUrl       String?
+  useOnBuy       Boolean      @default(false)
+  destroyOnUse   Boolean      @default(true)
+  useMessage     String?      @db.Text
+  buyMessage     String?      @db.Text
+  canBuyMultiple Boolean      @default(true)
+  // MEE6: 200 copies per item per user.
+  maxPerUser     Int          @default(200)
+  // null = unlimited stock.
+  stock          Int?
+  enabled        Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  guild     GuildSettings   @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  inventory InventoryItem[]
+
+  @@unique([guildId, name])
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  guildId   String
+  userId    String
+  itemId    String
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  item  ShopItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+  @@index([guildId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEEDS  (keyless: RSS/Atom, YouTube channel Atom, Reddit .rss, Bluesky AppView, podcasts)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FeedType {
+  RSS
+  YOUTUBE
+  REDDIT
+  BLUESKY
+  PODCAST
+}
+
+model Feed {
+  id              String    @id @default(cuid())
+  guildId         String
+  type            FeedType
+  // Canonical source id: feed URL (RSS/PODCAST), UC… channel id (YOUTUBE),
+  // lowercase subreddit (REDDIT), DID (BLUESKY).
+  source          String
+  displayName     String
+  // URL actually polled (resolved at add time).
+  fetchUrl        String
+  channelId       String
+  pingRoleId      String?
+  // Placeholder template; null = per-type default (pkg-feeds.md).
+  messageTemplate String?   @db.Text
+  // Bluesky: include reposts.
+  includeReposts  Boolean   @default(false)
+  enabled         Boolean   @default(true)
+  // false until the first successful poll has recorded existing items as seen (no backlog posting).
+  initialized     Boolean   @default(false)
+  // Most recent item ids seen (newest first, capped at 100).
+  seenIds         String[]  @default([])
+  etag            String?
+  lastModified    String?
+  lastCheckedAt   DateTime?
+  lastSuccessAt   DateTime?
+  lastPostedAt    DateTime?
+  failureCount    Int       @default(0)
+  lastError       String?
+  // Set when auto-disabled (e.g. "20 consecutive failures: HTTP 404").
+  disabledReason  String?
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, type, source, channelId])
+  @@index([type, source])
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAPTCHA VERIFICATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CaptchaVerification {
+  id         String    @id @default(cuid())
+  guildId    String
+  userId     String
+  // sha256(guildId:userId:ANSWER) of the current image challenge (null = none issued yet / BUTTON mode).
+  answerHash String?
+  attempts   Int       @default(0)
+  // When the current challenge stops being accepted.
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
 }

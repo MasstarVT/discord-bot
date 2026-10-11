@@ -63,8 +63,24 @@ jobs:
       - name: Validate the Prisma schema
         run: npx prisma validate
 
+      # Offline suite: no database, Redis, Discord or network. The tests force
+      # their own offline environment; the unreachable URL below is a second
+      # guard so a stray query fails fast instead of reaching the service.
+      - name: Run the offline test suite
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:1/test
+
       - name: Apply migrations to an empty database
         run: npx prisma migrate deploy
+
+      # Same suite again with the opt-in database tests enabled (test/db.test.js
+      # runs every RAW_SQL statement against the migrated schema). One file at a
+      # time: the database tests share one database.
+      - name: Run the test suite against the migrated database
+        run: node --test --test-concurrency=1 "test/*.test.js"
+        env:
+          TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Fail if schema.prisma changed without a migration
         run: >-

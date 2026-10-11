@@ -8,6 +8,8 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '512M',
+      // index.js gives the shards 25 s to shut down gracefully; PM2 must not SIGKILL earlier (R201).
+      kill_timeout: 26000,
       error_file: './logs/pm2-error.log',
       out_file: './logs/pm2-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',

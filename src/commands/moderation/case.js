@@ -1,112 +1,142 @@
-import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } from 'discord.js';
-import { PERMISSION_LEVELS, COLORS } from '../../config/constants.js';
-import { errorEmbed, successEmbed } from '../../utils/embedBuilder.js';
+import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import prisma from '../../database/client.js';
-import { cache } from '../../services/redis.js';
+import { COLORS, PERMISSION_LEVELS } from '../../config/constants.js';
+import {
+  ACTION_META,
+  MSG,
+  deliverLookup,
+  displayType,
+  postModLog,
+} from '../../services/moderationService.js';
+import { getSettingsSafe } from '../../services/settingsService.js';
+import { errorEmbed, neutralEmbed, successEmbed } from '../../utils/embedBuilder.js';
+import { isHttpUrl } from '../../utils/customEmbed.js';
+import logger from '../../utils/logger.js';
+import { clampText } from '../../utils/text.js';
+import { discordTimestamp } from '../../utils/time.js';
 
+export const module = 'moderation';
 export const permissionLevel = PERMISSION_LEVELS.MODERATOR;
 
-const ACTION_COLORS = {
-  WARN: COLORS.WARNING, TIMEOUT: 0xff9800, MUTE: 0xff9800,
-  KICK: 0xff5722, SOFTBAN: 0xf44336, BAN: 0xd32f2f,
-  UNBAN: COLORS.SUCCESS, UNMUTE: COLORS.SUCCESS, NOTE: COLORS.INFO,
-};
-const ACTION_EMOJI = {
-  WARN: '⚠️', TIMEOUT: '⏱️', MUTE: '🔇', KICK: '👢',
-  SOFTBAN: '🔨', BAN: '🔨', UNBAN: '✅', UNMUTE: '🔊', NOTE: '📝',
-};
+const MAX_CASE_ID = 2_147_483_647; // infraction.caseId is a 32-bit Int column
+const NO_MENTIONS = { parse: [] };
 
 export const data = new SlashCommandBuilder()
   .setName('case')
   .setDescription('View or edit a moderation case.')
   .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-  .addSubcommand((sub) =>
-    sub.setName('view')
-      .setDescription('View details of a case.')
-      .addIntegerOption((o) => o.setName('id').setDescription('Case ID').setRequired(true).setMinValue(1))
-  )
-  .addSubcommand((sub) =>
-    sub.setName('reason')
-      .setDescription('Update the reason for a case.')
-      .addIntegerOption((o) => o.setName('id').setDescription('Case ID').setRequired(true).setMinValue(1))
-      .addStringOption((o) => o.setName('reason').setDescription('New reason').setRequired(true))
-  )
-  .addSubcommand((sub) =>
-    sub.setName('proof')
-      .setDescription('Attach or update the proof URL for a case.')
-      .addIntegerOption((o) => o.setName('id').setDescription('Case ID').setRequired(true).setMinValue(1))
-      .addStringOption((o) => o.setName('url').setDescription('Proof URL').setRequired(true))
-  );
+  .addSubcommand((s) => s.setName('view').setDescription('View a case.')
+    .addIntegerOption((o) => o.setName('id').setDescription('Case number').setRequired(true).setMinValue(1)))
+  .addSubcommand((s) => s.setName('reason').setDescription("Change a case's reason.")
+    .addIntegerOption((o) => o.setName('id').setDescription('Case number').setRequired(true).setMinValue(1))
+    .addStringOption((o) => o.setName('reason').setDescription('New reason').setRequired(true).setMaxLength(1000)))
+  .addSubcommand((s) => s.setName('proof').setDescription("Set a case's proof link.")
+    .addIntegerOption((o) => o.setName('id').setDescription('Case number').setRequired(true).setMinValue(1))
+    .addStringOption((o) => o.setName('url').setDescription('Proof link (http/https)').setRequired(true).setMaxLength(1000)));
 
+const notFound = (caseId) => errorEmbed('Not Found', `Case #${caseId} doesn't exist in this server.`);
+const quote = (text) => String(text).replace(/\n/g, '\n> ');
+
+/** "<@id> `tag`", or "Unknown" when the user cannot be loaded. */
+async function personField(client, id) {
+  const user = client.users.cache.get(id) ?? await client.users.fetch(id).catch(() => null);
+  if (!user) return `<@${id}> \`Unknown\``;
+  return `<@${id}> \`${clampText(String(user.tag ?? user.username ?? id).replace(/`/g, "'"), 100)}\``;
+}
+
+/** Best-effort note in the case-log channel; postModLog never throws, the catch is a second guard. */
+async function logEdit(guild, caseId, text) {
+  try {
+    await postModLog(guild, neutralEmbed(`📝 Case #${caseId} edited`, clampText(text, 4000)));
+  } catch (err) {
+    logger.warn(`/case: mod log note failed: ${err?.message ?? err}`);
+  }
+}
+
+/**
+ * /case view | reason | proof. Every displayed value is clamped (older rows may hold very long text),
+ * and reason / proof edits are bounded to 1000 characters (R095).
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @param {import('discord.js').Client} [client]
+ * @returns {Promise<void>}
+ */
 export async function execute(interaction, client) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: true }); // errors stay private
 
-  const sub    = interaction.options.getSubcommand();
+  const sub = interaction.options.getSubcommand();
   const caseId = interaction.options.getInteger('id', true);
-  const guild  = interaction.guild;
+  const guild = interaction.guild;
+  const guildId = interaction.guildId;
+  const where = { guildId_caseId: { guildId, caseId } };
 
-  const infraction = await prisma.infraction.findUnique({
-    where: { guildId_caseId: { guildId: guild.id, caseId } },
-  });
-
-  if (!infraction) {
-    return interaction.editReply({ embeds: [errorEmbed('Not Found', `Case #${caseId} does not exist in this server.`)] });
+  if (caseId < 1 || caseId > MAX_CASE_ID) {
+    await interaction.editReply({ embeds: [notFound(caseId)] });
+    return;
   }
 
-  // ── View ────────────────────────────────────────────────────────────────────
+  // ── view ──────────────────────────────────────────────────────────────────
   if (sub === 'view') {
-    const target = await client.users.fetch(infraction.targetUserId).catch(() => ({ id: infraction.targetUserId, tag: 'Unknown User' }));
-    const mod    = await client.users.fetch(infraction.moderatorId).catch(() => ({ id: infraction.moderatorId, tag: 'Unknown Mod' }));
-    const emoji  = ACTION_EMOJI[infraction.type]  ?? '📋';
-    const color  = ACTION_COLORS[infraction.type] ?? COLORS.NEUTRAL;
-
-    const embed = new EmbedBuilder()
-      .setColor(color)
-      .setTitle(`${emoji} Case #${caseId} — ${infraction.type}`)
-      .addFields(
-        { name: 'Target',    value: `<@${target.id}> \`${target.tag}\``, inline: true },
-        { name: 'Moderator', value: `<@${mod.id}> \`${mod.tag}\``,       inline: true },
-        { name: 'Reason',    value: infraction.reason || 'None' },
-        { name: 'Active',    value: infraction.active ? 'Yes' : 'No',    inline: true },
-        { name: 'Created',   value: `<t:${Math.floor(infraction.createdAt.getTime() / 1000)}:F>`, inline: true },
-      )
-      .setFooter({ text: `User ID: ${infraction.targetUserId}` })
-      .setTimestamp();
-
-    if (infraction.expiresAt) {
-      embed.addFields({ name: 'Expires', value: `<t:${Math.floor(infraction.expiresAt.getTime() / 1000)}:R>` });
-    }
-    if (infraction.proofUrl) {
-      embed.addFields({ name: 'Proof', value: infraction.proofUrl });
+    const settings = await getSettingsSafe(guildId);
+    const inf = await prisma.infraction.findUnique({ where });
+    if (!inf) {
+      await interaction.editReply({ embeds: [notFound(caseId)] });
+      return;
     }
 
-    await interaction.deleteReply();
-    return interaction.followUp({ embeds: [embed] });
+    const bot = client ?? interaction.client;
+    const [target, moderator] = await Promise.all([personField(bot, inf.targetUserId), personField(bot, inf.moderatorId)]);
+    const meta = ACTION_META[displayType(inf)] ?? { emoji: '📋', label: String(inf.type), color: COLORS.NEUTRAL };
+    const embed = neutralEmbed(clampText(`${meta.emoji} Case #${caseId} | ${meta.label}`, 256)).setColor(meta.color);
+    embed.addFields(
+      { name: 'Target', value: target, inline: true },
+      { name: 'Moderator', value: moderator, inline: true },
+      { name: 'Reason', value: clampText(inf.reason || 'None', 1024) },
+      { name: 'Active', value: inf.active ? 'Yes' : 'No', inline: true },
+      { name: 'Created', value: discordTimestamp(inf.createdAt, 'F'), inline: true },
+    );
+    if (inf.expiresAt) {
+      embed.addFields({ name: 'Expires', value: `${discordTimestamp(inf.expiresAt, 'F')} (${discordTimestamp(inf.expiresAt, 'R')})`, inline: true });
+    }
+    if (inf.proofUrl) embed.addFields({ name: 'Proof', value: clampText(inf.proofUrl, 1024) });
+    embed.setFooter({ text: `User ID: ${inf.targetUserId}` });
+    await deliverLookup(interaction, settings, { embeds: [embed], allowedMentions: NO_MENTIONS });
+    return;
   }
 
-  // ── Reason update ────────────────────────────────────────────────────────────
+  // ── reason / proof ────────────────────────────────────────────────────────
+  let data;
+  let confirmation;
+  let logText;
   if (sub === 'reason') {
-    const newReason = interaction.options.getString('reason', true);
-    await prisma.infraction.update({
-      where: { guildId_caseId: { guildId: guild.id, caseId } },
-      data:  { reason: newReason },
-    });
-    await interaction.deleteReply();
-    return interaction.followUp({
-      embeds: [successEmbed('Case Updated', `Case #${caseId} reason updated to:\n> ${newReason}`)],
-    });
+    const newReason = clampText(interaction.options.getString('reason', true).trim(), 1000);
+    if (!newReason) {
+      await interaction.editReply({ embeds: [errorEmbed('Invalid Input', "The reason can't be empty.")] });
+      return;
+    }
+    data = { reason: newReason };
+    confirmation = successEmbed('Case Updated', `Case #${caseId} reason is now:\n> ${quote(clampText(newReason, 1000))}`);
+    logText = `Reason changed by <@${interaction.user.id}>:\n> ${quote(newReason)}`;
+  } else {
+    const url = interaction.options.getString('url', true).trim();
+    if (!isHttpUrl(url) || url.length > 1000) {
+      await interaction.editReply({ embeds: [errorEmbed('Invalid Link', MSG.BAD_PROOF)] });
+      return;
+    }
+    data = { proofUrl: url };
+    confirmation = successEmbed('Case Updated', `Case #${caseId} proof link updated.`);
+    logText = `Proof link changed by <@${interaction.user.id}>:\n${url}`;
   }
 
-  // ── Proof update ─────────────────────────────────────────────────────────────
-  if (sub === 'proof') {
-    const url = interaction.options.getString('url', true);
-    await prisma.infraction.update({
-      where: { guildId_caseId: { guildId: guild.id, caseId } },
-      data:  { proofUrl: url },
-    });
-    await interaction.deleteReply();
-    return interaction.followUp({
-      embeds: [successEmbed('Case Updated', `Case #${caseId} proof URL updated.`)],
-    });
+  const settings = await getSettingsSafe(guildId);
+  try {
+    await prisma.infraction.update({ where, data });
+  } catch (err) {
+    if (err?.code === 'P2025') {
+      await interaction.editReply({ embeds: [notFound(caseId)] });
+      return;
+    }
+    throw err;
   }
+  await deliverLookup(interaction, settings, { embeds: [confirmation], allowedMentions: NO_MENTIONS });
+  await logEdit(guild, caseId, logText);
 }

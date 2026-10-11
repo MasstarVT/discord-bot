@@ -1,17 +1,24 @@
-import { Events } from 'discord.js';
-import { runAutomod }      from '../services/automodService.js';
-import { grantXp }         from '../services/xpService.js';
-import { runTriggers }     from '../services/tagService.js';
-import { runAutoTranslate } from '../services/translationService.js';
+import { Events, MessageType } from 'discord.js';
+import { runHooks } from '../handlers/hookRegistry.js';
 
 export const name = Events.MessageCreate;
 export const once = false;
 
-export async function execute(message, client) {
-  if (message.author.bot || !message.guild) return;
+// Only real user messages enter the pipeline: join, boost, pin and thread notices never earn XP,
+// get moderated, triggered or translated (R262/R263).
+const USER_MESSAGE_TYPES = new Set([MessageType.Default, MessageType.Reply]);
 
-  await runAutomod(message, client);
-  await grantXp(message, client);
-  await runTriggers(message, client);
-  await runAutoTranslate(message, client);
+export async function execute(message, client) {
+  if (!message.inGuild() || message.author.bot || message.webhookId) return;
+  if (!USER_MESSAGE_TYPES.has(message.type)) return;
+
+  // The hook runner isolates every step and stops after ctx.stop(), so a message automod deleted
+  // never reaches XP, triggers or translation (R113-R117, R264, R265).
+  await runHooks('messageCreate', {
+    client,
+    guild: message.guild,
+    message,
+    member: message.member,
+    channel: message.channel,
+  });
 }

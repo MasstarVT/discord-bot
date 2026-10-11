@@ -1,5 +1,12 @@
 /**
  * Normalises any thrown value into a plain object suitable for structured logging.
+ *
+ * Pure and never throws.
+ * - For an `Error` the result is `{ message, name, stack, code, ...context }` (`code` is `null`
+ *   when the error has none).
+ * - For anything else the result is `{ message: String(err), ...context }`.
+ * The context is spread last, so a context key overrides a field of the same name.
+ *
  * @param {unknown} err
  * @param {object} [context] - Extra key/value pairs to include (guildId, userId, etc.)
  * @returns {object}
