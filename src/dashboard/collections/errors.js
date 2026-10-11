@@ -16,13 +16,15 @@ export class RecordError extends Error {
   /**
    * @param {keyof RECORD_ERROR_STATUS} code
    * @param {string} message shown to the admin
-   * @param {{ path?: string }} [extra] path: the field the message is about
+   * @param {{ path?: string, saved?: boolean }} [extra] path: the field the message is about; saved: the change was
+   *   stored before the failure (e.g. a panel saved but not posted), so the browser must not offer the same create again
    */
   constructor(code, message, extra = {}) {
     super(message);
     this.name = 'RecordError';
     this.code = Object.hasOwn(RECORD_ERROR_STATUS, code) ? code : 'invalid';
     if (extra.path) this.path = extra.path;
+    if (extra.saved === true) this.saved = true;
   }
 
   get status() {

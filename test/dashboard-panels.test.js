@@ -172,6 +172,22 @@ describe('descriptors', () => {
     for (const key of KEYS) assert.ok(!COLLECTIONS[key].readOnly.some((f) => f.field === 'messageId'), key);
   });
 
+  test('an action that only applies to some items names the field it depends on', () => {
+    for (const key of KEYS) {
+      const c = COLLECTIONS[key];
+      const names = new Set([...c.fields, ...c.readOnly].map((f) => f.field));
+      for (const a of publicCollection(c).actions) {
+        if (a.showWhen) assert.ok(names.has(a.showWhen.field), `${key}!${a.id} depends on ${a.showWhen.field}`);
+      }
+    }
+    const actions = publicCollection(COLLECTIONS.ticketPanels).actions;
+    // "Update posted message" means nothing for a panel that is not posted; Publish always applies
+    assert.deepEqual(actions.find((a) => a.id === 'refresh').showWhen, { field: 'status', in: [tpd.STATUS.PUBLISHED] });
+    assert.equal(actions.find((a) => a.id === 'publish').showWhen, null);
+    // Repost also posts a panel that never was (or whose message was deleted)
+    assert.equal(publicCollection(COLLECTIONS.reactionRoles).actions[0].showWhen, null);
+  });
+
   test('enum options match the database enums', () => {
     const rr = COLLECTIONS.reactionRoles.fields;
     const values = (name) => rr.find((f) => f.field === name).options.map((o) => o.value);
@@ -580,7 +596,7 @@ describe('ticket panel helpers', () => {
     assert.deepEqual(item.options[0].introTemplate, emptyTemplate(), 'no override reads as an empty message');
     assert.equal(item.template.embed.title, 'How can we help?');
     assert.equal(item.introTemplate.embed.title, 'Ticket #{number}');
-    assert.equal(item.status, 'Not published');
+    assert.equal(item.status, tpd.STATUS.DRAFT);
     assert.equal(item.messageUrl, null);
     assert.equal(item.openTickets, 4);
     assert.equal(item.summary, 'Buttons · 2 options · Not published');
@@ -707,6 +723,51 @@ describe('tasks', () => {
     await assert.rejects(call(rrTasks, 'rr.publish', actor, { groupId: 'g1', mode: 'explode' }), (err) => err instanceof TaskError && /not valid/.test(err.message));
     await assert.rejects(call(tkTasks, 'ticket.check', actor, { categoryIds: ['nope'] }), (err) => err instanceof TaskError);
     await assert.rejects(call(tkTasks, 'ticket.check', actor, { categoryIds: [], transcriptChannelId: 5 }), (err) => err instanceof TaskError);
+  });
+});
+
+describe('ticket.check (no database needed)', () => {
+  const GUILD = snow(710);
+  const admin = { id: snow(711), guild: { id: GUILD, ownerId: snow(712) }, roles: { cache: new Collection() }, permissions: { has: (b) => b === PermissionFlagsBits.ManageGuild } };
+  const actor = { id: admin.id, member: admin, isBotOwner: false };
+  const channel = (id, name, type, deny = []) => {
+    const c = { id, name, type, deny, isTextBased: () => type === ChannelType.GuildText || type === ChannelType.GuildAnnouncement, isThread: () => false };
+    c.permissionsFor = () => ({ has: (bit) => !c.deny.some((k) => PermissionFlagsBits[k] === bit) });
+    return c;
+  };
+  const me = { id: snow(713), permissions: { has: () => true } };
+  const guild = { id: GUILD, available: true, members: { me }, channels: { cache: new Collection(), fetch: async () => { throw Object.assign(new Error('x'), { code: 10003 }); } } };
+  const add = (id, name, type, deny) => { const c = channel(id, name, type, deny); c.guild = guild; guild.channels.cache.set(id, c); return c; };
+  const run = (payload) => tkTasks['ticket.check'].run({ guild, client: {}, actor, payload, taskId: 't' });
+  const refused = (payload, re) => assert.rejects(run(payload), (err) => err instanceof TaskError && re.test(err.message), JSON.stringify(payload));
+
+  test('categories need View Channel, Manage Channels and Manage Roles; the transcript channel needs four permissions', async () => {
+    const fine = add(snow(720), 'Tickets', ChannelType.GuildCategory);
+    const noRoles = add(snow(721), 'Locked', ChannelType.GuildCategory, ['ManageRoles']);
+    const text = add(snow(722), 'general', ChannelType.GuildText);
+    const voice = add(snow(723), 'Lounge', ChannelType.GuildVoice);
+    const transcripts = add(snow(724), 'transcripts', ChannelType.GuildText);
+    const noFiles = add(snow(725), 'no-files', ChannelType.GuildText, ['AttachFiles']);
+    const news = add(snow(726), 'news', ChannelType.GuildAnnouncement);
+
+    assert.equal((await run({ categoryIds: [fine.id], transcriptChannelId: transcripts.id })).message, 'The bot can use those channels.');
+    assert.ok(await run({ categoryIds: [] }), 'nothing to check is fine');
+    assert.ok(await run({ categoryIds: [fine.id, fine.id], transcriptChannelId: news.id }), 'an announcement channel is a fine transcript channel');
+    await refused({ categoryIds: [noRoles.id] }, /I need Manage Roles in the "Locked" category/);
+    await refused({ categoryIds: [text.id] }, /#general is not a category/);
+    await refused({ categoryIds: [snow(799)] }, /does not exist in this server any more/);
+    await refused({ categoryIds: [fine.id], transcriptChannelId: noFiles.id }, /I need Attach Files in #no-files/);
+    await refused({ categoryIds: [], transcriptChannelId: voice.id }, /text or announcement/);
+    await refused({ categoryIds: ['not-a-channel'] }, /not valid/);
+    await refused({ categoryIds: [], transcriptChannelId: 12345 }, /not valid/);
+  });
+
+  test('a payload without a category list checks nothing, and only the first few categories are looked at', async () => {
+    assert.ok(await run({}));
+    assert.ok(await run({ categoryIds: 'nope' }));
+    const many = Array.from({ length: 200 }, (_, i) => snow(800 + i));
+    // the 29th id and beyond are never looked up (the first 28 are unknown channels: the first one already refuses)
+    await refused({ categoryIds: many }, /does not exist/);
   });
 });
 
@@ -958,7 +1019,7 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
       const ch = w.text('roles', { deny: ['EmbedLinks'] });
       const err = await code(rrStore.create(w.id, valid('reactionRoles', rrBody({ channelId: ch.id, items: [rrItem(role.id, { label: 'News' })] })), w.ctx()));
       assert.equal(err.code, 'failed');
-      assert.match(err.message, /saved but could not be posted/);
+      assert.match(err.message, /was saved, but it was not posted/);
       assert.match(err.message, /I need Embed Links in #roles/);
       assert.equal(ch.sent.length, 0);
 
@@ -1332,7 +1393,7 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
       const offline = { runTask: async () => ({ status: 'offline', message: 'The bot did not pick this up in time, so nothing was done.', data: null }) };
       const err = await code(rrStore.create(w.id, valid('reactionRoles', rrBody({ channelId: ch.id, items: [rrItem(role.id)] })), w.ctx(offline)));
       assert.equal(err.code, 'unavailable');
-      assert.match(err.message, /saved but could not be posted/);
+      assert.match(err.message, /was saved, but it was not posted/);
       assert.equal((await rrStore.list(w.id)).length, 1);
       // still working when the wait ends: the item is returned as it is
       const pendingCtx = { runTask: async () => ({ status: 'pending', message: 'The bot is still working on it.', data: null }) };
@@ -1650,7 +1711,7 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
       const locked = w.text('locked', { deny: ['EmbedLinks'] });
       const err = await code(tkStore.create(w.id, valid('ticketPanels', tbody({ channelId: locked.id })), w.ctx()));
       assert.equal(err.code, 'failed');
-      assert.match(err.message, /saved but could not be published/);
+      assert.match(err.message, /was saved, but it was not published/);
       assert.match(err.message, /I need Embed Links in #locked/);
       const [panel] = await tkStore.list(w.id);
       assert.equal(panel.status, 'Not published');
@@ -1756,6 +1817,27 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
       const text = w.text('plain');
       const wrongKind = await code(tkStore.update(w.id, made.id, valid('ticketPanels', { openCategoryId: text.id }, update(made)), w.ctx()));
       assert.match(wrongKind.message, /not a category/);
+    });
+
+    test('a permission check the bot has not finished is not a pass: nothing is saved', async () => {
+      const w = makeWorld(await newGuild());
+      const cat = w.category('Tickets');
+      const slow = { runTask: async () => ({ status: 'pending', message: 'The bot is still working on it.', data: null }) };
+      const err = await code(tkStore.create(w.id, valid('ticketPanels', tbody({ openCategoryId: cat.id })), w.ctx(slow)));
+      assert.equal(err.code, 'unavailable');
+      assert.match(err.message, /nothing was saved/);
+      assert.deepEqual(await tkStore.list(w.id), []);
+    });
+
+    test('a manager change on a published panel only syncs the tickets, not the message', async () => {
+      const w = makeWorld(await newGuild());
+      const ch = w.text('support');
+      const role = w.role('Helpers', { mentionable: true });
+      const made = await tkStore.create(w.id, valid('ticketPanels', tbody({ channelId: ch.id })), w.ctx());
+      w.runs.length = 0;
+      await tkStore.update(w.id, made.id, valid('ticketPanels', { managerRoleIds: [role.id] }, update(made)), w.ctx());
+      assert.deepEqual(w.runs.map((r) => [r[0], r[1].message, r[1].managersAdded]), [['ticket.refresh', false, [role.id]]]);
+      assert.equal(ch.sent[0].edits.length, 0, 'the posted message was not touched');
     });
 
     test('the delete task confirms the actor again', async () => {

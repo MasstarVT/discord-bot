@@ -54,7 +54,8 @@ const STYLE_OPTIONS = Object.freeze([
 
 // ── Cross-field rules ────────────────────────────────────────────────────────
 
-const ATTACHED_TEXT = 'This panel uses an existing message that the bot never edits, so only the title, role mode, role limit and roles can change.';
+const ATTACHED_TEXT = 'This panel uses an existing message that the bot never edits, so only the title, role mode, role limit and roles '
+  + 'can change.';
 
 /** Fields of an attached panel whose message the bot never edits. */
 const LOCKED_WHEN_ATTACHED = Object.freeze(['description', 'messageContent', 'plainText']);
@@ -76,7 +77,9 @@ export function itemsProblem(items, layout) {
   const roles = new Set();
   const keys = new Set();
   for (const [i, item] of items.entries()) {
-    if (roles.has(item.roleId)) return { path: `items.${i}.roleId`, message: 'This role is already on the panel. Each role can be added once.' };
+    if (roles.has(item.roleId)) {
+      return { path: `items.${i}.roleId`, message: 'This role is already on the panel. Each role can be added once.' };
+    }
     roles.add(item.roleId);
     if (layout !== 'REACTIONS') continue;
     const key = emojiKey(item.emoji);
@@ -105,8 +108,7 @@ const ITEM_FIELDS = Object.freeze([
     field: 'roleId',
     type: 'role',
     label: 'Role',
-    description: "The role members get. It must be below the bot's highest role, and below yours. "
-      + 'Roles with moderator or admin permissions can only be added with /reactionrole add in Discord, which asks you to confirm.',
+    description: "The role members get, below the bot's highest role and yours.",
     assignable: true,
     required: true,
     default: null,
@@ -115,7 +117,7 @@ const ITEM_FIELDS = Object.freeze([
     field: 'label',
     type: 'text',
     label: 'Label',
-    description: 'The button text, dropdown option or reaction list entry (up to 80 characters). Empty: the role name.',
+    description: 'Button text or dropdown label, up to 80 characters. Empty: the role name.',
     maxLength: 80,
     nullable: true,
     default: null,
@@ -124,8 +126,7 @@ const ITEM_FIELDS = Object.freeze([
     field: 'emoji',
     type: 'emoji',
     label: 'Emoji',
-    description: 'Required for emoji-reaction panels, where each emoji can be used once. Optional otherwise. '
-      + 'A standard emoji or one of this server\'s custom emojis.',
+    description: 'Required on emoji-reaction panels (each emoji once). A standard emoji or one of this server\'s emojis.',
     nullable: true,
     default: null,
   },
@@ -133,7 +134,7 @@ const ITEM_FIELDS = Object.freeze([
     field: 'style',
     type: 'enum',
     label: 'Button colour',
-    description: 'Button panels only; ignored by the other layouts.',
+    description: 'Button panels only.',
     options: STYLE_OPTIONS,
     default: 1,
   },
@@ -141,7 +142,7 @@ const ITEM_FIELDS = Object.freeze([
     field: 'description',
     type: 'text',
     label: 'Dropdown description',
-    description: 'Dropdown panels only (up to 100 characters); ignored by the other layouts.',
+    description: 'Dropdown panels only, up to 100 characters.',
     maxLength: 100,
     nullable: true,
     default: null,
@@ -163,7 +164,7 @@ export const collection = Object.freeze({
       field: 'channelId',
       type: 'channel',
       label: 'Channel',
-      description: 'Where the panel is posted. Use "Repost" to move it later. It cannot be changed here after creation.',
+      description: 'Where the panel is posted. Use "Repost" to move it later.',
       channelTypes: [...POSTABLE_CHANNEL_KINDS],
       required: true,
       default: null,
@@ -172,7 +173,7 @@ export const collection = Object.freeze({
       field: 'layout',
       type: 'enum',
       label: 'Layout',
-      description: 'How members pick roles. It cannot be changed after the panel is created.',
+      description: 'How members pick roles.',
       options: LAYOUT_OPTIONS,
       default: 'BUTTONS',
     },
@@ -180,8 +181,7 @@ export const collection = Object.freeze({
       field: 'type',
       type: 'enum',
       label: 'Role mode',
-      description: 'Normal: members can get and remove roles. Unique: one role from the panel at a time. '
-        + 'Verify: members can only get roles. Reverse: using a role removes it.',
+      description: 'Normal: get and remove roles. Unique: one role at a time. Verify: get roles only. Reverse: using a role removes it.',
       options: TYPE_OPTIONS,
       default: 'NORMAL',
     },
@@ -209,7 +209,7 @@ export const collection = Object.freeze({
       field: 'messageContent',
       type: 'text',
       label: 'Message text',
-      description: 'Plain text sent with the panel (up to 2000 characters). With "Text only" it replaces the embed text.',
+      description: 'Plain text sent with the panel, up to 2000 characters.',
       multiline: true,
       maxLength: 2000,
       placeholders: false,
@@ -227,7 +227,7 @@ export const collection = Object.freeze({
       field: 'maxRoles',
       type: 'int',
       label: 'Most roles per member',
-      description: 'Normal mode only: how many roles from this panel a member can hold. Empty: no limit.',
+      description: 'Normal mode only. Empty: no limit.',
       min: 1,
       max: MAX_MAX_ROLES,
       nullable: true,
@@ -238,7 +238,7 @@ export const collection = Object.freeze({
       field: 'placeholder',
       type: 'text',
       label: 'Dropdown placeholder',
-      description: 'Dropdown panels only: the text shown before a member picks (up to 150 characters). Empty: a default for the role mode.',
+      description: 'Dropdown panels only: the text shown before a member picks, up to 150 characters. Empty: a default.',
       maxLength: 150,
       nullable: true,
       default: null,
@@ -248,8 +248,8 @@ export const collection = Object.freeze({
       field: 'items',
       type: 'objectList',
       label: 'Roles',
-      description: 'The roles on the panel, in this order. Buttons and dropdowns hold up to 25 roles, emoji reactions up to 20. '
-        + 'Removing a role never takes it from members who already have it.',
+      description: 'In this order. Buttons and dropdowns hold up to 25 roles, emoji reactions up to 20. Roles with moderator or admin '
+        + 'permissions can only be added with /reactionrole add in Discord, which asks you to confirm.',
       itemLabel: 'Role',
       addLabel: 'Add role',
       emptyText: 'No roles yet. Add the roles members can pick.',
@@ -275,8 +275,8 @@ export const collection = Object.freeze({
     {
       id: 'repost',
       label: 'Repost',
-      description: 'Posts the panel again, in another channel or in its own channel after the message was deleted, and deletes the '
-        + 'old message. For an attached panel without a channel, the bot only puts its reactions back on the attached message.',
+      description: 'Posts the panel again, in another channel or after its message was deleted, and deletes the old message. '
+        + 'An attached panel without a channel only gets its reactions back.',
       fields: [
         {
           field: 'channelId',

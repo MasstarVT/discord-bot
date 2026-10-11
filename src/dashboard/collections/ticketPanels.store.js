@@ -52,7 +52,9 @@ async function loadResources(ctx, guildId, options = []) {
   try {
     let resources = await ctx.discord.getGuildResources(guildId);
     const wanted = options.map((o) => CUSTOM_EMOJI_ID_RE.exec(o.emoji ?? '')?.[1]).filter(Boolean);
-    if (wanted.some((id) => !(resources.emojis ?? []).some((e) => e.id === id))) resources = await ctx.discord.getGuildResources(guildId, { fresh: true });
+    if (wanted.some((id) => !(resources.emojis ?? []).some((e) => e.id === id))) {
+      resources = await ctx.discord.getGuildResources(guildId, { fresh: true });
+    }
     return resources;
   } catch (err) {
     if (isDiscordApiError(err)) throw new RecordError('discord', 'The server could not be loaded from Discord. Try again in a moment.');
@@ -77,12 +79,14 @@ async function getItem(guildId, id) {
   return panelItem(row, await prisma.ticket.count({ where: { guildId, panelId: id, status: { in: ACTIVE } } }));
 }
 
-/** Runs a task; a refusal after the change was saved becomes "saved, but ..." (the change stays). */
-async function runAfterSave(ctx, kind, payload, lead) {
+/** Runs a task; a refusal after the change was saved becomes "saved, but <why>. <what to do>" (the change stays). */
+async function runAfterSave(ctx, kind, payload, { lead, hint }) {
   try {
     return taskOutcome(await ctx.runTask(kind, payload));
   } catch (err) {
-    if (err instanceof RecordError && (err.code === 'failed' || err.code === 'unavailable')) throw new RecordError(err.code, `${lead} ${err.message}`);
+    if (err instanceof RecordError && (err.code === 'failed' || err.code === 'unavailable')) {
+      throw new RecordError(err.code, `${lead} ${err.message} ${hint}`, { saved: true });
+    }
     throw err;
   }
 }
@@ -120,7 +124,11 @@ async function precheck(ctx, { categoryIds, transcriptChannelId }) {
   const ids = [...new Set(categoryIds.filter(Boolean))];
   if (ids.length === 0 && !transcriptChannelId) return;
   requireTasks(ctx);
-  taskOutcome(await ctx.runTask('ticket.check', { categoryIds: ids, transcriptChannelId: transcriptChannelId ?? null }));
+  const out = taskOutcome(await ctx.runTask('ticket.check', { categoryIds: ids, transcriptChannelId: transcriptChannelId ?? null }));
+  // Nothing is saved on a guess: a check that is still running when the wait ends is as good as none.
+  if (out.status === 'pending') {
+    throw new RecordError('unavailable', 'The bot is slow to answer right now, so nothing was saved. Try again in a moment.');
+  }
 }
 
 /** Writes the whole option list in one transaction (the service's option lock). Returns the plan that was applied. */
@@ -161,7 +169,9 @@ const customIds = (options) => new Set((options ?? []).map((o) => CUSTOM_EMOJI_I
 export const store = Object.freeze({
   async list(guildId) {
     const [rows, counts] = await Promise.all([
-      prisma.ticketPanel.findMany({ where: { guildId }, include: { options: { orderBy: OPTION_ORDER } }, orderBy: { name: 'asc' }, take: LIMITS.TICKET_PANELS }),
+      prisma.ticketPanel.findMany({
+        where: { guildId }, include: { options: { orderBy: OPTION_ORDER } }, orderBy: { name: 'asc' }, take: LIMITS.TICKET_PANELS,
+      }),
       prisma.ticket.groupBy({ by: ['panelId'], where: { guildId, status: { in: ACTIVE } }, _count: { _all: true } }),
     ]);
     const byPanel = new Map(counts.map((c) => [c.panelId, c._count._all]));
@@ -187,10 +197,13 @@ export const store = Object.freeze({
     });
 
     const made = await createPanel({
-      guildId, name: data.name, style: data.style, askReason: data.askReason, maxOpenPerUser: data.maxOpenPerUser, channelNameFormat: format.format,
+      guildId, name: data.name, style: data.style, askReason: data.askReason, maxOpenPerUser: data.maxOpenPerUser,
+      channelNameFormat: format.format,
     });
     if (!made.ok) {
-      if (made.code === 'PANEL_LIMIT') throw new RecordError('limit', `This server already has ${LIMITS.TICKET_PANELS} ticket panels, the maximum. Delete one first.`);
+      if (made.code === 'PANEL_LIMIT') {
+        throw new RecordError('limit', `This server already has ${LIMITS.TICKET_PANELS} ticket panels, the maximum. Delete one first.`);
+      }
       throw new RecordError('conflict', `A panel called "${data.name}" already exists.`, { path: 'name' });
     }
     const id = made.panel.id;
@@ -216,8 +229,10 @@ export const store = Object.freeze({
     ctx.logger?.info?.(`Dashboard ticket panel ${id} created in ${guildId} by ${ctx.userId}`);
 
     if (data.channelId) {
-      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: data.channelId },
-        'The panel was saved but could not be published yet. Fix the problem, then use "Publish" on it.');
+      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: data.channelId }, {
+        lead: 'The panel was saved, but it was not published:',
+        hint: 'Fix that, close this window, then use "Publish" on the panel in the list.',
+      });
     }
     return getItem(guildId, id);
   },
@@ -232,7 +247,10 @@ export const store = Object.freeze({
     const has = (key) => Object.hasOwn(data, key);
 
     const patch = {};
-    for (const key of ['name', 'style', 'askReason', 'dmTranscript', 'maxOpenPerUser', 'openCategoryId', 'claimedCategoryId', 'closedCategoryId', 'transcriptChannelId']) {
+    for (const key of [
+      'name', 'style', 'askReason', 'dmTranscript', 'maxOpenPerUser', 'openCategoryId', 'claimedCategoryId', 'closedCategoryId',
+      'transcriptChannelId',
+    ]) {
       if (has(key) && (data[key] ?? null) !== (row[key] ?? null)) patch[key] = data[key] ?? null;
     }
     if (has('channelNameFormat')) {
@@ -278,11 +296,13 @@ export const store = Object.freeze({
     }
 
     // The bot must be able to use any category or transcript channel that is new.
-    const had = new Set([row.openCategoryId, row.claimedCategoryId, row.closedCategoryId, ...row.options.map((o) => o.categoryId)].filter(Boolean));
+    const had = new Set([row.openCategoryId, row.claimedCategoryId, row.closedCategoryId, ...row.options.map((o) => o.categoryId)]
+      .filter(Boolean));
     const wanted = [patch.openCategoryId, patch.claimedCategoryId, patch.closedCategoryId, ...(options ?? []).map((o) => o.categoryId)];
     await precheck(ctx, {
       categoryIds: wanted.filter((c) => c && !had.has(c)),
-      transcriptChannelId: patch.transcriptChannelId && patch.transcriptChannelId !== row.transcriptChannelId ? patch.transcriptChannelId : null,
+      transcriptChannelId: patch.transcriptChannelId && patch.transcriptChannelId !== row.transcriptChannelId
+        ? patch.transcriptChannelId : null,
     });
 
     const publishTo = has('channelId') && data.channelId && data.channelId !== row.channelId ? data.channelId : null;
@@ -303,12 +323,16 @@ export const store = Object.freeze({
     const refreshMessage = published && !publishTo && Boolean('style' in patch || 'template' in patch || (plan && showsOnPanel(plan)));
     const managersChanged = managersAdded.length + managersRemoved.length > 0;
     if (publishTo) {
-      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: publishTo },
-        'Your changes were saved, but the panel was not published in the new channel. Use "Publish" to try again.');
+      await runAfterSave(ctx, 'ticket.publish', { panelId: id, channelId: publishTo }, {
+        lead: 'Your changes were saved, but the panel was not published in the new channel:',
+        hint: 'Use "Publish" to try again.',
+      });
     }
     if (refreshMessage || managersChanged) {
-      await runAfterSave(ctx, 'ticket.refresh', { panelId: id, message: refreshMessage, managersAdded, managersRemoved },
-        'Your changes were saved, but the published panel was not fully updated. Use "Update posted message" to try again.');
+      await runAfterSave(ctx, 'ticket.refresh', { panelId: id, message: refreshMessage, managersAdded, managersRemoved }, {
+        lead: 'Your changes were saved, but the published panel was not fully updated:',
+        hint: 'Use "Update posted message" to try again.',
+      });
     }
     return getItem(guildId, id);
   },

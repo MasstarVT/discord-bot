@@ -53,7 +53,9 @@ async function loadGroup(guild, payload) {
 async function postChannel(guild, id, { strictType }) {
   const channel = guild.channels.cache.get(id) ?? await guild.channels.fetch(id).catch(() => null);
   if (!channel) throw new TaskError('That channel does not exist in this server any more. Pick another one.');
-  if (strictType && !PANEL_CHANNEL_TYPES.includes(channel.type)) throw new TaskError('Panels can only be posted in text or announcement channels.');
+  if (strictType && !PANEL_CHANNEL_TYPES.includes(channel.type)) {
+    throw new TaskError('Panels can only be posted in text or announcement channels.');
+  }
   return channel;
 }
 
@@ -71,7 +73,9 @@ function requireUsable(channel, needs) {
     : `I can't post in #${channel?.name ?? 'that channel'}: ${check.reason}.`);
 }
 
-const lacksManageMessages = (channel, guild) => channel?.permissionsFor?.(guild.members.me)?.has(PermissionFlagsBits.ManageMessages) !== true;
+const lacksManageMessages = (channel, guild) => (
+  channel?.permissionsFor?.(guild.members.me)?.has(PermissionFlagsBits.ManageMessages) !== true
+);
 const title = (group) => clampText(group.title, 100);
 
 /** The text of the reaction failures of ensurePanelReactions, or null. */
@@ -104,7 +108,9 @@ async function postNew({ guild, group, channel, settings }) {
   if (!saved?.count) {
     markBotDeletion(sent.id, 'reaction-roles:rollback');
     await sent.delete().catch(() => {});
-    throw new TaskError(saved ? 'That panel was deleted while it was being posted.' : 'I could not save the new message, so I removed it. Please try again.');
+    throw new TaskError(saved
+      ? 'That panel was deleted while it was being posted.'
+      : 'I could not save the new message, so I removed it. Please try again.');
   }
   await rr.invalidatePanelIndex(guild.id);
 
@@ -145,7 +151,9 @@ async function publish({ guild, client, actor, payload }) {
   if (group.messageId === UNPOSTED) {
     const channel = await postChannel(guild, group.channelId, { strictType: true });
     const { sent, warnings } = await postNew({ guild, group, channel, settings });
-    return done(`Posted "${title(group)}" in #${channel.name}.`, warnings, { groupId: group.id, channelId: channel.id, messageId: sent.id, url: sent.url });
+    return done(`Posted "${title(group)}" in #${channel.name}.`, warnings, {
+      groupId: group.id, channelId: channel.id, messageId: sent.id, url: sent.url,
+    });
   }
 
   // Bring the posted message up to date (add / remove / edit). The index goes first, so our own reaction hooks never see
@@ -173,7 +181,8 @@ async function publish({ guild, client, actor, payload }) {
     }
   }
   await rr.invalidatePanelIndex(guild.id);
-  return done(group.attached ? `Updated the reactions on "${title(group)}".` : `Updated the panel message of "${title(group)}".`, notes, { groupId: group.id });
+  const what = group.attached ? 'the reactions on' : 'the panel message of';
+  return done(`Updated ${what} "${title(group)}".`, notes, { groupId: group.id });
 }
 
 // ── rr.repost ────────────────────────────────────────────────────────────────
@@ -218,7 +227,8 @@ async function repost({ guild, client, actor, payload }) {
       await rr.removeOwnReactions(oldMessage.message, rr.indexItems(group), client); // its content is never touched
     }
   }
-  const attachedNote = group.attached ? "It is a message the bot posted now, so the dashboard can change its text. The original message was left alone." : '';
+  const attachedNote = group.attached
+    ? 'It is a message the bot posted now, so the dashboard can change its text. The original message was left alone.' : '';
   return done(`"${title(group)}" is now in #${target.name}.`, [attachedNote, ...warnings].filter(Boolean), {
     groupId: group.id, channelId: target.id, messageId: sent.id, url: sent.url,
   });
@@ -243,7 +253,9 @@ async function remove({ guild, client, actor, payload }) {
   }
   markBotDeletion(fm.message.id, 'reaction-roles:delete');
   const deleted = await fm.message.delete().then(() => true, () => false);
-  return done(deleted ? `Deleted "${name}", along with its message.` : `Deleted "${name}". I couldn't delete its message, so delete it by hand.`, [], { groupId: group.id });
+  return done(deleted
+    ? `Deleted "${name}", along with its message.`
+    : `Deleted "${name}". I couldn't delete its message, so delete it by hand.`, [], { groupId: group.id });
 }
 
 export const tasks = Object.freeze({

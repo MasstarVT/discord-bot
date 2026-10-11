@@ -413,6 +413,8 @@ function formatValue(desc, value, ctx, look = lookups(ctx)) {
 // (422, `action_failed`) are 'status'.
 function writeError(err, c, limit) {
   if (!(err instanceof ApiError)) return { where: 'status', message: 'Something went wrong. Please try again.' };
+  // The change was saved but the bot could not finish (e.g. post the panel): the item exists, so never offer a retry.
+  if (err.body?.saved === true) return { where: 'saved', message: err.serverMessage || 'Saved, but the bot could not finish.' };
   const msg = err.serverMessage;
   switch (err.status) {
     case 401: return { where: 'reload', message: 'Your session has expired. Reloading…' };
@@ -1380,6 +1382,12 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         const info = writeError(err, c, limit);
         if (info.where === 'reload') {
           location.reload();
+          return null;
+        }
+        if (info.where === 'saved') {
+          load();
+          notify(info.message, { kind: 'error', ms: TOAST_ERROR_MS });
+          finish();
           return null;
         }
         if (info.where === 'field' && routeFieldError(forms, info.path, info.message)) {

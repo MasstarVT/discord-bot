@@ -13,6 +13,8 @@ import { POSTABLE_CHANNEL_KINDS, messageUrl } from './embeds.js';
 export const NAME_FORMAT_TOKENS = Object.freeze(['number', 'user.name', 'user.username', 'user.id', 'user.display_name', 'topic']);
 export const DEFAULT_OPTION = Object.freeze({ label: 'Open Ticket', emoji: '✉️', buttonStyle: 1 });
 export const MAX_OPEN_PER_USER = 10;
+/** The `status` of a panel item. */
+export const STATUS = Object.freeze({ PUBLISHED: 'Published', DRAFT: 'Not published' });
 
 /** The panel message of a panel without its own: the heading differs only in the verb of its text. */
 export function defaultPanelTemplate(style) {
@@ -79,7 +81,7 @@ const OPTION_FIELDS = Object.freeze([
     field: 'label',
     type: 'text',
     label: 'Label',
-    description: 'The button text or dropdown entry (up to 80 characters). Each label can be used once on a panel.',
+    description: 'The button text or dropdown entry, up to 80 characters. Each label once per panel.',
     maxLength: 80,
     minLength: 1,
     required: true,
@@ -97,7 +99,7 @@ const OPTION_FIELDS = Object.freeze([
     field: 'description',
     type: 'text',
     label: 'Dropdown description',
-    description: 'Dropdown panels only (up to 100 characters); buttons have no description.',
+    description: 'Dropdown panels only, up to 100 characters.',
     maxLength: 100,
     nullable: true,
     default: null,
@@ -106,7 +108,7 @@ const OPTION_FIELDS = Object.freeze([
     field: 'buttonStyle',
     type: 'enum',
     label: 'Button colour',
-    description: 'Button panels only; a dropdown has no colours.',
+    description: 'Button panels only.',
     options: BUTTON_COLOUR_OPTIONS,
     default: 1,
   },
@@ -114,7 +116,7 @@ const OPTION_FIELDS = Object.freeze([
     field: 'categoryId',
     type: 'channel',
     label: 'Category for this option',
-    description: 'Tickets opened with this option are created in this category. Empty: the panel\'s open category.',
+    description: 'Tickets of this option open here. Empty: the panel\'s open category.',
     channelTypes: ['category'],
     nullable: true,
     default: null,
@@ -123,7 +125,7 @@ const OPTION_FIELDS = Object.freeze([
     field: 'introTemplate',
     type: 'template',
     label: 'Intro message for this option',
-    description: 'Posted in tickets opened with this option. Leave it empty to use the panel\'s intro message.',
+    description: 'Posted in tickets of this option. Empty: the panel\'s intro message.',
     requireContent: false,
     placeholders: ['{number}', '{reason}', '{topic}', '{panel}', '{managers}'],
     default: emptyTemplate(),
@@ -147,8 +149,7 @@ const panelChannel = Object.freeze({
   field: 'channelId',
   type: 'channel',
   label: 'Publish in channel',
-  description: 'The channel where the panel message is posted. Pick another channel to move it (the old message is deleted); '
-    + 'a panel cannot be unpublished here, delete it to remove its message. Empty: not published yet.',
+  description: 'Where the panel message is posted; pick another channel to move it. Empty: not published yet.',
   channelTypes: [...POSTABLE_CHANNEL_KINDS],
   nullable: true,
   default: null,
@@ -215,8 +216,7 @@ export const collection = Object.freeze({
       field: 'template',
       type: 'template',
       label: 'Panel message',
-      description: 'The message with the buttons or dropdown. Server and channel variables work. Link buttons are not used here. '
-        + 'Leave it empty for the default "How can we help?".',
+      description: 'The message with the buttons or dropdown. Link buttons are not used here. Empty: the default "How can we help?".',
       requireContent: false,
       placeholders: [],
       placeholderGroups: ['server', 'channel', 'other'],
@@ -226,7 +226,7 @@ export const collection = Object.freeze({
       field: 'options',
       type: 'objectList',
       label: 'Options',
-      description: 'The buttons or dropdown entries members choose from, in this order. A panel keeps at least one option.',
+      description: 'The buttons or dropdown entries, in this order. A panel keeps at least one.',
       itemLabel: 'Option',
       addLabel: 'Add option',
       itemFields: OPTION_FIELDS,
@@ -246,8 +246,7 @@ export const collection = Object.freeze({
       field: 'managerRoleIds',
       type: 'roles',
       label: 'Ticket manager roles',
-      description: 'Roles that can see and handle this panel\'s tickets (moderators and admins always can). '
-        + 'Existing tickets get access too (the newest 50). @everyone cannot be a manager role.',
+      description: 'Roles that can see and handle this panel\'s tickets (moderators and admins always can). Existing tickets get access too.',
       maxItems: LIMITS.TICKET_MANAGER_ROLES,
       default: [],
     },
@@ -255,8 +254,7 @@ export const collection = Object.freeze({
       field: 'introTemplate',
       type: 'template',
       label: 'Ticket intro message',
-      description: 'Posted when a ticket opens, with the Close and Claim buttons. {managers} pings the manager roles. '
-        + 'Leave it empty for the default intro.',
+      description: 'Posted when a ticket opens, with Close and Claim buttons. {managers} pings the manager roles. Empty: the default intro.',
       requireContent: false,
       placeholders: ['{number}', '{reason}', '{topic}', '{panel}', '{managers}'],
       default: DEFAULT_INTRO_TEMPLATE,
@@ -265,8 +263,8 @@ export const collection = Object.freeze({
       field: 'openCategoryId',
       type: 'channel',
       label: 'Open tickets category',
-      description: 'Where new tickets are created. The bot needs View Channel, Manage Channels and Manage Roles there. '
-        + 'Empty: the bot creates a "Tickets" category when the first ticket opens.',
+      description: 'Where new tickets are created (the bot needs View Channel, Manage Channels and Manage Roles there). '
+        + 'Empty: the bot creates a "Tickets" category when needed.',
       channelTypes: ['category'],
       nullable: true,
       default: null,
@@ -275,7 +273,7 @@ export const collection = Object.freeze({
       field: 'claimedCategoryId',
       type: 'channel',
       label: 'Claimed tickets category',
-      description: 'Where a ticket moves when a staff member claims it. Empty: the bot creates "Claimed Tickets" when needed.',
+      description: 'Where a claimed ticket moves. Empty: the bot creates "Claimed Tickets" when needed.',
       channelTypes: ['category'],
       nullable: true,
       default: null,
@@ -284,7 +282,7 @@ export const collection = Object.freeze({
       field: 'closedCategoryId',
       type: 'channel',
       label: 'Closed tickets category',
-      description: 'Where a ticket moves when it is closed. Empty: the bot creates "Closed Tickets" when needed.',
+      description: 'Where a closed ticket moves. Empty: the bot creates "Closed Tickets" when needed.',
       channelTypes: ['category'],
       nullable: true,
       default: null,
@@ -293,8 +291,8 @@ export const collection = Object.freeze({
       field: 'transcriptChannelId',
       type: 'channel',
       label: 'Transcript channel',
-      description: 'Where the HTML transcript is posted when a ticket is deleted. The bot needs View Channel, Send Messages, '
-        + 'Embed Links and Attach Files there. Empty: no transcripts in a channel.',
+      description: 'Where the HTML transcript is posted when a ticket is deleted (the bot needs Send Messages, Embed Links and Attach Files). '
+        + 'Empty: none.',
       channelTypes: [...POSTABLE_CHANNEL_KINDS],
       nullable: true,
       default: null,
@@ -320,7 +318,7 @@ export const collection = Object.freeze({
       field: 'channelNameFormat',
       type: 'text',
       label: 'Ticket channel name',
-      description: 'The name of new ticket channels. Variables: {number}, {user.name}, {user.id}, {user.display_name} and {topic} (the option label).',
+      description: 'The name of new ticket channels, e.g. ticket-{number}. {topic} is the option label.',
       maxLength: 90,
       minLength: 1,
       placeholders: NAME_FORMAT_TOKENS.map((t) => `{${t}}`),
@@ -338,7 +336,7 @@ export const collection = Object.freeze({
   createOnly: Object.freeze([]),
   // `summary` (the row's subtitle) is also on every item.
   readOnly: Object.freeze([
-    { field: 'status', type: 'text', label: 'Status', description: 'Whether the panel message is posted in a channel.', maxLength: 40, default: 'Not published' },
+    { field: 'status', type: 'text', label: 'Status', description: 'Whether the panel message is posted in a channel.', maxLength: 40, default: STATUS.DRAFT },
     { field: 'openTickets', type: 'int', label: 'Active tickets', description: 'Tickets of this panel that are open, claimed or closed.', min: 0, max: 1_000_000_000, default: 0 },
     { field: 'messageUrl', type: 'url', label: 'Panel message', description: 'Open the message in Discord.', nullable: true, default: null },
   ]),
@@ -346,8 +344,7 @@ export const collection = Object.freeze({
     {
       id: 'publish',
       label: 'Publish',
-      description: 'Posts the panel message in a channel, or updates it when it is already there. If it was posted in another '
-        + 'channel, that message is deleted. The bot needs View Channel, Send Messages and Embed Links there.',
+      description: 'Posts the panel message in a channel, or updates it there. A message in another channel is deleted.',
       fields: [{
         field: 'channelId',
         type: 'channel',
@@ -361,6 +358,8 @@ export const collection = Object.freeze({
     {
       id: 'refresh',
       label: 'Update posted message',
+      // Offered only on a panel whose message is posted.
+      showWhen: Object.freeze({ field: 'status', in: [STATUS.PUBLISHED] }),
       description: 'Applies the saved panel (message, style and options) to the published message again.',
       fields: [],
     },
@@ -527,8 +526,8 @@ export function panelItem(row, openTickets = 0) {
     maxOpenPerUser: row.maxOpenPerUser ?? 1,
     channelNameFormat: row.channelNameFormat ?? 'ticket-{number}',
     askReason: row.askReason === true,
-    summary: `${row.style === 'SELECT' ? 'Dropdown' : 'Buttons'} · ${n} ${n === 1 ? 'option' : 'options'} · ${published ? 'Published' : 'Not published'}`,
-    status: published ? 'Published' : 'Not published',
+    summary: `${row.style === 'SELECT' ? 'Dropdown' : 'Buttons'} · ${n} ${n === 1 ? 'option' : 'options'} · ${published ? STATUS.PUBLISHED : STATUS.DRAFT}`,
+    status: published ? STATUS.PUBLISHED : STATUS.DRAFT,
     openTickets,
     messageUrl: published ? messageUrl(row.guildId, row.channelId, row.messageId) : null,
   };

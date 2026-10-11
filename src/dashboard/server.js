@@ -620,7 +620,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (err instanceof FieldError) return fail(ctx, 400, 'invalid_request', err.message, err.path ? { path: err.path } : {});
     if (err instanceof RecordError) {
       if (err.code === 'discord') logger.warn(`Dashboard: ${what}: ${err.message}`);
-      return fail(ctx, err.status, RECORD_ERROR_CODES[err.code], err.message, err.path ? { path: err.path } : {});
+      return fail(ctx, err.status, RECORD_ERROR_CODES[err.code], err.message,
+        { ...(err.path ? { path: err.path } : {}), ...(err.saved ? { saved: true } : {}) });
     }
     if (err instanceof DiscordApiError) {
       logger.warn(`Dashboard: ${what}: ${err.message}`);

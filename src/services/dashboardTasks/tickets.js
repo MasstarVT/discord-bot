@@ -116,7 +116,9 @@ async function publish({ guild, actor, payload }) {
 
   invalidatePanel(panel.id); // the bot's own memo of the panel may predate the dashboard's changes
   const r = await publishPanel({ guild, panelId: panel.id, channel, settings });
-  if (!r.ok) throw new TaskError(`I couldn't post the panel: ${r.code === 'PANEL_GONE' ? 'the panel was deleted' : describeDiscordError(r.error)}.`);
+  if (!r.ok) {
+    throw new TaskError(`I couldn't post the panel: ${r.code === 'PANEL_GONE' ? 'the panel was deleted' : describeDiscordError(r.error)}.`);
+  }
   const lead = `${r.mode === 'edited' ? 'Updated' : 'Posted'} "${clampText(panel.name, 80)}" in #${channel.name}.`;
   return {
     message: [lead, ...publishWarnings(guild, panel)].join(' '),
@@ -156,7 +158,9 @@ async function refresh({ guild, actor, payload }) {
     const r = await refreshPanelMessage(guild, panel.id);
     if (!r.ok) failure = refreshFailure(r, guild);
     else if (r.skipped) {
-      if (added.length + removed.length === 0) throw new TaskError('This panel is not published, so there is no message to update. Use "Publish" first.');
+      if (added.length + removed.length === 0) {
+        throw new TaskError('This panel is not published, so there is no message to update. Use "Publish" first.');
+      }
       parts.push('The panel is not published, so there is no message to update.');
     } else parts.push('Updated the published panel message.');
   }
@@ -172,7 +176,9 @@ async function refresh({ guild, actor, payload }) {
     }
   }
   if (added.length + removed.length > 0) {
-    parts.push(`Updated ${sync.updated} existing ticket(s)${sync.failed ? `, ${sync.failed} failed (missing permissions)` : ''}${sync.skipped ? `, ${sync.skipped} not updated (only the 50 newest are changed)` : ''}.`);
+    const failed = sync.failed ? `, ${sync.failed} failed (missing permissions)` : '';
+    const skipped = sync.skipped ? `, ${sync.skipped} not updated (only the 50 newest are changed)` : '';
+    parts.push(`Updated ${sync.updated} existing ticket(s)${failed}${skipped}.`);
   }
   if (failure) throw new TaskError([failure, ...parts].join(' '));
   return { message: parts.join(' ') || 'Done.', data: { panelId: panel.id } };

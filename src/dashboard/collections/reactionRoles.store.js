@@ -46,7 +46,9 @@ async function loadResources(ctx, guildId, items = []) {
   try {
     let resources = await ctx.discord.getGuildResources(guildId);
     const wanted = items.map((i) => CUSTOM_EMOJI_ID_RE.exec(i.emoji ?? '')?.[1]).filter(Boolean);
-    if (wanted.some((id) => !(resources.emojis ?? []).some((e) => e.id === id))) resources = await ctx.discord.getGuildResources(guildId, { fresh: true });
+    if (wanted.some((id) => !(resources.emojis ?? []).some((e) => e.id === id))) {
+      resources = await ctx.discord.getGuildResources(guildId, { fresh: true });
+    }
     return resources;
   } catch (err) {
     if (isDiscordApiError(err)) throw new RecordError('discord', 'The server could not be loaded from Discord. Try again in a moment.');
@@ -58,7 +60,9 @@ async function loadResources(ctx, guildId, items = []) {
 function assertUsableEmojis(items) {
   items.forEach((item, i) => {
     if (item.emoji && !CUSTOM_EMOJI_ID_RE.test(item.emoji) && !rr.isUnicodeEmoji(item.emoji)) {
-      throw new RecordError('invalid', `"${item.emoji}" cannot be used as a panel emoji. Pick a standard emoji or one of this server's emojis.`, { path: `items.${i}.emoji` });
+      throw new RecordError('invalid', `"${item.emoji}" cannot be used as a panel emoji. Pick a standard emoji or one of this server's emojis.`, {
+        path: `items.${i}.emoji`,
+      });
     }
   });
 }
@@ -74,13 +78,13 @@ async function getItem(guildId, id) {
   return row ? panelItem(row) : null;
 }
 
-/** Runs a task and turns a refusal into "saved, but ..." (the panel row stays). */
-async function runAfterSave(ctx, kind, payload, lead) {
+/** Runs a task and turns a refusal into "saved, but <why>. <what to do>" (the panel row stays). */
+async function runAfterSave(ctx, kind, payload, { lead, hint }) {
   try {
     return taskOutcome(await ctx.runTask(kind, payload));
   } catch (err) {
     if (err instanceof RecordError && (err.code === 'failed' || err.code === 'unavailable')) {
-      throw new RecordError(err.code, `${lead} ${err.message}`);
+      throw new RecordError(err.code, `${lead} ${err.message} ${hint}`, { saved: true });
     }
     throw err;
   }
@@ -113,7 +117,8 @@ export const store = Object.freeze({
       await prisma.$transaction(async (tx) => {
         await tx.$queryRaw(lockSql(`rrpanel:${guildId}`));
         if (await tx.reactionRoleGroup.count({ where: { guildId } }) >= LIMITS.REACTION_ROLE_PANELS) {
-          throw new RecordError('limit', `This server already has ${LIMITS.REACTION_ROLE_PANELS} reaction role panels, the maximum. Delete one first.`);
+          throw new RecordError('limit',
+            `This server already has ${LIMITS.REACTION_ROLE_PANELS} reaction role panels, the maximum. Delete one first.`);
         }
         await tx.reactionRoleGroup.create({
           data: {
@@ -139,14 +144,18 @@ export const store = Object.freeze({
         }
       }, { timeout: 10_000 });
     } catch (err) {
-      if (err?.code === 'P2002') throw new RecordError('conflict', 'That panel could not be saved because one of its roles is already in use. Try again.');
+      if (err?.code === 'P2002') {
+        throw new RecordError('conflict', 'That panel could not be saved because one of its roles is already in use. Try again.');
+      }
       throw err;
     }
     await rr.invalidatePanelIndex(guildId);
     ctx.logger?.info?.(`Dashboard reaction role panel ${id} created in ${guildId} by ${ctx.userId}`);
 
-    await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'post' },
-      'The panel was saved but could not be posted yet. Fix the problem, then use "Repost" on it (or save it again) to post it.');
+    await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'post' }, {
+      lead: 'The panel was saved, but it was not posted:',
+      hint: 'Fix that, close this window, then use "Repost" on the panel in the list.',
+    });
     return getItem(guildId, id);
   },
 
@@ -190,7 +199,9 @@ export const store = Object.freeze({
           return plan;
         }, { timeout: 10_000 });
       } catch (err) {
-        if (err?.code === 'P2002') throw new RecordError('conflict', 'One of those roles was just added to the panel by someone else. Reload and try again.', { path: 'items' });
+        if (err?.code === 'P2002') {
+          throw new RecordError('conflict', 'One of those roles was just added to the panel by someone else. Reload and try again.', { path: 'items' });
+        }
         throw err;
       }
     }
@@ -202,8 +213,10 @@ export const store = Object.freeze({
     const messageChanged = ['title', 'description', 'messageContent', 'plainText', 'type', 'maxRoles', 'placeholder'].some((k) => k in patch);
     const unposted = row.messageId === UNPOSTED_MESSAGE_ID;
     if (diff?.changed || (!row.attached && messageChanged) || 'type' in patch || 'maxRoles' in patch || unposted) {
-      await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'sync', removedEmojis: diff?.removedEmojis ?? [] },
-        'Your changes were saved, but the posted panel was not fully updated. Use "Repost" to post the panel again.');
+      await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'sync', removedEmojis: diff?.removedEmojis ?? [] }, {
+        lead: 'Your changes were saved, but the posted panel was not fully updated:',
+        hint: 'Use "Repost" to post the panel again.',
+      });
     }
     ctx.logger?.info?.(`Dashboard reaction role panel ${id} updated in ${guildId} by ${ctx.userId}`);
     return getItem(guildId, id);

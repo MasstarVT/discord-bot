@@ -2005,6 +2005,7 @@ function createRecordFakes() {
       if (data.name === 'taken') throw new RecordError('conflict', 'A thing with that name exists.', { path: 'name' });
       if (data.name === 'full') throw new RecordError('limit', 'This server already has 5 things.');
       if (data.name === 'boom') throw new Error('database down');
+      if (data.name === 'half') throw new RecordError('failed', 'The thing was saved, but it was not posted.', { saved: true });
       const item = { id: 't2', ...data };
       items.set('t2', item);
       return item;
@@ -2052,6 +2053,16 @@ describe('HTTP records API', () => {
     port = await listen(server);
   });
   after(() => close(server));
+
+  test('a write that was saved before the bot failed says so (saved: true), so the browser never retries it', async () => {
+    const r = await write('POST', base, { data: { name: 'half' } });
+    assert.equal(r.status, 422);
+    assert.equal(r.json.error, 'action_failed');
+    assert.equal(r.json.saved, true);
+    assert.match(r.json.message, /was saved, but/);
+    const plain = await write('POST', base, { data: { name: 'full' } });
+    assert.equal(plain.json.saved, undefined);
+  });
 
   test('GET lists the items with the limit, access-checked', async () => {
     assert.equal((await call(port, 'GET', base)).status, 401);
