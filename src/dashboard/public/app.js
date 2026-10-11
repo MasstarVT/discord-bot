@@ -1,19 +1,23 @@
 // Bot Dashboard: a dependency-free single-page UI (vanilla ES module, no build step).
 //
-// Layout of this file (shared DOM helpers, the API client, toasts and small components live in lib.js):
-//   constants, state, theme, the per-guild save queue, shell, screens, router, start().
+// Layout of this file (shared DOM helpers, the API client, toasts and small components live in lib.js;
+// field controls in forms.js, record lists and the embed editor in collections.js / embed-editor.js):
+//   constants, state, theme, the per-guild save queue, shell, screens (picker, overview, module and general
+//   settings pages with the unsaved-changes bar), router, start().
 //
 // Nothing here touches the DOM, window or storage at import time (the module is
 // import-checked in plain Node); everything runs from start() at the bottom.
 
 import {
   TOAST_ERROR_MS,
-  h, icon, pluralize, slug, safeHref, mount,
-  api, fallbackMessage,
+  h, icon, pluralize, canonical, slug, safeHref, mount,
+  ApiError, api, fallbackMessage,
   toast,
   initialsOf, avatar, banner, statusCard, backLink, retryButton, describeError,
   createSwitch, paintSwitch,
 } from './lib.js';
+import { createForm } from './forms.js';
+import { mountCollection } from './collections.js';
 
 const APP_NAME = 'Bot Dashboard';
 const THEME_KEY = 'bot-dashboard-theme';
@@ -35,9 +39,10 @@ const state = {
 
 let routeToken = 0; // bumped on every navigation so late responses can be dropped
 let currentRoute = null;
-let currentView = null;
+let currentView = null; // { kind, destroy, ... }; settings pages also expose isDirty() and save()
 let activeShell = null;
 let activeSearch = null;
+let acceptedHash = ''; // the hash of the page being shown; a hashchange back to it is a cancelled navigation
 
 function loadCatalog() {
   if (state.catalog) return Promise.resolve(state.catalog);
@@ -202,6 +207,12 @@ class GuildStore {
     this.confirmed = { ...values };
   }
 
+  /** Records values saved elsewhere (the settings forms) so the overview switches match. */
+  confirm(values) {
+    Object.assign(this.confirmed, values);
+    this.emit();
+  }
+
   get(field, fallback) {
     if (this.queued.has(field)) return this.queued.get(field);
     if (this.inflight.has(field)) return this.inflight.get(field);
@@ -360,7 +371,7 @@ function buildShell({ sidebar = false } = {}) {
     backdrop.classList.toggle('is-open', open);
     document.body.classList.toggle('no-scroll', open);
     menuBtn.setAttribute('aria-expanded', String(open));
-    if (open) closeBtn.focus();
+    if (open) closeBtn.focus({ preventScroll: true });
     else if (aside.contains(document.activeElement)) menuBtn.focus();
   }
 
@@ -399,7 +410,11 @@ function buildShell({ sidebar = false } = {}) {
   }
 
   const skip = h('button', { type: 'button', class: 'skip-link', onclick: () => main.focus() }, 'Skip to content');
-  const footer = h('footer', { class: 'footer' }, 'Changes are saved automatically.');
+  const footer = h(
+    'footer',
+    { class: 'footer' },
+    sidebar ? 'Module switches save as you flip them. Other settings save with the Save changes button.' : 'Choose a server to configure the bot.',
+  );
   const root = h(
     'div',
     { class: 'app' },
@@ -420,7 +435,7 @@ function teardownView() {
   activeSearch = null;
   if (activeShell) activeShell.setDrawer(false);
   activeShell = null;
-  if (typeof document !== 'undefined') document.body.classList.remove('no-scroll');
+  if (typeof document !== 'undefined') document.body.classList.remove('no-scroll', 'has-savebar');
 }
 
 /* ------------------------------------------------------------------ */
@@ -490,7 +505,11 @@ function renderLoggedOut({ notice = '', error = false } = {}) {
           { class: 'hero-card' },
           h('img', { class: 'hero-logo', src: '/favicon.svg', alt: '', width: '64', height: '64' }),
           h('h1', { class: 'hero-title' }, 'Manage your server'),
-          h('p', { class: 'hero-lead' }, 'Log in with Discord to switch bot modules and their options on or off for any server you manage.'),
+          h(
+            'p',
+            { class: 'hero-lead' },
+            'Log in with Discord to configure every module, channel, role and message of the bot for any server you manage.',
+          ),
           h('a', { class: 'btn btn-primary btn-lg hero-cta', href: '/auth/login' }, 'Log in with Discord'),
           h('p', { class: 'hero-fine' }, 'We only read your profile and the list of your servers.'),
         ),
@@ -663,11 +682,11 @@ function sidebarSkeleton() {
   );
 }
 
-function showGuildError(guildId, section, err) {
+function showGuildError(err, onRetry) {
   const shell = buildShell({ sidebar: false });
   mount(shell.root);
   document.title = APP_NAME;
-  const retry = retryButton(() => showGuild(guildId, section));
+  const retry = retryButton(onRetry);
   let card;
 
   if (err.status === 403) {
@@ -734,7 +753,7 @@ async function showGuild(guildId, section) {
   const failure = settingsRes.status === 'rejected' ? settingsRes.reason : catalogRes.status === 'rejected' ? catalogRes.reason : null;
   if (failure) {
     if (handleAuthError(failure)) return;
-    showGuildError(guildId, section, failure);
+    showGuildError(failure, () => showGuild(guildId, section));
     return;
   }
 
@@ -748,6 +767,139 @@ async function showGuild(guildId, section) {
   guildsLoaded.then(({ guilds }) => {
     if (token === routeToken) view.renderServers(guilds);
   });
+}
+
+/** Labels of a module's editable fields (not the quick toggles, which the card lists itself), for the overview search. */
+function fieldLabels(mod) {
+  const quick = new Set([mod.flag, ...(mod.subToggles || []).map((sub) => sub.field)]);
+  const labels = [];
+  for (const group of Array.isArray(mod.groups) ? mod.groups : []) {
+    labels.push(group.title);
+    for (const field of Array.isArray(group.fields) ? group.fields : []) if (!quick.has(field.field)) labels.push(field.label);
+  }
+  return labels.filter(Boolean).join(' ');
+}
+
+/* ---- sidebar pieces shared by the overview and the settings pages ---- */
+
+const guildHref = (guildId) => `#/guild/${encodeURIComponent(guildId)}`;
+const modulePageHref = (guildId, key) => `${guildHref(guildId)}/module/${encodeURIComponent(key)}`;
+
+function serverListItem(g, guildId) {
+  if (g.botPresent) {
+    const active = g.id === guildId;
+    return h(
+      'li',
+      {},
+      h(
+        'a',
+        {
+          class: active ? 'side-item is-active' : 'side-item',
+          href: guildHref(g.id),
+          'aria-current': active ? 'page' : null,
+        },
+        avatar(g.name, g.iconUrl, { size: 'xs' }),
+        h('span', { class: 'side-name' }, g.name),
+      ),
+    );
+  }
+  const invite = safeHref(g.inviteUrl);
+  const inner = [
+    avatar(g.name, g.iconUrl, { size: 'xs' }),
+    h('span', { class: 'side-name' }, g.name),
+    invite ? h('span', { class: 'side-plus' }, icon('plus')) : null,
+    h('span', { class: 'sr-only' }, invite ? ' (add bot)' : ' (bot not added)'),
+  ];
+  return h(
+    'li',
+    {},
+    invite
+      ? h('a', { class: 'side-item is-dim', href: invite, target: '_blank', rel: 'noopener', title: 'Add the bot to this server' }, inner)
+      : h('span', { class: 'side-item is-dim' }, inner),
+  );
+}
+
+function renderServerList(slot, guilds, guildId) {
+  slot.replaceChildren(
+    h('h2', { class: 'side-title' }, 'Servers'),
+    guilds
+      ? h('nav', { 'aria-label': 'Servers' }, h('ul', { class: 'side-list server-list' }, guilds.map((g) => serverListItem(g, guildId))))
+      : h('p', { class: 'side-note' }, 'Could not load your servers.'),
+    h('ul', { class: 'side-list' }, h('li', {}, h('a', { class: 'side-item', href: '#/' }, icon('back'), h('span', { class: 'side-name' }, 'All servers')))),
+  );
+}
+
+/** "This server": the overview and the general settings page. `active` is 'overview' or 'general'. */
+function serverNav(guildId, active) {
+  const item = (id, href, iconName, label) =>
+    h(
+      'li',
+      {},
+      h(
+        'a',
+        {
+          class: active === id ? (id === 'overview' ? 'side-item is-current' : 'side-item is-active') : 'side-item',
+          href,
+          'aria-current': active === id ? 'page' : null,
+        },
+        icon(iconName),
+        h('span', { class: 'side-name' }, label),
+      ),
+    );
+  return [
+    h('h2', { class: 'side-title' }, 'This server'),
+    h(
+      'nav',
+      { 'aria-label': 'Server pages' },
+      h('ul', { class: 'side-list' }, item('overview', guildHref(guildId), 'home', 'Overview'), item('general', modulePageHref(guildId, 'general'), 'settings', 'General settings')),
+    ),
+  ];
+}
+
+/**
+ * The module list for the settings pages: every module grouped by category, the current one highlighted, a dot
+ * showing whether it is on. Returns { el, paint } (paint re-reads the on/off state from the store).
+ */
+function buildModuleNav({ guildId, model, store, currentKey }) {
+  const links = [];
+  const groups = model.categories.map((cat) =>
+    h(
+      'div',
+      { class: 'side-group' },
+      h('h3', { class: 'side-group-title' }, h('a', { href: `${guildHref(guildId)}/${encodeURIComponent(cat.id)}` }, cat.label)),
+      h(
+        'ul',
+        { class: 'side-list' },
+        cat.modules.map((mod) => {
+          const dot = h('span', { class: 'status-dot' });
+          const state = h('span', { class: 'sr-only' });
+          const active = mod.key === currentKey;
+          const link = h(
+            'a',
+            {
+              class: active ? 'side-item side-module is-active' : 'side-item side-module',
+              href: modulePageHref(guildId, mod.key),
+              'aria-current': active ? 'page' : null,
+            },
+            h('span', { class: 'side-emoji', 'aria-hidden': 'true' }, mod.emoji || '\u{1F9E9}'),
+            h('span', { class: 'side-name' }, mod.label),
+            dot,
+            state,
+          );
+          links.push({ mod, dot, state });
+          return h('li', {}, link);
+        }),
+      ),
+    ),
+  );
+  const paint = () => {
+    for (const l of links) {
+      const on = store.get(l.mod.flag, l.mod.default);
+      l.dot.classList.toggle('is-on', on);
+      l.state.textContent = on ? ' (on)' : ' (off)';
+    }
+  };
+  return { el: h('nav', { 'aria-label': 'Modules' }, groups), paint };
 }
 
 /**
@@ -837,7 +989,7 @@ function buildGuildView({ guildId, data, catalog, shell }) {
       collapse: null,
       disclosure: null,
       note: null,
-      ownText: [mod.label, mod.key, mod.description, mod.configCommand].filter(Boolean).join(' ').toLowerCase(),
+      ownText: [mod.label, mod.key, mod.description, mod.configCommand, fieldLabels(mod)].filter(Boolean).join(' ').toLowerCase(),
     };
 
     const toggle = makeSwitch(mod.flag, mod.default, labelId, mod.description ? descId : null);
@@ -856,7 +1008,20 @@ function buildGuildView({ guildId, data, catalog, shell }) {
         ),
         toggle,
       ),
-      mod.configCommand ? h('p', { class: 'module-hint' }, 'Configure in Discord with ', h('code', {}, mod.configCommand)) : null,
+      h(
+        'div',
+        { class: 'module-links' },
+        h(
+          'a',
+          { class: 'btn btn-secondary btn-sm module-settings', href: modulePageHref(guildId, mod.key) },
+          icon('settings'),
+          'Settings',
+          h('span', { class: 'sr-only' }, ` for ${mod.label}`),
+        ),
+        mod.configCommand
+          ? h('p', { class: 'module-hint', title: `Also available in Discord with ${mod.configCommand}` }, 'Discord: ', h('code', {}, mod.configCommand))
+          : null,
+      ),
     );
 
     if (mod.subToggles.length) {
@@ -963,12 +1128,12 @@ function buildGuildView({ guildId, data, catalog, shell }) {
     const chip = (key, ...value) => h('span', { class: 'chip' }, h('span', { class: 'chip-k' }, key), h('span', { class: 'chip-v' }, ...value));
     return h(
       'div',
-      { class: 'general', role: 'group', 'aria-label': 'General settings (read-only)' },
+      { class: 'general', role: 'group', 'aria-label': 'General settings' },
       h('span', { class: 'general-title' }, 'General'),
       chip('Timezone', timezone),
       chip('Command prefix', prefix),
       chip('Embed colour', colour ? [swatch, colour.toUpperCase()] : 'Default'),
-      h('span', { class: 'general-hint' }, 'Read-only here. Change these in Discord with ', h('code', {}, '/settings'), '.'),
+      h('a', { class: 'btn btn-secondary btn-sm general-edit', href: modulePageHref(guildId, 'general') }, icon('settings'), 'Edit general settings'),
     );
   }
 
@@ -1150,53 +1315,12 @@ function buildGuildView({ guildId, data, catalog, shell }) {
   }
 
   shell.sectionsSlot.replaceChildren(
-    h('h2', { class: 'side-title' }, 'Sections'),
+    ...serverNav(guildId, 'overview'),
+    h('h2', { class: 'side-title side-title-gap' }, 'Sections'),
     h('nav', { 'aria-label': 'Sections' }, h('ul', { class: 'side-list' }, sections.map((s) => h('li', {}, s.navLink)))),
   );
 
-  function serverItem(g) {
-    if (g.botPresent) {
-      const active = g.id === guildId;
-      return h(
-        'li',
-        {},
-        h(
-          'a',
-          {
-            class: active ? 'side-item is-active' : 'side-item',
-            href: `#/guild/${encodeURIComponent(g.id)}`,
-            'aria-current': active ? 'page' : null,
-          },
-          avatar(g.name, g.iconUrl, { size: 'xs' }),
-          h('span', { class: 'side-name' }, g.name),
-        ),
-      );
-    }
-    const invite = safeHref(g.inviteUrl);
-    const inner = [
-      avatar(g.name, g.iconUrl, { size: 'xs' }),
-      h('span', { class: 'side-name' }, g.name),
-      invite ? h('span', { class: 'side-plus' }, icon('plus')) : null,
-      h('span', { class: 'sr-only' }, invite ? ' (add bot)' : ' (bot not added)'),
-    ];
-    return h(
-      'li',
-      {},
-      invite
-        ? h('a', { class: 'side-item is-dim', href: invite, target: '_blank', rel: 'noopener', title: 'Add the bot to this server' }, inner)
-        : h('span', { class: 'side-item is-dim' }, inner),
-    );
-  }
-
-  function renderServers(guilds) {
-    shell.serversSlot.replaceChildren(
-      h('h2', { class: 'side-title' }, 'Servers'),
-      guilds
-        ? h('nav', { 'aria-label': 'Servers' }, h('ul', { class: 'side-list server-list' }, guilds.map(serverItem)))
-        : h('p', { class: 'side-note' }, 'Could not load your servers.'),
-      h('ul', { class: 'side-list' }, h('li', {}, h('a', { class: 'side-item', href: '#/' }, icon('back'), h('span', { class: 'side-name' }, 'All servers')))),
-    );
-  }
+  const renderServers = (guilds) => renderServerList(shell.serversSlot, guilds, guildId);
 
   // Scroll-spy for the section list.
   let observer = null;
@@ -1224,6 +1348,7 @@ function buildGuildView({ guildId, data, catalog, shell }) {
   if (state.guilds) renderServers(state.guilds);
 
   return {
+    kind: 'overview',
     main,
     guildName: guild.name,
     goTo,
@@ -1237,26 +1362,623 @@ function buildGuildView({ guildId, data, catalog, shell }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Screens: module and general settings pages                           */
+/* ------------------------------------------------------------------ */
+
+const GENERAL_KEY = 'general';
+const DEFAULT_PROPAGATION_S = 30;
+const LEAVE_PROMPT = 'You have unsaved changes. Leave this page and discard them?';
+
+function settingsSkeleton() {
+  const card = () =>
+    h(
+      'div',
+      { class: 'card skeleton-card' },
+      skeletonBlock('skeleton-line w-30'),
+      skeletonBlock('skeleton-line w-90'),
+      skeletonBlock('skeleton-line w-70'),
+      skeletonBlock('skeleton-line w-50'),
+    );
+  return h('div', { class: 'module-page', 'aria-hidden': 'true' }, skeletonBlock('skeleton-crumb'), skeletonBlock('skeleton-header'), card(), card());
+}
+
+const isResources = (value) =>
+  Boolean(value) && typeof value === 'object' && Array.isArray(value.channels) && Array.isArray(value.roles);
+
+/** The page a `#/guild/<id>/module/<key>` route shows, or null for an unknown module. */
+function resolvePage(catalog, model, key) {
+  const usable = (groups, hidden = []) =>
+    (Array.isArray(groups) ? groups : [])
+      .map((group) => ({
+        ...group,
+        fields: (Array.isArray(group && group.fields) ? group.fields : []).filter((f) => f && f.field && f.type && !hidden.includes(f.field)),
+      }))
+      .filter((group) => group.fields.length > 0);
+
+  if (key === GENERAL_KEY) {
+    const general = (catalog && catalog.general) || {};
+    return {
+      key,
+      mod: null,
+      label: general.title ? `${general.title} settings` : 'General settings',
+      emoji: '⚙️',
+      description: general.description || 'Time zone, embed colour and command prefix for this server.',
+      groups: usable(general.groups),
+      collections: [],
+    };
+  }
+  const mod = model.categories.flatMap((cat) => cat.modules).find((m) => m.key === key);
+  if (!mod) return null;
+  const collections = (Array.isArray(mod.collections) ? mod.collections : []).filter((k) => catalog.collections && catalog.collections[k]);
+  return { key, mod, label: mod.label, emoji: mod.emoji || '\u{1F9E9}', description: mod.description || '', groups: usable(mod.groups, [mod.flag]), collections };
+}
+
+const cloneValue = (value) => {
+  try { return structuredClone(value); } catch { return JSON.parse(JSON.stringify(value ?? null)); }
+};
+
+async function showModule(guildId, moduleKey) {
+  const token = ++routeToken;
+  teardownView();
+  document.title = APP_NAME;
+  const shell = buildShell({ sidebar: true });
+  mount(shell.root);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  shell.main.append(settingsSkeleton());
+  shell.serversSlot.append(h('h2', { class: 'side-title' }, 'Servers'), sidebarSkeleton());
+  shell.sectionsSlot.append(h('h2', { class: 'side-title' }, 'Modules'), sidebarSkeleton());
+
+  const base = `/api/guilds/${encodeURIComponent(guildId)}`;
+  const guildsLoaded = loadGuilds().then(
+    (guilds) => ({ guilds }),
+    () => ({ guilds: null }),
+  );
+  const [settingsRes, catalogRes, resourcesRes] = await Promise.allSettled([api(`${base}/settings`), loadCatalog(), api(`${base}/resources`)]);
+  if (token !== routeToken) return;
+
+  const failure = settingsRes.status === 'rejected' ? settingsRes.reason : catalogRes.status === 'rejected' ? catalogRes.reason : null;
+  if (failure) {
+    if (handleAuthError(failure)) return;
+    showGuildError(failure, () => showModule(guildId, moduleKey));
+    return;
+  }
+  if (resourcesRes.status === 'rejected' && handleAuthError(resourcesRes.reason)) return;
+
+  const catalog = catalogRes.value;
+  const model = normalizeCatalog(catalog);
+  const page = resolvePage(catalog, model, moduleKey);
+  if (!page) {
+    shell.main.replaceChildren(
+      statusCard({
+        tone: 'accent',
+        iconName: 'server',
+        title: 'Module not found',
+        message: 'This module does not exist. It may have been renamed.',
+        actions: [h('a', { class: 'btn btn-secondary', href: guildHref(guildId) }, icon('back'), 'Back to overview')],
+        role: 'alert',
+      }),
+    );
+    shell.main.focus({ preventScroll: true });
+    shell.sectionsSlot.replaceChildren(...serverNav(guildId, null));
+    guildsLoaded.then(({ guilds }) => {
+      if (token === routeToken) renderServerList(shell.serversSlot, guilds, guildId);
+    });
+    return;
+  }
+
+  const resources = resourcesRes.status === 'fulfilled' && isResources(resourcesRes.value) ? resourcesRes.value : null;
+  const view = buildSettingsView({ guildId, data: settingsRes.value, catalog, model, page, resources, shell });
+  currentView = view;
+  shell.main.replaceChildren(view.main);
+  document.title = `${page.label} · ${view.guildName} · ${APP_NAME}`;
+  shell.main.focus({ preventScroll: true });
+  view.revealNav();
+
+  guildsLoaded.then(({ guilds }) => {
+    if (token === routeToken) view.renderServers(guilds);
+  });
+}
+
+/**
+ * Builds one module's (or the general) settings page: header with the on/off switch, one form per group, one
+ * section per collection, and the unsaved-changes bar. Boolean flags are painted from the GuildStore, so the
+ * switch here and the overview stay in sync; everything else is saved explicitly with ONE PATCH.
+ */
+function buildSettingsView({ guildId, data, catalog, model, page, resources, shell }) {
+  const store = getStore(guildId);
+  const values = data && typeof data.values === 'object' && data.values ? data.values : {};
+  store.load(values);
+  const guild = (data && data.guild) || { id: guildId, name: 'Server', iconUrl: null };
+  const propagation = Number(data && data.propagationSeconds) > 0 ? Number(data.propagationSeconds) : DEFAULT_PROPAGATION_S;
+  const mod = page.mod;
+  const idBase = `mp-${slug(page.key)}`;
+  const settingsUrl = `/api/guilds/${encodeURIComponent(guildId)}/settings`;
+  let destroyed = false;
+  let saving = false;
+  let ready = false; // false while the forms are being built: their first onChange calls are not edits
+  let lastField = null; // where focus returns when the bar closes under the keyboard
+
+  const ctx = {
+    guildId,
+    guild: { id: guild.id || guildId, name: guild.name, iconUrl: guild.iconUrl || null },
+    user: state.user,
+    resources,
+    placeholders: Array.isArray(catalog.placeholders) ? catalog.placeholders : [],
+    reloadResources: () => reloadResources(),
+  };
+
+  /* ---- resources (channels, roles, emojis) ---- */
+
+  const entries = []; // one per group: { group, form, card }
+  let resourcesPromise = null;
+
+  function reloadResources() {
+    if (resourcesPromise) return resourcesPromise;
+    const promise = api(`/api/guilds/${encodeURIComponent(guildId)}/resources`)
+      .then((res) => {
+        if (!isResources(res)) throw new ApiError(502, 'bad_response', '', null);
+        ctx.resources = res;
+        if (!destroyed) {
+          for (const entry of entries) {
+            try { entry.form.setResources(res); } catch { /* one broken control must not stop the others */ }
+          }
+          resourcesWarning.hidden = true;
+        }
+        return res;
+      })
+      .catch((err) => {
+        if (!destroyed) handleAuthError(err);
+        throw err;
+      })
+      .finally(() => {
+        if (resourcesPromise === promise) resourcesPromise = null;
+      });
+    resourcesPromise = promise;
+    return promise;
+  }
+
+  const retryResources = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, icon('refresh'), 'Retry');
+  retryResources.addEventListener('click', () => {
+    retryResources.disabled = true;
+    reloadResources()
+      .catch((err) => toast(describeError(err).message, { kind: 'error', key: 'resources-error', ms: TOAST_ERROR_MS }))
+      .finally(() => { retryResources.disabled = false; });
+  });
+  const resourcesWarning = banner('warn', "Couldn't load this server's channels, roles and emojis. You can still edit other settings; pickers may be limited.", [retryResources]);
+  resourcesWarning.hidden = resources !== null;
+
+  /* ---- dirty tracking ---- */
+
+  const owner = new Map(); // top-level field -> entry
+  const baseline = new Map(); // field -> canonical JSON of the saved value
+  const baselineValue = new Map(); // field -> a copy of the saved value (for Reset)
+  const current = new Map(); // field -> canonical JSON of the value in the form
+  const dirty = new Set();
+
+  function snapshot(entry, field, value) {
+    const text = canonical(value);
+    baseline.set(field, text);
+    baselineValue.set(field, cloneValue(value));
+    current.set(field, text);
+    dirty.delete(field);
+    owner.set(field, entry);
+  }
+
+  function markDirty(field) {
+    if (current.get(field) !== baseline.get(field)) dirty.add(field);
+    else dirty.delete(field);
+  }
+
+  function onFieldChange(field, value) {
+    if (!ready) return;
+    current.set(field, canonical(value));
+    markDirty(field);
+    paintBar();
+  }
+
+  /* ---- header ---- */
+
+  const titleId = `${idBase}-title`;
+  const descId = `${idBase}-desc`;
+  const saveStatus = h('span', { class: 'save-status', 'data-active': 'false', 'aria-hidden': 'true' }, h('span', { class: 'spinner' }), 'Saving…');
+  const statePrefix = h('span', { class: 'mh-state-prefix' }, 'Module is ');
+  const stateValue = h('span', {});
+  const stateText = h('span', { class: 'mh-state' }, statePrefix, stateValue);
+  const toggle = mod ? createSwitch({ labelId: titleId, describedBy: mod.description ? descId : null, onToggle: () => store.toggle(mod.flag, mod.default) }) : null;
+  const offNotice = mod
+    ? h('p', { class: 'mh-notice', hidden: true }, icon('info'), 'This module is off. Your settings are kept, but the bot ignores them until you switch it on.')
+    : null;
+
+  const header = h(
+    'section',
+    { class: 'card module-header', 'aria-labelledby': titleId },
+    h('span', { class: 'mh-emoji', 'aria-hidden': 'true' }, page.emoji),
+    h(
+      'div',
+      { class: 'mh-text' },
+      h('h1', { class: 'mh-title', id: titleId }, page.label),
+      page.description ? h('p', { class: 'mh-desc', id: descId }, page.description) : null,
+    ),
+    mod ? h('div', { class: 'mh-switch' }, stateText, toggle) : null,
+    h(
+      'div',
+      { class: 'mh-meta' },
+      h('p', { class: 'mh-note' }, icon('info'), `Changes reach the bot within ~${propagation} seconds.`),
+      mod && mod.configCommand ? h('p', { class: 'mh-note' }, 'Also in Discord: ', h('code', {}, mod.configCommand)) : null,
+      saveStatus,
+    ),
+    offNotice,
+  );
+
+  const crumbs = h(
+    'nav',
+    { class: 'crumbs', 'aria-label': 'Breadcrumb' },
+    h('a', { class: 'crumb-link', href: guildHref(guildId) }, icon('back'), 'Overview'),
+    h('span', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/'),
+    h('span', { class: 'crumb-here', 'aria-current': 'page' }, page.label),
+  );
+
+  /* ---- forms: one card per group ---- */
+
+  const sections = []; // { id, label, el } for the "On this page" chips
+  const groupCards = [];
+  for (const group of page.groups) {
+    const gTitleId = `${idBase}-${slug(group.id)}-title`;
+    const entry = { group, form: null, card: null };
+    const body = h('div', { class: 'group-body' });
+    try {
+      const initial = {};
+      for (const f of group.fields) initial[f.field] = values[f.field] !== undefined ? values[f.field] : f.default;
+      entry.form = createForm({
+        fields: group.fields,
+        values: initial,
+        ctx,
+        idPrefix: `f-${slug(page.key)}-${slug(group.id)}`,
+        onChange: onFieldChange,
+      });
+      body.append(entry.form.el);
+      const initialValues = entry.form.getValues();
+      for (const f of group.fields) snapshot(entry, f.field, initialValues[f.field]);
+      entries.push(entry);
+    } catch {
+      body.append(banner('error', 'This group of settings could not be displayed. Reload the page to try again.'));
+    }
+    entry.card = h(
+      'section',
+      { class: 'card group-card', id: `${idBase}-${slug(group.id)}`, 'aria-labelledby': gTitleId },
+      h(
+        'div',
+        { class: 'group-head' },
+        h('h2', { class: 'group-title', id: gTitleId }, group.title || 'Settings'),
+        group.description ? h('p', { class: 'group-desc' }, group.description) : null,
+      ),
+      body,
+    );
+    groupCards.push(entry.card);
+    sections.push({ label: group.title || 'Settings', el: entry.card });
+  }
+
+  /* ---- collections ---- */
+
+  const handles = [];
+  const collectionSections = [];
+  for (const key of page.collections) {
+    const collection = catalog.collections[key];
+    const cTitleId = `${idBase}-c-${slug(key)}-title`;
+    const host = h('div', { class: 'collection-host' });
+    try {
+      const handle = mountCollection(host, { collection, ctx });
+      if (handle && typeof handle.destroy === 'function') handles.push(handle);
+    } catch {
+      host.append(banner('error', 'This list could not be displayed. Reload the page to try again.'));
+    }
+    const el = h(
+      'section',
+      { class: 'collection-section', id: `${idBase}-c-${slug(key)}`, 'aria-labelledby': cTitleId },
+      h(
+        'div',
+        { class: 'section-head' },
+        h('h2', { class: 'section-title', id: cTitleId }, collection.label || key),
+        collection.description ? h('p', { class: 'section-desc' }, collection.description) : null,
+      ),
+      host,
+    );
+    collectionSections.push(el);
+    sections.push({ label: collection.label || key, el });
+  }
+
+  const jump =
+    sections.length >= 3
+      ? h(
+        'nav',
+        { class: 'jump', 'aria-label': 'On this page' },
+        sections.map((s) => h('button', { type: 'button', class: 'jump-chip', onclick: () => s.el.scrollIntoView({ block: 'start' }) }, s.label)),
+      )
+      : null;
+
+  const emptyNote =
+    sections.length === 0
+      ? h(
+        'div',
+        { class: 'card empty-card' },
+        h('p', { class: 'empty-title' }, mod ? 'Nothing else to configure' : 'No general settings available'),
+        h('p', { class: 'empty-text' }, mod ? 'This module has no extra options. Use the switch above to turn it on or off.' : 'Try reloading the page.'),
+      )
+      : null;
+
+  /* ---- unsaved-changes bar ---- */
+
+  const live = h('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const countText = h('span', { class: 'save-bar-count num' });
+  const resetBtn = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => reset() }, icon('undo'), 'Reset');
+  const saveLabel = h('span', {}, 'Save changes');
+  const saveSpinner = h('span', { class: 'spinner on-accent', hidden: true });
+  const saveBtn = h(
+    'button',
+    { type: 'button', class: 'btn btn-primary save-btn', title: 'Save changes (Ctrl+S)', onclick: () => save() },
+    saveSpinner,
+    saveLabel,
+  );
+  const bar = h(
+    'div',
+    { class: 'save-bar', role: 'region', 'aria-label': 'Unsaved changes', hidden: true },
+    h(
+      'div',
+      { class: 'save-bar-inner' },
+      h('p', { class: 'save-bar-msg' }, h('span', { class: 'save-bar-dot', 'aria-hidden': 'true' }), h('span', {}, 'You have unsaved changes'), countText),
+      h('div', { class: 'save-bar-actions' }, resetBtn, saveBtn),
+    ),
+  );
+
+  const main = h(
+    'div',
+    { class: 'module-page' },
+    crumbs,
+    header,
+    resourcesWarning,
+    jump,
+    groupCards,
+    collectionSections,
+    emptyNote,
+    live,
+    bar,
+  );
+  main.addEventListener('focusin', (event) => {
+    if (!bar.contains(event.target)) lastField = event.target;
+  });
+  ready = true;
+
+  function paintBar() {
+    if (destroyed) return;
+    const any = dirty.size > 0;
+    if (any && bar.hidden) live.textContent = 'You have unsaved changes';
+    bar.hidden = !any;
+    main.classList.toggle('has-bar', any);
+    document.body.classList.toggle('has-savebar', any);
+    countText.textContent = any ? `· ${pluralize(dirty.size, 'setting')}` : '';
+    // aria-disabled (not disabled) so the focused button keeps focus while the request runs.
+    resetBtn.setAttribute('aria-disabled', String(saving));
+    saveBtn.setAttribute('aria-disabled', String(saving));
+    saveBtn.setAttribute('aria-busy', String(saving));
+    saveSpinner.hidden = !saving;
+    saveLabel.textContent = saving ? 'Saving…' : 'Save changes';
+  }
+
+  /** When the bar closes with focus inside it, hand focus back to the last field the user touched. */
+  function closeBar() {
+    const hadFocus = bar.contains(document.activeElement);
+    paintBar();
+    if (hadFocus && bar.hidden && lastField && lastField.isConnected) lastField.focus({ preventScroll: true });
+  }
+
+  function reset() {
+    if (saving) return;
+    for (const entry of entries) {
+      const restore = {};
+      for (const f of entry.group.fields) restore[f.field] = cloneValue(baselineValue.get(f.field));
+      try {
+        entry.form.setValues({ ...entry.form.getValues(), ...restore });
+        entry.form.setErrors([]);
+      } catch { /* a control that cannot reset keeps its value; the bar below stays honest */ }
+      const now = entry.form.getValues();
+      for (const f of entry.group.fields) {
+        current.set(f.field, canonical(now[f.field]));
+        markDirty(f.field);
+      }
+    }
+    closeBar();
+    live.textContent = 'Changes discarded';
+  }
+
+  function applySaved(res, sentValues) {
+    const saved = res && typeof res.values === 'object' && res.values ? res.values : null;
+
+    // Keep the overview switches (and this page's own) in step with what the server stored.
+    const flags = {};
+    for (const [field, sent] of sentValues) {
+      const value = saved && saved[field] !== undefined ? saved[field] : sent;
+      if (typeof value === 'boolean') flags[field] = value;
+    }
+    store.confirm(flags);
+    if (destroyed) return;
+
+    for (const entry of entries) {
+      const fields = entry.group.fields.map((f) => f.field).filter((f) => sentValues.has(f));
+      if (!fields.length) continue;
+      // Controls get the server's normalised value, unless the user already edited it again.
+      const patch = {};
+      for (const f of fields) {
+        const now = canonical(entry.form.getValue(f));
+        if (saved && saved[f] !== undefined && now === canonical(sentValues.get(f)) && canonical(saved[f]) !== now) patch[f] = saved[f];
+      }
+      if (Object.keys(patch).length) {
+        try { entry.form.setValues({ ...entry.form.getValues(), ...patch }); } catch { /* keep what the user sees */ }
+      }
+      entry.form.setErrors([]);
+      for (const f of fields) {
+        const value = entry.form.getValue(f);
+        if (canonical(value) === canonical(sentValues.get(f)) || patch[f] !== undefined) {
+          snapshot(entry, f, value);
+        } else {
+          // Edited again while the request was in flight: what was sent is saved, the newer edit is still pending.
+          baseline.set(f, canonical(sentValues.get(f)));
+          baselineValue.set(f, cloneValue(sentValues.get(f)));
+          current.set(f, canonical(value));
+          markDirty(f);
+        }
+      }
+    }
+  }
+
+  function showFieldError(err) {
+    const path = err.body && typeof err.body.path === 'string' ? err.body.path : '';
+    const message = err.serverMessage || 'One of the values is not valid.';
+    const entry = path ? owner.get(path.split('.')[0]) : null;
+    for (const e of entries) {
+      try { e.form.setErrors(e === entry ? [{ path, message }] : []); } catch { /* the toast below still tells the user */ }
+    }
+    if (entry) {
+      // focusPath also scrolls the field into view; the card is the fallback.
+      try { entry.form.focusPath(path); } catch { entry.card.scrollIntoView({ block: 'center' }); }
+    }
+    toast(message, { kind: 'error', key: 'save-error', ms: TOAST_ERROR_MS });
+  }
+
+  async function save() {
+    if (saving || dirty.size === 0 || destroyed) return;
+    saving = true;
+    paintBar();
+    const changes = {};
+    const sentValues = new Map();
+    for (const field of dirty) {
+      const value = owner.get(field).form.getValue(field);
+      changes[field] = value;
+      sentValues.set(field, cloneValue(value));
+    }
+    try {
+      const res = await api(settingsUrl, { method: 'PATCH', body: { changes } });
+      applySaved(res, sentValues);
+      toast('Saved', { kind: 'success', key: 'saved' });
+      if (!destroyed) live.textContent = 'Changes saved';
+    } catch (err) {
+      if (destroyed) {
+        reportSaveError(err);
+      } else if (err && err.status === 400) {
+        showFieldError(err);
+      } else {
+        reportSaveError(err);
+      }
+    } finally {
+      saving = false;
+      if (!destroyed) closeBar();
+    }
+  }
+
+  /* ---- painting from the store, sidebar ---- */
+
+  const moduleNav = buildModuleNav({ guildId, model, store, currentKey: mod ? mod.key : null });
+
+  function paint() {
+    if (mod) {
+      const on = store.get(mod.flag, mod.default);
+      paintSwitch(toggle, on, store.isPending(mod.flag));
+      stateValue.textContent = on ? 'on' : 'off';
+      header.classList.toggle('is-on', on);
+      offNotice.hidden = on;
+    }
+    saveStatus.setAttribute('data-active', String(store.busy));
+    moduleNav.paint();
+  }
+
+  shell.sectionsSlot.replaceChildren(
+    ...serverNav(guildId, mod ? null : GENERAL_KEY),
+    h('h2', { class: 'side-title side-title-gap' }, 'Modules'),
+    moduleNav.el,
+  );
+
+  const unsubscribe = store.subscribe(paint);
+  paint();
+  paintBar();
+  if (state.guilds) renderServerList(shell.serversSlot, state.guilds, guildId);
+
+  return {
+    kind: 'settings',
+    main,
+    guildName: guild.name,
+    isDirty: () => dirty.size > 0,
+    save,
+    renderServers: (guilds) => renderServerList(shell.serversSlot, guilds, guildId),
+    /** Scrolls the sidebar so the current module is visible. */
+    revealNav() {
+      requestAnimationFrame(() => {
+        const here = shell.sectionsSlot.querySelector('.side-module[aria-current="page"]');
+        const aside = here && here.closest('.sidebar');
+        if (!aside) return;
+        // Only move the list when the current module is out of sight.
+        const top = here.offsetTop;
+        if (top < aside.scrollTop || top + here.offsetHeight > aside.scrollTop + aside.clientHeight) {
+          aside.scrollTop = Math.max(0, top - aside.clientHeight / 3);
+        }
+      });
+    },
+    destroy() {
+      destroyed = true;
+      unsubscribe();
+      document.body.classList.remove('has-savebar');
+      for (const handle of handles) {
+        try { handle.destroy(); } catch { /* already gone */ }
+      }
+      for (const entry of entries) {
+        try { entry.form.destroy(); } catch { /* already gone */ }
+      }
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* Router                                                               */
 /* ------------------------------------------------------------------ */
 
-/** `#/guild/<id>` or `#/guild/<id>/<category>`; anything else is the picker. */
+/**
+ * `#/guild/<id>` (overview), `#/guild/<id>/<category>` (overview scrolled to a category),
+ * `#/guild/<id>/module/<key>` (a module's settings; key `general` is the general settings page).
+ * Anything else is the picker.
+ */
 function parseRoute(hash) {
+  const page = /^#\/guild\/(\d{1,30})\/module\/([A-Za-z0-9_-]{1,40})\/?$/.exec(hash || '');
+  if (page) return { name: 'module', id: page[1], section: null, module: page[2] };
   const match = /^#\/guild\/(\d{1,30})(?:\/([A-Za-z0-9_-]{1,40}))?\/?$/.exec(hash || '');
   if (match) return { name: 'guild', id: match[1], section: match[2] || null };
   return { name: 'picker', id: null, section: null };
 }
 
+/** True when the settings page on screen has edits that were not saved. */
+function hasUnsavedChanges() {
+  return Boolean(currentView && typeof currentView.isDirty === 'function' && currentView.isDirty());
+}
+
 function route() {
   if (!state.user) return;
+  acceptedHash = location.hash;
   const next = parseRoute(location.hash);
-  if (next.name === 'guild' && currentRoute && currentRoute.name === 'guild' && currentRoute.id === next.id && currentView) {
+  if (next.name === 'guild' && currentRoute && currentRoute.name === 'guild' && currentRoute.id === next.id && currentView && currentView.goTo) {
     currentView.goTo(next.section); // same server: only the section anchor changed
     return;
   }
   currentRoute = next;
-  if (next.name === 'guild') showGuild(next.id, next.section);
+  if (next.name === 'module') showModule(next.id, next.module);
+  else if (next.name === 'guild') showGuild(next.id, next.section);
   else showPicker();
+}
+
+function onHashChange() {
+  if (location.hash === acceptedHash) return; // the echo of a cancelled navigation
+  if (hasUnsavedChanges() && !window.confirm(LEAVE_PROMPT)) {
+    // Put the old address back without a history entry or another hashchange.
+    history.replaceState(null, '', location.pathname + location.search + acceptedHash);
+    return;
+  }
+  route();
 }
 
 async function boot() {
@@ -1287,7 +2009,7 @@ function start() {
   state.loginError = new URLSearchParams(location.search).get('error') === 'login_failed';
   if (location.search) history.replaceState(null, '', location.pathname + location.hash);
 
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', onHashChange);
 
   // "/" focuses the search box, unless the user is already typing somewhere.
   document.addEventListener('keydown', (event) => {
@@ -1299,7 +2021,20 @@ function start() {
     activeSearch.select();
   });
 
+  // Ctrl/Cmd+S saves the settings page instead of the browser's "save page" dialog.
+  document.addEventListener('keydown', (event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || String(event.key).toLowerCase() !== 's') return;
+    if (!currentView || typeof currentView.save !== 'function') return;
+    event.preventDefault();
+    currentView.save();
+  });
+
   window.addEventListener('beforeunload', (event) => {
+    if (hasUnsavedChanges()) {
+      event.preventDefault();
+      event.returnValue = '';
+      return;
+    }
     for (const store of stores.values()) {
       if (store.busy) {
         event.preventDefault();

@@ -27,6 +27,9 @@ const ICONS = {
   plus: 'M12 5v14|M5 12h14',
   lock: 'M5 11h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z|M8 11V7a4 4 0 0 1 8 0v4',
   server: 'M4 4h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z|M4 13h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1z|M7 7.5h.01|M7 16.5h.01',
+  home: 'M3 11l9-8 9 8|M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5',
+  settings: 'M4 21v-7|M4 10V3|M12 21v-9|M12 8V3|M20 21v-5|M20 12V3|M1 14h6|M9 8h6|M17 16h6',
+  undo: 'M3 7v6h6|M3.5 13A9 9 0 1 0 6 6.3L3 9',
 };
 
 /* ------------------------------------------------------------------ */
@@ -79,6 +82,20 @@ function icon(name) {
 
 function pluralize(n, one, many = `${one}s`) {
   return `${n} ${n === 1 ? one : many}`;
+}
+
+/** JSON with sorted object keys, so two equal values compare equal as strings whatever their key order. */
+function canonical(value) {
+  const seen = (v) => {
+    if (Array.isArray(v)) return v.map(seen);
+    if (v && typeof v === 'object') {
+      const out = {};
+      for (const key of Object.keys(v).sort()) if (v[key] !== undefined) out[key] = seen(v[key]);
+      return out;
+    }
+    return v;
+  };
+  return JSON.stringify(seen(value)) ?? 'null';
 }
 
 /** Make an arbitrary id usable inside an element id / URL fragment. */
@@ -241,12 +258,14 @@ function avatar(name, url, { size = 'md', round = false } = {}) {
   return wrap;
 }
 
-function banner(kind, text) {
+/** Inline notice. `kind`: error | warn | info; `actions` are extra elements (e.g. a retry button) shown on the right. */
+function banner(kind, text, actions = []) {
   return h(
     'div',
     { class: `banner banner-${kind}`, role: kind === 'error' ? 'alert' : 'status' },
-    icon(kind === 'error' ? 'alert' : 'info'),
-    h('span', {}, text),
+    icon(kind === 'error' || kind === 'warn' ? 'alert' : 'info'),
+    h('span', { class: 'banner-text' }, text),
+    actions.length ? h('span', { class: 'banner-actions' }, actions) : null,
   );
 }
 
@@ -316,7 +335,7 @@ function paintSwitch(el, on, pending) {
 
 export {
   ICONS, TOAST_MS, TOAST_ERROR_MS,
-  h, appendAll, icon, pluralize, slug, safeUrl, safeHref, safeImageUrl, mount,
+  h, appendAll, icon, pluralize, canonical, slug, safeUrl, safeHref, safeImageUrl, mount,
   ApiError, fallbackMessage, api,
   toast, dismissToast,
   initialsOf, hueOf, avatar, banner, statusCard, backLink, retryButton, describeError,
