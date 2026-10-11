@@ -47,7 +47,8 @@ const storeFor = (key) => {
  * `{ owner, permissions }` from that user's OAuth guild entry, for rules such as who may ping a role), the Discord
  * REST client (src/dashboard/discordApi.js) for writes such as posting a message, the logger, and
  * `runTask(kind, payload, opts?)` (src/dashboard/tasks.js), which has the bot do it for this user in this guild.
- * `list(guildId, opts)` gets `{ query, cursor }` for searchable collections and may return `{ items, nextCursor }`.
+ * `list(guildId, opts, ctx)` gets `{ query, cursor }` for searchable collections and may return `{ items, nextCursor }`;
+ * `list` and `get` get a read context `{ guildId, discord, logger }` as their last argument.
  * @param {{ discord: object, logger: object, tasks?: { run: Function } }} deps tasks: a test double of the task runner
  */
 export function createRecordsBridge({ discord, logger, tasks = createTaskRunner({ logger }) }) {
@@ -57,8 +58,9 @@ export function createRecordsBridge({ discord, logger, tasks = createTaskRunner(
     runTask: (kind, payload, opts = {}) => tasks.run(guildId, kind, payload, { ...opts, actorId: userId }),
   });
   return {
-    list: (guildId, key, opts = {}) => storeFor(key).list(guildId, opts),
-    get: (guildId, key, id) => storeFor(key).get(guildId, id),
+    // Reads get a context too (no actor): stores show member names and avatars through ctx.discord.
+    list: (guildId, key, opts = {}) => storeFor(key).list(guildId, opts, { guildId, discord, logger }),
+    get: (guildId, key, id) => storeFor(key).get(guildId, id, { guildId, discord, logger }),
     create: (guildId, key, data, actor) => storeFor(key).create(guildId, data, ctx(guildId, actor)),
     update: (guildId, key, id, data, actor) => storeFor(key).update(guildId, id, data, ctx(guildId, actor)),
     remove: (guildId, key, id, actor) => storeFor(key).remove(guildId, id, ctx(guildId, actor)),

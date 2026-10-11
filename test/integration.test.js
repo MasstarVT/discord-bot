@@ -929,7 +929,7 @@ describe('K contracts', () => {
   test('K1 moderationService exports the shared moderation API', async () => {
     const m = await import('../src/services/moderationService.js');
     expectNone(['executeModAction', 'isImmune', 'createInfraction'].filter((n) => !isFn(m[n])), 'moderationService exports that are not functions');
-    assert.deepEqual(m.MOD_SOURCES, ['command', 'automod', 'escalation', 'captcha']);
+    assert.deepEqual(m.MOD_SOURCES, ['command', 'automod', 'escalation', 'captcha', 'dashboard']);
   });
 
   test('K2 loggingService exports sendLog, extractMentions, channelTypeLabel, LOG_TYPES and LOG_EVENTS', async () => {

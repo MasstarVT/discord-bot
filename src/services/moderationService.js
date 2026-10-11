@@ -34,7 +34,11 @@ import { isHttpUrl } from '../utils/customEmbed.js';
 // ── Constants (§4.1) ──────────────────────────────────────────────────────────
 
 export const MOD_ACTIONS = Object.freeze(['WARN', 'TIMEOUT', 'MUTE', 'KICK', 'BAN', 'TEMPBAN', 'SOFTBAN']);
-export const MOD_SOURCES = Object.freeze(['command', 'automod', 'escalation', 'captcha']);
+export const MOD_SOURCES = Object.freeze(['command', 'automod', 'escalation', 'captcha', 'dashboard']);
+/** Sources where a person picked the action (a slash command, or the web dashboard acting for its user): the moderator's
+ * own roles, immunity rank and self-moderation are checked, and the DM may name them. */
+const PERSON_SOURCES = new Set(['command', 'dashboard']);
+const byPerson = (source) => PERSON_SOURCES.has(source);
 export const MOD_ERROR_CODES = Object.freeze(['NOT_PERMITTED', 'HIERARCHY', 'IMMUNE', 'NOT_IN_GUILD', 'ALREADY', 'INVALID', 'DISCORD_ERROR']);
 export const TIER_ACTIONS = Object.freeze(['TIMEOUT', 'MUTE', 'KICK', 'TEMPBAN', 'BAN']);
 export const TIMEOUT_MAX_MS = 2_419_200_000; // 28 days (Discord maximum)
@@ -54,7 +58,7 @@ export const ACTION_PERMISSION = Object.freeze({
 });
 export const SOURCE_LABEL = Object.freeze({
   command: 'Command', automod: 'Automod', escalation: 'Escalation',
-  automation: 'Automation', captcha: 'Captcha', expiry: 'Expiry', external: 'External',
+  automation: 'Automation', captcha: 'Captcha', expiry: 'Expiry', external: 'External', dashboard: 'Dashboard',
 });
 export const ACTION_META = Object.freeze({
   WARN: { emoji: '⚠️', color: 0xfee75c, label: 'Warn', past: 'warned', active: true },
@@ -182,7 +186,9 @@ export function mapDiscordError(err) {
  */
 export function buildAuditReason(reason, moderator, source) {
   let text;
-  if (source === 'command') text = `${reason} | by ${moderator?.username ?? moderator?.tag ?? moderator?.id ?? 'unknown'}`;
+  const by = moderator?.username ?? moderator?.tag ?? moderator?.id ?? 'unknown';
+  if (source === 'command') text = `${reason} | by ${by}`;
+  else if (source === 'dashboard') text = `[Dashboard] ${reason} | by ${by}`; // the bot is the audit-log executor
   else if (source === 'escalation') text = String(reason);
   else text = `[${SOURCE_LABEL[source] ?? source}] ${reason}`;
   return clampText(text, AUDIT_REASON_MAX);
@@ -286,13 +292,13 @@ const fail = (code, error) => ({ code, error });
 function checkIdentity({ guild, me, targetId, executor, source }) {
   if (me && targetId === me.id) return fail('HIERARCHY', MSG.BOT_SELF);
   if (targetId === guild?.ownerId) return fail('HIERARCHY', MSG.OWNER);
-  if (source === 'command' && executor && targetId === executor.id) return fail('INVALID', MSG.SELF);
+  if (byPerson(source) && executor && targetId === executor.id) return fail('INVALID', MSG.SELF);
   return null;
 }
 
 /** Check 8: the invoker must outrank the target (the owner always does). Returns null when fine. */
 function checkExecutorRank({ guild, member, executor, source }) {
-  if (source === 'command' && executor && member && executor.id !== guild?.ownerId
+  if (byPerson(source) && executor && member && executor.id !== guild?.ownerId
     && member.roles.highest.comparePositionTo(executor.roles.highest) >= 0) {
     return fail('HIERARCHY', MSG.EXEC_ROLE);
   }
@@ -315,7 +321,7 @@ export function preflightModAction({ action, guild, me, member, targetId, execut
 
   // Immunity (policy §4.4)
   if (member) {
-    if (source !== 'command') {
+    if (!byPerson(source)) {
       if (isImmune(member, settings)) return fail('IMMUNE', MSG.IMMUNE_AUTO);
     } else if (!(executor && executor.id === guild?.ownerId)) {
       if (hasImmuneRole(member, settings)) return fail('IMMUNE', MSG.IMMUNE_ROLE);
@@ -907,7 +913,8 @@ async function getMemberOrNull(guild, id) {
  * @param {number} [input.durationMs]
  * @param {number} [input.deleteMessageSeconds] 0..604800
  * @param {string} [input.proofUrl]
- * @param {'command'|'automod'|'escalation'|'captcha'} [input.source]
+ * @param {'command'|'automod'|'escalation'|'captcha'|'dashboard'} [input.source] 'dashboard': the web dashboard acting for
+ *   its user (`moderator`), checked like a command
  * @param {boolean} [input.silent] no DMs
  * @param {boolean} [input.skipEscalation]
  * @param {Array<{ name: string, value: string }>} [input.logFields] at most 3, appended to the case embed
@@ -954,7 +961,7 @@ export async function executeModAction(input = {}) {
         member = (target.guild?.id === guild.id && typeof target.roles === 'object')
           ? target
           : await getMemberOrNull(guild, target.id);
-        if (source === 'command' && moderator.id !== guild.client.user.id) {
+        if (byPerson(source) && moderator.id !== guild.client.user.id) {
           executor = await getMemberOrNull(guild, moderator.id);
           if (!executor) return invalid(MSG.NO_EXECUTOR);
         }
@@ -986,7 +993,7 @@ export async function executeModAction(input = {}) {
 
       // h. delivery settings
       const visibility = settings?.modVisibility ?? 'PUBLIC';
-      const showModerator = source === 'command' && visibility === 'PUBLIC';
+      const showModerator = byPerson(source) && visibility === 'PUBLIC';
       const dmEnabled = !silent && (settings?.modDmTargets ?? true);
       const expiresAt = eff.durationMs ? new Date(Date.now() + eff.durationMs) : null;
       const warnings = eff.note ? [eff.note] : [];
@@ -1238,7 +1245,7 @@ export async function executeUnmute({ guild, target, moderator, reason = null, s
       let executor = null;
       try {
         member = (target.guild?.id === guild.id && typeof target.roles === 'object') ? target : await getMemberOrNull(guild, target.id);
-        if (source === 'command' && moderator.id !== guild.client.user.id) {
+        if (byPerson(source) && moderator.id !== guild.client.user.id) {
           executor = await getMemberOrNull(guild, moderator.id);
           if (!executor) return { ok: false, code: 'INVALID', error: MSG.NO_EXECUTOR };
         }
