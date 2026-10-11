@@ -240,6 +240,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'end',
       label: 'End now',
+      showWhen: Object.freeze({ field: 'status', in: [STATUS_LABELS.ACTIVE] }),
       description: 'Draws the winners now, announces them and pays the XP and coin prizes. Same as /giveaway end.',
       confirm: 'End this giveaway now and draw its winners?',
       fields: Object.freeze([]),
@@ -247,6 +248,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'reroll',
       label: 'Reroll',
+      showWhen: Object.freeze({ field: 'status', in: [STATUS_LABELS.ENDED] }),
       description: 'Draws new winners of an ended giveaway. Earlier winners keep their prize. Same as /giveaway reroll.',
       fields: Object.freeze([
         field({
@@ -263,6 +265,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'restart',
       label: 'Restart',
+      showWhen: Object.freeze({ field: 'status', in: [STATUS_LABELS.DRAFT] }),
       description: 'Posts a draft giveaway (its message was deleted) again. The entries are kept. Same as /giveaway restart.',
       fields: restartFields,
       check: (data) => endTimeProblem(data, { required: false }),
@@ -270,6 +273,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'cancel',
       label: 'Cancel giveaway',
+      showWhen: Object.freeze({ field: 'status', in: [STATUS_LABELS.ACTIVE, STATUS_LABELS.DRAFT] }),
       description: 'Stops a running or draft giveaway without drawing winners. Same as /giveaway cancel.',
       danger: true,
       confirm: 'Cancel this giveaway? No winners will be drawn and this cannot be undone.',

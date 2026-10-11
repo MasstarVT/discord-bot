@@ -137,6 +137,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'end',
       label: 'End now',
+      showWhen: Object.freeze({ field: 'status', in: [STATUS_LABELS.ACTIVE] }),
       description: 'Closes the poll and posts the results in its channel. Same as /poll end.',
       confirm: 'End this poll now and post the results?',
       fields: Object.freeze([]),

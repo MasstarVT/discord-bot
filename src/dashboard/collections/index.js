@@ -73,6 +73,8 @@ export function publicCollection(c) {
       description: a.description ?? '',
       danger: a.danger === true,
       confirm: a.confirm ?? null,
+      // Offered only on items whose field matches (e.g. "End now" while a giveaway runs): { field, in?, notIn? }.
+      showWhen: a.showWhen ?? null,
       fields: Object.freeze((a.fields ?? []).map(publicDescriptor)),
     }))),
   });

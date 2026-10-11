@@ -26,6 +26,18 @@ let openModals = 0;
 
 // Toasts live in a fixed box at the end of <body>, but a modal <dialog> is drawn in the top layer above everything
 // else, so while dialogs are open the box is moved into the topmost one (and back when it closes).
+
+/**
+ * A `showWhen: { field, in?, notIn? }` rule against an item's values (the same rule forms.js applies to sibling
+ * fields); no rule matches everything.
+ */
+function matchesShowWhen(rule, values) {
+  if (!rule || typeof rule.field !== 'string') return true;
+  const value = values ? values[rule.field] : undefined;
+  if (Array.isArray(rule.in) && !rule.in.includes(value)) return false;
+  if (Array.isArray(rule.notIn) && rule.notIn.includes(value)) return false;
+  return true;
+}
 function placeToasts() {
   const box = document.querySelector('.toasts');
   if (!box) return;
@@ -475,7 +487,8 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
   const publishable = c.readOnly.some((f) => f.field === 'channelId') && c.readOnly.some((f) => f.field === 'messageId');
   const isPosted = (item) => Boolean(item?.channelId && item?.messageId);
   // Actions on the posted copy (update it, delete it) mean nothing for a draft.
-  const actionApplies = (a, item) => !(publishable && !isPosted(item) && ['refresh', 'unpublish', 'update'].includes(a.id));
+  const actionApplies = (a, item) => !(publishable && !isPosted(item) && ['refresh', 'unpublish', 'update'].includes(a.id))
+    && matchesShowWhen(a.showWhen, item);
   const placeholder = c.searchPlaceholder || `Search ${c.label.toLowerCase()}`;
   let items = [];
   let limit = c.limit;
@@ -1244,9 +1257,11 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
               idPrefix: `${prefix}-locked`,
             });
             forms.push({ form: locked, names: new Set(lockedFields.map((f) => f.field)) });
+            // Name only the locked fields that are shown (a preset's options are hidden for other presets).
+            const shown = lockedFields.filter((f) => matchesShowWhen(f.showWhen, current ?? {}));
             parts.push(h('div', { class: 'cl-locked' }, locked.el,
-              h('p', { class: 'cl-hint' }, icon('lock'),
-                `${lockedFields.map((f) => f.label).join(', ')} cannot be changed after creation.`)));
+              shown.length ? h('p', { class: 'cl-hint' }, icon('lock'),
+                `${shown.map((f) => f.label).join(', ')} cannot be changed after creation.`) : null));
           }
           mainForm = createForm({
             fields: editable,
