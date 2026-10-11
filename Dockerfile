@@ -30,7 +30,7 @@ USER node
 
 LABEL org.opencontainers.image.source=https://github.com/MasstarVT/discord-bot
 
-EXPOSE 8081
+EXPOSE 8081 8080
 
 # Liveness only: 200 while the main thread's event loop runs (also during the
 # restart brake and while parked). Readiness is /readyz, polled by Uptime Kuma.
