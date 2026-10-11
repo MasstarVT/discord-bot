@@ -56,6 +56,8 @@ export function publicCollection(c) {
     limit: c.limit,
     titleField: c.titleField,
     subtitleField: c.subtitleField ?? null,
+    // A readOnly field holding an image URL (e.g. a member's avatar) shown at the start of each row.
+    avatarField: c.avatarField ?? null,
     canCreate: c.canCreate !== false,
     canEdit: c.canEdit !== false,
     canDelete: c.canDelete !== false,
