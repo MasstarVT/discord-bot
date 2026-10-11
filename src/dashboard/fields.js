@@ -453,6 +453,9 @@ function automodDraft(draft, row) {
   return draft.automodConfig;
 }
 
+// The dashboard hides a rule's options while the rule is off (forms.js `showWhen`).
+const RULE_ON = Object.freeze({ field: 'action', notIn: ['off'] });
+
 for (const key of AUTOMOD_RULE_KEYS) {
   const meta = AUTOMOD_RULES[key];
   const t = meta.threshold;
@@ -465,14 +468,16 @@ for (const key of AUTOMOD_RULE_KEYS) {
     fields: [
       { field: 'action', type: 'enum', label: 'Action', options: AUTOMOD_ACTIONS, default: 'off' },
       ...(t ? [int('threshold', t.default, t.min, t.max, 'Threshold', `Triggers at ${t.min} to ${t.max} ${t.unit}.`,
-        { unit: t.unit })] : []),
+        { unit: t.unit, showWhen: RULE_ON })] : []),
       int('timeoutSeconds', AUTOMOD_DEFAULTS.timeoutSeconds, AUTOMOD_DEFAULTS.minTimeoutSeconds, AUTOMOD_DEFAULTS.maxTimeoutSeconds,
-        'Timeout length (seconds)', 'How long "Delete & timeout" times the member out (1 minute to 28 days).', { unit: 'seconds' }),
-      { field: 'roleMode', type: 'enum', label: 'Applies to roles', options: SCOPE_OPTIONS('role'), default: 'except' },
-      { field: 'roleIds', type: 'roles', label: 'Roles', maxItems: LIMITS.AUTOMOD_EXEMPTIONS, default: [] },
-      { field: 'channelMode', type: 'enum', label: 'Applies in channels', options: SCOPE_OPTIONS('channel'), default: 'except' },
+        'Timeout length (seconds)', 'How long "Delete & timeout" times the member out (1 minute to 28 days).',
+        { unit: 'seconds', showWhen: { field: 'action', in: ['timeout'] } }),
+      { field: 'roleMode', type: 'enum', label: 'Applies to roles', options: SCOPE_OPTIONS('role'), default: 'except', showWhen: RULE_ON },
+      { field: 'roleIds', type: 'roles', label: 'Roles', maxItems: LIMITS.AUTOMOD_EXEMPTIONS, default: [], showWhen: RULE_ON },
+      { field: 'channelMode', type: 'enum', label: 'Applies in channels', options: SCOPE_OPTIONS('channel'), default: 'except',
+        showWhen: RULE_ON },
       { field: 'channelIds', type: 'channels', label: 'Channels', channelTypes: [...AUTOMOD_CHANNEL_KINDS],
-        maxItems: LIMITS.AUTOMOD_EXEMPTIONS, default: [] },
+        maxItems: LIMITS.AUTOMOD_EXEMPTIONS, default: [], showWhen: RULE_ON },
     ],
     read: (row) => automodConfigOf(row).rules[key],
     write: (value, draft, row) => { automodDraft(draft, row).rules[key] = value; },
@@ -675,8 +680,9 @@ const WELCOME_GROUPS = [
           return row?.welcomeUseEmbed !== false && embedHasContent(storedEmbed(row?.welcomeEmbed)) ? '' : DEFAULT_TEXTS.welcomeMessage;
         },
       },
-      welcomeEmbedField('welcomeEmbed', 'Embed',
+      { ...welcomeEmbedField('welcomeEmbed', 'Embed',
         'Shown when "Welcome message as an embed" is on. Clear it to use the default embed.'),
+      showWhen: { field: 'welcomeUseEmbed', in: [true] } },
     ],
   },
   {
@@ -745,8 +751,9 @@ const WELCOME_GROUPS = [
           return row?.goodbyeUseEmbed === true ? '' : DEFAULT_TEXTS.goodbyeMessage;
         },
       },
-      welcomeEmbedField('goodbyeEmbed', 'Embed',
+      { ...welcomeEmbedField('goodbyeEmbed', 'Embed',
         'Shown when "Goodbye message as an embed" is on. Clear it to use the default embed.'),
+      showWhen: { field: 'goodbyeUseEmbed', in: [true] } },
     ],
   },
   {
@@ -868,7 +875,8 @@ const LEVELING_GROUPS = [
           { value: 'OFF', label: 'Disabled' }, { value: 'CURRENT', label: 'Current channel' },
           { value: 'DM', label: 'Private message' }, { value: 'CHANNEL', label: 'Custom channel' },
         ] },
-      channel('levelUpChannelId', 'Announcement channel', 'Used when "Custom channel" is selected.', { nullable: false }),
+      { ...channel('levelUpChannelId', 'Announcement channel', 'Used when "Custom channel" is selected.', { nullable: false }),
+        showWhen: { field: 'levelUpMode', in: ['CHANNEL'] } },
       bool('levelUpUseEmbed', false, 'Level-up message as an embed',
         'Sends level-up announcements as an embed; off sends plain text.'),
       messageField('levelUpMessage', 'Level-up message', 'Empty uses the default message.', {

@@ -2234,11 +2234,27 @@ export function createForm({ fields = [], values = {}, ctx = null, onChange, dis
       ctx,
       idPrefix,
       disabled,
-      onChange: (v) => onChange?.(desc.field, v),
+      onChange: (v) => {
+        paintVisibility();
+        onChange?.(desc.field, v);
+      },
     });
     controls.set(desc.field, control);
     el.append(control.el);
   }
+
+  // `showWhen: { field, in?: [...], notIn?: [...] }` hides a field while a sibling field's value does not match
+  // (e.g. a rule's threshold while its action is off). A hidden field keeps its value.
+  const conditional = fields.filter((d) => d.showWhen && typeof d.showWhen.field === 'string' && controls.has(d.showWhen.field));
+  function paintVisibility() {
+    for (const desc of conditional) {
+      const { field, in: oneOf, notIn } = desc.showWhen;
+      const value = controls.get(field).getValue();
+      const shown = (!Array.isArray(oneOf) || oneOf.includes(value)) && (!Array.isArray(notIn) || !notIn.includes(value));
+      controls.get(desc.field).el.hidden = !shown;
+    }
+  }
+  paintVisibility();
 
   function clearErrors() {
     for (const control of controls.values()) control.setError(null);
@@ -2257,8 +2273,10 @@ export function createForm({ fields = [], values = {}, ctx = null, onChange, dis
       seen.add(path);
       const [first, ...rest] = path.split('.');
       const control = controls.get(first);
-      if (control) control.setError(message, rest.join('.'));
-      else unrouted.push(message);
+      if (control) {
+        control.el.hidden = false; // an error is never hidden behind showWhen
+        control.setError(message, rest.join('.'));
+      } else unrouted.push(message);
     }
     if (unrouted.length) {
       formError.textContent = [formError.textContent, ...unrouted].filter(Boolean).join(' ');
@@ -2275,6 +2293,7 @@ export function createForm({ fields = [], values = {}, ctx = null, onChange, dis
       for (const [field, control] of controls) {
         if (Object.hasOwn(next, field)) control.setValue(next[field]);
       }
+      paintVisibility();
     },
     setErrors(errors) {
       clearErrors();
