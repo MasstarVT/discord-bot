@@ -476,6 +476,62 @@ function echoBlock(question, optionsRaw, baseLength) {
 // ── Modal submit ──────────────────────────────────────────────────────────────
 
 /** `poll-modal:{nonce}`: validates the form, posts the poll and schedules its end. */
+/**
+ * Creates a poll, posts it in `channel`, stores its message id and schedules its end: the steps the /poll form and the
+ * dashboard share. A failed post or save removes the poll again (and the posted message). `deps` are test seams.
+ * @param {{ client: import('discord.js').Client, guild: import('discord.js').Guild, channel: import('discord.js').TextChannel,
+ *   pending: object, question: string, options: string[], maxChoices: number }} input pending: what createPoll takes
+ *   (its `durationMs` decides whether an end is scheduled)
+ * @param {{ createPoll?: Function, buildPollPayload?: Function, emptyTally?: Function, getSettings?: Function,
+ *   db?: object, schedule?: Function, logPrefix?: string }} [deps]
+ * @returns {Promise<{ ok: true, poll: object, timerFailed: boolean }
+ *   | { ok: false, code: 'LIMIT'|'SEND'|'SAVE', error?: unknown }>}
+ */
+export async function postPoll({ client, guild, channel, pending, question, options, maxChoices }, deps = {}) {
+  const create = deps.createPoll ?? createPoll;
+  const build = deps.buildPollPayload ?? buildPollPayload;
+  const tally = deps.emptyTally ?? emptyTally;
+  const loadSettings = deps.getSettings ?? getSettingsSafe;
+  const db = deps.db ?? prisma;
+  const schedule = deps.schedule ?? scheduleJob;
+  const log = deps.logPrefix ?? 'poll';
+
+  const created = await create(client, guild, pending, { question, options, maxChoices });
+  if (!created.ok) return { ok: false, code: 'LIMIT' };
+  const { poll } = created;
+
+  let msg;
+  try {
+    const settings = await loadSettings(guild.id);
+    msg = await channel.send(build(poll, tally(poll.options.length), { settings }));
+  } catch (err) {
+    logger.warn(`${log}: could not post the poll message`, err);
+    await db.poll.delete({ where: { id: poll.id } }).catch(() => {});
+    return { ok: false, code: 'SEND', error: err };
+  }
+  try {
+    await db.poll.update({ where: { id: poll.id }, data: { messageId: msg.id } });
+  } catch (err) {
+    logger.error(`${log}: could not store the poll message id`, err);
+    await msg.delete?.().catch(() => {});
+    await db.poll.delete({ where: { id: poll.id } }).catch(() => {});
+    return { ok: false, code: 'SAVE', error: err };
+  }
+
+  let timerFailed = false;
+  if (pending.durationMs) {
+    try {
+      await schedule({
+        guildId: guild.id, type: END_JOB_TYPE, runAt: poll.endsAt, payload: { pollId: poll.id }, dedupeKey: endJobKey(poll.id),
+      });
+    } catch (err) {
+      timerFailed = true;
+      logger.error(`${log}: could not schedule poll.end`, err);
+    }
+  }
+  return { ok: true, poll: { ...poll, messageId: msg.id }, timerFailed };
+}
+
 export async function handleCreateModal(interaction, client) {
   const { params: [nonce] } = parseCustomId(interaction.customId);
   const question = interaction.fields.getTextInputValue('poll-question');
@@ -505,7 +561,6 @@ export async function handleCreateModal(interaction, client) {
   if (!(await safeDefer(interaction, { ephemeral: true }))) return;
   const reply = (embed) => safeReply(interaction, { embeds: [embed] });
   const { guild } = interaction;
-  const guildId = interaction.guildId;
 
   const maxChoices = Math.min(pending.maxChoices, o.options.length);
   const clamped = maxChoices < pending.maxChoices;
@@ -517,45 +572,19 @@ export async function handleCreateModal(interaction, client) {
     return;
   }
 
-  const created = await createPoll(client, guild, pending, { question: q.question, options: o.options, maxChoices });
-  if (!created.ok) {
-    await reply(errorEmbed('Too Many Polls', `This server already has **${POLL.ACTIVE_MAX}** active polls. End one with \`/poll end\` first.`));
-    return;
-  }
-  const { poll } = created;
-
-  let msg;
-  try {
-    const settings = await getSettingsSafe(guildId);
-    msg = await channel.send(buildPollPayload(poll, emptyTally(poll.options.length), { settings }));
-  } catch (err) {
-    logger.warn('poll: could not post the poll message', err);
-    await prisma.poll.delete({ where: { id: poll.id } }).catch(() => {});
-    await reply(errorEmbed('Could Not Post Poll', `I couldn't post the poll in <#${channel.id}>: ${sendFailureReason(err)}`));
-    return;
-  }
-  try {
-    await prisma.poll.update({ where: { id: poll.id }, data: { messageId: msg.id } });
-  } catch (err) {
-    logger.error('poll: could not store the poll message id', err);
-    await msg.delete?.().catch(() => {});
-    await prisma.poll.delete({ where: { id: poll.id } }).catch(() => {});
-    await reply(errorEmbed('Could Not Post Poll', "I couldn't save the poll. Please try again in a moment."));
-    return;
-  }
-  const posted = { ...poll, messageId: msg.id };
-
-  let timerFailed = false;
-  if (pending.durationMs) {
-    try {
-      await scheduleJob({
-        guildId, type: END_JOB_TYPE, runAt: poll.endsAt, payload: { pollId: poll.id }, dedupeKey: endJobKey(poll.id),
-      });
-    } catch (err) {
-      timerFailed = true;
-      logger.error('poll: could not schedule poll.end', err);
+  const out = await postPoll({ client, guild, channel, pending, question: q.question, options: o.options, maxChoices });
+  if (!out.ok) {
+    if (out.code === 'LIMIT') {
+      await reply(errorEmbed('Too Many Polls', `This server already has **${POLL.ACTIVE_MAX}** active polls. End one with \`/poll end\` first.`));
+    } else if (out.code === 'SEND') {
+      await reply(errorEmbed('Could Not Post Poll', `I couldn't post the poll in <#${channel.id}>: ${sendFailureReason(out.error)}`));
+    } else {
+      await reply(errorEmbed('Could Not Post Poll', "I couldn't save the poll. Please try again in a moment."));
     }
+    return;
   }
+  const { poll, timerFailed } = out;
+  const posted = poll;
 
   const lines = [`Your poll is live in <#${channel.id}>. [Jump to poll](${jumpUrl(posted)})`];
   if (pending.durationMs) lines.push(`It ends ${discordTimestamp(poll.endsAt, 'R')}.`);

@@ -140,40 +140,17 @@ export function createPollTasks(deps = {}) {
       hideResults: payload.hideResults === true,
       durationMs: d.ms,
     };
-    const created = await svc.createPoll(client, guild, pending, { question: q.question, options: o.options, maxChoices });
-    if (!created.ok) throw new TaskError(`This server already has ${svc.POLL.ACTIVE_MAX} active polls. End one first.`);
-    const { poll } = created;
-
-    // Post, record the message id, schedule the end: the same steps (and clean-ups) as the form submit.
-    let msg;
-    try {
-      const settings = await getSettings(guild.id);
-      msg = await channel.send(svc.buildPollPayload(poll, svc.emptyTally(poll.options.length), { settings }));
-    } catch (err) {
-      logger.warn('dashboard poll: could not post the poll message', err);
-      await db.poll.delete({ where: { id: poll.id } }).catch(() => {});
-      throw new TaskError(`I couldn't post the poll in #${channel.name}: ${svc.sendFailureReason(err)}`);
-    }
-    try {
-      await db.poll.update({ where: { id: poll.id }, data: { messageId: msg.id } });
-    } catch (err) {
-      logger.error('dashboard poll: could not store the poll message id', err);
-      await msg.delete?.().catch(() => {});
-      await db.poll.delete({ where: { id: poll.id } }).catch(() => {});
+    // Create, post, record the message id and schedule the end: the same steps (and clean-ups) as the /poll form.
+    const out = await svc.postPoll({ client, guild, channel, pending, question: q.question, options: o.options, maxChoices }, {
+      createPoll: svc.createPoll, buildPollPayload: svc.buildPollPayload, emptyTally: svc.emptyTally,
+      getSettings, db, schedule, logPrefix: 'dashboard poll',
+    });
+    if (!out.ok) {
+      if (out.code === 'LIMIT') throw new TaskError(`This server already has ${svc.POLL.ACTIVE_MAX} active polls. End one first.`);
+      if (out.code === 'SEND') throw new TaskError(`I couldn't post the poll in #${channel.name}: ${svc.sendFailureReason(out.error)}`);
       throw new TaskError("I couldn't save the poll. Please try again in a moment.");
     }
-
-    let timerFailed = false;
-    if (d.ms) {
-      try {
-        await schedule({
-          guildId: guild.id, type: svc.END_JOB_TYPE, runAt: poll.endsAt, payload: { pollId: poll.id }, dedupeKey: svc.endJobKey(poll.id),
-        });
-      } catch (err) {
-        timerFailed = true;
-        logger.error('dashboard poll: could not schedule poll.end', err);
-      }
-    }
+    const { poll, timerFailed } = out;
 
     let message = `Posted the poll "${clampText(q.question, 80)}" in #${channel.name}.`;
     if (d.ms) message += ` It ends ${utc(poll.endsAt)}.`;
