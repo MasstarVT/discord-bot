@@ -270,6 +270,7 @@ class GuildStore {
           this.inflight = new Map();
           this.emit();
           noteSaved();
+          showNotices(res);
         } catch (err) {
           // Roll everything not yet confirmed back to the last server state.
           this.inflight = new Map();
@@ -287,6 +288,14 @@ class GuildStore {
 }
 
 let savedTimer = 0;
+
+/** Side-effect notes a save may return (e.g. "Lowered 2 balances to the new maximum."), one toast each. */
+function showNotices(res) {
+  const notices = res && Array.isArray(res.notices) ? res.notices : [];
+  for (const notice of notices.slice(0, 3)) {
+    if (typeof notice === 'string' && notice) toast(notice, { kind: 'info', ms: TOAST_ERROR_MS });
+  }
+}
 
 function noteSaved() {
   clearTimeout(savedTimer);
@@ -1859,6 +1868,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
       const res = await api(settingsUrl, { method: 'PATCH', body: { changes } });
       applySaved(res, sentValues);
       toast('Saved', { kind: 'success', key: 'saved' });
+      showNotices(res);
       if (!destroyed) live.textContent = 'Changes saved';
     } catch (err) {
       if (destroyed) {
