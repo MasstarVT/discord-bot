@@ -32,23 +32,26 @@ const storeFor = (key) => {
 /**
  * Creates the records bridge used by the dashboard server (`deps.records`). Every method may throw a RecordError
  * (expected failure, shown to the admin) or any other error (logged, answered as a 500).
- * Stores get a context `{ userId, discord, logger }`: the acting dashboard user, the Discord REST client
- * (src/dashboard/discordApi.js) for writes such as posting a message, and the logger.
+ * Stores get a context `{ userId, user, member, discord, logger }`: the acting dashboard user (`user` =
+ * `{ id, username, globalName, avatar }` from the session, for placeholders such as {user.name}; `member` =
+ * `{ owner, permissions }` from that user's OAuth guild entry, for rules such as who may ping a role), the Discord
+ * REST client (src/dashboard/discordApi.js) for writes such as posting a message, and the logger.
  * @param {{ discord: object, logger: object }} deps
  */
 export function createRecordsBridge({ discord, logger }) {
-  const ctx = (userId) => ({ userId, discord, logger });
+  /** @param {{ userId: string, user?: object|null, member?: object|null }} actor */
+  const ctx = ({ userId, user = null, member = null }) => ({ userId, user, member, discord, logger });
   return {
     list: (guildId, key) => storeFor(key).list(guildId),
     get: (guildId, key, id) => storeFor(key).get(guildId, id),
-    create: (guildId, key, data, { userId }) => storeFor(key).create(guildId, data, ctx(userId)),
-    update: (guildId, key, id, data, { userId }) => storeFor(key).update(guildId, id, data, ctx(userId)),
-    remove: (guildId, key, id, { userId }) => storeFor(key).remove(guildId, id, ctx(userId)),
-    async action(guildId, key, id, actionId, data, { userId }) {
+    create: (guildId, key, data, actor) => storeFor(key).create(guildId, data, ctx(actor)),
+    update: (guildId, key, id, data, actor) => storeFor(key).update(guildId, id, data, ctx(actor)),
+    remove: (guildId, key, id, actor) => storeFor(key).remove(guildId, id, ctx(actor)),
+    async action(guildId, key, id, actionId, data, actor) {
       const store = storeFor(key);
       const run = Object.hasOwn(store.actions ?? {}, actionId) ? store.actions[actionId] : null;
       if (typeof run !== 'function') throw new RecordError('not_found', 'Unknown action.');
-      return run(guildId, id, data, ctx(userId));
+      return run(guildId, id, data, ctx(actor));
     },
   };
 }
