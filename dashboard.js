@@ -35,6 +35,10 @@ if (!ok) {
   const settings = await import('./src/dashboard/settingsBridge.js');
   const discord = createDiscordApi({ config, logger });
   server = createDashboardServer({ config, deps: { discord, settings }, logger });
+  if (config.urlIsDefault && config.host === '0.0.0.0') {
+    logger.warn(`Dashboard: DASHBOARD_URL is not set, so saving only works at ${config.url}. Browsers that open the dashboard `
+      + 'by another address will be able to read but not save changes until DASHBOARD_URL is set to that address.');
+  }
   closeServices = async () => {
     const { disconnect } = await import('./src/database/client.js');
     const { default: redis } = await import('./src/services/redis.js');

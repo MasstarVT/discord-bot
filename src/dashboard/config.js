@@ -54,7 +54,8 @@ export function parseDashboardUrl(raw) {
  *   config: {
  *     clientId: string, botToken: string, clientSecret: string, sessionSecret: string,
  *     databaseUrl: string, redisUrl: string, botOwnerId: string|null,
- *     url: string, origin: string, redirectUri: string, secureCookies: boolean, port: number, host: string,
+ *     url: string, urlIsDefault: boolean, origin: string, redirectUri: string, secureCookies: boolean,
+ *     port: number, host: string,
  *   },
  * }}
  */
@@ -105,6 +106,7 @@ export function loadDashboardConfig(env = process.env) {
     botOwnerId,
     url,
     origin: new URL(url).origin,
+    urlIsDefault: rawUrl === '',
     redirectUri: `${url}/auth/callback`,
     secureCookies: url.startsWith('https:'),
     port,

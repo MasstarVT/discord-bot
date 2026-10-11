@@ -59,7 +59,7 @@ export const DESCRIPTIONS = Object.freeze({
   games: 'Rock-paper-scissors, number guessing, tic-tac-toe and two-player Scrabble.',
   feeds: 'Posts new RSS, YouTube, Reddit, Bluesky and podcast items to a channel.',
   search: 'Look up anime, manga, Pokémon and Urban Dictionary definitions.',
-  liverole: 'Gives members a role while they are streaming live.',
+  liverole: 'Gives members a role while they stream. Switching it off here leaves it on current streamers; /liverole disable in Discord removes it too.',
 });
 
 const sub = (field, defaultValue, label, description) => Object.freeze({ field, label, description, default: defaultValue });

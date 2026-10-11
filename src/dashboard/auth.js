@@ -264,9 +264,20 @@ const header = (req, name) => {
   return Array.isArray(value) ? value[0] : value;
 };
 
+/** Whether an Origin header is a well-formed http(s) origin (not `null`, not a path). */
+function isHttpOrigin(value) {
+  try {
+    const url = new URL(value);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.origin === value;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * CSRF guard for state-changing requests: POST/PATCH only, a JSON content type, `X-Dashboard: 1`,
  * an Origin (when sent) equal to the dashboard's origin, and Sec-Fetch-Site (when sent) same-origin or none.
+ * A different but well-formed http(s) Origin gets a message naming the configured origin (never the request's).
  * @param {import('node:http').IncomingMessage} req
  * @param {{ origin: string }} config
  * @returns {{ ok: true } | { ok: false, status: number, error: string, message: string }}
@@ -284,7 +295,11 @@ export function checkWriteRequest(req, config) {
   }
   const origin = header(req, 'origin');
   if (origin !== undefined && origin !== config.origin) {
-    return { ok: false, status: 403, error: 'forbidden', message: 'Cross-origin requests are not allowed.' };
+    // A well-formed origin that merely differs is most likely the wrong address in DASHBOARD_URL: say which one is expected.
+    const message = isHttpOrigin(origin)
+      ? `This dashboard is configured for ${config.origin}. Open it there, or set DASHBOARD_URL to the address you use.`
+      : 'Cross-origin requests are not allowed.';
+    return { ok: false, status: 403, error: 'forbidden', message };
   }
   const site = header(req, 'sec-fetch-site');
   if (site !== undefined && site !== 'same-origin' && site !== 'none') {

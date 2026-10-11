@@ -1,6 +1,7 @@
 // Discord REST access for the dashboard: the logged-in user's profile and guild list (user token, cached),
 // whether the bot is in a guild (bot token, cached), the invite URL and CDN image URLs.
-// Every call has a timeout and every cache is bounded; no timers, so nothing keeps the process alive.
+// Every call has a timeout and every cache is bounded; the only timer is the short unref'd wait before a
+// rate-limited bot-guild page is retried, so nothing keeps the process alive.
 import { createHash } from 'node:crypto';
 import { PermissionFlagsBits, RouteBases, Routes } from 'discord.js';
 import { exchangeCode, revokeToken } from './auth.js';
@@ -11,6 +12,8 @@ export const USER_GUILDS_MAX_STALE_MS = 5 * 60_000;
 export const USER_GUILDS_CACHE_MAX = 5_000;
 export const BOT_GUILDS_TTL_MS = 60_000;
 export const BOT_GUILDS_MAX_PAGES = 100;
+export const BOT_GUILDS_MAX_RETRIES = 3;
+export const BOT_GUILDS_MAX_WAIT_SECONDS = 10;
 const BOT_MISS_TTL_MS = 5_000;
 const BOT_MISS_MAX = 1_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
@@ -84,6 +87,8 @@ async function getJson(fetchImpl, route, authorization) {
   }
 }
 
+const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms).unref(); });
+
 const tokenFingerprint = (token) => createHash('sha256').update(String(token)).digest('base64url').slice(0, 22);
 
 function normalizeGuild(g) {
@@ -124,9 +129,10 @@ export function guildIconUrl(guild) {
 /**
  * Creates the dashboard's Discord client.
  * @param {{ config: { clientId: string, clientSecret: string, botToken: string, redirectUri: string },
- *           fetchImpl?: typeof fetch, now?: () => number, logger?: object }} opts
+ *           fetchImpl?: typeof fetch, now?: () => number, logger?: object,
+ *           sleep?: (ms: number) => Promise<void> }} opts sleep: the wait before a rate-limited page is retried
  */
-export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, logger = null }) {
+export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, logger = null, sleep = defaultSleep }) {
   const bot = `Bot ${config.botToken}`;
 
   /** userId -> { fp, guilds, fetchedAt }; insertion order = age. */
@@ -155,10 +161,6 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
       return guilds;
     } catch (err) {
       if (err instanceof DiscordApiError && err.code === 'unauthenticated') userGuilds.delete(userId);
-      if (err instanceof DiscordApiError && (err.code === 'rate_limited' || err.code === 'unavailable')) {
-        const stale = userGuilds.get(userId);
-        if (stale && stale.fp === fp && now() - stale.fetchedAt <= USER_GUILDS_MAX_STALE_MS) return stale.guilds;
-      }
       throw err;
     }
   }
@@ -166,8 +168,22 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
   async function refreshBotGuilds() {
     const ids = new Set();
     let after = '0';
+    let retriesLeft = BOT_GUILDS_MAX_RETRIES;
+    // One page; a short 429 is waited out and the same page retried (a few times per refresh), anything else fails.
+    const fetchPage = async () => {
+      for (;;) {
+        try {
+          return await getJson(fetchImpl, `${Routes.userGuilds()}?limit=200&after=${after}`, bot);
+        } catch (err) {
+          const wait = err instanceof DiscordApiError && err.code === 'rate_limited' ? err.retryAfter : undefined;
+          if (!Number.isFinite(wait) || wait > BOT_GUILDS_MAX_WAIT_SECONDS || retriesLeft <= 0) throw err;
+          retriesLeft--;
+          await sleep(wait * 1000);
+        }
+      }
+    };
     for (let page = 0; page < BOT_GUILDS_MAX_PAGES; page++) {
-      const data = await getJson(fetchImpl, `${Routes.userGuilds()}?limit=200&after=${after}`, bot);
+      const data = await fetchPage();
       if (!Array.isArray(data)) throw new DiscordApiError('Discord returned an unexpected guild list', { code: 'unavailable' });
       for (const g of data) if (typeof g?.id === 'string' && SNOWFLAKE_RE.test(g.id)) ids.add(g.id);
       if (data.length < 200) break;
@@ -225,13 +241,15 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
 
     /**
      * The user's guilds (`{ id, name, icon, owner, permissions }`), cached for 60 s per user and token and
-     * shared by concurrent callers. On a Discord 429 or outage a recent cached list is served instead.
+     * shared by concurrent callers. With `allowStale` (display only, never for an access decision) a Discord
+     * 429 or outage serves a list up to USER_GUILDS_MAX_STALE_MS old; otherwise the error is thrown.
      * @param {string} userId
      * @param {string} accessToken
+     * @param {{ allowStale?: boolean }} [opts] default false
      * @returns {Promise<ReadonlyArray<object>>}
      * @throws {DiscordApiError} unauthenticated, rate_limited (with retryAfter) or unavailable
      */
-    async getUserGuilds(userId, accessToken) {
+    async getUserGuilds(userId, accessToken, { allowStale = false } = {}) {
       const fp = tokenFingerprint(accessToken);
       const hit = userGuilds.get(userId);
       if (hit && hit.fp === fp && now() - hit.fetchedAt < USER_GUILDS_TTL_MS) return hit.guilds;
@@ -241,7 +259,15 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
         pending = fetchUserGuilds(userId, accessToken, fp).finally(() => userInflight.delete(key));
         userInflight.set(key, pending);
       }
-      return pending;
+      try {
+        return await pending;
+      } catch (err) {
+        if (allowStale && err instanceof DiscordApiError && (err.code === 'rate_limited' || err.code === 'unavailable')) {
+          const stale = userGuilds.get(userId);
+          if (stale && stale.fp === fp && now() - stale.fetchedAt <= USER_GUILDS_MAX_STALE_MS) return stale.guilds;
+        }
+        throw err;
+      }
     },
 
     /** Drops the cached guild list of a user (after logout). */

@@ -79,7 +79,7 @@ describe('catalog', () => {
     }
   });
 
-  test('every module has a one-sentence description', () => {
+  test('every module has a short description (a sentence or two)', () => {
     for (const key of MODULE_NAMES) {
       const text = DESCRIPTIONS[key];
       assert.equal(typeof text, 'string', `${key} has no description`);
@@ -87,6 +87,11 @@ describe('catalog', () => {
       assert.match(text, /\.$/, `${key}: description should be a sentence`);
     }
     assert.deepEqual(Object.keys(DESCRIPTIONS).sort(), [...MODULE_NAMES].sort());
+  });
+
+  test('the Live Role description warns that switching it off keeps the role on current streamers', () => {
+    assert.match(DESCRIPTIONS.liverole, /off here leaves it on current streamers/);
+    assert.match(DESCRIPTIONS.liverole, /\/liverole disable in Discord removes it too/);
   });
 
   test('buildCatalog() mirrors the module registry', () => {
@@ -211,6 +216,17 @@ describe('config', () => {
     assert.equal(r.config.redirectUri, 'http://localhost:8080/auth/callback');
     assert.equal(r.config.secureCookies, false);
     assert.equal(r.config.botOwnerId, null);
+    assert.equal(r.config.urlIsDefault, true);
+    assert.equal(loadDashboardConfig({}).config.urlIsDefault, true);
+  });
+
+  test('urlIsDefault is false once DASHBOARD_URL is set, even to the default address', () => {
+    for (const url of ['https://dash.example.com', 'http://localhost:8080']) {
+      const r = loadDashboardConfig(baseEnv({ DASHBOARD_URL: url }));
+      assert.equal(r.config.urlIsDefault, false, url);
+      assert.equal(r.config.url, url);
+    }
+    assert.equal(loadDashboardConfig(baseEnv({ DASHBOARD_URL: '   ' })).config.urlIsDefault, true, 'blank counts as unset');
   });
 
   test('an https DASHBOARD_URL makes cookies secure; the trailing slash is dropped', () => {
@@ -370,6 +386,29 @@ describe('auth', () => {
       else assert.equal(result.status, status, JSON.stringify(r));
     }
   });
+
+  test('checkWriteRequest names the configured address when a well-formed Origin differs', () => {
+    const config = { origin: 'https://dash.example.com' };
+    const json = { 'content-type': 'application/json', 'x-dashboard': '1' };
+    const check = (origin) => auth.checkWriteRequest({ method: 'PATCH', headers: { ...json, origin } }, config);
+    const expected = 'This dashboard is configured for https://dash.example.com. Open it there, or set DASHBOARD_URL to the address you use.';
+    for (const origin of ['http://192.168.1.5:8080', 'http://localhost:8080', 'https://evil.example', 'https://dash.example.com.evil.example']) {
+      const result = check(origin);
+      assert.deepEqual([result.ok, result.status, result.error], [false, 403, 'forbidden'], origin);
+      assert.equal(result.message, expected, origin);
+      assert.equal(result.message.includes(new URL(origin).host), false, 'the request origin is never echoed');
+    }
+    // Not a well-formed http(s) origin: the generic message.
+    for (const origin of ['null', '', 'not an origin', 'ftp://dash.example.com', 'https://evil.example/path', 'javascript:alert(1)']) {
+      const result = check(origin);
+      assert.equal(result.status, 403, JSON.stringify(origin));
+      assert.equal(result.message, 'Cross-origin requests are not allowed.', JSON.stringify(origin));
+    }
+    // The matching origin still passes, and Sec-Fetch-Site keeps its own message.
+    assert.deepEqual(check('https://dash.example.com'), { ok: true });
+    const site = auth.checkWriteRequest({ method: 'PATCH', headers: { ...json, origin: config.origin, 'sec-fetch-site': 'cross-site' } }, config);
+    assert.equal(site.message, 'Cross-site requests are not allowed.');
+  });
 });
 
 // ── Discord client ───────────────────────────────────────────────────────────
@@ -440,12 +479,54 @@ describe('discordApi', () => {
     await api.getUserGuilds(USER_ID, TOKEN);
     t += 61_000;
     reply = [429, { retry_after: 2.5 }];
-    assert.deepEqual((await api.getUserGuilds(USER_ID, TOKEN)).map((g) => g.id), [G.zeta], 'stale list on 429');
+    assert.deepEqual((await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true })).map((g) => g.id), [G.zeta], 'stale list on 429');
     await assert.rejects(api.getUserGuilds(OWNER_ID, TOKEN), (err) => err instanceof DiscordApiError && err.code === 'rate_limited' && err.retryAfter === 3);
     reply = [401, { message: '401: Unauthorized' }];
     await assert.rejects(api.getUserGuilds(USER_ID, TOKEN), (err) => err.code === 'unauthenticated');
     const down = discordApi.createDiscordApi({ config, fetchImpl: async () => { throw new TypeError('fetch failed'); } });
     await assert.rejects(down.getUserGuilds(USER_ID, TOKEN), (err) => err.code === 'unavailable');
+  });
+
+  test('getUserGuilds serves an old list only when the caller allows it, and never past 5 minutes', async () => {
+    let t = 0;
+    let reply = [200, [{ id: G.zeta, name: 'Z', owner: true, permissions: '0' }]];
+    const { impl, calls } = fakeFetch(async () => reply);
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    await api.getUserGuilds(USER_ID, TOKEN);
+    t += 61_000; // past the 60 s TTL, within the 5 minute stale window
+    const failures = [[429, { retry_after: 2.5 }, 'rate_limited'], [503, {}, 'unavailable']];
+    for (const [status, body, code] of failures) {
+      reply = [status, body];
+      for (const opts of [undefined, {}, { allowStale: false }]) {
+        await assert.rejects(api.getUserGuilds(USER_ID, TOKEN, opts), (err) => err instanceof DiscordApiError && err.code === code,
+          `${status} ${JSON.stringify(opts)}: authoritative callers get the error`);
+      }
+      assert.deepEqual((await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true })).map((g) => g.id), [G.zeta], `${status}: stale list for display`);
+    }
+    await assert.rejects(api.getUserGuilds(USER_ID, TOKEN), (err) => err.code === 'unavailable' && err.status === 503);
+
+    // Callers sharing one in-flight request each decide for themselves.
+    reply = [429, { retry_after: 2.5 }];
+    const before = calls.length;
+    const [strict, lenient] = await Promise.allSettled([
+      api.getUserGuilds(USER_ID, TOKEN), api.getUserGuilds(USER_ID, TOKEN, { allowStale: true }),
+    ]);
+    assert.equal(calls.length, before + 1, 'one request');
+    assert.equal(strict.status, 'rejected');
+    assert.equal(strict.reason.code, 'rate_limited');
+    assert.equal(strict.reason.retryAfter, 3);
+    assert.equal(lenient.status, 'fulfilled');
+
+    t += 5 * 60_000; // the list is now older than 5 minutes
+    await assert.rejects(api.getUserGuilds(USER_ID, TOKEN, { allowStale: true }), (err) => err.code === 'rate_limited');
+
+    // A fresh list is served from the cache either way, without a request.
+    reply = [200, [{ id: G.zeta, name: 'Z', owner: true, permissions: '0' }]];
+    await api.getUserGuilds(USER_ID, TOKEN);
+    const cached = calls.length;
+    await api.getUserGuilds(USER_ID, TOKEN);
+    await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true });
+    assert.equal(calls.length, cached);
   });
 
   test('isBotInGuild pages through the bot guild list and double-checks misses', async () => {
@@ -475,6 +556,73 @@ describe('discordApi', () => {
     assert.equal(calls.length, before);
     assert.equal(await api.isBotInGuild('not-a-snowflake'), false);
   });
+
+  /** A fake fetch for the bot's guild list: page 1 is full, page 2 holds G.zeta; `limit(url)` may answer a 429 first. */
+  function pagedBotGuilds(limit) {
+    const page1 = Array.from({ length: 200 }, (_, i) => ({ id: String(300000000000000000n + BigInt(i)) }));
+    return fakeFetch(async (url) => {
+      const after = new URL(url).searchParams.get('after');
+      const limited = limit(after);
+      if (limited) return limited;
+      return [200, after === '0' ? page1 : [{ id: G.zeta }]];
+    });
+  }
+
+  test('the bot guild load waits out a short 429 mid-pagination and retries the same page', async () => {
+    let limits = 1;
+    const { impl, calls } = pagedBotGuilds((after) => (after !== '0' && limits-- > 0 ? [429, { retry_after: 0.01 }] : null));
+    const sleeps = [];
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, sleep: async (ms) => { sleeps.push(ms); } });
+    const ids = await api.getBotGuildIds();
+    assert.equal(ids.size, 201);
+    assert.equal(ids.has(G.zeta), true);
+    assert.equal(calls.length, 3, 'page 1, the limited page 2, page 2 again');
+    assert.equal(calls[2].url, calls[1].url, 'the same page is retried');
+    assert.deepEqual(sleeps, [1000], 'retry_after is rounded up to whole seconds');
+    assert.equal(await api.isBotInGuild(G.zeta, { verify: false }), true);
+    assert.equal(calls.length, 3, 'cached afterwards');
+  });
+
+  test('the bot guild load fails on a long 429 and after three retries', async () => {
+    // A wait longer than 10 s is not worth holding the request for.
+    const long = pagedBotGuilds((after) => (after !== '0' ? [429, { retry_after: 30 }] : null));
+    const longSleeps = [];
+    const api = discordApi.createDiscordApi({ config, fetchImpl: long.impl, sleep: async (ms) => { longSleeps.push(ms); } });
+    await assert.rejects(api.getBotGuildIds(), (err) => err instanceof DiscordApiError && err.code === 'rate_limited' && err.retryAfter === 30);
+    assert.equal(long.calls.length, 2);
+    assert.deepEqual(longSleeps, []);
+
+    // Exactly 10 s is still waited out; the retries are capped at 3 per refresh, counted across pages.
+    const stuck = pagedBotGuilds((after) => (after !== '0' ? [429, { retry_after: 10 }] : null));
+    const stuckSleeps = [];
+    const stuckApi = discordApi.createDiscordApi({ config, fetchImpl: stuck.impl, sleep: async (ms) => { stuckSleeps.push(ms); } });
+    await assert.rejects(stuckApi.getBotGuildIds(), (err) => err.code === 'rate_limited');
+    assert.deepEqual(stuckSleeps, [10_000, 10_000, 10_000]);
+    assert.equal(stuck.calls.length, 1 + 4, 'page 1, then the limited page 2 once and three retries');
+
+    // Other failures are not retried.
+    const down = pagedBotGuilds((after) => (after !== '0' ? [503, {}] : null));
+    const downSleeps = [];
+    const downApi = discordApi.createDiscordApi({ config, fetchImpl: down.impl, sleep: async (ms) => { downSleeps.push(ms); } });
+    await assert.rejects(downApi.getBotGuildIds(), (err) => err.code === 'unavailable');
+    assert.deepEqual(downSleeps, []);
+    assert.equal(down.calls.length, 2);
+  });
+
+  test('the default pause between bot guild page retries is a real, unref\'d wait', async () => {
+    let limits = 1;
+    const { impl, calls } = pagedBotGuilds((after) => (after !== '0' && limits-- > 0 ? [429, { retry_after: 1 }] : null));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl });
+    const started = Date.now();
+    const keepAlive = setTimeout(() => {}, 5_000); // the pause itself is unref'd; in the server the listener keeps the loop alive
+    try {
+      assert.equal((await api.getBotGuildIds()).size, 201);
+    } finally {
+      clearTimeout(keepAlive);
+    }
+    assert.ok(Date.now() - started >= 900, 'waited about retry_after seconds');
+    assert.equal(calls.length, 3);
+  });
 });
 
 // ── HTTP API ─────────────────────────────────────────────────────────────────
@@ -489,13 +637,21 @@ const USER_GUILDS = Object.freeze([
 const BOT_GUILDS = new Set([G.zeta, G.beta, G.plain, G.broken]);
 
 function createFakes() {
-  const calls = { writeToggles: [], exchangeCode: [], revokeToken: [], forgetUser: [] };
+  const calls = { writeToggles: [], exchangeCode: [], revokeToken: [], forgetUser: [], getUserGuilds: [] };
   let row = {
     guildId: G.zeta, modEnabled: true, xpEnabled: false, voiceXpEnabled: true, levelingEnabled: true,
     captchaLockdownPrior: true, timezone: 'Europe/Berlin', customPrefix: '', embedColor: 0x5865f2,
   };
   const discord = {
-    async getUserGuilds(uid, token) {
+    async getUserGuilds(uid, token, opts = {}) {
+      calls.getUserGuilds.push({ token, allowStale: opts?.allowStale === true });
+      // Stands in for a Discord 429 or outage with an older list on hand: only a caller that allows it gets the list.
+      if (token === 'stale-limited-token' || token === 'stale-down-token') {
+        if (opts?.allowStale === true) return USER_GUILDS;
+        throw token === 'stale-limited-token'
+          ? new DiscordApiError('Discord returned HTTP 429', { status: 429, code: 'rate_limited', retryAfter: 4 })
+          : new DiscordApiError('Discord request failed', { code: 'unavailable' });
+      }
       if (token === 'expired-token') throw new DiscordApiError('Discord returned HTTP 401', { status: 401, code: 'unauthenticated' });
       if (token === 'limited-token') throw new DiscordApiError('Discord returned HTTP 429', { status: 429, code: 'rate_limited', retryAfter: 7 });
       if (token === 'down-token') throw new DiscordApiError('Discord request failed', { code: 'unavailable' });
@@ -671,6 +827,34 @@ describe('HTTP server', () => {
     assert.equal(down.json.error, 'discord_unavailable');
   });
 
+  test('only the read-only server list may use an old guild list; settings GET and PATCH never do', async () => {
+    const uid = '444444444444444444';
+    const writes = fakes.calls.writeToggles.length;
+    for (const [accessToken, status, error] of [['stale-limited-token', 429, 'rate_limited'], ['stale-down-token', 502, 'discord_unavailable']]) {
+      const cookie = sessionCookie({ uid, accessToken });
+      const list = await authed('/api/guilds', { cookie });
+      assert.equal(list.status, 200, `${accessToken}: the listing keeps the stale fallback`);
+      assert.ok(list.json.guilds.some((g) => g.id === G.zeta));
+
+      const read = await authed(`/api/guilds/${G.zeta}/settings`, { cookie });
+      assert.equal(read.status, status, `${accessToken}: GET settings`);
+      assert.equal(read.json.error, error);
+      const write = await patch(G.zeta, { changes: { modEnabled: false } }, { cookie });
+      assert.equal(write.status, status, `${accessToken}: PATCH settings`);
+      assert.equal(write.json.error, error);
+      if (status === 429) {
+        for (const r of [read, write]) {
+          assert.equal(r.json.retryAfter, 4);
+          assert.equal(r.headers['retry-after'], '4');
+        }
+      }
+    }
+    assert.equal(fakes.calls.writeToggles.length, writes, 'nothing was written');
+    const asked = (token) => fakes.calls.getUserGuilds.filter((c) => c.token === token).map((c) => c.allowStale);
+    assert.deepEqual(asked('stale-limited-token'), [true, false, false]);
+    assert.deepEqual(asked('stale-down-token'), [true, false, false]);
+  });
+
   test('GET settings: 403 without permission, 404 without the bot, 200 shape', async () => {
     const plain = await authed(`/api/guilds/${G.plain}/settings`);
     assert.equal(plain.status, 403);
@@ -707,7 +891,14 @@ describe('HTTP server', () => {
     const body = { changes: { modEnabled: false } };
     const noHeader = await patch(G.zeta, body, { 'x-dashboard': '' });
     assert.equal(noHeader.status, 403);
-    assert.equal((await patch(G.zeta, body, { origin: 'https://evil.example' })).status, 403);
+    const wrongOrigin = await patch(G.zeta, body, { origin: 'https://evil.example' });
+    assert.equal(wrongOrigin.status, 403);
+    assert.equal(wrongOrigin.json.error, 'forbidden');
+    assert.equal(wrongOrigin.json.message, 'This dashboard is configured for http://localhost:8080. Open it there, or set DASHBOARD_URL to the address you use.');
+    assert.equal(wrongOrigin.text.includes('evil.example'), false, 'the request origin is not echoed');
+    const nullOrigin = await patch(G.zeta, body, { origin: 'null' });
+    assert.equal(nullOrigin.status, 403);
+    assert.equal(nullOrigin.json.message, 'Cross-origin requests are not allowed.');
     assert.equal((await patch(G.zeta, body, { 'content-type': 'text/plain' })).status, 415);
     assert.equal((await patch(G.zeta, body, { 'sec-fetch-site': 'cross-site' })).status, 403);
     assert.equal((await call(port, 'PATCH', `/api/guilds/${G.zeta}/settings`, { headers: { ...WRITE_HEADERS }, body: JSON.stringify(body) })).status, 401);
@@ -841,6 +1032,8 @@ describe('HTTP server', () => {
     assert.equal((await get('/auth/logout')).status, 405);
     const r = await call(port, 'POST', '/auth/logout', { headers: { cookie: sessionCookie(), ...WRITE_HEADERS }, body: '{}' });
     assert.equal(r.status, 204);
+    assert.equal(r.headers['content-length'], undefined, 'a 204 carries no Content-Length');
+    assert.equal(r.text, '');
     assert.match(r.headers['set-cookie'][0], /^dash_session=; .*Max-Age=0/);
     await new Promise((res) => setImmediate(res));
     assert.deepEqual(fakes.calls.revokeToken, [TOKEN]);
@@ -877,6 +1070,8 @@ describe('HTTP server over https', () => {
       body: JSON.stringify({ changes: { modEnabled: true } }),
     });
     assert.equal(r.status, 403, 'the origin must be the https DASHBOARD_URL');
+    assert.match(r.json.message, /configured for https:\/\/dash\.example\.com\. Open it there, or set DASHBOARD_URL/);
+    assert.equal(r.text.includes('localhost'), false, 'the request origin is not echoed');
   });
 });
 

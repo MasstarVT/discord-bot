@@ -143,9 +143,10 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   function send(ctx, status, body, headers = {}) {
     const out = { ...baseHeaders, ...headers };
     if (ctx.cookies.length > 0) out['Set-Cookie'] = ctx.cookies;
-    out['Content-Length'] = body === undefined ? 0 : Buffer.byteLength(body);
+    const bodiless = status === 204 || status === 304; // no body, so no Content-Length either
+    if (!bodiless) out['Content-Length'] = body === undefined ? 0 : Buffer.byteLength(body);
     ctx.res.writeHead(status, out);
-    ctx.res.end(ctx.req.method === 'HEAD' ? undefined : body);
+    ctx.res.end(bodiless || ctx.req.method === 'HEAD' ? undefined : body);
   }
 
   const json = (ctx, status, payload, headers = {}) => send(ctx, status, JSON.stringify(payload), {
@@ -197,11 +198,14 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     return fail(ctx, 502, 'discord_unavailable', 'Discord could not be reached. Try again in a moment.');
   }
 
-  /** The user's OAuth guild list; on a Discord failure answers and returns null. */
-  async function userGuilds(ctx, session) {
+  /**
+   * The user's OAuth guild list; on a Discord failure answers and returns null. `allowStale` lets a list up to
+   * 5 minutes old stand in during a Discord 429 or outage: for display only, never for an access decision.
+   */
+  async function userGuilds(ctx, session, { allowStale = false } = {}) {
     let guilds;
     try {
-      guilds = await discord.getUserGuilds(session.uid, session.accessToken);
+      guilds = await discord.getUserGuilds(session.uid, session.accessToken, { allowStale });
     } catch (err) {
       discordFailure(ctx, err, true);
       return null;
@@ -315,7 +319,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (!allow(ctx, ['GET'])) return;
     const session = requireSession(ctx);
     if (!session) return;
-    const guilds = await userGuilds(ctx, session);
+    const guilds = await userGuilds(ctx, session, { allowStale: true });
     if (!guilds) return;
     const manageable = guilds.filter((g) => canManageGuild(g, session.uid, config.botOwnerId));
     let present;
