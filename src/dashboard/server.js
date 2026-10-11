@@ -15,8 +15,8 @@ import {
 } from './auth.js';
 import { buildCatalog } from './catalog.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
-import { FieldError, checkRefs, collectStoredRefs } from './schema.js';
-import { collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
+import { FieldError, checkRefs, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
+import { collectSettingsRefKeys, collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
 import { COLLECTIONS, RECORD_ID_RE, validateRecordInput } from './collections/index.js';
 import { RecordError } from './collections/errors.js';
 
@@ -421,9 +421,11 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   /**
    * Checks the channel and role ids of a write against the server: they must exist with the right kind (ids the stored
    * value already held may stay), and a role the bot will give must be one it can give and one the user could give
-   * (checkAssignableRole). Answers and returns false on a problem.
+   * (checkAssignableRole). Only a role already stored in the same field skips the giving checks: moved into a field
+   * that hands it out (e.g. from the mod roles to the autoroles), it is checked like a new one. Answers and returns
+   * false on a problem.
    * @param {import('./schema.js').Refs} refs
-   * @param {{ channels: Set<string>, roles: Set<string> }} keep
+   * @param {{ channels: Set<string>, roles: Set<string>, keys: Set<string> }} keep stored ids, and their refKeys
    */
   async function verifyRefs(ctx, session, guildId, refs, keep) {
     if (refs.channels.length === 0 && refs.roles.length === 0) return true;
@@ -445,7 +447,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       return false;
     }
 
-    const given = refs.roles.filter((r) => r.assignable && !keep.roles.has(r.id) && map.roles.has(r.id));
+    const given = refs.roles.filter((r) => r.assignable && !keep.keys.has(refKey(r.path, r.id)) && map.roles.has(r.id));
     if (given.length === 0) return true;
     const problem = (ref, message) => {
       fail(ctx, 400, 'invalid_request', message, { path: ref.path });
@@ -453,7 +455,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     };
     if (!res.bot.manageRoles) return problem(given[0], 'The bot needs the Manage Roles permission to give roles.');
     for (const ref of given) {
-      if (map.roles.get(ref.id).dangerous) {
+      // Level rewards and achievement role removals may use such roles, as /levelconfig and /achievement-config allow.
+      if (map.roles.get(ref.id).dangerous && !ref.allowDangerous) {
         return problem(ref, 'That role has moderator or admin permissions (such as Administrator, Manage Server, Ban or Kick Members). '
           + 'The bot does not hand those out; pick a role without them.');
       }
@@ -529,7 +532,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (valid.refs.channels.length > 0 || valid.refs.roles.length > 0) {
       const loaded = await loadRow();
       if (!loaded) return;
-      if (!await verifyRefs(ctx, session, guildId, valid.refs, collectSettingsRefs(loaded.row))) return;
+      const keep = { ...collectSettingsRefs(loaded.row), keys: collectSettingsRefKeys(loaded.row) };
+      if (!await verifyRefs(ctx, session, guildId, valid.refs, keep)) return;
     }
     let result;
     try {
@@ -589,10 +593,13 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       : fail(ctx, 503, 'unavailable', 'The list could not be loaded. Try again in a moment.');
   }
 
-  /** Every channel and role id a stored record holds (checkRefs' keep sets). */
+  /** Every channel and role id a stored record holds (checkRefs' keep sets), and which field holds it (keys). */
   function recordRefs(collection, item) {
-    const out = { channels: new Set(), roles: new Set() };
-    for (const desc of [...collection.fields, ...(collection.readOnly ?? [])]) collectStoredRefs(desc, item?.[desc.field], out);
+    const out = { channels: new Set(), roles: new Set(), keys: new Set() };
+    for (const desc of [...collection.fields, ...(collection.readOnly ?? [])]) {
+      collectStoredRefs(desc, item?.[desc.field], out);
+      storedRefKeys(desc, item?.[desc.field], desc.field, out.keys);
+    }
     return out;
   }
 
@@ -684,7 +691,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       }
       const mode = actionId !== undefined ? 'action' : itemId !== undefined ? 'update' : 'create';
       const valid = registry.validateRecordInput(key, data, { mode, actionId, current });
-      const keep = current ? recordRefs(collection, current) : { channels: new Set(), roles: new Set() };
+      const keep = current ? recordRefs(collection, current) : { channels: new Set(), roles: new Set(), keys: new Set() };
       if (!await verifyRefs(ctx, session, guildId, valid.refs, keep)) return;
 
       if (mode === 'create') {

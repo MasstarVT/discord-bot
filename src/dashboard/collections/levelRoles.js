@@ -40,6 +40,8 @@ const fields = Object.freeze([
     label: 'Reward role',
     description: "The role the bot gives. It must be below the bot's highest role, and each role can be the reward for one level only.",
     assignable: true,
+    // /levelconfig role add allows a role with moderator permissions as a reward (allowDangerous).
+    allowDangerous: true,
     default: null,
     required: true,
   }),

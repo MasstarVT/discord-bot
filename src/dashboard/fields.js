@@ -18,7 +18,7 @@ import { normalizeTemplate } from '../utils/customEmbed.js';
 import { renderPlaceholdersDetailed } from '../utils/placeholderParser.js';
 import { MAX_PATTERN_LENGTH, compileSafeRegex, safeRegexTest, validateRegex } from '../utils/safeRegex.js';
 import {
-  FieldError, collectStoredRefs, emptyRefs, isPlainObject, isSnowflake, readValue, validateValue,
+  FieldError, collectStoredRefs, emptyRefs, isPlainObject, isSnowflake, readValue, storedRefKeys, validateValue,
 } from './schema.js';
 
 /** Most fields one PATCH may change (every field once is far below the body limit). */
@@ -1309,6 +1309,18 @@ export function readSettingsValues(row) {
 export function collectSettingsRefs(row) {
   const out = { channels: new Set(), roles: new Set() };
   for (const desc of Object.values(SETTINGS_FIELDS)) collectStoredRefs(desc, storedOf(desc, row), out);
+  return out;
+}
+
+/**
+ * Which stored id sits in which setting (refKey per field path): a role may keep failing a giving check only where
+ * it was already stored, never after a move into a field that hands it out.
+ * @param {object|null} row
+ * @returns {Set<string>}
+ */
+export function collectSettingsRefKeys(row) {
+  const out = new Set();
+  for (const desc of Object.values(SETTINGS_FIELDS)) storedRefKeys(desc, storedOf(desc, row), desc.field, out);
   return out;
 }
 

@@ -2203,6 +2203,88 @@ describe('HTTP records API', () => {
   });
 });
 
+describe('HTTP role checks across fields', () => {
+  const { config } = loadDashboardConfig(baseEnv());
+  const fakes = createFakes();
+  const MEMBER = '800000000000000021'; // not the owner; highest role RL.mid (position 3)
+  // A record with a role list the bot never gives, a role it gives, and a reward role that may carry moderator rights.
+  const PERKS = Object.freeze({
+    key: 'perks', module: 'embeds', label: 'Perks', singular: 'perk', description: '', limit: 5, titleField: 'name',
+    fields: [
+      { field: 'name', type: 'text', label: 'Name', maxLength: 32, minLength: 1, required: true },
+      { field: 'pingRoleIds', type: 'roles', label: 'Ping roles', maxItems: 5, default: [] },
+      { field: 'roleId', type: 'role', label: 'Role', assignable: true, nullable: true, default: null },
+      { field: 'rewardRoleId', type: 'role', label: 'Reward', assignable: true, allowDangerous: true, nullable: true, default: null },
+    ],
+    createOnly: [], readOnly: [], actions: [],
+  });
+  const items = new Map([['p1', { id: 'p1', name: 'One', pingRoleIds: [RL.admin, RL.mid], roleId: null, rewardRoleId: null }]]);
+  const records = {
+    async get(guildId, key, id) { return items.get(id) ?? null; },
+    async update(guildId, key, id, data) {
+      const item = { ...items.get(id), ...data };
+      items.set(id, item);
+      return item;
+    },
+  };
+  const validateRecordInput = (key, data) => {
+    const refs = schema.emptyRefs();
+    const out = {};
+    for (const f of PERKS.fields) if (Object.hasOwn(data, f.field)) out[f.field] = schema.validateValue(f, data[f.field], f.field, refs);
+    return { data: out, refs };
+  };
+  let server;
+  let port;
+  before(async () => {
+    server = createDashboardServer({
+      config, logger: recordingLogger(),
+      deps: { discord: fakes.discord, settings: fakes.settings, records, collections: { COLLECTIONS: { perks: PERKS }, validateRecordInput } },
+    });
+    port = await listen(server);
+  });
+  after(() => close(server));
+  const send = (method, path, body, uid = MEMBER) => call(port, method, path, {
+    headers: { cookie: sessionCookie({ uid }), ...WRITE_HEADERS }, body: JSON.stringify(body),
+  });
+  const settingsPatch = (changes, uid) => send('PATCH', `/api/guilds/${G.zeta}/settings`, { changes }, uid);
+
+  test('a role stored in one setting is checked again when it moves into a setting that gives it', async () => {
+    assert.equal((await settingsPatch({ modRoleIds: [RL.admin, RL.mid] }, MEMBER)).status, 200, 'mod roles are never given');
+    const dangerous = await settingsPatch({ autoroleIds: [RL.admin] }, MEMBER);
+    assert.equal(dangerous.status, 400);
+    assert.equal(dangerous.json.path, 'autoroleIds.0');
+    assert.match(dangerous.json.message, /moderator or admin permissions/);
+    const above = await settingsPatch({ autoroleIds: [RL.mid] }, MEMBER);
+    assert.equal(above.status, 400);
+    assert.match(above.json.message, /not below your highest role/);
+
+    // Already in the same field: it may stay while another role is added.
+    assert.equal((await settingsPatch({ autoroleIds: [RL.mid] }, GUILD_OWNER)).status, 200);
+    const kept = await settingsPatch({ autoroleIds: [RL.mid, RL.low] }, MEMBER);
+    assert.equal(kept.status, 200, kept.json?.message);
+    const moved = await settingsPatch({ muteRoleId: RL.mid }, MEMBER);
+    assert.equal(moved.status, 400, 'moved from the autoroles to the mute role: checked again');
+  });
+
+  test('a role stored in one field of a record is checked again in a field that gives it; allowDangerous fields accept it', async () => {
+    const path = `/api/guilds/${G.zeta}/records/perks/p1`;
+    const given = await send('PATCH', path, { data: { roleId: RL.admin } });
+    assert.equal(given.status, 400);
+    assert.equal(given.json.path, 'roleId');
+    assert.match(given.json.message, /moderator or admin permissions/);
+    const hierarchy = await send('PATCH', path, { data: { roleId: RL.mid } });
+    assert.equal(hierarchy.status, 400);
+    assert.match(hierarchy.json.message, /not below your highest role/);
+    const reward = await send('PATCH', path, { data: { rewardRoleId: RL.admin } });
+    assert.equal(reward.status, 200, reward.json?.message);
+    assert.equal(items.get('p1').rewardRoleId, RL.admin);
+  });
+
+  test('an empty required text says so', () => {
+    assert.throws(() => schema.validateValue({ field: 'name', type: 'text', label: 'Name', maxLength: 50 }, null), /"Name" cannot be empty\./);
+  });
+});
+
 describe('HTTP server over https', () => {
   let server;
   let port;

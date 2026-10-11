@@ -44,6 +44,8 @@ const tierFields = Object.freeze([
     label: 'Take this role away',
     description: "Reward: a role the bot removes. It must be below the bot's highest role.",
     assignable: true,
+    // /achievement-config allows any role below the bot to be taken away (allowDangerous).
+    allowDangerous: true,
     nullable: true,
     default: null,
   }),

@@ -23,8 +23,9 @@ import { isHttpUrl, normalizeTemplate, validateTemplate } from '../utils/customE
  *   timezone                        an IANA zone name or 'UTC'
  *   channel  channelTypes           a channel id of this server whose kind is listed (CHANNEL_KINDS keys)
  *   channels channelTypes maxItems  unique channel ids
- *   role     assignable? allowEveryone?
- *                                   a role id of this server; assignable: the bot must be able to give it
+ *   role     assignable? allowEveryone? allowDangerous?
+ *                                   a role id of this server; assignable: the bot must be able to give it (and, unless
+ *                                   allowDangerous, the role carries no moderator/admin permissions)
  *   roles    assignable? allowEveryone? maxItems
  *   template requireContent?        a MessageTemplate { content, embed, buttons } (src/utils/customEmbed.js);
  *                                   requireContent (default true): an empty message is refused
@@ -96,7 +97,7 @@ const join = (path, key) => (path ? `${path}.${key}` : String(key));
 /**
  * Ids a value refers to, collected while validating, so they can be checked against the server in one go.
  * @typedef {{ channels: { id: string, path: string, kinds: string[] }[],
- *             roles: { id: string, path: string, assignable: boolean, allowEveryone: boolean }[] }} Refs
+ *             roles: { id: string, path: string, assignable: boolean, allowEveryone: boolean, allowDangerous: boolean }[] }} Refs
  */
 export const emptyRefs = () => ({ channels: [], roles: [] });
 
@@ -107,7 +108,9 @@ function checkChannel(desc, id, path, refs) {
 
 function checkRole(desc, id, path, refs) {
   if (!isSnowflake(id)) throw new FieldError(path, `${labelOf(desc, path)} must be a role of this server.`);
-  refs.roles.push({ id, path, assignable: desc.assignable === true, allowEveryone: desc.allowEveryone === true });
+  refs.roles.push({
+    id, path, assignable: desc.assignable === true, allowEveryone: desc.allowEveryone === true, allowDangerous: desc.allowDangerous === true,
+  });
 }
 
 function checkList(desc, value, path) {
@@ -163,6 +166,7 @@ const toHex = (n) => `#${n.toString(16).padStart(6, '0').toUpperCase()}`;
 export function validateValue(desc, value, path = desc.field ?? '', refs = emptyRefs()) {
   if (value === null && desc.nullable) return null;
   const name = labelOf(desc, path);
+  if (value === null && desc.type === 'text') throw new FieldError(path, `${name} cannot be empty.`);
   switch (desc.type) {
     case 'boolean':
       if (typeof value !== 'boolean') throw new FieldError(path, `${name} must be on or off.`);
@@ -427,6 +431,53 @@ export function collectStoredRefs(desc, raw, out = { channels: new Set(), roles:
       case 'object': if (isPlainObject(raw)) for (const f of desc.fields) collectStoredRefs(f, raw[f.field], out); break;
       case 'objectList':
         if (Array.isArray(raw)) for (const item of raw) if (isPlainObject(item)) for (const f of desc.itemFields) collectStoredRefs(f, item[f.field], out);
+        break;
+      default: break;
+    }
+  } catch { /* a malformed stored value simply keeps nothing */ }
+  return out;
+}
+
+/**
+ * The key of an id at a place in a value, with list indexes dropped: refKey('tiers.2.roleAdd', id) equals
+ * refKey('tiers.0.roleAdd', id) but not refKey('tiers.0.roleRemove', id).
+ * @param {string} path
+ * @param {string} id
+ * @returns {string}
+ */
+export const refKey = (path, id) => `${String(path).split('.').filter((seg) => !/^\d+$/.test(seg)).join('.')}|${id}`;
+
+/**
+ * The refKeys of every channel and role id inside a stored value: which id sits in which field. A role the stored value
+ * already held in the same field may stay when its checks would now fail; the same role moved into another field is
+ * checked like a new one. Never throws.
+ * @param {object} desc
+ * @param {unknown} raw
+ * @param {string} [path]
+ * @param {Set<string>} [out]
+ * @returns {Set<string>}
+ */
+export function storedRefKeys(desc, raw, path = desc.field, out = new Set()) {
+  try {
+    if (raw === null || raw === undefined) return out;
+    switch (desc.type) {
+      case 'channel':
+      case 'role':
+        if (isSnowflake(raw)) out.add(refKey(path, raw));
+        break;
+      case 'channels':
+      case 'roles':
+        if (Array.isArray(raw)) for (const id of raw) if (isSnowflake(id)) out.add(refKey(path, id));
+        break;
+      case 'object':
+        if (isPlainObject(raw)) for (const f of desc.fields) storedRefKeys(f, raw[f.field], `${path}.${f.field}`, out);
+        break;
+      case 'objectList':
+        if (Array.isArray(raw)) {
+          for (const item of raw) {
+            if (isPlainObject(item)) for (const f of desc.itemFields) storedRefKeys(f, item[f.field], `${path}.${f.field}`, out);
+          }
+        }
         break;
       default: break;
     }
