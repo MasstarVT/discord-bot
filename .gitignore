@@ -36,3 +36,4 @@ Thumbs.db
 
 # Runtime state (restart brake)
 state/
+graphify-out/
