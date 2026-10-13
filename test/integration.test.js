@@ -429,12 +429,12 @@ describe('A commands', () => {
     expectNone(problems, 'bad subcommandPermissions');
   });
 
-  test('A8 ADMIN commands restrict default member permissions; optional exports have the right type', () => {
+  test('A8 MODERATOR and ADMIN commands restrict default member permissions; optional exports have the right type', () => {
     const problems = OK_COMMANDS.flatMap((c) => {
       const out = [];
       const dmp = c.payload.default_member_permissions;
-      if ((c.ns.permissionLevel ?? PERMISSION_LEVELS.MEMBER) === PERMISSION_LEVELS.ADMIN && !(typeof dmp === 'string' && dmp.length > 0)) {
-        out.push(`/${c.payload.name}: ADMIN command without default_member_permissions (got ${JSON.stringify(dmp)})`);
+      if ((c.ns.permissionLevel ?? PERMISSION_LEVELS.MEMBER) >= PERMISSION_LEVELS.MODERATOR && !(typeof dmp === 'string' && dmp.length > 0)) {
+        out.push(`/${c.payload.name}: level ${c.ns.permissionLevel} command without default_member_permissions (got ${JSON.stringify(dmp)})`);
       }
       if (c.ns.allowInDMs !== undefined && typeof c.ns.allowInDMs !== 'boolean') out.push(`/${c.payload.name}: allowInDMs is not a boolean`);
       if (c.ns.autocomplete !== undefined && typeof c.ns.autocomplete !== 'function') out.push(`/${c.payload.name}: autocomplete is not a function`);
