@@ -374,7 +374,7 @@ test('/birthday-config payload and exports', () => {
   assert.deepEqual(json.options.map((o) => o.name),
     ['channel', 'role', 'hour', 'message', 'message-age', 'require-year', 'set-user', 'unset-user', 'show', 'test']);
   assert.equal(json.default_member_permissions, String(P.ManageGuild));
-  assert.ok(charCount(json) <= 1200, `${charCount(json)} chars`);
+  assert.ok(charCount(json) <= 1300, `${charCount(json)} chars`);
   assert.equal(configCmd.module, 'birthdays');
   assert.equal(configCmd.gated, false);
   assert.equal(configCmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -1306,6 +1306,8 @@ function mkInteraction(guild, { sub, user, member, options = {}, channel = null 
     inCachedGuild: () => true,
     options: {
       getSubcommand: () => sub,
+      getSubcommandGroup: () => null,
+      get: (n) => options[n] ?? null,
       getString: (n) => options[n] ?? null,
       getUser: (n) => options[n] ?? null,
       getMember: (n) => options[`${n}:member`] ?? null,

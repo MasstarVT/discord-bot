@@ -7,6 +7,7 @@ import {
 } from '../../services/welcomeService.js';
 import { getSettings } from '../../services/settingsService.js';
 import { errorEmbed, successEmbed } from '../../utils/embedBuilder.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'welcome';
@@ -24,7 +25,8 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('enable').setDescription('Post a goodbye message when members leave.'))
   .addSubcommand((s) => s.setName('disable').setDescription('Stop goodbye messages.'))
   .addSubcommand((s) => s.setName('channel').setDescription('Set the goodbye channel.')
-    .addChannelOption((o) => o.setName('channel').setDescription('Goodbye channel').setRequired(true).addChannelTypes(...TXT)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Goodbye channel').addChannelTypes(...TXT))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('message').setDescription('Set the goodbye text (mentions do not ping).')
     .addStringOption((o) => o.setName('text').setDescription('Text, e.g. **{user.idname}** just left the server').setMaxLength(2000))
     .addBooleanOption((o) => o.setName('reset').setDescription('Use the default text')))
@@ -63,6 +65,8 @@ export async function execute(interaction) {
       logger.warn(`/goodbye could not load settings for ${guildId}: ${err?.message}`);
       return await interaction.editReply({ embeds: [unavailable()] });
     }
+
+    if (!(await resolveNewOptions(interaction, data, { required: ['channel'] }))) return;
 
     if (sub === 'enable') {
       const after = await saveSettings(guildId, { goodbyeEnabled: true });

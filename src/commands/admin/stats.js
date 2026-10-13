@@ -13,6 +13,7 @@ import {
   chunkLines, clampText, formatNumber,
 } from '../../utils/text.js';
 import { discordTimestamp } from '../../utils/time.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 const { STAT_KINDS, KIND_INFO } = stats;
@@ -32,7 +33,8 @@ export const data = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('kind').setDescription('What to count').setRequired(true).addChoices(...KIND_CHOICES))
     .addStringOption((o) => o.setName('template').setDescription('Channel name with {count}, e.g. "Members: {count}"').setMinLength(1).setMaxLength(100))
     .addRoleOption((o) => o.setName('role').setDescription('Role to count (Role members only)'))
-    .addChannelOption((o) => o.setName('category').setDescription('Category for this channel').addChannelTypes(ChannelType.GuildCategory)))
+    .addChannelOption((o) => o.setName('category').setDescription('Category for this channel').addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'category', 'category')))
   .addSubcommand((s) => s.setName('edit').setDescription("Change a counter's name template.")
     .addStringOption((o) => o.setName('channel').setDescription('Counter channel').setRequired(true).setAutocomplete(true).setMaxLength(100))
     .addStringOption((o) => o.setName('template').setDescription('New name with {count}').setRequired(true).setMinLength(1).setMaxLength(100)))
@@ -42,7 +44,8 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('list').setDescription('List counters.'))
   .addSubcommand((s) => s.setName('refresh').setDescription('Update all counters now.'))
   .addSubcommand((s) => s.setName('category').setDescription('Set the default category for new counters.')
-    .addChannelOption((o) => o.setName('category').setDescription('Category (omit to clear)').addChannelTypes(ChannelType.GuildCategory)));
+    .addChannelOption((o) => o.setName('category').setDescription('Category (omit to clear)').addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'category', 'category')));
 
 const MODULE_OFF_NOTE = "\n\n⚠️ The Statistics Channels module is off, so counters don't update. Turn it on with `/module enable stats`.";
 const moduleNote = (settings) => (settings && !isModuleEnabled(settings, 'stats') ? MODULE_OFF_NOTE : '');
@@ -299,6 +302,7 @@ export async function execute(interaction, client) {
   const sub = interaction.options.getSubcommand();
   try {
     await interaction.deferReply();
+    if (!(await resolveNewOptions(interaction, data))) return;
     const settings = await getSettingsSafe(interaction.guildId);
     const run = RUNNERS[sub];
     const embed = run ? await run(interaction, client, settings) : genericError();

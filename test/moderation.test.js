@@ -1245,6 +1245,7 @@ function fakeConfigInteraction(guild, { group = null, sub, opts = {}, member = n
     options: {
       getSubcommandGroup: () => group,
       getSubcommand: () => sub,
+      get,
       getInteger: get, getString: get, getBoolean: get, getRole: get, getChannel: get,
     },
     deferReply: async () => {},

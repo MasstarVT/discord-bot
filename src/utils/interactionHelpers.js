@@ -235,7 +235,7 @@ export function checkChannelUsable(channel, { needs = ['ViewChannel', 'SendMessa
   };
 }
 
-const DANGEROUS_PERMISSIONS = [
+export const DANGEROUS_PERMISSIONS = [
   'Administrator', 'ManageGuild', 'ManageRoles', 'BanMembers', 'KickMembers',
   'ManageChannels', 'ManageWebhooks', 'MentionEveryone', 'ModerateMembers', 'ManageMessages',
 ];

@@ -492,12 +492,12 @@ test('12. command payload', () => {
   assert.deepEqual(json.options.map((o) => o.name), ['create', 'edit', 'delete', 'list']);
   assert.ok(json.options.every((o) => o.type === 1));
   const sub = (n) => json.options.find((o) => o.name === n);
-  assert.equal(sub('create').options.length, 11);
-  assert.equal(sub('edit').options.length, 15);
+  assert.equal(sub('create').options.length, 12);
+  assert.equal(sub('edit').options.length, 16);
   assert.equal(sub('delete').options.length, 1);
   assert.equal(sub('list').options?.length ?? 0, 0);
   assert.deepEqual(sub('create').options.slice(0, 2).map((o) => o.name), ['name', 'channel']);
-  assert.deepEqual(sub('create').options.slice(0, 2).map((o) => o.required), [true, true]);
+  assert.deepEqual(sub('create').options.slice(0, 2).map((o) => !!o.required), [true, false]); // channel: new_channel can create it
   assert.ok(sub('create').options.slice(2).every((o) => !o.required));
   assert.equal(sub('edit').options[0].name, 'name');
   assert.equal(sub('edit').options[0].autocomplete, true);
@@ -511,7 +511,7 @@ test('12. command payload', () => {
   };
   walk(json);
   const chars = (n) => (n.name?.length ?? 0) + (n.description?.length ?? 0) + (n.options ?? []).reduce((s, o) => s + chars(o), 0);
-  assert.ok(chars(json) <= 1700, `${chars(json)} characters`);
+  assert.ok(chars(json) <= 1900, `${chars(json)} characters`);
   assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   assert.deepEqual(json.contexts, [0]);
   assert.equal(cmd.module, 'starboard');
@@ -1275,6 +1275,8 @@ function makeInteraction(world, { sub, strings = {}, ints = {}, bools = {}, chan
     deferred: false, replied: false, ephemeral: null, replies, responded: null,
     options: {
       getSubcommand: () => sub,
+      getSubcommandGroup: () => null,
+      get: (n) => channels[n] ?? null,
       getString: (n) => strings[n] ?? null,
       getInteger: (n) => ints[n] ?? null,
       getBoolean: (n) => bools[n] ?? null,

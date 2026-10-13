@@ -434,9 +434,9 @@ test('15. /voice-hub payload', () => {
   assert.equal(hub.name, 'voice-hub');
   assert.deepEqual(hub.options.map((o) => o.name), ['create', 'edit', 'delete', 'list', 'ignore-role', 'mod-role']);
   const sub = (name) => hub.options.find((o) => o.name === name);
-  assert.equal(sub('create').options.length, 10);
+  assert.equal(sub('create').options.length, 12); // + new_channel, new_category (newTargets)
   assert.ok(sub('create').options.every((o) => !o.required));
-  assert.equal(sub('edit').options.length, 10);
+  assert.equal(sub('edit').options.length, 11);
   assert.deepEqual(sub('edit').options.filter((o) => o.required).map((o) => o.name), ['hub']);
   assert.equal(sub('edit').options[0].name, 'hub');
   assert.deepEqual(sub('delete').options.map((o) => o.name), ['hub', 'delete_channel']);
@@ -444,7 +444,7 @@ test('15. /voice-hub payload', () => {
     assert.deepEqual(sub(g).options.map((o) => o.name), ['add', 'remove']);
     for (const s of sub(g).options) assert.deepEqual(s.options.map((o) => o.name), ['hub', 'role']);
   }
-  assert.ok(charCount(hub) <= 1800, `/voice-hub is ${charCount(hub)} characters`);
+  assert.ok(charCount(hub) <= 2000, `/voice-hub is ${charCount(hub)} characters`);
   assert.equal(hub.default_member_permissions, String(P.ManageGuild));
   assert.deepEqual(hub.contexts, [0]);
   assert.equal(hubCmd.module, 'tempvoice');
@@ -1708,6 +1708,7 @@ function fakeCommand(world, member, { sub, group = null, opts = {} }) {
     options: {
       getSubcommand: () => sub,
       getSubcommandGroup: () => group,
+      get: val,
       getChannel: val, getString: val, getInteger: val, getBoolean: val, getRole: val, getUser: val,
     },
     deferReply: async (o) => { i.deferred = true; i.ephemeral = Boolean(o?.ephemeral); log.deferred = o ?? {}; },

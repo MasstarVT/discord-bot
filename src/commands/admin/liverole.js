@@ -10,6 +10,7 @@ import {
 } from '../../utils/interactionHelpers.js';
 import { joinWithLimit, formatNumber } from '../../utils/text.js';
 import { withTimeout } from '../../utils/async.js';
+import { newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 import {
   LIVEROLE, isStreaming, streamLabel, countLosingHolders,
@@ -25,7 +26,8 @@ export const data = new SlashCommandBuilder()
   .setDescription('Give a role while members stream (MEE6 Twitch Alerts live-streaming role).')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('set').setDescription('Set the role members get while they are live.')
-    .addRoleOption((o) => o.setName('role').setDescription('A dedicated role, e.g. @Live.').setRequired(true)))
+    .addRoleOption((o) => o.setName('role').setDescription('A dedicated role, e.g. @Live.'))
+    .addStringOption((o) => newRoleOption(o)))
   .addSubcommand((s) => s.setName('require').setDescription('Only give the live role to members with a role.')
     .addRoleOption((o) => o.setName('role').setDescription('Required role (leave empty for everyone).')))
   .addSubcommand((s) => s.setName('enable').setDescription('Turn the live role on and re-sync it.'))
@@ -40,11 +42,11 @@ const MSG = {
   SAME_AS_REQUIRED: () => errorEmbed('Invalid Role', "The live role can't also be the required role. Change the requirement with `/liverole require`."),
   REQUIRED_IS_LIVE: () => errorEmbed('Invalid Role', "The required role can't be the live role itself."),
   CANNOT_USE: (reason) => errorEmbed('Cannot Use That Role', `${reason} Pick another role, or fix my role position and permissions.`),
-  NO_ROLE: () => errorEmbed('No Live Role Set', 'Pick the role first with `/liverole set role:@Live`, then run `/liverole enable`.'),
+  NO_ROLE: () => errorEmbed('No Live Role Set', 'Pick the role first with `/liverole set role:@Live` (or create it with `new_role:Live`), then run `/liverole enable`.'),
   ROLE_DELETED: () => errorEmbed('Live Role Missing', 'The live role was deleted. Pick a new one with `/liverole set`.'),
   TOO_MANY: (n, roleId, partial) => errorEmbed(
     'Use a Dedicated Role',
-    `<@&${roleId}> is held by **${formatNumber(n)}** members who are not live${partial}. They would all lose it. Create a new role (for example @Live) and run \`/liverole set\` again.`,
+    `<@&${roleId}> is held by **${formatNumber(n)}** members who are not live${partial}. They would all lose it. Create a dedicated one with \`/liverole set new_role:Live\`.`,
   ),
   SETTINGS_UNAVAILABLE: () => errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.'),
   COULD_NOT_SAVE: () => errorEmbed('Could Not Save', 'The setting could not be saved. Please try again in a moment.'),
@@ -104,6 +106,7 @@ async function runSet(interaction) {
   if (!(await safeDefer(interaction))) return;
   const settings = await loadSettingsOrFinish(interaction);
   if (!settings) return;
+  if (!(await resolveNewOptions(interaction, data, { required: ['role'] }))) return;
   const { guild } = interaction;
   const role = resolveRole(interaction, true);
 

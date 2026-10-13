@@ -722,7 +722,7 @@ test('command payloads', () => {
   const groups = panel.options.filter((o) => o.type === 2);
   assert.deepEqual(groups.map((g) => [g.name, g.options.length]), [['option', 4], ['managers', 2]]);
   assert.equal(panel.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
-  assert.ok(charCount(panel) <= 2900, `/ticket-panel is ${charCount(panel)} characters`);
+  assert.ok(charCount(panel) <= 3400, `/ticket-panel is ${charCount(panel)} characters`);
   assert.equal(panelCmd.module, 'tickets');
   assert.equal(panelCmd.gated, false);
   assert.equal(panelCmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -2480,6 +2480,7 @@ function command(w, member, { group = null, sub, strings = {}, ints = {}, bools 
     channel: here, channelId: here.id, client: w.client,
     options: {
       getSubcommandGroup: () => group, getSubcommand: () => sub,
+      get: (name) => channels[name] ?? roles[name] ?? null,
       getString: get(strings), getInteger: get(ints), getBoolean: get(bools), getChannel: get(channels), getRole: get(roles),
       getUser: get(users), getMember: (n) => members[n] ?? null,
       getFocused: () => focused,

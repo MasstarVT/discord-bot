@@ -12,6 +12,7 @@ import { applyGuildColor, errorEmbed, infoEmbed, successEmbed } from '../../util
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { respondAutocomplete } from '../../utils/interactionHelpers.js';
 import { joinWithLimit } from '../../utils/text.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'welcome';
@@ -30,7 +31,8 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('disable').setDescription('Turn the Welcome & Goodbye module off (settings are kept).'))
   .addSubcommand((s) => s.setName('status').setDescription('Show all welcome, DM, goodbye and autorole settings.'))
   .addSubcommand((s) => s.setName('channel').setDescription('Set the channel for welcome messages.')
-    .addChannelOption((o) => o.setName('channel').setDescription('Welcome channel').setRequired(true).addChannelTypes(...TXT)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Welcome channel').addChannelTypes(...TXT))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('message').setDescription('Set the welcome text; {user} pings the new member.')
     .addStringOption((o) => o.setName('text').setDescription('Text with variables such as {user} and {server}').setMaxLength(2000))
     .addBooleanOption((o) => o.setName('enabled').setDescription('Post the welcome message in the channel'))
@@ -63,7 +65,8 @@ export const data = new SlashCommandBuilder()
       .addBooleanOption((o) => o.setName('enabled').setDescription('Attach the card').setRequired(true))))
   .addSubcommandGroup((g) => g.setName('autorole').setDescription('Roles given to new members (MEE6 welcome role).')
     .addSubcommand((s) => s.setName('add').setDescription('Add a role given to new members.')
-      .addRoleOption((o) => o.setName('role').setDescription('Role to give').setRequired(true))
+      .addRoleOption((o) => o.setName('role').setDescription('Role to give'))
+      .addStringOption((o) => newRoleOption(o))
       .addStringOption((o) => o.setName('delay').setDescription('Delay for all autoroles, e.g. 10m (0 = at once, max 7d)').setMaxLength(32)))
     .addSubcommand((s) => s.setName('remove').setDescription('Remove an autorole, including deleted roles.')
       .addStringOption((o) => o.setName('role').setDescription('Autorole to remove').setRequired(true).setAutocomplete(true)))
@@ -136,6 +139,7 @@ export async function execute(interaction) {
 async function run(interaction, key, s) {
   const { guild, guildId } = interaction;
   const reply = (embed, extra = {}) => interaction.editReply({ embeds: [embed], ...extra });
+  if (!(await resolveNewOptions(interaction, data, { required: ['channel', 'role'] }))) return;
 
   switch (key) {
     case 'enable': {

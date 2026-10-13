@@ -13,6 +13,7 @@ import { clampText } from '../../utils/text.js';
 import { markBotDeletion } from '../../utils/deletionTracker.js';
 import { getSettingsSafe, ensureGuildSettings, isModuleEnabled } from '../../services/settingsService.js';
 import * as rr from '../../services/reactionRoleService.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'reactionroles';
@@ -48,7 +49,8 @@ export const data = new SlashCommandBuilder()
   .setDescription('Role panels with buttons, a dropdown or emoji reactions (MEE6 Reaction Roles)')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('create').setDescription('Post a new role panel')
-    .addChannelOption((o) => o.setName('channel').setDescription('Where to post it').setRequired(true).addChannelTypes(...PANEL_CHANNEL_TYPES))
+    .addChannelOption((o) => o.setName('channel').setDescription('Where to post it').addChannelTypes(...PANEL_CHANNEL_TYPES))
+    .addStringOption((o) => newChannelOption(o))
     .addStringOption((o) => o.setName('title').setDescription('Panel title').setMaxLength(256))
     .addStringOption((o) => o.setName('type').setDescription('Role mode (default Normal)').addChoices(...TYPE_CHOICES))
     .addStringOption((o) => o.setName('layout').setDescription('Default Buttons').addChoices(...LAYOUT_CHOICES))
@@ -58,6 +60,7 @@ export const data = new SlashCommandBuilder()
     .addBooleanOption((o) => o.setName('plain_text').setDescription('Send text only, no embed (default False)'))
     .addIntegerOption((o) => o.setName('max_roles').setDescription('Most roles a member can hold (Normal only)').setMinValue(1).setMaxValue(25))
     .addRoleOption((o) => o.setName('role').setDescription('First role to add (the verified role for Verify)'))
+    .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('emoji').setDescription('Emoji for that first role').setMaxLength(100))
     .addStringOption((o) => o.setName('placeholder').setDescription('Dropdown placeholder text').setMaxLength(150)))
   .addSubcommand((s) => s.setName('attach').setDescription('Turn an existing message into an emoji-reaction panel')
@@ -67,7 +70,8 @@ export const data = new SlashCommandBuilder()
     .addIntegerOption((o) => o.setName('max_roles').setDescription('Most roles a member can hold (Normal only)').setMinValue(1).setMaxValue(20)))
   .addSubcommand((s) => s.setName('add').setDescription('Add a role to a panel')
     .addStringOption((o) => panelOption(o))
-    .addRoleOption((o) => o.setName('role').setDescription('Role to offer').setRequired(true))
+    .addRoleOption((o) => o.setName('role').setDescription('Role to offer'))
+    .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('emoji').setDescription('Emoji (required on emoji panels)').setMaxLength(100))
     .addStringOption((o) => o.setName('label').setDescription('Text (default: role name)').setMaxLength(80))
     .addStringOption((o) => o.setName('style').setDescription('Button colour (default Blue)').addChoices(...STYLE_CHOICES))
@@ -86,7 +90,8 @@ export const data = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('placeholder').setDescription('New dropdown placeholder (- resets)').setMaxLength(150)))
   .addSubcommand((s) => s.setName('repost').setDescription('Post a panel again (deleted message) or move it')
     .addStringOption((o) => panelOption(o))
-    .addChannelOption((o) => o.setName('channel').setDescription('Default: its current channel').addChannelTypes(...PANEL_CHANNEL_TYPES)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Default: its current channel').addChannelTypes(...PANEL_CHANNEL_TYPES))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('delete').setDescription('Delete a panel')
     .addStringOption((o) => panelOption(o)))
   .addSubcommand((s) => s.setName('list').setDescription('List role panels'));
@@ -660,6 +665,8 @@ async function list(c) {
 // ── Entry points ──────────────────────────────────────────────────────────────
 
 const HANDLERS = { create, attach, add, remove, edit, repost, delete: del, list };
+// Pickers that need a value (picker or new_ companion), by subcommand, for resolveNewOptions.
+const NEW_TARGETS = { create: { required: ['channel'] }, add: { required: ['role'] } };
 
 export async function execute(interaction, client) {
   const sub = interaction.options.getSubcommand();
@@ -668,6 +675,7 @@ export async function execute(interaction, client) {
   // Public replies (admin convention); the delete prompt is private and its result is a public follow-up.
   if (!(await safeDefer(interaction, { ephemeral: sub === 'delete' }))) return;
   try {
+    if (!(await resolveNewOptions(interaction, data, NEW_TARGETS[sub]))) return;
     const guild = interaction.guild;
     const guildId = interaction.guildId;
     const settings = await getSettingsSafe(guildId); // may be null: the command still works

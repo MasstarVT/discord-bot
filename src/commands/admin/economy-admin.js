@@ -33,6 +33,7 @@ import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { isHttpUrl } from '../../utils/customEmbed.js';
 import { errorEmbed, guildEmbed, successEmbed } from '../../utils/embedBuilder.js';
 import { awaitConfirm, checkAssignableRole, respondAutocomplete } from '../../utils/interactionHelpers.js';
+import { newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 import { paginate } from '../../utils/paginator.js';
 import { clampText, formatNumber, joinWithLimit } from '../../utils/text.js';
@@ -65,6 +66,7 @@ function itemFields(s, { edit }) {
   }
   s.addStringOption((o) => o.setName('type').setDescription(edit ? 'Item type' : 'Item type (default Static)').addChoices(...TYPE_CHOICES))
     .addRoleOption((o) => o.setName('role').setDescription('Role a Role item gives'))
+    .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('description').setDescription('Shown in the shop ("none" clears)').setMaxLength(ITEM_DESCRIPTION_MAX))
     .addStringOption((o) => o.setName('image').setDescription('Image URL, http or https ("none" clears)').setMaxLength(ITEM_IMAGE_MAX))
     .addBooleanOption((o) => o.setName('use_on_buy').setDescription('Use the item as soon as it is bought'))
@@ -746,6 +748,7 @@ export async function execute(interaction) {
   // Acknowledge before any settings or database access.
   if (PRIVATE_FLOW.has(key)) await interaction.deferReply({ ephemeral: true });
   else await interaction.deferReply();
+  if (!(await resolveNewOptions(interaction, data))) return;
   const settings = await getSettings(interaction.guildId);
   await handler(interaction, settings);
 }

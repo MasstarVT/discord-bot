@@ -1026,6 +1026,7 @@ function fakeInteraction(guild, { sub, group = null, strings = {}, channels = {}
     options: {
       getSubcommandGroup: () => group,
       getSubcommand: () => sub,
+      get: (name) => channels[name] ?? null,
       getString: (name) => strings[name] ?? null,
       getChannel: (name) => channels[name] ?? null,
       getFocused: () => focused,

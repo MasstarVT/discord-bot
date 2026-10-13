@@ -343,22 +343,22 @@ test('command payloads', () => {
   const a = buildCommandPayload(mine);
   const c = buildCommandPayload(cfg);
   assert.ok(charCount(a) <= 260, `achievements ${charCount(a)}`);
-  assert.ok(charCount(c) <= 2500, `achievement-config ${charCount(c)}`);
+  assert.ok(charCount(c) <= 2800, `achievement-config ${charCount(c)}`);
   assert.deepEqual(c.options.map((o) => o.name), ['create', 'edit', 'delete', 'enable', 'disable', 'list', 'info', 'reset', 'preset', 'tier', 'announce']);
   const group = (name) => c.options.find((o) => o.name === name);
   assert.deepEqual(group('tier').options.map((o) => o.name), ['add', 'edit', 'remove']);
   assert.deepEqual(group('announce').options.map((o) => o.name), ['mode', 'channel', 'message']);
   const create = group('create');
-  assert.equal(create.options.length, 11);
+  assert.equal(create.options.length, 12); // + new_role_add (newTargets)
   assert.deepEqual(create.options.slice(0, 3).map((o) => [o.name, o.required]), [['name', true], ['trigger', true], ['goals', true]]);
   assert.equal(create.options.find((o) => o.name === 'trigger').choices.length, 5);
-  assert.deepEqual(group('announce').options[0].options.map((o) => o.name), ['mode', 'channel', 'embed']);
+  assert.deepEqual(group('announce').options[0].options.map((o) => o.name), ['mode', 'channel', 'new_channel', 'embed']);
   const walk = (node, fn) => { fn(node); for (const o of node.options ?? []) walk(o, fn); };
   const achOptions = [];
   walk(c, (n) => { if (n.name === 'achievement' && n.type === 3) achOptions.push(n); });
   assert.equal(achOptions.length, 9); // edit, delete, enable, disable, info, reset, tier add|edit|remove
   for (const o of achOptions) assert.equal(o.autocomplete, true);
-  walk(c, (n) => { assert.ok((n.options?.length ?? 0) <= 11); assert.ok((n.description?.length ?? 0) <= 100); });
+  walk(c, (n) => { assert.ok((n.options?.length ?? 0) <= 12); assert.ok((n.description?.length ?? 0) <= 100); });
   assert.deepEqual(a.contexts, [0]);
   assert.deepEqual(c.contexts, [0]);
   assert.equal(mine.module, 'achievements');

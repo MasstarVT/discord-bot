@@ -13,6 +13,7 @@ import {
 import { getSettingsSafe, isModuleEnabled } from '../../services/settingsService.js';
 import * as tv from '../../services/tempVoiceService.js';
 import { clampText } from '../../utils/text.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'tempvoice';
@@ -25,6 +26,7 @@ const HUB_TYPES = [ChannelType.GuildVoice];
 function addHubSettings(s) {
   return s
     .addChannelOption((o) => o.setName('category').setDescription("Category for new channels (default: the hub's)").addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'category', 'category'))
     .addStringOption((o) => o.setName('name_format').setDescription("Name format (default #{index} - {username}'s Channel)").setMinLength(1).setMaxLength(100))
     .addIntegerOption((o) => o.setName('limit').setDescription('User limit (0 = no limit)').setMinValue(0).setMaxValue(99))
     .addIntegerOption((o) => o.setName('bitrate').setDescription('Bitrate in kbps (capped by boost level)').setMinValue(8).setMaxValue(384))
@@ -42,7 +44,8 @@ export const data = new SlashCommandBuilder()
   .setDescription('Join-to-create voice hubs (MEE6 Temporary Channels).')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => addHubSettings(s.setName('create').setDescription('Create a join-to-create hub (up to 10).')
-    .addChannelOption((o) => o.setName('channel').setDescription('Voice channel to use as the hub (omit to create one)').addChannelTypes(...HUB_TYPES))))
+    .addChannelOption((o) => o.setName('channel').setDescription('Voice channel to use as the hub (omit to create one)').addChannelTypes(...HUB_TYPES))
+    .addStringOption((o) => newChannelOption(o, 'channel', 'voice channel'))))
   .addSubcommand((s) => addHubSettings(s.setName('edit').setDescription("Change a hub's settings.")
     .addChannelOption(hubOpt('Hub to edit'))))
   .addSubcommand((s) => s.setName('delete').setDescription('Delete a hub and its temporary channels.')
@@ -367,6 +370,7 @@ export async function execute(interaction) {
       return;
     }
     if (!(await safeDefer(interaction))) return;
+    if (!(await resolveNewOptions(interaction, data))) return;
     const settings = await getSettingsSafe(interaction.guildId);
     if (group) await runRoleList(interaction, group, sub);
     else if (sub === 'create') await runCreate(interaction, settings);

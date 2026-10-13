@@ -516,11 +516,11 @@ test('14. command payload and exports', () => {
   const json = buildCommandPayload(cmd);
   assert.deepEqual(json.options.map((o) => o.name), ['create', 'attach', 'add', 'remove', 'edit', 'repost', 'delete', 'list']);
   for (const sub of json.options) {
-    assert.ok((sub.options ?? []).length <= 12, `${sub.name}: ${sub.options?.length} options`);
+    assert.ok((sub.options ?? []).length <= 14, `${sub.name}: ${sub.options?.length} options`);
     assert.ok(sub.description.length >= 1 && sub.description.length <= 100);
     for (const o of sub.options ?? []) assert.ok(o.description.length >= 1 && o.description.length <= 100, `${sub.name}.${o.name}`);
   }
-  assert.ok(charCount(json) <= 2200, `payload is ${charCount(json)} characters`);
+  assert.ok(charCount(json) <= 2400, `payload is ${charCount(json)} characters`);
   assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   assert.deepEqual(json.contexts, [0]);
   assert.equal(cmd.module, 'reactionroles');
@@ -529,7 +529,7 @@ test('14. command payload and exports', () => {
   assert.equal(typeof cmd.autocomplete, 'function');
   assert.equal(typeof cmd.execute, 'function');
   const opts = (sub) => Object.fromEntries(json.options.find((o) => o.name === sub).options.map((o) => [o.name, o]));
-  assert.equal(opts('create').channel.required, true);
+  assert.ok(!opts('create').channel.required, 'optional: new_channel can create it (newTargets)');
   assert.equal(opts('create').title.max_length, 256);
   assert.equal(opts('create').description.max_length, 4000);
   assert.equal(opts('create').placeholder.max_length, 150);
@@ -1239,7 +1239,8 @@ function commandWorld(n, { channelDeny = [], roles = [] } = {}) {
       deferred: false, replied: false, ephemeral: null, replies: [], followUps: [], confirmAnswer: confirm,
       isRepliable: () => true,
       options: {
-        getSubcommand: () => sub, getString: lookup, getBoolean: lookup, getInteger: lookup, getRole: lookup, getChannel: lookup,
+        getSubcommand: () => sub, getSubcommandGroup: () => null, get: lookup,
+        getString: lookup, getBoolean: lookup, getInteger: lookup, getRole: lookup, getChannel: lookup,
         getFocused: () => opts.__focused,
       },
     };

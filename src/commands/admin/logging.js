@@ -18,6 +18,7 @@ import { getSettings, getSettingsSafe, peekSettings, updateSettings, updateSetti
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { errorEmbed, guildEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { checkChannelUsable, permissionNames, respondAutocomplete } from '../../utils/interactionHelpers.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 import { joinWithLimit } from '../../utils/text.js';
 
@@ -60,12 +61,14 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('enable').setDescription('Turn audit logging on.')
     .addChannelOption((o) => o.setName('channel').setDescription('Optional: send every log type to this channel.')
-      .addChannelTypes(...LOG_CHANNEL_TYPES)))
+      .addChannelTypes(...LOG_CHANNEL_TYPES))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('disable').setDescription('Turn audit logging off (settings are kept).'))
   .addSubcommand((s) => s.setName('status').setDescription('Show log channels, disabled events and ignored channels.'))
   .addSubcommand((s) => s.setName('channel').setDescription('Set or clear the channel for a log type.')
     .addStringOption((o) => o.setName('type').setDescription('Which logs go to the channel.').setRequired(true).addChoices(...TYPE_CHOICES))
-    .addChannelOption((o) => o.setName('channel').setDescription('Log channel (leave empty to clear).').addChannelTypes(...LOG_CHANNEL_TYPES)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Log channel (leave empty to clear).').addChannelTypes(...LOG_CHANNEL_TYPES))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('event').setDescription('Turn one log event (or all) on or off.')
     .addStringOption((o) => o.setName('name').setDescription('Log event, or "all".').setRequired(true).setAutocomplete(true).setMaxLength(32))
     .addStringOption((o) => o.setName('state').setDescription('on or off').setRequired(true)
@@ -282,6 +285,7 @@ export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
   const label = group ? `${group} ${sub}` : sub;
   try {
+    if (!(await resolveNewOptions(interaction, data, { private: ['channel'] }))) return undefined;
     if (group === 'ignore') {
       if (sub === 'add') return await subIgnoreAdd(interaction);
       if (sub === 'remove') return await subIgnoreRemove(interaction);

@@ -436,8 +436,8 @@ test('/liverole payload', () => {
   assert.deepEqual(json.contexts, [0]);
   assert.deepEqual(json.options.map((o) => [o.name, o.type]), [['set', 1], ['require', 1], ['enable', 1], ['disable', 1], ['status', 1]]);
   const sub = Object.fromEntries(json.options.map((o) => [o.name, o]));
-  assert.equal(sub.set.options.length, 1);
-  assert.deepEqual([sub.set.options[0].name, sub.set.options[0].type, sub.set.options[0].required], ['role', 8, true]);
+  // `role` is optional because `new_role` can create the role instead (newTargets); runSet refuses when both are empty.
+  assert.deepEqual(sub.set.options.map((o) => [o.name, o.type, !!o.required]), [['role', 8, false], ['new_role', 3, false]]);
   assert.deepEqual([sub.require.options[0].name, sub.require.options[0].type], ['role', 8]);
   assert.ok(!sub.require.options[0].required);
   assert.deepEqual([sub.disable.options[0].name, sub.disable.options[0].type], ['remove_roles', 5]);
@@ -446,7 +446,7 @@ test('/liverole payload', () => {
   assert.deepEqual(sub.status.options ?? [], []);
   for (const o of json.options) assert.ok(o.description.length >= 1 && o.description.length <= 100);
   assert.ok(json.description.length <= 100);
-  assert.ok(charCount(json) <= 450, `payload is ${charCount(json)} chars`);
+  assert.ok(charCount(json) <= 550, `payload is ${charCount(json)} chars`);
   assert.equal(cmd.module, 'liverole');
   assert.equal(cmd.gated, false);
   assert.equal(cmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -632,7 +632,7 @@ function mkInteraction(w, sub, { role = null, bool = null, answer = null } = {})
     member: { id: 'admin', roles: { highest: { position: 20 } } },
     deferred: false,
     replied: false,
-    options: { getSubcommand: () => sub, getRole: () => (role ? { id: role } : null), getBoolean: () => bool },
+    options: { getSubcommand: () => sub, getSubcommandGroup: () => null, get: () => (role ? { id: role } : null), getString: () => null, getRole: () => (role ? { id: role } : null), getBoolean: () => bool },
     deferReply: async () => { interaction.deferred = true; interaction.ephemeral = false; },
     editReply: async (p) => {
       edits.push(p);
@@ -686,6 +686,33 @@ test('/liverole set: a dedicated role is saved; the module stays off and nothing
   const again = mkInteraction(w, 'set', { role: 'L' });
   await cmd.execute(again);
   assert.match(again.title(), /No Change/);
+});
+
+test('/liverole set new_role: creates a role with no permissions and saves it; neither picker nor name is refused', { skip: skipDb }, async () => {
+  const { CommandInteractionOptionResolver, PermissionsBitField, PermissionFlagsBits } = await import('discord.js');
+  const w = mkWorld(dbGuildId());
+  w.addRole(w.guild.id); // @everyone
+  const created = [];
+  w.guild.roles.create = async (o) => { created.push(o); return Object.assign(w.addRole('NEW'), { name: o.name }); };
+  // A real resolver, so the new_role → role substitution runs exactly as in Discord.
+  const withOptions = (opts) => Object.assign(mkInteraction(w, 'set'), {
+    commandName: 'liverole',
+    user: { id: 'admin', username: 'admin' },
+    memberPermissions: new PermissionsBitField(PermissionFlagsBits.ManageRoles),
+    options: new CommandInteractionOptionResolver({}, [{ name: 'set', type: 1, options: opts }], null),
+  });
+
+  const i = withOptions([{ name: 'new_role', type: 3, value: 'Live' }]);
+  await cmd.execute(i);
+  assert.equal(i.title(), '✅  Live Role Set');
+  assert.match(i.text(), /<@&NEW>/);
+  assert.deepEqual(created.map((o) => [o.name, o.permissions]), [['Live', []]]);
+  assert.equal((await row(w.guild.id)).liveRoleId, 'NEW');
+
+  const none = withOptions([]);
+  await cmd.execute(none);
+  assert.match(none.title(), /Missing Role/);
+  assert.equal(created.length, 1);
 });
 
 test('/liverole set: the dedicated-role guard refuses > 50 holders and confirms 1-50', { skip: skipDb }, async () => {

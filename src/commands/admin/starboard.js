@@ -10,6 +10,7 @@ import { getSettingsSafe, isModuleEnabled } from '../../services/settingsService
 import * as sb from '../../services/starboardService.js';
 import { joinWithLimit, clampText } from '../../utils/text.js';
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'starboard';
@@ -40,11 +41,13 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => addSettingOptions(
     s.setName('create').setDescription('Create a starboard (up to 10).')
       .addStringOption((o) => o.setName('name').setDescription('Board name').setRequired(true).setMinLength(1).setMaxLength(32))
-      .addChannelOption((o) => o.setName('channel').setDescription('Channel to repost to').setRequired(true).addChannelTypes(...BOARD_CHANNEL_TYPES))))
+      .addChannelOption((o) => o.setName('channel').setDescription('Channel to repost to').addChannelTypes(...BOARD_CHANNEL_TYPES))
+      .addStringOption((o) => newChannelOption(o))))
   .addSubcommand((s) => addSettingOptions(
     s.setName('edit').setDescription('Change a starboard, including its repost channel.')
       .addStringOption((o) => o.setName('name').setDescription('Board to edit').setRequired(true).setAutocomplete(true).setMaxLength(32))
-      .addChannelOption((o) => o.setName('channel').setDescription('New repost channel').addChannelTypes(...BOARD_CHANNEL_TYPES)))
+      .addChannelOption((o) => o.setName('channel').setDescription('New repost channel').addChannelTypes(...BOARD_CHANNEL_TYPES))
+      .addStringOption((o) => newChannelOption(o)))
     .addChannelOption((o) => o.setName('ignore_channel').setDescription('Add a channel to the ignore list').addChannelTypes(...SOURCE_CHANNEL_TYPES))
     .addChannelOption((o) => o.setName('unignore_channel').setDescription('Remove a channel from the ignore list').addChannelTypes(...SOURCE_CHANNEL_TYPES))
     .addBooleanOption((o) => o.setName('enabled').setDescription('Turn this board on or off'))
@@ -125,6 +128,7 @@ function boardProblem(guild, board) {
 
 async function runCreate(interaction, client) {
   if (!(await safeDefer(interaction))) return;
+  if (!(await resolveNewOptions(interaction, data, { required: ['channel'] }))) return;
   const reply = (embed) => safeReply(interaction, { embeds: [embed] });
   try {
     const { moduleOff } = await loadModuleState(interaction.guildId);
@@ -195,6 +199,7 @@ function describeChanges(before, after, client) {
 
 async function runEdit(interaction, client) {
   if (!(await safeDefer(interaction))) return;
+  if (!(await resolveNewOptions(interaction, data))) return;
   const reply = (embed) => safeReply(interaction, { embeds: [embed] });
   const { guild, options } = interaction;
   let patchName = null;

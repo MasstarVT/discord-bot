@@ -165,7 +165,7 @@ function mkSlash(guild, member, sub, o = {}) {
   return {
     guild, guildId: guild.id, member, user: member.user, createdTimestamp: Date.now(), log, deferred: false, replied: false,
     options: {
-      getSubcommand: () => sub,
+      getSubcommand: () => sub, getSubcommandGroup: () => null, get: (n) => pick(n),
       getString: (n) => pick(n), getBoolean: (n) => pick(n), getInteger: (n) => pick(n),
       getRole: (n) => pick(n), getChannel: (n) => pick(n),
     },
@@ -457,7 +457,7 @@ test('/captcha payload: 11 subcommands, within limits, exports', () => {
   assert.equal(json.options.length, 11);
   assert.deepEqual(json.options.map((o) => o.name),
     ['setup', 'enable', 'disable', 'status', 'mode', 'role', 'channel', 'timeout', 'message', 'lock', 'verify-existing']);
-  assert.ok(charCount(json) <= 1200, `${charCount(json)} characters`);
+  assert.ok(charCount(json) <= 1450, `${charCount(json)} characters`);
   const walk = (n) => { assert.ok(n.description.length <= 100, n.name); (n.options ?? []).forEach(walk); };
   walk(json);
   assert.equal(cmd.module, 'captcha');

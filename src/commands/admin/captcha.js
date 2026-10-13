@@ -16,6 +16,7 @@ import {
 import { buildTemplateModal } from '../../utils/customEmbed.js';
 import { clampText, formatNumber } from '../../utils/text.js';
 import { formatDurationLong } from '../../utils/parseDuration.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 const TXT = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
@@ -31,7 +32,9 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('setup').setDescription('Create or reuse #verification and the role, then post the panel.')
     .addChannelOption((o) => o.setName('channel').setDescription('Verification channel (default: create one)').addChannelTypes(...TXT))
+    .addStringOption((o) => newChannelOption(o))
     .addRoleOption((o) => o.setName('role').setDescription('Verified role (default: create one)'))
+    .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('mode').setDescription('How members verify').addChoices(...MODES)))
   .addSubcommand((s) => s.setName('enable').setDescription('Turn verification on.'))
   .addSubcommand((s) => s.setName('disable').setDescription('Turn verification off (settings are kept).'))
@@ -39,9 +42,11 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('mode').setDescription('Image code or one-click button.')
     .addStringOption((o) => o.setName('type').setDescription('How members verify').setRequired(true).addChoices(...MODES)))
   .addSubcommand((s) => s.setName('role').setDescription('Set the verified role.')
-    .addRoleOption((o) => o.setName('role').setDescription('Verified role').setRequired(true)))
+    .addRoleOption((o) => o.setName('role').setDescription('Verified role'))
+    .addStringOption((o) => newRoleOption(o)))
   .addSubcommand((s) => s.setName('channel').setDescription('Move the panel to another channel.')
-    .addChannelOption((o) => o.setName('channel').setDescription('Verification channel').setRequired(true).addChannelTypes(...TXT)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Verification channel').addChannelTypes(...TXT))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('timeout').setDescription('Kick members who do not verify in time.')
     .addIntegerOption((o) => o.setName('minutes').setDescription('Minutes after joining, 5-10080; 0 = never').setRequired(true).setMinValue(0).setMaxValue(10080)))
   .addSubcommand((s) => s.setName('message').setDescription('Edit the panel (no options opens a form).')
@@ -70,6 +75,7 @@ export async function execute(interaction) {
     if (sub === 'message' && !hasAnyOption(interaction)) return await openPanelModal(interaction); // showModal is the first response
     if (sub === 'lock') return await runLock(interaction); // awaitConfirm replies first
     await interaction.deferReply(); // public (admin convention)
+    if (!(await resolveNewOptions(interaction, data, sub === 'setup' ? undefined : { required: ['role', 'channel'] }))) return undefined;
     const s = await getSettings(interaction.guildId); // a memo hit: the router loaded it
     switch (sub) {
       case 'setup': return await doSetup(interaction, s);

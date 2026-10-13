@@ -16,6 +16,7 @@ import { clampText, formatNumber, joinWithLimit } from '../../utils/text.js';
 import { discordTimestamp } from '../../utils/time.js';
 import { paginate } from '../../utils/paginator.js';
 import logger from '../../utils/logger.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import {
   TRIGGER_LABELS, TRIGGER_EMOJI, TIER_NAMES, TIER_EMOJIS, GOAL_MAX, GOAL_INPUT_MAX, MAX_REWARD_AMOUNT, PRESETS,
   DEFAULT_ACHIEVEMENT_MESSAGE, MODULE_OFF_NOTE, LIST_PAGE_SIZE,
@@ -33,6 +34,7 @@ const TEXT_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 const ach = (o) => o.setName('achievement').setDescription('Achievement').setRequired(true).setAutocomplete(true).setMaxLength(100);
 const rewardOpts = (s) => s
   .addRoleOption((o) => o.setName('role_add').setDescription('Reward: role to give'))
+  .addStringOption((o) => newRoleOption(o, 'role_add'))
   .addRoleOption((o) => o.setName('role_remove').setDescription('Reward: role to take away'))
   .addIntegerOption((o) => o.setName('xp').setDescription('Reward: XP (needs Levels)').setMinValue(1).setMaxValue(MAX_REWARD_AMOUNT))
   .addIntegerOption((o) => o.setName('coins').setDescription('Reward: coins (needs Economy)').setMinValue(1).setMaxValue(MAX_REWARD_AMOUNT));
@@ -91,9 +93,11 @@ export const data = new SlashCommandBuilder()
         { name: 'Disabled', value: 'OFF' }, { name: 'Current channel', value: 'CURRENT' },
         { name: 'Private message', value: 'DM' }, { name: 'Custom channel', value: 'CHANNEL' }))
       .addChannelOption((o) => o.setName('channel').setDescription('Channel for Custom channel mode').addChannelTypes(...TEXT_TYPES))
+      .addStringOption((o) => newChannelOption(o))
       .addBooleanOption((o) => o.setName('embed').setDescription('Send unlocks as an embed')))
     .addSubcommand((s) => s.setName('channel').setDescription('Set the announcement channel')
-      .addChannelOption((o) => o.setName('channel').setDescription('Channel to announce in').setRequired(true).addChannelTypes(...TEXT_TYPES)))
+      .addChannelOption((o) => o.setName('channel').setDescription('Channel to announce in').addChannelTypes(...TEXT_TYPES))
+      .addStringOption((o) => newChannelOption(o)))
     .addSubcommand((s) => s.setName('message').setDescription('Set the announcement text (blank = default)')
       .addStringOption((o) => o.setName('text').setDescription('Text with {player} {achievement} {tier} {rewards}').setMaxLength(1500))));
 
@@ -615,6 +619,7 @@ export async function execute(interaction, client) {
     // delete and reset prompt for confirmation, so their defer is ephemeral; the result is posted publicly afterwards.
     const ephemeral = key === 'delete' || key === 'reset';
     if (!(await safeDefer(interaction, { ephemeral }))) return;
+    if (!(await resolveNewOptions(interaction, data, key === 'announce channel' ? { required: ['channel'] } : undefined))) return;
     const settings = await getSettings(interaction.guildId);
     const handler = HANDLERS[key];
     if (!handler) return;

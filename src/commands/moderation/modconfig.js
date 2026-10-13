@@ -14,6 +14,7 @@ import {
   respondAutocomplete,
 } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import { parseDuration } from '../../utils/parseDuration.js';
 import { chunkLines, clampText, joinWithLimit } from '../../utils/text.js';
 import { discordTimestamp } from '../../utils/time.js';
@@ -51,16 +52,19 @@ export const data = new SlashCommandBuilder()
     .addSubcommand((s) => s.setName('list').setDescription('List the immune roles.')))
   .addSubcommandGroup((g) => g.setName('modroles').setDescription('Roles that can use moderation commands.')
     .addSubcommand((s) => s.setName('add').setDescription('Give a role moderator access.')
-      .addRoleOption((o) => o.setName('role').setDescription('Moderator role').setRequired(true)))
+      .addRoleOption((o) => o.setName('role').setDescription('Moderator role'))
+      .addStringOption((o) => newRoleOption(o)))
     .addSubcommand((s) => s.setName('remove').setDescription('Remove a moderator role.')
       .addRoleOption((o) => o.setName('role').setDescription('Role to remove').setRequired(true)))
     .addSubcommand((s) => s.setName('list').setDescription('List the moderator roles.')))
   .addSubcommand((s) => s.setName('muterole').setDescription('Set, create or clear the mute role (used for mutes over 28 days).')
     .addRoleOption((o) => o.setName('role').setDescription('Existing role to use as the mute role'))
+    .addStringOption((o) => newRoleOption(o))
     .addBooleanOption((o) => o.setName('setup').setDescription('Create the role if needed and deny talking in every channel'))
     .addBooleanOption((o) => o.setName('clear').setDescription('Clear the mute role')))
   .addSubcommand((s) => s.setName('logchannel').setDescription('Set or clear the channel for moderation case logs.')
-    .addChannelOption((o) => o.setName('channel').setDescription('Case log channel (omit to clear)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Case log channel (omit to clear)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('visibility').setDescription('Who sees moderation command replies (MEE6 command visibility).')
     .addStringOption((o) => o.setName('mode').setDescription('Visibility mode').setRequired(true).addChoices(
       { name: 'Public: everyone sees the action', value: 'PUBLIC' },
@@ -456,6 +460,9 @@ async function showCommand(interaction, settings) {
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
+// Per subcommand for resolveNewOptions: pickers that need a value, and channels created hidden from @everyone.
+const NEW_TARGETS = { 'modroles add': { required: ['role'] }, logchannel: { private: ['channel'] } };
+
 /**
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  * @returns {Promise<void>}
@@ -465,6 +472,7 @@ export async function execute(interaction) {
   try {
     const group = interaction.options.getSubcommandGroup(false);
     const sub = interaction.options.getSubcommand();
+    if (!(await resolveNewOptions(interaction, data, NEW_TARGETS[group ? `${group} ${sub}` : sub]))) return;
     const needsSettings = ['list', 'show', 'muterole'].includes(sub);
     const settings = needsSettings ? await getSettingsSafe(interaction.guildId) : null;
     if (needsSettings && !settings) {

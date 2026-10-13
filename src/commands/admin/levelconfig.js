@@ -24,6 +24,7 @@ import {
 } from '../../utils/embedBuilder.js';
 import { checkAssignableRole, checkChannelUsable, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import { paginate } from '../../utils/paginator.js';
 import { renderPlaceholdersDetailed } from '../../utils/placeholderParser.js';
 import { safeFetchImage } from '../../utils/safeFetch.js';
@@ -72,6 +73,7 @@ export const data = new SlashCommandBuilder()
         o.setName('channel').setDescription('Channel for the Custom channel mode')
           .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
       )
+      .addStringOption((o) => newChannelOption(o))
       .addBooleanOption((o) => o.setName('embed').setDescription('Send as an embed instead of plain text'))
   )
   .addSubcommand((s) =>
@@ -127,7 +129,8 @@ export const data = new SlashCommandBuilder()
         s.setName('add')
           .setDescription('Give a role when members reach a level.')
           .addIntegerOption((o) => o.setName('level').setDescription('Level').setRequired(true).setMinValue(1).setMaxValue(999))
-          .addRoleOption((o) => o.setName('role').setDescription('Reward role').setRequired(true))
+          .addRoleOption((o) => o.setName('role').setDescription('Reward role'))
+          .addStringOption((o) => newRoleOption(o))
           .addBooleanOption((o) => o.setName('sync').setDescription('Also give it to members already at this level (default: yes)'))
       )
       .addSubcommand((s) =>
@@ -180,6 +183,7 @@ export async function execute(interaction) {
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand();
   try {
+    if (!(await resolveNewOptions(interaction, data, { required: ['role'] }))) return undefined;
     if (group === 'noxp') return await (sub === 'role' ? subNoxpRole(interaction) : subNoxpChannel(interaction));
     if (group === 'role') {
       switch (sub) {

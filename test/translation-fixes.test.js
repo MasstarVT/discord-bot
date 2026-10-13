@@ -553,10 +553,10 @@ describe('handleAutoTranslate', () => {
 describe('command payloads', () => {
   test('/autotranslate', () => {
     const json = buildCommandPayload(autotranslateCmd);
-    assert.deepEqual(json.options.map((o) => o.name), ['enable', 'language1', 'language2', 'language3', 'language4', 'language5', 'channel']);
+    assert.deepEqual(json.options.map((o) => o.name), ['enable', 'language1', 'language2', 'language3', 'language4', 'language5', 'channel', 'new_channel']);
     assert.equal(json.options[0].required, true);
     assert.ok(!json.options[1].required, 'language1 is optional so /autotranslate enable:false needs no language');
-    assert.ok(charCount(json) <= 450, `${charCount(json)} chars`);
+    assert.ok(charCount(json) <= 550, `${charCount(json)} chars`);
     assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
     assert.equal(autotranslateCmd.module, 'translation');
     assert.equal(autotranslateCmd.gated, false);
@@ -761,6 +761,9 @@ describe('/autotranslate', () => {
         getBoolean: () => enable,
         getString: (name) => langs[Number(name.replace('language', '')) - 1] ?? null,
         getChannel: () => null,
+        getSubcommandGroup: () => null,
+        getSubcommand: () => null,
+        get: () => null,
       },
       deferReply: async () => {},
       editReply: async (p) => { sent.push(p.embeds[0].data); },

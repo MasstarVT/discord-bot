@@ -426,14 +426,14 @@ test('11. the /stats payload', () => {
   const sub = (name) => json.options.find((o) => o.name === name);
   const opts = (name) => (sub(name).options ?? []).map((o) => [o.name, Boolean(o.required)]);
 
-  assert.deepEqual(opts('create'), [['kind', true], ['template', false], ['role', false], ['category', false]]);
+  assert.deepEqual(opts('create'), [['kind', true], ['template', false], ['role', false], ['category', false], ['new_category', false]]);
   assert.deepEqual(sub('create').options[0].choices.map((c) => c.value), [...STAT_KINDS]);
   assert.deepEqual(sub('create').options[0].choices.map((c) => c.name), STAT_KINDS.map((k) => KIND_INFO[k].label));
   assert.deepEqual(opts('edit'), [['channel', true], ['template', true]]);
   assert.equal(sub('edit').options[0].autocomplete, true);
   assert.deepEqual(opts('delete'), [['channel', true], ['keep_channel', false]]);
   assert.equal(sub('delete').options[0].autocomplete, true);
-  assert.deepEqual(opts('category'), [['category', false]]);
+  assert.deepEqual(opts('category'), [['category', false], ['new_category', false]]);
   assert.deepEqual(opts('list'), []);
   assert.deepEqual(opts('refresh'), []);
 
@@ -442,7 +442,7 @@ test('11. the /stats payload', () => {
     for (const o of node.options ?? []) walk(o);
   };
   walk(json);
-  assert.ok(charCount(json) <= 900, `charCount ${charCount(json)}`);
+  assert.ok(charCount(json) <= 1000, `charCount ${charCount(json)}`);
   assert.equal(json.default_member_permissions, String(P.ManageGuild));
   assert.deepEqual(json.contexts, [0]);
   assert.equal(statsCmd.module, 'stats');
@@ -1213,6 +1213,8 @@ function fakeInteraction(guild, sub, { strings = {}, role = null, channel = null
     user: { tag: 'tester#0' },
     options: {
       getSubcommand: () => sub,
+      getSubcommandGroup: () => null,
+      get: () => channel,
       getString: (name) => strings[name] ?? null,
       getRole: () => role,
       getChannel: () => channel,

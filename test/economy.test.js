@@ -284,7 +284,7 @@ function charCount(node) {
 }
 
 test('command modules: exports, permission levels and payload budgets (item 24)', () => {
-  const budgets = { balance: 110, daily: 90, pity: 90, work: 70, pay: 150, richest: 70, shop: 400, inventory: 110, use: 120, admin: 3400, boost: 650 };
+  const budgets = { balance: 110, daily: 90, pity: 90, work: 70, pay: 150, richest: 70, shop: 400, inventory: 110, use: 120, admin: 3450, boost: 650 };
   for (const [key, budget] of Object.entries(budgets)) {
     const mod = cmd[key];
     assert.equal(mod.module, 'economy', key);

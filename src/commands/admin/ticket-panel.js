@@ -20,6 +20,7 @@ import {
   awaitConfirm, checkChannelUsable, isInteractionGone, missingBotPermissions, permissionNames, pingableRoleIds, respondAutocomplete,
   safeDefer, safeReply,
 } from '../../utils/interactionHelpers.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 import { paginate } from '../../utils/paginator.js';
 import { chunkLines, clampText } from '../../utils/text.js';
@@ -44,6 +45,7 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('create').setDescription('Create a panel with a default "Open Ticket" button.')
     .addStringOption((o) => o.setName('name').setDescription('Panel name (unique on this server)').setRequired(true).setMinLength(1).setMaxLength(50))
     .addChannelOption((o) => o.setName('channel').setDescription('Publish it here right away').addChannelTypes(...textCh))
+    .addStringOption((o) => newChannelOption(o))
     .addStringOption(styleOpt)
     .addBooleanOption((o) => o.setName('ask_reason').setDescription('Ask for a reason in a form before opening'))
     .addIntegerOption((o) => o.setName('max_open').setDescription('Open tickets per member on this panel (default 1)').setMinValue(1).setMaxValue(10))
@@ -60,7 +62,8 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('list').setDescription('List the ticket panels on this server.'))
   .addSubcommand((s) => s.setName('publish').setDescription('Post or update the panel message in a channel.')
     .addStringOption(panelOpt)
-    .addChannelOption((o) => o.setName('channel').setDescription('Channel to post the panel in').setRequired(true).addChannelTypes(...textCh)))
+    .addChannelOption((o) => o.setName('channel').setDescription('Channel to post the panel in').addChannelTypes(...textCh))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('message').setDescription('Edit the panel message or the ticket intro message in a form.')
     .addStringOption(panelOpt)
     .addStringOption((o) => o.setName('type').setDescription('Which message (default panel)')
@@ -69,12 +72,16 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('categories').setDescription('Set the open/claimed/closed categories; with no options, show them.')
     .addStringOption(panelOpt)
     .addChannelOption((o) => o.setName('open').setDescription('Category for new tickets').addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'open', 'category'))
     .addChannelOption((o) => o.setName('claimed').setDescription('Category for claimed tickets').addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'claimed', 'category'))
     .addChannelOption((o) => o.setName('closed').setDescription('Category for closed tickets').addChannelTypes(ChannelType.GuildCategory))
+    .addStringOption((o) => newChannelOption(o, 'closed', 'category'))
     .addBooleanOption((o) => o.setName('create_missing').setDescription('Create any category that is not set (MEE6 "Create one for me")')))
   .addSubcommand((s) => s.setName('transcripts').setDescription('Where transcripts go when a ticket is deleted; no options = show.')
     .addStringOption(panelOpt)
     .addChannelOption((o) => o.setName('channel').setDescription('Channel that receives transcripts').addChannelTypes(...textCh))
+    .addStringOption((o) => newChannelOption(o))
     .addBooleanOption((o) => o.setName('dm_owner').setDescription('Also DM the transcript to the ticket opener'))
     .addBooleanOption((o) => o.setName('disable').setDescription('Stop posting transcripts to a channel')))
   .addSubcommandGroup((g) => g.setName('option').setDescription('Panel buttons / dropdown options')
@@ -84,7 +91,8 @@ export const data = new SlashCommandBuilder()
       .addStringOption((o) => o.setName('emoji').setDescription('Emoji, e.g. ✉️ or a server emoji').setMaxLength(64))
       .addStringOption((o) => o.setName('description').setDescription('Dropdown description').setMaxLength(100))
       .addIntegerOption(colorOpt)
-      .addChannelOption((o) => o.setName('category').setDescription('Open tickets of this option here').addChannelTypes(ChannelType.GuildCategory)))
+      .addChannelOption((o) => o.setName('category').setDescription('Open tickets of this option here').addChannelTypes(ChannelType.GuildCategory))
+      .addStringOption((o) => newChannelOption(o, 'category', 'category')))
     .addSubcommand((s) => s.setName('edit').setDescription('Change an option.')
       .addStringOption(panelOpt)
       .addStringOption((o) => o.setName('option').setDescription('Option to change').setRequired(true).setAutocomplete(true))
@@ -93,6 +101,7 @@ export const data = new SlashCommandBuilder()
       .addStringOption((o) => o.setName('description').setDescription('New dropdown description ("none" removes it)').setMaxLength(100))
       .addIntegerOption(colorOpt)
       .addChannelOption((o) => o.setName('category').setDescription('Open tickets of this option here').addChannelTypes(ChannelType.GuildCategory))
+      .addStringOption((o) => newChannelOption(o, 'category', 'category'))
       .addBooleanOption((o) => o.setName('clear_category').setDescription('Use the panel open category again')))
     .addSubcommand((s) => s.setName('remove').setDescription('Remove an option (a panel keeps at least one).')
       .addStringOption(panelOpt)
@@ -102,10 +111,18 @@ export const data = new SlashCommandBuilder()
   .addSubcommandGroup((g) => g.setName('managers').setDescription('Ticket Manager roles (max 10 per panel)')
     .addSubcommand((s) => s.setName('add').setDescription("Let a role see and handle this panel's tickets.")
       .addStringOption(panelOpt)
-      .addRoleOption((o) => o.setName('role').setDescription('Role').setRequired(true)))
+      .addRoleOption((o) => o.setName('role').setDescription('Role'))
+      .addStringOption((o) => newRoleOption(o)))
     .addSubcommand((s) => s.setName('remove').setDescription('Remove a Ticket Manager role.')
       .addStringOption(panelOpt)
       .addRoleOption((o) => o.setName('role').setDescription('Role').setRequired(true))));
+
+// Per subcommand for resolveNewOptions: pickers that need a value, and channels created hidden from @everyone.
+const NEW_TARGETS = Object.freeze({
+  publish: { required: ['channel'] },
+  transcripts: { private: ['channel'] },
+  'managers add': { required: ['role'] },
+});
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -165,6 +182,7 @@ export async function execute(interaction, client) {
   if (!group && sub === 'message') return message(interaction);
 
   if (!(await safeDefer(interaction))) return undefined;
+  if (!(await resolveNewOptions(interaction, data, NEW_TARGETS[group ? `${group} ${sub}` : sub]))) return undefined;
   const ctx = {
     interaction, client, guild: interaction.guild, settings: await loadSettings(interaction.guildId),
     reply: (payload) => safeReply(interaction, payload),

@@ -9,6 +9,7 @@ import {
 import { errorEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { checkChannelUsable, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import { clampText, joinWithLimit } from '../../utils/text.js';
+import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'translation';
@@ -40,7 +41,8 @@ export const data = new SlashCommandBuilder()
   .addStringOption((o) => o.setName('language5')
     .setDescription('Another target language (optional).').setMaxLength(40).setAutocomplete(true))
   .addChannelOption((o) => o.setName('channel')
-    .setDescription('Channel to configure (default: this channel).').addChannelTypes(...CHANNEL_TYPES));
+    .setDescription('Channel to configure (default: this channel).').addChannelTypes(...CHANNEL_TYPES))
+  .addStringOption((o) => newChannelOption(o));
 
 export async function autocomplete(interaction) {
   if (providerName() === 'libretranslate') warmLanguageSupport();
@@ -87,6 +89,7 @@ async function channelsField(interaction) {
 
 export async function execute(interaction) {
   await interaction.deferReply();
+  if (!(await resolveNewOptions(interaction, data))) return undefined;
 
   const { guildId } = interaction;
   const channel = interaction.options.getChannel('channel') ?? interaction.channel;

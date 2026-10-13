@@ -17,6 +17,7 @@ import {
   checkAssignableRole, checkChannelUsable, permissionNames, safeDefer, safeReply,
 } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import { renderPlaceholdersDetailed } from '../../utils/placeholderParser.js';
 import { clampText, formatNumber } from '../../utils/text.js';
 import { discordTimestamp, zonedParts } from '../../utils/time.js';
@@ -34,10 +35,12 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('channel')
     .setDescription('Set the birthday announcement channel; leave empty to turn announcements off.')
     .addChannelOption((o) => o.setName('channel').setDescription('Text or announcement channel (empty = off)')
-      .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+      .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+    .addStringOption((o) => newChannelOption(o)))
   .addSubcommand((s) => s.setName('role')
     .setDescription('Set the role members get on their birthday; leave empty to turn it off.')
-    .addRoleOption((o) => o.setName('role').setDescription('Birthday role (empty = off)')))
+    .addRoleOption((o) => o.setName('role').setDescription('Birthday role (empty = off)'))
+    .addStringOption((o) => newRoleOption(o)))
   .addSubcommand((s) => s.setName('hour')
     .setDescription('Set the hour (server timezone) when birthdays are announced.')
     .addIntegerOption((o) => o.setName('hour').setDescription('0–23, e.g. 9 = 09:00 (default 9)')
@@ -325,6 +328,7 @@ export async function execute(interaction) {
   // The acknowledgement comes first (00-overview rule 21); `test` is the one private reply.
   if (!(await safeDefer(interaction, { ephemeral: sub === 'test' }))) return;
   try {
+    if (!(await resolveNewOptions(interaction, data))) return;
     const settings = await getSettingsSafe(interaction.guild.id);
     if (!settings) return await send(interaction, U1());
     await handler(interaction, settings);

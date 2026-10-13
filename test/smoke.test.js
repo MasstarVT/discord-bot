@@ -87,6 +87,14 @@ function checkOptions(path, options, problems, depth = 0) {
       }
     }
   }
+  // newTargets companions: `new_<x>` (string) must sit next to a role (8) or channel (7) picker `<x>`.
+  for (const opt of options) {
+    if (!opt.name.startsWith('new_')) continue;
+    const base = options.find((o) => o.name === opt.name.slice(4));
+    if (opt.type !== 3 || !base || (base.type !== 7 && base.type !== 8)) {
+      problems.push(`${path} ${opt.name}: a new_ option must be a string next to a role or channel option "${opt.name.slice(4)}"`);
+    }
+  }
   const hasSub = options.some((o) => SUB_TYPES.has(o.type));
   if (hasSub && options.some((o) => !SUB_TYPES.has(o.type))) {
     problems.push(`${path}: mixes subcommands with plain options`);

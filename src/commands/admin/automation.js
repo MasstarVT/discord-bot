@@ -16,6 +16,7 @@ import {
 import { paginate } from '../../utils/paginator.js';
 import { safeFetchText, SafeFetchError } from '../../utils/safeFetch.js';
 import { clampText, chunkLines, formatNumber } from '../../utils/text.js';
+import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
 export const module = 'automations';
@@ -60,8 +61,10 @@ export const data = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('preset').setDescription('Preset recipe').setRequired(true).addChoices(...PRESET_CHOICES))
     .addStringOption(newNameOpt)
     .addChannelOption((o) => o.setName('channel').setDescription('Post/repost here (Thread Joiner: watch here)').addChannelTypes(...PRESET_CHANNEL_TYPES))
+    .addStringOption((o) => newChannelOption(o))
     .addStringOption((o) => o.setName('message').setDescription('Welcomer: message').setMaxLength(2000))
     .addRoleOption((o) => o.setName('role').setDescription('Welcomer: role to give'))
+    .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('emoji').setDescription('Starboard: emoji (default ⭐)').setMaxLength(64))
     .addIntegerOption((o) => o.setName('threshold').setDescription('Starboard: threshold (default 3)').setMinValue(1).setMaxValue(1000))
     .addUserOption((o) => o.setName('user').setDescription('Thread Joiner: member to add')))
@@ -91,8 +94,10 @@ export const data = new SlashCommandBuilder()
       .addStringOption(nameOpt)
       .addStringOption((o) => o.setName('type').setDescription('Action type').setRequired(true).setAutocomplete(true).setMaxLength(32))
       .addChannelOption((o) => o.setName('channel').setDescription('Target channel (default: where it happened)').addChannelTypes(...TARGET_CHANNEL_TYPES))
+      .addStringOption((o) => newChannelOption(o))
       .addStringOption((o) => o.setName('text').setDescription('Message, thread name, or role/user mentions').setMaxLength(2000))
       .addRoleOption((o) => o.setName('role').setDescription('Role to give or take'))
+      .addStringOption((o) => newRoleOption(o))
       .addUserOption((o) => o.setName('user').setDescription('Member to add to the thread'))
       .addStringOption((o) => o.setName('emoji').setDescription('Emoji').setMaxLength(64))
       .addIntegerOption((o) => o.setName('amount').setDescription('Coins or XP').setMinValue(1).setMaxValue(1000000))
@@ -564,6 +569,7 @@ export async function execute(interaction) {
   try {
     // Every subcommand answers publicly (admin convention) except delete, whose confirm dialog is private.
     if (!(await safeDefer(interaction, { ephemeral: key === 'delete' }))) return;
+    if (!(await resolveNewOptions(interaction, data))) return;
     ctx.settings = await getSettingsSafe(ctx.guildId);   // a memo hit (the router just loaded it); null is tolerated
     ctx.moduleOff = !isModuleEnabled(ctx.settings, 'automations');
     await handler(ctx);

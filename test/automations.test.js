@@ -682,8 +682,8 @@ test('/automation payload', async () => {
   assert.equal(top.length, 12);
   assert.equal(top.filter((o) => o.type === 2).length, 2);
   const find = (...path) => path.reduce((node, name) => node.options.find((o) => o.name === name), { options: top });
-  assert.equal(find('create').options.length, 8);
-  assert.equal(find('action', 'add').options.length, 11);
+  assert.equal(find('create').options.length, 10); // + new_channel, new_role (newTargets)
+  assert.equal(find('action', 'add').options.length, 13);
   assert.equal(find('condition', 'add').options.length, 8);
   assert.equal(find('create-blank', 'trigger').choices.length, 11);
   assert.deepEqual(find('create-blank', 'trigger').choices.map((c) => c.value).sort(), Object.keys(TRIGGERS).sort());
@@ -702,7 +702,7 @@ test('/automation payload', async () => {
   const charCount = (node) => (node.name?.length ?? 0) + (node.description?.length ?? 0)
     + (node.choices ?? []).reduce((n, c) => n + c.name.length + String(c.value).length, 0)
     + (node.options ?? []).reduce((n, o) => n + charCount(o), 0);
-  assert.ok(charCount(json) <= 2000, `payload is ${charCount(json)} characters`);
+  assert.ok(charCount(json) <= 2300, `payload is ${charCount(json)} characters`);
   assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   assert.deepEqual(json.contexts, [0]);
   assert.equal(cmd.module, 'automations');
