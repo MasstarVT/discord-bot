@@ -1,0 +1,239 @@
+# Architecture reference
+
+Read on demand from CLAUDE.md. Env keys, architecture, registries, data layer, utilities, conventions.
+
+## Environment
+
+Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Copy `.env.example`. If any is missing the process parks (stays up, `/readyz` returns 503 `parked:missing-env`) instead of exiting. Every other key is optional and commented out in `.env.example` (an empty value in a Docker env file overrides the image's defaults); a new `process.env` read must be added there (a test checks).
+
+| Key | Default | Purpose |
+|---|---|---|
+| `HEALTH_PORT`, `STATE_DIR`, `DEPLOY_HASH_FILE` | 8081, `./state`, `./.deploy-hash` | health endpoints; restart-brake history; command hash |
+| `DEPLOY_GUILD_ID`, `BOT_OWNER_ID` | global, none | instant guild-scoped deployment; user with the OWNER level |
+| `NODE_ENV`, `PRISMA_LOG_QUERIES` | none, off | `production` hides debug logs; `1` logs every Prisma query |
+| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY` | `google`, `http://localhost:5000`, none | `google` or `libretranslate` (anything else warns, uses google) |
+| `HTTP_CONTACT` | `n/a` | contact in the User-Agent of every `safeFetch` request |
+| `REDDIT_USER_AGENT`, `BSKY_APPVIEW_URL` | `DEFAULT_USER_AGENT`, `https://public.api.bsky.app` | Reddit feed User-Agent; Bluesky AppView |
+| `TEST_GUILD_ID`, `TEST_DATABASE_URL` | 0, none | `db:seed` guild; opt-in DB tests |
+| `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET` | none (required by `dashboard.js`) | web dashboard: OAuth2 client secret; session cookie key (at least 32 characters) |
+| `DASHBOARD_URL`, `DASHBOARD_PORT`, `DASHBOARD_HOST` | `http://localhost:8080`, 8080, `0.0.0.0` | web dashboard: public origin (https: Secure cookies, HSTS); listen port and interface |
+
+## Architecture
+
+### Entry Flow
+
+`index.js` runs `autoDeployCommands()`, then the `ShardingManager` spawns `src/bot.js` as a worker thread (`totalShards: 'auto'`, so Discord controls the shard count). `bot.js` creates the `Client` and boots in this order: `collectPlugins` → `installPlugins` → `registerCoreComponents` → `loadCommands` → `loadEvents` → `client.login`. On `ready` the scheduler starts, then `runGuildReady` runs the `guildReady` hooks for every available guild (concurrency 4; it ensures the `GuildSettings` row first); `guildCreate` and `guildAvailable` run it too. `guildDelete` clears the guild's Redis keys and cancels its recurring jobs; rows are kept so a re-invite restores everything.
+
+`index.js --deploy` short-circuits the boot sequence, calls `deployCommands()`, and exits.
+
+**Process supervision (main thread, `index.js`):**
+- A `node:http` health server (`src/utils/healthServer.js`) starts first: `/healthz` = event loop alive, `/readyz` = every shard `isReady()`.
+- The restart brake (`src/utils/restartBrake.js`) records each start in `STATE_DIR`; more than 5 starts per hour delays the next login (2^(n-5) min, max 30).
+- The ShardingManager uses `respawn: false`. A dead shard, or one disconnected for good (non-fatal unrecoverable close such as 4011), exits the process; Docker's restart policy and the brake handle retries.
+- Close codes 4004/4013/4014 are fatal (`src/utils/fatalGateway.js`): the shard reports them via `client.shard.send()` and the main thread parks instead of retrying.
+- Because a dead shard restarts the whole bot, per-event failures must not kill the worker: `eventLoader.js` catches and logs errors from every event handler, and `bot.js` logs client `error` events and unhandled rejections in the shard (e.g. from collector callbacks). Uncaught synchronous exceptions still end the shard.
+- `SIGTERM`/`SIGINT` are handled only in `index.js`: each shard runs `client.shutdown()` (defined in `bot.js`: stops the scheduler, flushes the audit-log queue, `client.destroy()`, closes Prisma and Redis), then the process exits within 25 s. The web dashboard's `dashboard.js` is the one other entry point with its own handlers (see Web dashboard below). Don't add signal handlers elsewhere.
+
+**Auto-deploy:** `autoDeployCommands()` in `src/handlers/commandLoader.js` hashes `CLIENT_ID`, `DEPLOY_GUILD_ID` and all command payloads and compares against `DEPLOY_HASH_FILE`. It only calls Discord when the hash changes; adding a command file and restarting is all that is needed. `buildCommandPayload` registers commands for servers only (`contexts: [0]`, `integration_types: [0]`) unless the command exports `allowInDMs = true`.
+
+### Extension points: the file-system registry
+
+Three directories are auto-discovered; **never edit `commandLoader.js`, `eventLoader.js` or `pluginLoader.js` when adding a feature.**
+
+**Commands** (`src/commands/<category>/*.js`; `_`-prefixed files are skipped) export:
+
+- `data`, `execute(interaction, client)`: required.
+- `module`: **required, explicit**: a `MODULES` key or `null` (core command).
+- `gated` (default `true`): refused while the module is off. ADMIN config commands set `false` (admins can set a disabled module up); only `/embed` is gated.
+- `permissionLevel` (default MEMBER) and `subcommandPermissions` `{ 'sub': level, 'group sub': level }` (a key that is not a real subcommand is a bug; tests check).
+- `allowInDMs`: `true` only for DM-safe commands; all others fail closed outside a cached guild. `autocomplete`: gated exactly like `execute`; a refusal answers an empty list.
+
+ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (76 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
+
+**Events** (`src/events/*.js`, `{ name, once, execute }`; the client is injected last) are thin dispatchers: pre-filter, then `await runHooks('<event>', { client, guild, ...fields })`. **Never put feature logic in `src/events/`.** They may import only `discord.js`, `hookRegistry`, `settingsService`, `scheduler`, `redis`, `config/jobTypes`, `utils/async`, `utils/logger` (tested). Besides gateway events there are the synthetic `guildReady` and the internal `levelUp` and `economyPurchase` points. `messageCreate` passes only real user messages (no bots, webhooks or system messages).
+
+**Plugins** (`src/plugins/<id>.js`): `export const plugin = { id, module, hooks, components, jobs, provides, init }`. `id` equals the file name; `module` is a `MODULES` key or `null`; importing has no side effects (`init(client)` is synchronous, run at install). `hooks`: `{ event, id, run(ctx), filter?, module?, always?, timeoutMs? }`; `components`: `{ type: 'button'|'select'|'modal', prefix, handler(interaction, client), module? }`; `jobs`: `{ type, handler(job, ctx) }`; `provides`: `{ xp?, coins? }` each `{ grant, take }`. `collectPlugins()` validates (ids and prefixes owned by this plugin, ids in `HOOK_ORDER`, no duplicates; an offending entry is dropped); `installPlugins()` registers hooks, components (module-gated), job handlers, reward providers, then `init`. Each plugin is named in its module's section; search has none.
+
+### Hook points
+
+`src/config/hookPoints.js` (`HOOK_ORDER`: event → ordered hook ids `<pluginId>` or `<pluginId>:<name>`) is the order of truth; add a hook's id there first. `runHooks(event, fields)` (never throws) runs each hook: sync `filter` (false or throwing skips) → module gate (skipped for `always: true` and `module: null`; no settings counts as disabled) → `run(ctx)` with a soft timeout (10 s default, or `timeoutMs`). A failing or timed-out hook is logged; the next still runs.
+- `ctx`: `event`, `client`, `guild`, `guildId`, `state` (shared scratch; keys in use: `invite`, `captchaPending`, `customCommand`, `automodAction`), `stop(reason)`, `stopped`, `getSettings()` (memoised, never throws), plus the event's fields. **Only automod and custom-commands may call `ctx.stop()`** (a test enforces it).
+- Internal points: `levelUp` (from `xpService.js` and `/xp give`: `member` may be null, `userId`, `oldLevel`, `newLevel`, `channel`, `source`) and `economyPurchase` (`/shop buy` only: `member`, `userId`, `item`, `quantity`, `totalPrice`, `channel`).
+
+### Interaction routing and the customId registry
+
+For a slash command or autocomplete the router applies one gate (`checkCommandAccess`): guild guard (fails closed unless `allowInDMs`) → module toggle (gated commands of disabled modules refused; unreadable settings answer "Temporarily Unavailable") → permission level (`subcommandPermissions['group sub']` beats `['sub']` beats `permissionLevel`) → `execute`. Settings come from the memo or a bounded load (3 s ack window).
+- Components route by prefix to `client.buttonHandlers`/`selectHandlers`/`modalHandlers` (`HandlerMap`: first registration wins). A `collector` prefix with no live collector gets "expired" after 2.5 s.
+- **`src/config/customIds.js`** (`CUSTOM_ID_PREFIXES`) lists every prefix with `owner`, `types` and `kind`: `persistent` (registered by a plugin or `registerCoreComponents`, survives restarts), `collector` (only a live collector answers) or `field` (modal input id, no params). `buildCustomId(prefix, ...params)`/`parseCustomId` use `prefix:param1:param2` (params never contain `:`, max 100 characters). **To add a prefix, edit `customIds.js`**; tests reject unknown prefixes and persistent prefixes without exactly one handler. Register persistent components only through a plugin's `components`, never `client.*Handlers.set` in a command.
+- Persistent components re-check permission levels themselves (the router does not); collector handlers acknowledge first.
+
+### Scheduler (`src/services/scheduler.js`)
+
+Durable timed work in the `ScheduledJob` table. `JOB_TYPES` (`src/config/jobTypes.js`) is the registry; an unknown type throws.
+- `scheduleJob({ guildId, type, runAt, payload, dedupeKey, maxAttempts = 5, onConflict })` calls `ensureGuildSettings`; `onConflict` `replace` (default), `keep` or `earliest` applies when the dedupe key has a live row. `cancelJobs({ dedupeKey | guildId | type | types | ids })`, `getJob(dedupeKey)`.
+- Handlers `async (job, ctx) => void | { nextRunAt, payload? }` (`ctx = { client, guild, lateByMs, attempt }`) must be idempotent (a claim can repeat after a crash). Return `{ nextRunAt }` to reschedule; throw `PermanentJobError` to fail without retry; other errors retry with back-off 30 s × 2^n (max 1 h) up to `maxAttempts`.
+- Every ~5 s each shard claims up to 25 due jobs (`FOR UPDATE SKIP LOCKED`) for its own available guilds: no shard-0 poller, no Redis lock. A job with no handler waits.
+- Interactive types (`interactive: true` in `JOB_TYPES`, listed in `INTERACTIVE_JOB_TYPES`: `dashboard.task`) are claimed only by their own ~1 s loop, so slow jobs never delay them, and are failed instead of run when they have no handler, the guild is not in the shard's cache, or they are over 60 s late (`INTERACTIVE_MAX_LATE_MS`): someone was told the outcome.
+- **Never use `setInterval`** (tested); use a recurring job. `guildDelete` cancels `RECURRING_JOB_TYPES`; `guildReady` hooks re-seed them.
+
+**Job types** (`src/config/jobTypes.js`):
+
+| Type | Owner plugin | Recurring | Dedupe key |
+|---|---|---|---|
+| `mod.unban` | moderation | no | `mod.unban:{guildId}:{userId}` |
+| `mod.expire` | moderation | no | `mod.expire:{infractionId}` |
+| `welcome.autorole` | welcome | no | `welcome.autorole:{guildId}:{userId}` |
+| `captcha.timeout` | captcha | no | `captcha.timeout:{guildId}:{userId}` |
+| `reminder.fire` | reminders | yes | `reminder:{reminderId}` |
+| `giveaway.end` | giveaways | no | `giveaway.end:{giveawayId}` |
+| `poll.end` | polls | no | `poll.end:{pollId}` |
+| `tempvoice.cleanup` | temp-voice | no | `tempvoice.cleanup:{channelId}` |
+| `stats.refresh` | stat-channels | yes | `stats.refresh:{guildId}` |
+| `birthday.tick` | birthdays | yes | `birthday.tick:{guildId}` |
+| `feed.poll` | feeds | yes | `feed.poll:{feedId}` |
+| `levels.voiceSweep` | levels | yes | `levels.voiceSweep:{guildId}` |
+| `dashboard.task` | dashboard-tasks | no | `dashboard.task:{taskId}` |
+
+### Rewards bus (`src/services/rewards.js`)
+
+XP and coins are granted through providers, so giveaways, achievements and automations never import levels or economy (`xp`: levels plugin, `coins`: economy plugin). `grant(kind, { guild, userId, amount, reason, member, channel })` / `take(...)` never throw and return `{ ok, total?, reason? }` (`reason`: `invalid-amount` unless an integer 1 to 1e9, `unavailable`, `module-disabled`, `error`); `isRewardAvailable(kind, settings)` is sync.
+
+### Modules and `/module`
+
+`MODULES` in `src/config/modules.js` is the single registry (`MODULE_FLAGS` is the legacy alias). The router, hook runner, `/module` and `/help` read it. `isModuleEnabled(settings, key)`: `null` key → on; unknown key or no settings → off; else the flag must be exactly `true`. `/module list|enable|disable` (ADMIN, core) toggles flags.
+
+| Key | `GuildSettings` flag | Default | Label | Config command |
+|---|---|---|---|---|
+| `moderation` | `modEnabled` | on | 🔨 Moderation | `/modconfig` |
+| `automod` | `automodEnabled` | off | 🤖 Auto-Moderation | `/automod` |
+| `logging` | `loggingEnabled` | off | 📜 Audit Logs | `/logging` |
+| `welcome` | `welcomeEnabled` | off | 👋 Welcome & Goodbye | `/welcome` |
+| `captcha` | `captchaEnabled` | off | 🛡️ Verification | `/captcha` |
+| `reactionroles` | `reactionRolesEnabled` | on | 🎭 Reaction Roles | `/reactionrole` |
+| `leveling` | `xpEnabled` | off | ⭐ Levels | `/levelconfig` |
+| `customcommands` | `customCommandsEnabled` | off | 🏷️ Custom Commands | `/tag` |
+| `automations` | `automationsEnabled` | off | ⚙️ Automations | `/automation` |
+| `translation` | `translationEnabled` | off | 🌐 Auto-Translate | `/autotranslate` |
+| `invites` | `invitesEnabled` | on | 📨 Invite Tracker | `/invites` |
+| `embeds` | `embedsEnabled` | on | 🧱 Embed Messages | `/embed` |
+| `reminders` | `remindersEnabled` | on | ⏰ Reminders | `/reminder` |
+| `giveaways` | `giveawaysEnabled` | on | 🎉 Giveaways | `/giveaway` |
+| `polls` | `pollsEnabled` | on | 📊 Polls | `/poll` |
+| `starboard` | `starboardEnabled` | on | 🌟 Starboards | `/starboard` |
+| `tickets` | `ticketsEnabled` | on | 🎫 Ticketing | `/ticket-panel` |
+| `tempvoice` | `tempVoiceEnabled` | on | 🔊 Temporary Channels | `/voice-hub` |
+| `stats` | `statsEnabled` | on | 📈 Statistics Channels | `/stats` |
+| `birthdays` | `birthdaysEnabled` | on | 🎂 Birthdays | `/birthday-config` |
+| `achievements` | `achievementsEnabled` | off | 🏆 Achievements | `/achievement-config` |
+| `economy` | `economyEnabled` | on | 🪙 Economy | `/economy-admin` |
+| `games` | `gamesEnabled` | on | 🎮 Games | `/games` |
+| `feeds` | `feedsEnabled` | on | 📰 Social Feeds | `/feed` |
+| `search` | `searchEnabled` | on | 🔎 Search Anything | `/settings` |
+| `liverole` | `liveRoleEnabled` | off | 🔴 Live Role | `/liverole` |
+
+`levelingEnabled` is deprecated and never read (`xpEnabled` is used).
+
+**Adding a module:** (1) boolean flag on `GuildSettings` + migration; (2) `DEFAULT_MODULE_SETTINGS` entry in `src/config/constants.js`; (3) `MODULES` entry; (4) commands with an explicit `module`; (5) `src/plugins/<id>.js`, its hook ids in `HOOK_ORDER`, prefixes in `customIds.js`, job types in `jobTypes.js`; (6) README command-table rows, a section in `modules.md`, `.env.example` keys, and in `src/dashboard/catalog.js` a `CATEGORIES` entry and a `DESCRIPTIONS` sentence (20 to 140 characters, ending with a full stop); the dashboard tests fail without them. Settings groups in `src/dashboard/fields.js` and record collections are optional. `npm test` fails until all agree.
+
+### Permission levels
+`PERMISSION_LEVELS` (`src/config/constants.js`): `MEMBER=0`, `MODERATOR=1`, `ADMIN=2`, `OWNER=3`. `resolvePermissionLevel(member, settings)` (`src/utils/permissionChecker.js`): `BOT_OWNER_ID` → OWNER; guild owner, Administrator or Manage Server → ADMIN; a `modRoleIds` role or Kick/Ban/Moderate Members → MODERATOR.
+
+### Settings (`src/services/settingsService.js`)
+
+**The only way to read or write `GuildSettings`** (never `prisma.guildSettings.*` elsewhere; never `cache.del('guild:…:settings')`; tests enforce both). Rows are cached in Redis (300 s, versioned by `_cacheV`), memoised per shard for 30 s and deep-frozen (copy arrays before editing).
+- `getSettings(guildId, { fresh })` memo → Redis → Postgres (row created on first use; throws only on Postgres failure); `getSettingsSafe` returns `null` instead; `peekSettings` is memo-only and synchronous.
+- `ensureGuildSettings(guildId)`: **call before creating any per-guild row** (every per-guild model has an FK to it).
+- `updateSettings(guildId, data)` upserts scalars with write-through; `updateSettingsWith(guildId, mutator)` is a locked (`FOR UPDATE`) read-modify-write for arrays and JSON, the mutator being pure; `invalidateSettings` is for guild join/leave only.
+- A cache miss is never a deletion: if Redis or a lookup fails, keep the data and degrade.
+
+### Data layer
+
+- **Prisma** (`src/database/client.js`): one singleton; query logging only with `PRISMA_LOG_QUERIES=1`. Int columns are 32-bit: clamp with `XP_MAX`/`COIN_MAX`/`economyMaxBalance`; SQL maths uses `::bigint`. Raw SQL uses `SQL_NOW`/`sqlUtc(date)` (UTC, like Prisma `DateTime`; never bare `now()`), and a service exports its statements as `RAW_SQL = [{ name, build }]` so `test/db.test.js` can run them.
+- **Redis** is a cache only, never the source of truth.
+
+**`cache` API** (`src/services/redis.js`): never throws; errors are logged and a fallback returned (`get` -> `null`, `set`/`del` -> `false`, `incr`/`slidingWindow` -> `null`, `invalidate` -> `0`). `setNX` returns `true`/`false`/`null` (Redis down): fail-open callers test `!== false`, fail-closed `!== true`. Always pass a TTL; commands time out after 750 ms; `slidingWindow(key, windowMs, member?)` counts hits in a ZSET window. `{g}` = guild id; owners without a path are in `src/services/`. `guildDelete` purges `guild:{g}:*`, `xp:cooldown:{g}:*`, `voice:start:{g}:*`. Dotted names such as `feed.poll:` are `ScheduledJob` dedupe keys, not Redis.
+
+| Key pattern | Owner | TTL | Purpose |
+|---|---|---|---|
+| `guild:{g}:settings` | settingsService | 300 s | row + `_cacheV` marker (`SETTINGS_CACHE_VERSION` 2; other versions are misses); 30 s memo |
+| `guild:{g}:embed:{name}` | embedService | 300 s (miss 60 s) | saved embed |
+| `guild:{g}:achievements`, `:automations`, `:rrpanels`, `:starboards`, `:triggers`, `:translateChannels` | achievement, automation, reactionRole, starboard, tag, translation services | 300 s | per-guild config caches |
+| `guild:{g}:invites` | inviteTracker | 7 d | invite use-count snapshot |
+| `xp:cooldown:{g}:{userId}` | xpService | `xpCooldown` s | fail-closed |
+| `voice:start:{g}:{userId}` | xpService | 26 h | open voice session; fail-closed |
+| `tag:cd:{g}:{tagId}[:{userId}]`, `trigger:cd:{g}:{triggerId}:{userId}` | tagService | cooldown | fail-closed |
+| `automation:cd:{g}:{automationId}:{userId}`, `automation:repost:{automationId}:{messageId}`, `automation:problem:{automationId}` | automationService | cooldown / 30 d / 7 d | cooldown (in-process fallback), repost once, last error |
+| `automod:dup:{g}:{userId}:{sha16}`, `automod:rate:{g}:{userId}` | automodService | 30 s / 5 s | fail-open |
+| `captcha:img:{g}[:{userId}]`, `captcha:dm:{g}` | captchaService | 60 s / 600 s | image and kick-DM caps; fail-open |
+| `welcome:rate:{g}:{kind}` | welcomeService | 60 s | flood caps; fail-open |
+| `rr:rate:{g}:{userId}` | reactionRoleService | 10 s | click limit |
+| `feed:fetch:{sha1(url)}`, `feed:rl:reddit:{slot}`, `feed:itunes:rl`, `feed:block:reddit` | feedService | interval - 30 s / 60 s / 60 s / 10-60 min | parsed feed, Reddit slot budget, podcast search cap, Reddit 429 block |
+| `search:{api}:{sha1}`, `search:pokeapi:index`, `search:{api}:pause`, `search:budget:{api}:{minute}`, `search:cd:{userId}` | searchService | 6 h (PokeAPI 7 d, empty 1 h) / pause / 120 s / 3 s | cache, 429 pause, budget, cooldown; fail-open |
+| `tr:{provider}:{target}:{sha1}`, `translate:{provider}:pausedUntil` | translationService | 1 h / pause length | result cache, 429 pause |
+| `log:timeout:{g}:{userId}:{untilSec}` | `src/plugins/logging.js` | to timeout end | de-dupes timeout logs; fail-open |
+| `mod:bansync:{g}` | `src/plugins/moderation.js` | 6 h | ban import throttle |
+| `invites:link:cd:{g}:{userId}` | `src/commands/utility/invites.js` | 60 s | `/invites link` cooldown |
+| `ach:react:{g}:{userId}:{messageId}:{emojiKey}`, `ach:boost:{g}:{userId}:{premiumSince}` | achievementService | 24 h | count once |
+| `birthday:announced:{g}:{userId}` | birthdayService | to year end + 1 d | announced-year tombstone |
+| `tempvoice:rename:{channelId}` | tempVoiceService | 10 min | rename stamps |
+
+### Schema notes
+
+Every model with a `guildId` has an FK to `GuildSettings(guildId)` with `onDelete: Cascade` (leaving a guild keeps its rows); children without `guildId` cascade from their parent.
+
+- `GuildSettings`: one row per guild, parent of all; use `settingsService` only. One boolean flag per `MODULES` entry (`autoTriggersEnabled` is a `/trigger` sub-switch; `levelingEnabled` and `xpRate` are legacy), plus `timezone`, `embedColor`, `customPrefix`, and JSON such as `automodConfig` and `infractionEscalation`. `String[]` fields change via `updateSettingsWith` (row lock), not `updateSettings`.
+- `ScheduledJob`: `dedupeKey` unique globally (`scheduleJob` upserts), `version` bumped on reschedule, lease `lockedBy`/`lockedUntil`.
+- `Infraction`: `caseId` is per guild, `@@unique([guildId, caseId])`, allocated under `pg_advisory_xact_lock`, never MAX+1.
+- `UserLevel` `[guildId, userId]` (`xp` clamped to `XP_MAX`); `LevelRole` `[guildId, level]`: one reward role per level.
+- `UserEconomy`: legacy global wallet by `userId`, never written, only read by `getAccount`/`peekAccount`. `EconomyAccount` is per server: `getAccount` creates it lazily and copies the legacy balance once (`importedGlobal`) unless `economyImportGlobal` is false.
+
+**Schema-change protocol** (after this branch merges): edit `prisma/schema.prisma` and `npx prisma generate`; `npm run db:migrate -- --name <change>` on a scratch database and commit the migration with the schema; **additive only** (never drop or rename columns/tables or change types: rolling back the image does not roll back the database); an enum `ADD VALUE` is not usable as a default or in data statements of the same migration; data fixes are hand-written `UPDATE`s below the generated DDL; CI applies every migration to an empty PostgreSQL 17 and fails on drift; never edit an applied migration. Until `20261010120000_mee6_parity` is deployed, schema changes on branch `mee6-parity` regenerate that single migration instead of adding a second one.
+
+### Web dashboard (`dashboard.js`)
+
+A separate process: `npm run dashboard` (`dashboard:dev` with nodemon, `pm2:dashboard` under PM2). It shares Postgres and Redis with the bot and adds no dependencies. Its SIGTERM/SIGINT handlers close the server, Prisma and Redis, then exit within 10 s.
+- `dashboard.js` (repo root): entry point. `loadDashboardConfig()` runs once; missing or invalid keys park it (`createParkedServer`: `/healthz` 200, everything else 503 naming the keys, never values). `settingsBridge.js` and `recordsBridge.js` are imported only after the config is valid, because importing them opens Redis.
+- `src/dashboard/config.js`: parses every env key the dashboard reads (`DASHBOARD_*`, `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET`, plus `CLIENT_ID`, `DISCORD_TOKEN`, `DATABASE_URL`, `REDIS_URL`, `BOT_OWNER_ID`). Pure: nothing is read at import.
+- `src/dashboard/server.js`: `createDashboardServer` (router, static files from `src/dashboard/public/` by name, security headers with a strict CSP). Routes: `/healthz`, `/auth/login|callback|logout`, `/api/me`, `/api/catalog`, `/api/guilds`, `/api/guilds/:id/settings` (GET; PATCH `{ changes }`, at most 200 fields, 256 KB), `/api/guilds/:id/resources` (GET; `?fresh=1` reloads channels, roles, emojis and the bot's permissions), `/api/guilds/:id/members?query=` (GET; member search for `user` fields, 30 per 10 s per user), `/api/guilds/:id/records/:key` (GET list, POST create; a searchable list takes `?query=` and `?cursor=` and answers `nextCursor` while more pages follow), `.../:itemId` (GET, PATCH, DELETE), `.../:itemId/actions/:actionId` (POST). Record bodies are `{ data }`, at most 128 KB. Settings and record writes and forced resource reloads share 20 per 10 s per user. Channel and role ids must exist in the server. A role must be assignable by the bot and carry no moderator or admin permissions; unless the admin is the guild owner or `BOT_OWNER_ID`, it must also sit below their own top role.
+- `src/dashboard/auth.js`: Discord OAuth2 (`identify guilds`), AES-256-GCM sealed session cookie (7 d max, no refresh token), OAuth `state` cookie, CSRF guard `checkWriteRequest` (`X-Dashboard: 1`, JSON content type, same-origin `Origin`, `Sec-Fetch-Site`; POST, PATCH and DELETE), `canManageGuild`.
+- `src/dashboard/discordApi.js`: Discord REST. The current user, the user's guilds and the bot's guild ids (both lists cached 60 s), the invite URL, `getGuildResources` (channels, roles, emojis and the bot's permissions; cached 30 s, `fresh` skips it) and `getMember`, with the user's token or the bot's. `sendMessage`, `editMessage` and `deleteMessage` post as the bot: `allowed_mentions` never allows @everyone and pings nothing unless asked.
+- `src/dashboard/catalog.js`: `CATEGORIES` (every module in exactly one), `DESCRIPTIONS`, `SUB_TOGGLES` (16 boolean switches inside modules; a test pins the count), and `buildCatalog()` for `GET /api/catalog`: the general page, each module's groups and collection keys, every collection descriptor and the placeholder tokens.
+- `src/dashboard/schema.js`: the field descriptors (`FIELD_TYPES`: boolean, int, float, text, enum, color, channel(s), role(s), template, embed, stringList, objectList and more). `validateValue` is strict and checks input; `readValue` is lenient and reads stored data; `checkRefs` checks ids against the server; `publicDescriptor` is what the browser gets; `lintDescriptors` runs in the tests.
+- `src/dashboard/fields.js`: the settings registry. `GENERAL_GROUPS` (time zone, embed colour, prefix), `MODULE_GROUPS` (titled groups of descriptors per module), `SETTINGS_FIELDS` (field to descriptor; module flags included), `NOT_EXPOSED` (columns the dashboard never writes, each with its reason). Automod rules and lists are virtual fields over the `automodConfig` JSON column; the captcha verify button is one over `captchaTemplate`. Helpers: `readSettingsValues`, `validateSettingsChanges`, `toStoredChanges`, `checkCrossFields`.
+- `src/dashboard/settingsBridge.js`: the dashboard's only path to `GuildSettings`. `readGuildSettings` reads with `fresh: true` and normalises the JSON columns with the bot's normalisers. `writeSettings` is one row-locked `updateSettingsWith` write: cross-field rules are checked on the merged row, Json `null` is stored as `Prisma.DbNull`, then the commands' side effects run. Open voice sessions are dropped when voice XP or Levels go off (`voice:start:{g}:*`); scheduled captcha kicks are cancelled when the timeout is set to 0; the posted captcha panel is edited; the birthday job is rescheduled; balances are lowered when the maximum drops; a confirmation is posted in a new moderation log channel; the automod config is rewritten when Auto-Moderation is enabled; the welcome text in effect is kept. A thrown side-effect error is logged and never undoes the save; the captcha panel and moderation-log steps report through `notices`.
+- Dashboard tasks (actions that need the gateway client): a store calls `ctx.runTask(kind, payload)`; `src/dashboard/tasks.js` queues a `dashboard.task` job (one attempt, dedupe `dashboard.task:{taskId}`) for the shard that has the guild and waits up to 12 s: `done` (message from Redis `dashboard:task:{jobId}`, 15 min), `failed` (the job's `lastError`), `pending` (still running), or `offline` (never claimed, so cancelled; `taskOutcome` in `collections/errors.js` maps these to results or `RecordError`s). In the bot, `src/plugins/dashboard-tasks.js` runs them through `src/services/dashboardTasks/index.js` (`TASKS`: one `{ run }` per kind, from the feature files in that directory; `TaskError` messages reach the admin, anything else is generic). Kinds: `mod.action`, `mod.editCase`, `mod.clearWarnings`, `xp.adjust`, `giveaway.start|end|reroll|cancel|restart|odds`, `poll.start|end|delete`, `rr.publish|repost|delete`, `ticket.check|publish|refresh|delete`; each re-checks the dashboard user's rights and its payload. Coins (`balances`) and automations write without a task.
+- `src/dashboard/recordsBridge.js`: `createRecordsBridge` sends each request to the collection's store, with `{ userId, user, member, discord, logger }` as the context. `dashboard.js` loads it with a dynamic import, like `settingsBridge.js`, because the stores open Redis.
+- Record collections (`src/dashboard/collections/`, registry in `index.js`): 21 per-server lists: saved embeds (`embeds`), custom commands (`tags`), auto-responders (`triggers`), reminders, social feeds (`feeds`), level rewards (`levelRoles`), shop items, achievements, starboards, auto-translate channels (`translateChannels`), voice hubs (`tempVoiceHubs`), counter channels (`statChannels`), coin boosts (`economyBoosts`), moderation cases (`cases`), member levels (`levels`), member balances (`balances`), giveaways, polls, reaction-role panels (`reactionRoles`), ticket panels (`ticketPanels`) and automations. Each has a pure descriptor file (`fields`, `createOnly`, `readOnly`, `actions`, `limit`, `check`; `searchable` lists add `searchPlaceholder`, and `limit: null` means no cap) and a `.store.js` file, the only one that touches the database. `validateRecordInput` checks input against the descriptor; `errors.js` maps `RecordError` codes to HTTP statuses: `failed` (the bot refused the action) is 422 `action_failed`. A `saved: true` error means the change was stored, or may still happen, before the failure (a panel saved but not posted, a task still running); the front end closes the dialog and reloads instead of offering a retry. A store's create or update may return `withMessage(item, note)` (`errors.js`) to show the bot's note instead of "Saved". A collection whose role field means different things per item type defines server-only `refKeys(item, keys)` / `refKeyOf(ref, data)` (automations: given vs taken roles), so `verifyRefs` re-checks a role that moves to a giving use.
+- Store rules: queries are scoped by `guildId` (an update by id follows a scoped read in the same transaction). A create calls `ensureGuildSettings`, directly or through the command's service. Caps and unique names are enforced under a lock: the GuildSettings row (`FOR UPDATE`), a per-guild advisory lock, or the service's own lock. Most stores call the same service as their command, so caps and side effects match; the Discord-side writes of moderation, XP, giveaways, polls and panel posts go through dashboard tasks instead, and level rewards write directly, with the `/levelconfig role` rules. The stores that define a lock statement export it in `RAW_SQL` (`dashboard.*` names), which `test/db.test.js` runs. Discord writes go through `ctx.discord` and are bot messages only: no channel or role is created or deleted.
+- `src/dashboard/public/`: the front end, no build step; the server serves only the files it lists by name. `index.html` loads `app.js` as a module, which routes the pages (`#/guild/<id>`, `.../<category>`, `.../module/<key>`, `.../module/general`) and shows the unsaved-changes bar. `lib.js` (DOM helpers, API client, toasts), `forms.js` + `forms.css` (one control per descriptor type, plus the pickers), `embed-editor.js` (message and embed editor with a live preview), `collections.js` + `collections.css` (record lists and editor dialogs), `styles.css` (tokens and page styles).
+- Access: `canManageGuild` allows the guild owner, Administrator or Manage Server holders (from the OAuth guild list) and `BOT_OWNER_ID`. Rechecked on every request against a guild list cached at most 60 s. Without the bot in the guild, the dashboard offers an invite link instead.
+- Write whitelist: `validateSettingsChanges` (fields.js) accepts only `SETTINGS_FIELDS`: every module flag and every group field, at most 200 changes, each value checked by its descriptor. A new GuildSettings column must be a field in one of the groups in `fields.js` (a description of at least 10 characters, a type that fits the column, a default equal to its `@default`) or be listed in `NOT_EXPOSED` with a reason. `test/dashboard.test.js` enforces both, that bot-managed columns are never fields, that list caps come from `LIMITS`, and that each module flag and sub-toggle is a Boolean column whose `@default` matches. A new module needs a category (see Adding a module).
+- Propagation: the bot memoises settings for 30 s per shard, so a dashboard change reaches it within about 30 s; no restart. Lists: custom commands and auto-responders have a 60 s memo (the tag index and the trigger list); achievements 30 s (`ACH_MEMO_TTL_MS`); starboards 60 s; auto-translate channels 30 s; voice hubs 5 min (`INDEX_TTL_MS`, which the dashboard cannot clear); automations 60 s (`MEMO_TTL_MS`); counter channels are renamed by the 10 min `stats.refresh` job. Reminders, feeds, saved embeds (which rewrite their `guild:{g}:embed:{name}` copy), shop items, boosts and level rewards are read or scheduled when saved.
+- Front-end rules: no inline scripts or styles (CSP `style-src 'self'`), no `innerHTML` or other HTML-string sinks and no `eval` in `src/dashboard/public/` (`test/dashboard.test.js` scans for them). Every page module stays import-safe in Node: nothing touches `document`, `window` or storage until a function is called (`test/smoke.test.js` imports every source file). They must not use `console` or `setInterval` (the repo-rule scans in `test/integration.test.js` catch both) or `process.env`.
+- Tests: `test/dashboard.test.js` covers the web dashboard offline: catalog, the settings registry, config, sessions, access and CSRF rules, and the HTTP API against fake Discord and bridge dependencies; `test/dashboard-collections.test.js` and `test/dashboard-collections-more.test.js` cover the record collections: descriptors, request rules and drift guards against the services' limits; `test/dashboard-tasks.test.js` covers the task runner (queueing, waiting, `done`/`failed`/`pending`/`offline`) and the bot's dispatch; `test/dashboard-moderation.test.js` (cases, levels, balances and the `dashboard` moderation source), `test/dashboard-giveaways-polls.test.js`, `test/dashboard-panels.test.js` (reaction-role and ticket panels) and `test/dashboard-automations.test.js` cover the newer collections, and their database cases need `TEST_DATABASE_URL`.
+
+### Safe utilities (`src/utils/`)
+
+| Module | Exports worth knowing | Use when |
+|---|---|---|
+| `placeholderParser.js` | `renderPlaceholders(tpl, ctx)` (`ctx` = `{member, user, guild, channel, vars, args}`): MEE6 tokens, args `{1}` `{1:default}`, extra tokens via `ctx.vars`, unknown tokens stay literal | any admin-written text |
+| `customEmbed.js` | MessageTemplate `{content, embed, buttons}`: `validateTemplate`, `renderTemplate(tpl, ctx, opts)` (payload or `null`), `buildTemplateModal`/`parseTemplateModal` (`tpl-*` inputs); its `LIMITS` are message sizes, not the per-guild table | configurable messages |
+| `safeRegex.js` | `validateRegex`, `safeRegexTest` (vm timeout; a timeout quarantines the regex), `containsWord` (Unicode whole word) | any user-supplied pattern |
+| `safeFetch.js` | `safeFetch`, `safeFetchJson/Text/Image`, `SafeFetchError`, `DEFAULT_USER_AGENT` (includes `HTTP_CONTACT`) | any request to a user-influenced URL (SSRF-safe, limits) |
+| `interactionHelpers.js` | `safeDefer`, `safeReply`, `replyError`, `requireBotPermissions`, `checkChannelUsable`, `checkAssignableRole`, `pingableRoleIds`, `respondAutocomplete`, `awaitConfirm` | replies, role/channel validation, autocomplete, confirms |
+| `async.js` | `withTimeout`, `ackBudgetMs`, `mapLimit`, `createKeyedMutex`, `createThrottle` | lookups before an ack, bounded fan-out, per-key serialisation |
+| `newTargets.js` | `newRoleOption`/`newChannelOption` (builder companion `new_<picker>`), `resolveNewOptions(interaction, data, { required, private })` | a setup picker that should also accept "create a new role/channel": add the companion right after the picker (a required picker becomes optional and goes in `required`), call `resolveNewOptions` after the defer and before reading the picker. Reuses an exact-name match (refused for a role with `DANGEROUS_PERMISSIONS` or, for `private`, a channel @everyone can see), else creates (role with no permissions; channel of the picker's first creatable type, `private` ones hidden from @everyone); the invoker and the bot need Manage Roles/Channels to create. Substitutes into discord.js's private `_hoistedOptions`, pinned by `test/new-targets.test.js` |
+| `embedBuilder.js`, `paginator.js` | `successEmbed`, `errorEmbed`, `infoEmbed`, `warnEmbed`, `neutralEmbed`, `applyGuildColor`, `guildEmbed`; `paginate(target, pages, opts)` (ids `paginator:prev|next|stop`) | every embed (guild colour on info/neutral only) |
+| `time.js`, `parseDuration.js`, `text.js` | `zonedToUtc`, `nextTimeOfDay`, `nextIntervalRun`, `parseDateInput`, `discordTimestamp`; `parseDuration` (ms or `null`), `formatDuration`; `clampText`, `chunkLines`, `formatNumber`, `progressBar` | guild-`timezone` maths, durations, text clamping |
+| `deletionTracker.js`, `guildMembers.js`, `imageSize.js` | `markBotDeletion`/`wasDeletedByBot` (before the bot deletes, so delete logs skip it); `fetchAllMembers` -> `{ok, members}` or `{ok:false, reason}`; `assertImageDimensions` (throws) | bot deletions, full member fetches, before `loadImage` of user bytes |
+| `welcomeCard.js`, `profileCard.js` | `generateWelcomeCard`, `generateProfileCard` | canvas PNGs; need the bundled `assets/fonts/Nunito-Bold.ttf`: the Docker image has no system fonts, so a missing file means blank text |
+
+### Global conventions
+
+- **Mentions:** the client default is `allowedMentions: { parse: ['users'], repliedUser: false }`; never parse `@everyone`; roles only when an admin configured a ping role, filtered by `pingableRoleIds`.
+- **Embeds:** bot text uses the `embedBuilder` factories; admin-authored templates use `customEmbed`, clamped after placeholder expansion. Keep `{ ephemeral: true }` (not `MessageFlags.Ephemeral`).
+- **Acknowledge within 3 s:** bound lookups before `deferReply`/`showModal` with `ackBudgetMs(interaction)` and `peekSettings`; collectors acknowledge first.
+- **Canvas:** welcome card 700×250 (`welcomeCardStyle`), rank card 900×280 (`rankCardStyle`); both need the committed `assets/fonts/Nunito-Bold.ttf` (the image has no system fonts, a missing file renders blank text).
+- **Limits:** per-guild caps are `LIMITS` in `src/config/constants.js`; never hard-code (`XP_MAX`, `COIN_MAX` clamp XP and coins). **Roles:** `checkAssignableRole`, then add/remove one at a time (never `roles.add([...])` or `roles.set`). User images: `assertImageDimensions`; full member lists: `fetchAllMembers`; autocomplete: filter in the database, return 25 via `respondAutocomplete`.
+- **Moderation commands** `deferReply({ ephemeral: true })`, then on success `deleteReply()` + public `followUp()` (subject to `modVisibility`); errors `editReply` (`/purge` always replies privately). **Admin config commands** use a public `deferReply()`; exceptions: `/settings` validation errors and `/automod words|patterns` replies are ephemeral.
+- **Timers and collectors catch everything** (a stray rejection must not kill the shard). `logger` only, never `console`. Check bot permissions before Discord writes and answer friendly. REST codes 10003, 10008, 10011, 50001, 50013 (unknown channel/message/role, missing access/permission) mean "gone": degrade and clean up, do not retry.
