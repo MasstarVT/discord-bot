@@ -14,6 +14,7 @@ import { collection as shopItems } from './shopItems.js';
 import { collection as achievements } from './achievements.js';
 import { collection as starboards } from './starboards.js';
 import { collection as translateChannels } from './translateChannels.js';
+import { collection as translateStats } from './translateStats.js';
 import { collection as tempVoiceHubs } from './tempVoiceHubs.js';
 import { collection as statChannels } from './statChannels.js';
 import { collection as economyBoosts } from './economyBoosts.js';
@@ -28,7 +29,7 @@ import { collection as automations } from './automations.js';
 
 /** Display order. */
 export const COLLECTION_LIST = Object.freeze([
-  embeds, tags, triggers, reminders, feeds, levelRoles, shopItems, achievements, starboards, translateChannels,
+  embeds, tags, triggers, reminders, feeds, levelRoles, shopItems, achievements, starboards, translateChannels, translateStats,
   tempVoiceHubs, statChannels, economyBoosts, cases, levels, balances, giveaways, polls, reactionRoles, ticketPanels,
   automations,
 ]);

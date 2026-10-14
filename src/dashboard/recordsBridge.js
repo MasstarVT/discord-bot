@@ -14,6 +14,7 @@ import { store as shopItems } from './collections/shopItems.store.js';
 import { store as achievements } from './collections/achievements.store.js';
 import { store as starboards } from './collections/starboards.store.js';
 import { store as translateChannels } from './collections/translateChannels.store.js';
+import { store as translateStats } from './collections/translateStats.store.js';
 import { store as tempVoiceHubs } from './collections/tempVoiceHubs.store.js';
 import { store as statChannels } from './collections/statChannels.store.js';
 import { store as economyBoosts } from './collections/economyBoosts.store.js';
@@ -28,7 +29,7 @@ import { store as automations } from './collections/automations.store.js';
 
 /** key -> store. Every key of COLLECTIONS (src/dashboard/collections/index.js) has one. */
 export const STORES = Object.freeze({
-  embeds, tags, triggers, reminders, feeds, levelRoles, shopItems, achievements, starboards, translateChannels,
+  embeds, tags, triggers, reminders, feeds, levelRoles, shopItems, achievements, starboards, translateChannels, translateStats,
   tempVoiceHubs, statChannels, economyBoosts, cases, levels, balances, giveaways, polls, reactionRoles, ticketPanels,
   automations,
 });

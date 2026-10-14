@@ -65,6 +65,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Code:** `src/plugins/translation-fixes.js` (hook last in `messageCreate`), `src/services/translationService.js`.
 - **Providers:** `TRANSLATE_PROVIDER` `google` (default) or `libretranslate` (`LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY`); else warns, uses google. Traditional Chinese is `zh-tw`; aliases `iw nb zh-cn zh-hant fil`; the first 1,000 characters are translated, up to 1,000 shown per language.
 - **Redis:** `tr:{provider}:{target}:{sha1}` (1 h), `translate:{provider}:pausedUntil`; a 429 pauses (30 min Google, 1 min LibreTranslate).
+- **Activity:** `src/services/translateStatsService.js` `recordTranslation` counts each auto-translate reply that was sent and each `/translate` in a server (never DMs) in `TranslateStat`: per channel, `via` `auto|command`, `direction` `from` (detected language, `und` when none) or `to` (each target shown), `count` clamped to int4. One `INSERT … ON CONFLICT` per message, unawaited, never throws; counts only, never text. The dashboard's read-only `translateStats` list shows it per channel.
 
 ### 📨 Invite Tracker — `invites`
 - **Commands:** `/invites` (gated).

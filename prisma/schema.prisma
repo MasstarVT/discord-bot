@@ -283,6 +283,7 @@ model GuildSettings {
   levelRoles           LevelRole[]
   autoTriggers         AutoTrigger[]
   translateChannels    TranslateChannel[]
+  translateStats       TranslateStat[]
   scheduledJobs        ScheduledJob[]
   personalInvites      PersonalInvite[]
   savedEmbeds          SavedEmbed[]
@@ -618,6 +619,23 @@ model TranslateChannel {
 
   @@unique([guildId, channelId])
   @@index([guildId])
+}
+
+// Translation activity per channel (auto-translate replies and /translate in a server): one counter per
+// language, `from` = the language the author wrote in ('und' when not detected), `to` = a target. Counts only.
+model TranslateStat {
+  guildId   String
+  channelId String
+  via       String // 'auto' or 'command'
+  direction String // 'from' or 'to'
+  lang      String
+  count     Int      @default(0)
+  firstAt   DateTime @default(now())
+  lastAt    DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, channelId, via, direction, lang])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

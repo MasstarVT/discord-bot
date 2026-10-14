@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { EmbedBuilder } from 'discord.js';
 import prisma from '../database/client.js';
 import { cache } from './redis.js';
+import { STAT_VIA, recordTranslation } from './translateStatsService.js';
 import { COLORS } from '../config/constants.js';
 import logger from '../utils/logger.js';
 import { clampText } from '../utils/text.js';
@@ -1140,6 +1141,11 @@ export async function handleAutoTranslate(ctx, { checkPermissions = true } = {})
       });
       try {
         await message.reply(buildAutoReplyPayload(embed));
+        // Unawaited: counting never delays or fails the hook.
+        void recordTranslation({
+          guildId, channelId: message.channelId, via: STAT_VIA.AUTO,
+          detected: outcome.detected, targets: outcome.results.map((r) => r.target),
+        });
       } catch (err) {
         if (REPLY_GONE.has(err?.code)) logger.debug(`Auto-translate: the message ${message.id} is gone (${err.code})`);
         else if (REPLY_BLOCKED.has(err?.code)) {

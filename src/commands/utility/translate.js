@@ -7,6 +7,7 @@ import {
   translateText, translationPaused, warmLanguageSupport,
 } from '../../services/translationService.js';
 import { getSettingsSafe } from '../../services/settingsService.js';
+import { STAT_VIA, recordTranslation } from '../../services/translateStatsService.js';
 import { applyGuildColor, errorEmbed, infoEmbed } from '../../utils/embedBuilder.js';
 import { isInteractionGone, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import { clampText } from '../../utils/text.js';
@@ -91,6 +92,12 @@ export async function execute(interaction) {
 
   try {
     await interaction.editReply({ embeds: [first] });
+    if (interaction.guildId) {
+      void recordTranslation({
+        guildId: interaction.guildId, channelId: interaction.channelId, via: STAT_VIA.COMMAND,
+        detected: result.detected, targets: result.detected === target ? [] : [target],
+      });
+    }
   } catch (err) {
     if (isInteractionGone(err)) { logger.debug(`/translate: interaction gone (${err.code})`); return undefined; }
     throw err;
