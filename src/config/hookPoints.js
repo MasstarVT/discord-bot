@@ -2,7 +2,7 @@
 // The table is generated from build-plan.mjs (01-foundation §3.3); the runner is src/handlers/hookRegistry.js.
 export const HOOK_ORDER = Object.freeze({
   "ready": Object.freeze([]),
-  "guildReady": Object.freeze(["invites","moderation","levels","temp-voice","stat-channels","birthdays","feeds","liverole","reminders"]),
+  "guildReady": Object.freeze(["invites","moderation","levels","temp-voice","stat-channels","birthdays","feeds","liverole","reminders","bot-joins"]),
   "guildDelete": Object.freeze([]),
   "messageCreate": Object.freeze(["automod","counting","logging","custom-commands","levels","achievements","automations","custom-commands:triggers","translation-fixes"]),
   "messageUpdate": Object.freeze(["logging","automod","automations","starboard"]),

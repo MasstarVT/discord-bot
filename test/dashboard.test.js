@@ -1687,6 +1687,47 @@ describe('HTTP server', () => {
     assert.equal(absent.json.error, 'bot_not_in_guild');
   });
 
+  test('only the bot owner sees who added the bot; a database failure leaves it out', async () => {
+    const joinedAt = new Date('2026-10-01T12:00:00.000Z');
+    const stored = new Map([
+      [G.zeta, { inviterId: '200000000000000001', inviterName: 'alice', source: 'audit', joinedAt }],
+      [G.botOnly, { inviterId: null, inviterName: null, source: null, joinedAt }],
+    ]);
+    let failing = false;
+    const asked = [];
+    const botJoins = {
+      listBotJoins: async (ids) => {
+        asked.push(ids);
+        if (failing) throw new Error('database down');
+        return new Map(ids.filter((id) => stored.has(id)).map((id) => [id, stored.get(id)]));
+      },
+    };
+    const withJoins = createDashboardServer({ config, logger: recordingLogger(), deps: { discord: fakes.discord, settings: fakes.settings, botJoins } });
+    const joinsPort = await listen(withJoins);
+    try {
+      const mine = await call(joinsPort, 'GET', '/api/guilds', { headers: { cookie: sessionCookie() } });
+      assert.equal(mine.status, 200);
+      assert.equal([...mine.json.guilds].some((g) => Object.hasOwn(g, 'addedBy')), false);
+      assert.deepEqual(asked, [], 'not even read for other users');
+
+      const cookie = sessionCookie({ uid: OWNER_ID });
+      const owner = await call(joinsPort, 'GET', '/api/guilds', { headers: { cookie } });
+      assert.equal(owner.status, 200);
+      const byId = new Map([...owner.json.guilds, ...owner.json.ownerGuilds].map((g) => [g.id, g]));
+      assert.deepEqual(byId.get(G.zeta).addedBy, { userId: '200000000000000001', name: 'alice', source: 'audit', joinedAt: joinedAt.toISOString() });
+      assert.deepEqual(byId.get(G.botOnly).addedBy, { userId: null, name: null, source: null, joinedAt: joinedAt.toISOString() });
+      assert.equal(byId.get(G.plain).addedBy, null, 'nothing recorded yet');
+      assert.equal(Object.hasOwn(byId.get(G.alpha), 'addedBy'), false, 'the bot is not there');
+
+      failing = true;
+      const down = await call(joinsPort, 'GET', '/api/guilds', { headers: { cookie } });
+      assert.equal(down.status, 200);
+      assert.equal([...down.json.guilds, ...down.json.ownerGuilds].some((g) => Object.hasOwn(g, 'addedBy')), false);
+    } finally {
+      await close(withJoins);
+    }
+  });
+
   test('Discord failures on /api/guilds', async () => {
     const expired = await authed('/api/guilds', { cookie: sessionCookie({ accessToken: 'expired-token' }) });
     assert.equal(expired.status, 401);

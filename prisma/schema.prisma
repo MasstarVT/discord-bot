@@ -290,6 +290,7 @@ model GuildSettings {
   translateChannels    TranslateChannel[]
   translateStats       TranslateStat[]
   countingState        CountingState?
+  botJoin              BotJoin?
   scheduledJobs        ScheduledJob[]
   personalInvites      PersonalInvite[]
   savedEmbeds          SavedEmbed[]
@@ -654,6 +655,20 @@ model CountingState {
   lastMessageId String?
   best          Int      @default(0)
   updatedAt     DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+// Who added the bot to a guild, shown to the bot owner in the dashboard. Written when the bot joins (and at startup
+// while still unknown) from the audit log's Bot Add entry, else the server's integration for the bot. A null
+// inviterId means unknown: no View Audit Log or Manage Server, or the entry is gone. A re-add overwrites the row.
+model BotJoin {
+  guildId     String   @id
+  inviterId   String?
+  inviterName String?
+  source      String? // 'audit' or 'integration'; null when unknown
+  joinedAt    DateTime
+  checkedAt   DateTime @updatedAt
 
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 }

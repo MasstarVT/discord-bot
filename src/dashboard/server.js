@@ -185,7 +185,7 @@ function readBody(req, limit) {
  * @returns {import('node:http').Server}
  */
 export function createDashboardServer({ config, deps, logger = defaultLogger, publicDir = PUBLIC_DIR }) {
-  const { discord, settings, records = null } = deps;
+  const { discord, settings, records = null, botJoins = null } = deps;
   const registry = deps.collections ?? { COLLECTIONS, validateRecordInput };
   const now = deps.now ?? Date.now;
   const sessionKey = deriveSessionKey(config.sessionSecret);
@@ -429,7 +429,32 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       return;
     }
     const memberOf = new Set(guilds.map((g) => g.id));
-    json(ctx, 200, { guilds: list, ownerGuilds: await ownerGuildList(new Set(list.map((g) => g.id)), memberOf) });
+    const ownerGuilds = await ownerGuildList(new Set(list.map((g) => g.id)), memberOf);
+    await addInviters([...list, ...ownerGuilds]);
+    json(ctx, 200, { guilds: list, ownerGuilds });
+  }
+
+  /**
+   * For the bot owner: sets `addedBy` on each server the bot is in, from the BotJoin rows the bot records: null when
+   * nothing is recorded yet, else `{ userId, name, source, joinedAt }` (userId null: the bot could not tell who). A
+   * database failure, or no `botJoins` dependency, leaves the field out.
+   */
+  async function addInviters(entries) {
+    if (!botJoins) return;
+    const present = entries.filter((g) => g.botPresent);
+    let rows;
+    try {
+      rows = await botJoins.listBotJoins(present.map((g) => g.id));
+    } catch (err) {
+      logger.warn(`Dashboard: could not read who added the bot: ${err?.message ?? err}`);
+      return;
+    }
+    for (const g of present) {
+      const row = rows.get(g.id);
+      g.addedBy = row
+        ? { userId: row.inviterId, name: row.inviterName, source: row.source, joinedAt: row.joinedAt.toISOString() }
+        : null;
+    }
   }
 
   /**

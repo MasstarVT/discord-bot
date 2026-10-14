@@ -571,8 +571,30 @@ function serverIdentity(guild, meta) {
     'span',
     { class: 'server-identity' },
     avatar(guild.name, guild.iconUrl, { size: 'md' }),
-    h('span', { class: 'server-text' }, h('span', { class: 'server-name' }, guild.name), h('span', { class: 'server-meta' }, meta)),
+    h(
+      'span',
+      { class: 'server-text' },
+      h('span', { class: 'server-name' }, guild.name),
+      h('span', { class: 'server-meta' }, meta),
+      addedByLine(guild),
+    ),
   );
+}
+
+/**
+ * Who added the bot, for the bot owner: only their /api/guilds entries carry `addedBy` (null: nothing recorded yet;
+ * a null userId: the bot could not tell, it needs View Audit Log or Manage Server there).
+ */
+function addedByLine(guild) {
+  if (!Object.hasOwn(guild, 'addedBy')) return null;
+  const info = guild.addedBy;
+  if (!info) return h('span', { class: 'server-meta server-added' }, 'Added by: not recorded yet');
+  const who = info.userId ? `${info.name || 'unknown name'} (${info.userId})` : 'unknown';
+  let when = '';
+  const date = new Date(info.joinedAt);
+  if (!Number.isNaN(date.getTime())) when = ` on ${new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date)}`;
+  const hint = info.userId ? null : 'The bot needs View Audit Log or Manage Server in this server to tell who added it.';
+  return h('span', { class: 'server-meta server-added', title: hint }, `Added by ${who}${when}`);
 }
 
 /** The bot owner's Join button: asks the bot for a single-use invite, then offers it as a link (no popup). */

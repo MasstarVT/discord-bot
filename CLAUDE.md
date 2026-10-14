@@ -24,4 +24,4 @@ Detail lives in two docs, read only the part you need (grep first):
 
 Job types: `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task`
 
-Core plugin (no module): `src/plugins/dashboard-tasks.js`
+Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`

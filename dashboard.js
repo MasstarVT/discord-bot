@@ -34,9 +34,10 @@ if (!ok) {
   // Loaded only now: importing the settings gateway and the record stores opens the Redis connection.
   const settings = await import('./src/dashboard/settingsBridge.js');
   const { createRecordsBridge } = await import('./src/dashboard/recordsBridge.js');
+  const botJoins = await import('./src/services/botJoinService.js');
   const discord = createDiscordApi({ config, logger });
   const records = createRecordsBridge({ discord, logger });
-  server = createDashboardServer({ config, deps: { discord, settings, records }, logger });
+  server = createDashboardServer({ config, deps: { discord, settings, records, botJoins }, logger });
   if (config.urlIsDefault && config.host === '0.0.0.0') {
     logger.warn(`Dashboard: DASHBOARD_URL is not set, so saving only works at ${config.url}. Browsers that open the dashboard `
       + 'by another address will be able to read but not save changes until DASHBOARD_URL is set to that address.');

@@ -829,6 +829,7 @@ a.server-card:hover {
   font-weight: 700;
 }
 .server-meta { display: block; color: var(--text-3); font-size: var(--text-sm); }
+.server-added { margin-top: 2px; overflow-wrap: anywhere; }
 .server-action {
   flex: none;
   display: inline-flex;
