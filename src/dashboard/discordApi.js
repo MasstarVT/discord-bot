@@ -14,6 +14,9 @@ export const USER_GUILDS_MAX_STALE_MS = 5 * 60_000;
 export const USER_GUILDS_CACHE_MAX = 5_000;
 export const BOT_GUILDS_TTL_MS = 60_000;
 export const BOT_GUILDS_MAX_PAGES = 100;
+/** How long a bot-owner invite lasts (it also works only once). */
+export const OWNER_INVITE_MAX_AGE_SECONDS = 1800;
+const INVITE_CODE_RE = /^[A-Za-z0-9-]{2,32}$/;
 export const BOT_GUILDS_MAX_RETRIES = 3;
 export const BOT_GUILDS_MAX_WAIT_SECONDS = 10;
 export const RESOURCES_TTL_MS = 30_000;
@@ -83,11 +86,12 @@ function retryAfterSeconds(res, body) {
  * @param {string} route
  * @param {string} authorization
  * @param {object} [body] sent as JSON
+ * @param {Record<string, string>} [extraHeaders] e.g. X-Audit-Log-Reason
  * @throws {DiscordApiError}
  */
-async function requestJson(fetchImpl, method, route, authorization, body) {
+async function requestJson(fetchImpl, method, route, authorization, body, extraHeaders = {}) {
   const where = `${method} ${route.split('?')[0]}`;
-  const headers = { Authorization: authorization, Accept: 'application/json' };
+  const headers = { ...extraHeaders, Authorization: authorization, Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   let res;
   try {
@@ -258,7 +262,11 @@ function mapGuildResources(guildId, botUserId, guild, rawChannels, rawRoles, raw
     channels,
     roles,
     emojis,
-    bot: { userId: botUserId, topRolePosition, manageRoles: has(PermissionFlagsBits.ManageRoles) },
+    bot: {
+      userId: botUserId, topRolePosition,
+      manageRoles: has(PermissionFlagsBits.ManageRoles),
+      createInvite: has(PermissionFlagsBits.CreateInstantInvite),
+    },
   });
 }
 
@@ -568,7 +576,7 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
      * @param {string} guildId
      * @param {{ fresh?: boolean }} [opts]
      * @returns {Promise<Readonly<{ guild: object, channels: object[], roles: object[], emojis: object[],
-     *   bot: { userId: string, topRolePosition: number, manageRoles: boolean } }>>}
+     *   bot: { userId: string, topRolePosition: number, manageRoles: boolean, createInvite: boolean } }>>}
      * @throws {DiscordApiError}
      */
     async getGuildResources(guildId, { fresh = false } = {}) {
@@ -665,6 +673,29 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
       assertSnowflake(channelId, 'channel');
       const data = await requestJson(fetchImpl, 'POST', Routes.channelMessages(channelId), bot, safeMentions(payload));
       return messageRef(data, channelId);
+    },
+
+    /**
+     * Creates an invite as the bot, for the bot owner to join a server: single use, short-lived, not temporary
+     * membership. `reason` shows in the server's audit log next to the invite, so its admins can see who asked.
+     * @param {string} channelId
+     * @param {{ reason?: string }} [opts]
+     * @returns {Promise<{ code: string, url: string, expiresAt: string|null }>}
+     * @throws {DiscordApiError}
+     */
+    async createInvite(channelId, { reason = '' } = {}) {
+      assertSnowflake(channelId, 'channel');
+      const headers = reason ? { 'X-Audit-Log-Reason': encodeURIComponent(String(reason).slice(0, 512)) } : {};
+      const body = { max_age: OWNER_INVITE_MAX_AGE_SECONDS, max_uses: 1, unique: true, temporary: false };
+      const data = await requestJson(fetchImpl, 'POST', Routes.channelInvites(channelId), bot, body, headers);
+      if (typeof data?.code !== 'string' || !INVITE_CODE_RE.test(data.code)) {
+        throw new DiscordApiError('Discord returned an unexpected invite', { code: 'unavailable' });
+      }
+      return {
+        code: data.code,
+        url: `https://discord.gg/${data.code}`,
+        expiresAt: typeof data.expires_at === 'string' ? data.expires_at : null,
+      };
     },
 
     /**

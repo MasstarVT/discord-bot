@@ -32,6 +32,8 @@ export const SEARCH_RATE_LIMIT = Object.freeze({ max: 30, windowMs: 10_000 });
 const RATE_LIMIT_KEYS_MAX = 10_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 const ACTION_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
+/** Channels tried for a bot-owner invite before giving up. */
+const OWNER_INVITE_ATTEMPTS = 5;
 const LOGIN_FAILED = '/?error=login_failed';
 const STATE_PATH = '/auth';
 
@@ -426,11 +428,15 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       json(ctx, 200, { guilds: list });
       return;
     }
-    json(ctx, 200, { guilds: list, ownerGuilds: await ownerGuildList(new Set(list.map((g) => g.id))) });
+    const memberOf = new Set(guilds.map((g) => g.id));
+    json(ctx, 200, { guilds: list, ownerGuilds: await ownerGuildList(new Set(list.map((g) => g.id)), memberOf) });
   }
 
-  /** For the bot owner: every server the bot is in that is not in their own list. A Discord failure leaves it empty. */
-  async function ownerGuildList(skip) {
+  /**
+   * For the bot owner: every server the bot is in that is not in their own list, with `member` (whether they are in
+   * it, from their whole OAuth list). A Discord failure leaves it empty.
+   */
+  async function ownerGuildList(skip, memberOf) {
     let all;
     try {
       all = await discord.getBotGuilds();
@@ -440,8 +446,63 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     }
     return all
       .filter((g) => !skip.has(g.id))
-      .map((g) => ({ id: g.id, name: g.name, iconUrl: guildIconUrl(g), botPresent: true, inviteUrl: null, ownerAccess: true }))
+      .map((g) => ({
+        id: g.id, name: g.name, iconUrl: guildIconUrl(g), botPresent: true, inviteUrl: null, ownerAccess: true, member: memberOf.has(g.id),
+      }))
       .sort((a, b) => nameCollator.compare(a.name, b.name) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  }
+
+  /**
+   * POST /api/guilds/:id/invite: a single-use, 30-minute invite the bot creates so the bot owner can join a server it
+   * is in. Bot owner only, refused before anything shows whether the bot is there. Tries a few text, announcement,
+   * then voice channels: one where the bot lacks Create Invite is skipped, any other Discord error stops.
+   */
+  async function ownerInvite(ctx, guildId) {
+    if (!allow(ctx, ['POST'])) return;
+    const check = checkWriteRequest(ctx.req, config);
+    if (!check.ok) {
+      fail(ctx, check.status, check.error, check.message);
+      return;
+    }
+    const session = requireSession(ctx);
+    if (!session) return;
+    if (!SNOWFLAKE_RE.test(guildId)) {
+      fail(ctx, 400, 'invalid_request', 'That is not a valid server id.');
+      return;
+    }
+    if (!isBotOwner(session)) {
+      fail(ctx, 403, 'forbidden', 'Only the bot owner can create an invite here.');
+      return;
+    }
+    if (!withinWriteLimit(ctx, session)) return;
+    if (!(await managedGuild(ctx, session, guildId))) return;
+    let res;
+    try {
+      res = await discord.getGuildResources(guildId);
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return;
+    }
+    if (!res.bot.createInvite) {
+      fail(ctx, 422, 'action_failed', 'The bot needs the Create Invite permission in this server to invite you.');
+      return;
+    }
+    const byKind = (...kinds) => res.channels.filter((c) => kinds.includes(c.kind));
+    const candidates = [...byKind('text', 'announcement'), ...byKind('voice', 'stage')].slice(0, OWNER_INVITE_ATTEMPTS);
+    for (const channel of candidates) {
+      try {
+        const invite = await discord.createInvite(channel.id, { reason: 'Requested by the bot owner from the dashboard' });
+        logger.info(`Dashboard: the bot owner created an invite for guild ${guildId} (channel ${channel.id})`);
+        json(ctx, 200, { url: invite.url, expiresAt: invite.expiresAt, channel: { id: channel.id, name: channel.name } });
+        return;
+      } catch (err) {
+        // 50013 Missing Permissions / 50001 Missing Access: a channel override; try the next one.
+        if (err instanceof DiscordApiError && (err.discordCode === 50013 || err.discordCode === 50001)) continue;
+        discordFailure(ctx, err, false);
+        return;
+      }
+    }
+    fail(ctx, 422, 'action_failed', 'The bot could not create an invite in the channels it tried. Let it Create Invite in a text channel.');
   }
 
   /** Answers 429 and returns false when the user is over the write rate limit. */
@@ -850,6 +911,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (resourcesMatch) return guildResources(ctx, resourcesMatch[1]);
     const membersMatch = /^\/api\/guilds\/([^/]{1,32})\/members$/.exec(path);
     if (membersMatch) return guildMembers(ctx, membersMatch[1]);
+    const inviteMatch = /^\/api\/guilds\/([^/]{1,32})\/invite$/.exec(path);
+    if (inviteMatch) return ownerInvite(ctx, inviteMatch[1]);
     const recordsMatch = /^\/api\/guilds\/([^/]{1,32})\/records\/([^/]{1,64})(?:\/([^/]{1,64})(?:\/actions\/([^/]{1,64}))?)?$/.exec(path);
     if (recordsMatch) return guildRecords(ctx, recordsMatch[1], recordsMatch[2], recordsMatch[3], recordsMatch[4]);
     const file = STATIC_FILES.get(path);

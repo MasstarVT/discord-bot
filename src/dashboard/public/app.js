@@ -575,7 +575,51 @@ function serverIdentity(guild, meta) {
   );
 }
 
+/** The bot owner's Join button: asks the bot for a single-use invite, then offers it as a link (no popup). */
+async function requestOwnerInvite(event, guild) {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const data = await api(`/api/guilds/${encodeURIComponent(guild.id)}/invite`, { method: 'POST' });
+    const href = safeHref(data && data.url);
+    if (!href) throw new ApiError(500, 'error', 'The invite could not be read. Try again.', null);
+    button.replaceWith(h(
+      'a',
+      { class: 'btn btn-primary btn-sm', href, target: '_blank', rel: 'noopener' },
+      'Open invite',
+      h('span', { class: 'sr-only' }, ` to ${guild.name}`),
+    ));
+    toast('Invite ready. It works once and expires in 30 minutes.', { kind: 'success' });
+  } catch (err) {
+    button.disabled = false;
+    if (handleAuthError(err)) return;
+    toast(describeError(err).message, { kind: 'error', ms: TOAST_ERROR_MS });
+  }
+}
+
+/** A bot-owner card for a server they are not in: Manage, and Join through an invite the bot creates. */
+function ownerJoinCard(guild) {
+  return h(
+    'div',
+    { class: 'card server-card' },
+    serverIdentity(guild, 'Bot owner access, not a member'),
+    h(
+      'span',
+      { class: 'server-buttons' },
+      h('a', { class: 'btn btn-secondary btn-sm', href: `#/guild/${encodeURIComponent(guild.id)}` }, 'Manage'),
+      h(
+        'button',
+        { class: 'btn btn-primary btn-sm', type: 'button', onclick: (event) => requestOwnerInvite(event, guild) },
+        icon('plus'),
+        'Join',
+        h('span', { class: 'sr-only' }, ` ${guild.name}`),
+      ),
+    ),
+  );
+}
+
 function serverCard(guild) {
+  if (guild.ownerAccess && guild.member === false) return ownerJoinCard(guild);
   if (guild.botPresent) {
     return h(
       'a',

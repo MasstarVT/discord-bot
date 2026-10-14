@@ -1082,6 +1082,23 @@ describe('discordApi', () => {
     assert.equal(calls.length, cached);
   });
 
+  test('createInvite: one use, 30 minutes, not temporary, with the audit-log reason', async () => {
+    let seen;
+    const { impl } = fakeFetch(async (url, init) => {
+      seen = { url, method: init.method, headers: init.headers, body: JSON.parse(init.body) };
+      return url.endsWith(`/channels/${CH.text}/invites`) ? [200, { code: 'aB-9', expires_at: '2026-10-13T12:30:00.000Z' }] : [200, { code: '<bad>' }];
+    });
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => 0 });
+    const invite = await api.createInvite(CH.text, { reason: 'Requested by the bot owner' });
+    assert.deepEqual(invite, { code: 'aB-9', url: 'https://discord.gg/aB-9', expiresAt: '2026-10-13T12:30:00.000Z' });
+    assert.equal(seen.method, 'POST');
+    assert.deepEqual(seen.body, { max_age: discordApi.OWNER_INVITE_MAX_AGE_SECONDS, max_uses: 1, unique: true, temporary: false });
+    assert.equal(discordApi.OWNER_INVITE_MAX_AGE_SECONDS, 1800);
+    assert.equal(seen.headers['X-Audit-Log-Reason'], encodeURIComponent('Requested by the bot owner'));
+    assert.match(seen.headers.Authorization, /^Bot /);
+    await assert.rejects(api.createInvite(CH.voice), (err) => err instanceof DiscordApiError && err.code === 'unavailable', 'an odd code is refused');
+  });
+
   test('getBotGuilds lists the bot\'s servers with names from the cached list', async () => {
     const { impl, calls } = fakeFetch(async (url) => {
       if (url.includes('/users/@me/guilds')) {
@@ -1270,7 +1287,8 @@ describe('discordApi', () => {
     assert.equal(res.roles.find((r) => r.id === R.fan).dangerous, false);
     assert.equal(res.roles.find((r) => r.id === R.tie).color, null);
     assert.deepEqual(res.emojis, [{ id: '610000000000000001', name: 'apple', animated: true }, { id: '610000000000000002', name: 'zebra', animated: false }]);
-    assert.deepEqual(res.bot, { userId: config.clientId, topRolePosition: 5, manageRoles: true });
+    // The fixture's bot role has Manage Roles but not Create Invite.
+    assert.deepEqual(res.bot, { userId: config.clientId, topRolePosition: 5, manageRoles: true, createInvite: false });
     assert.deepEqual(res.guild, {
       id: G.zeta, name: 'Zeta', icon: 'a'.repeat(32), memberCount: 42, ownerId: GUILD_OWNER, premiumTier: 2, premiumSubscriptionCount: 0,
       verificationLevel: 0,
@@ -1424,14 +1442,17 @@ function fakeResources(guildId) {
       role(guildId, '@everyone', 0, { everyone: true, assignable: false }),
     ],
     emojis: [{ id: '600000000000000001', name: 'coin', animated: false }],
-    bot: { userId: BOT_ID, topRolePosition: 6, manageRoles: true },
+    bot: { userId: BOT_ID, topRolePosition: 6, manageRoles: true, createInvite: guildId !== G.plain },
   };
 }
 
 function createFakes() {
   const calls = {
     writeSettings: [], exchangeCode: [], revokeToken: [], forgetUser: [], getUserGuilds: [], resources: [], getMember: [],
+    invites: [],
   };
+  /** Channels where the fake bot is refused an invite (Discord 50013); CH.text by default, so the next one is tried. */
+  const inviteDeny = new Set([CH.text]);
   let row = {
     guildId: G.zeta, modEnabled: true, xpEnabled: false, voiceXpEnabled: true, levelingEnabled: true,
     captchaLockdownPrior: true, captchaMessageId: '700000000000000001', timezone: 'Europe/Berlin', customPrefix: '', embedColor: 0x5865f2,
@@ -1455,6 +1476,13 @@ function createFakes() {
     },
     async isBotInGuild(guildId) { return BOT_GUILDS.has(guildId); },
     async getBotGuilds() { return BOT_GUILD_ENTRIES; },
+    async createInvite(channelId, opts) {
+      calls.invites.push({ channelId, opts });
+      if (inviteDeny.has(channelId)) {
+        throw new DiscordApiError('Discord returned HTTP 403', { status: 403, code: 'forbidden', discordCode: 50013 });
+      }
+      return { code: 'abc123', url: 'https://discord.gg/abc123', expiresAt: '2026-10-13T12:30:00.000Z' };
+    },
     inviteUrl: (guildId) => `https://discord.com/oauth2/authorize?client_id=123456789012345678&guild_id=${guildId}`,
     async exchangeCode(code) {
       calls.exchangeCode.push(code);
@@ -1490,7 +1518,7 @@ function createFakes() {
       return { row: { ...row, guildId }, notices: Object.hasOwn(changes, 'economyMaxBalance') ? ['Lowered 2 balances to the new maximum.'] : [] };
     },
   };
-  return { discord, settings, calls, getRow: () => row };
+  return { discord, settings, calls, inviteDeny, getRow: () => row };
 }
 
 function recordingLogger() {
@@ -1643,8 +1671,8 @@ describe('HTTP server', () => {
     assert.equal(list.status, 200);
     assert.deepEqual(list.json.guilds.map((g) => g.name), ['beta', 'Broken', 'zeta', 'Alpha'], 'their own list is unchanged');
     assert.deepEqual(list.json.ownerGuilds, [
-      { id: G.botOnly, name: 'Bot only', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true },
-      { id: G.plain, name: 'Plain', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true },
+      { id: G.botOnly, name: 'Bot only', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true, member: false },
+      { id: G.plain, name: 'Plain', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true, member: true },
     ]);
 
     // A member without rights (Plain) and a server they are not in (Bot only) both open.
@@ -2000,6 +2028,52 @@ describe('HTTP server', () => {
     await new Promise((res) => setImmediate(res));
     assert.deepEqual(fakes.calls.revokeToken, [TOKEN]);
     assert.deepEqual(fakes.calls.forgetUser, [USER_ID]);
+  });
+
+  test('POST /api/guilds/:id/invite: the bot owner gets a single-use invite; nobody else, and only where the bot is', async () => {
+    const owner = sessionCookie({ uid: OWNER_ID });
+    const invite = (guildId, cookie = owner, headers = WRITE_HEADERS) => call(port, 'POST', `/api/guilds/${guildId}/invite`, {
+      headers: { cookie, ...headers },
+      body: '{}',
+    });
+
+    // A channel the bot may not invite from is skipped (CH.text), the next one is used.
+    const before = fakes.calls.invites.length;
+    const ok = await invite(G.botOnly);
+    assert.equal(ok.status, 200, ok.json?.message);
+    assert.deepEqual(ok.json, { url: 'https://discord.gg/abc123', expiresAt: '2026-10-13T12:30:00.000Z', channel: { id: CH.news, name: 'news' } });
+    const tried = fakes.calls.invites.slice(before);
+    assert.deepEqual(tried.map((c) => c.channelId), [CH.text, CH.news]);
+    assert.match(tried[1].opts.reason, /bot owner/, 'the audit log says who asked');
+
+    // Nobody else, not even a Manage Server holder, and before anything shows whether the bot is there.
+    for (const id of [G.zeta, G.botOnly, G.stranger]) {
+      const r = await invite(id, sessionCookie());
+      assert.equal(r.status, 403, id);
+      assert.equal(r.json.error, 'forbidden');
+    }
+    assert.equal((await invite(G.botOnly, owner, { ...WRITE_HEADERS, 'x-dashboard': '0' })).status, 403, 'CSRF guard');
+    assert.equal((await call(port, 'GET', `/api/guilds/${G.botOnly}/invite`, { headers: { cookie: owner } })).status, 405);
+
+    const absent = await invite(G.stranger);
+    assert.equal(absent.status, 404);
+    assert.equal(absent.json.error, 'bot_not_in_guild');
+
+    const noPerm = await invite(G.plain);
+    assert.equal(noPerm.status, 422);
+    assert.match(noPerm.json.message, /Create Invite permission/);
+
+    const all = [CH.text, CH.news, CH.voice];
+    for (const id of all) fakes.inviteDeny.add(id);
+    try {
+      const none = await invite(G.botOnly);
+      assert.equal(none.status, 422);
+      assert.match(none.json.message, /could not create an invite/);
+    } finally {
+      for (const id of all) fakes.inviteDeny.delete(id);
+      fakes.inviteDeny.add(CH.text);
+    }
+    assert.equal(fakes.calls.invites.filter((c) => c.channelId === G.zeta).length, 0);
   });
 
   // Last on purpose: it writes the shared fake settings row.
