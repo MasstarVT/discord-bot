@@ -52,6 +52,7 @@ const G = Object.freeze({
   plain: '200000000000000004', // no permission, bot present
   broken: '200000000000000005', // settings cannot be read
   stranger: '200000000000000099', // not in the user's guild list
+  botOnly: '200000000000000006', // bot present, not in the user's guild list
 });
 
 function baseEnv(extra = {}) {
@@ -767,6 +768,7 @@ describe('config', () => {
     assert.equal(r.config.origin, 'http://localhost:8080');
     assert.equal(r.config.redirectUri, 'http://localhost:8080/auth/callback');
     assert.equal(r.config.secureCookies, false);
+    assert.equal(r.config.botOwnerId, null);
     assert.equal(r.config.urlIsDefault, true);
     assert.equal(loadDashboardConfig({}).config.urlIsDefault, true);
   });
@@ -781,12 +783,13 @@ describe('config', () => {
   });
 
   test('an https DASHBOARD_URL makes cookies secure; the trailing slash is dropped', () => {
-    const r = loadDashboardConfig(baseEnv({ DASHBOARD_URL: 'https://dash.example.com/', DASHBOARD_PORT: '9000' }));
+    const r = loadDashboardConfig(baseEnv({ DASHBOARD_URL: 'https://dash.example.com/', DASHBOARD_PORT: '9000', BOT_OWNER_ID: OWNER_ID }));
     assert.equal(r.ok, true);
     assert.equal(r.config.url, 'https://dash.example.com');
     assert.equal(r.config.redirectUri, 'https://dash.example.com/auth/callback');
     assert.equal(r.config.secureCookies, true);
     assert.equal(r.config.port, 9000);
+    assert.equal(r.config.botOwnerId, OWNER_ID);
   });
 
   test('invalid values are reported by key', () => {
@@ -805,11 +808,10 @@ describe('config', () => {
       assert.equal(r.ok, false, `${JSON.stringify(extra)} was accepted`);
       assert.deepEqual(r.invalid.map((i) => i.key), [key]);
     }
-    // The dashboard does not read BOT_OWNER_ID (no bot-owner bypass), so any value is ignored.
     const owner = loadDashboardConfig(baseEnv({ BOT_OWNER_ID: 'me' }));
     assert.equal(owner.ok, true);
-    assert.equal('botOwnerId' in owner.config, false);
-    assert.equal(owner.warnings.length, 0);
+    assert.equal(owner.config.botOwnerId, null);
+    assert.equal(owner.warnings.length, 1);
   });
 
   test('every key the dashboard reads is documented in .env.example', () => {
@@ -1078,6 +1080,24 @@ describe('discordApi', () => {
     await api.getUserGuilds(USER_ID, TOKEN);
     await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true });
     assert.equal(calls.length, cached);
+  });
+
+  test('getBotGuilds lists the bot\'s servers with names from the cached list', async () => {
+    const { impl, calls } = fakeFetch(async (url) => {
+      if (url.includes('/users/@me/guilds')) {
+        return [200, [{ id: G.zeta, name: 'zeta', icon: 'c'.repeat(32) }, { id: G.beta }, { id: 'nope', name: 'Bad' }, { id: G.zeta, name: 'again' }]];
+      }
+      return [404, { code: 10004 }];
+    });
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => 0 });
+    assert.deepEqual(await api.getBotGuilds(), [
+      { id: G.zeta, name: 'zeta', icon: 'c'.repeat(32) },
+      { id: G.beta, name: 'Unknown server', icon: null },
+    ]);
+    const requests = calls.length;
+    assert.equal((await api.getBotGuilds()).length, 2);
+    assert.equal(await api.isBotInGuild(G.beta, { verify: false }), true, 'one list serves both');
+    assert.equal(calls.length, requests, 'served from the cache');
   });
 
   test('isBotInGuild pages through the bot guild list and double-checks misses', async () => {
@@ -1362,7 +1382,12 @@ const USER_GUILDS = Object.freeze([
   { id: G.plain, name: 'Plain', icon: null, owner: false, permissions: '1024' },
   { id: G.broken, name: 'Broken', icon: null, owner: true, permissions: '0' },
 ]);
-const BOT_GUILDS = new Set([G.zeta, G.beta, G.plain, G.broken]);
+const BOT_GUILDS = new Set([G.zeta, G.beta, G.plain, G.broken, G.botOnly]);
+/** The bot's own guild list (getBotGuilds): the user's entries where they share one, plus G.botOnly. */
+const BOT_GUILD_ENTRIES = Object.freeze([...BOT_GUILDS].map((id) => {
+  const g = USER_GUILDS.find((u) => u.id === id);
+  return Object.freeze({ id, name: g ? g.name : 'Bot only', icon: g ? g.icon : null });
+}));
 
 /** Channel and role ids of the fake server G.zeta. */
 const CH = Object.freeze({
@@ -1429,6 +1454,7 @@ function createFakes() {
       return USER_GUILDS;
     },
     async isBotInGuild(guildId) { return BOT_GUILDS.has(guildId); },
+    async getBotGuilds() { return BOT_GUILD_ENTRIES; },
     inviteUrl: (guildId) => `https://discord.com/oauth2/authorize?client_id=123456789012345678&guild_id=${guildId}`,
     async exchangeCode(code) {
       calls.exchangeCode.push(code);
@@ -1599,16 +1625,38 @@ describe('HTTP server', () => {
     assert.equal(r.json.guilds.some((g) => g.id === G.plain), false, 'no permission: not listed');
   });
 
-  test('BOT_OWNER_ID gets no bypass: the bot owner sees and opens only the servers they manage', async () => {
+  test('other users get no ownerGuilds and cannot open servers they do not manage', async () => {
+    const list = await authed('/api/guilds');
+    assert.equal(Object.hasOwn(list.json, 'ownerGuilds'), false);
+    for (const id of [G.plain, G.botOnly, G.stranger]) {
+      for (const path of [`/api/guilds/${id}/settings`, `/api/guilds/${id}/resources`, `/api/guilds/${id}/members?query=a`]) {
+        const r = await authed(path);
+        assert.equal(r.status, 403, path);
+        assert.equal(r.json.error, 'forbidden', path);
+      }
+    }
+  });
+
+  test('the bot owner keeps their own list and gets every other server the bot is in apart', async () => {
     const cookie = sessionCookie({ uid: OWNER_ID });
     const list = await authed('/api/guilds', { cookie });
     assert.equal(list.status, 200);
-    assert.deepEqual(list.json.guilds.map((g) => g.name), ['beta', 'Broken', 'zeta', 'Alpha']);
-    for (const path of [`/api/guilds/${G.plain}/settings`, `/api/guilds/${G.plain}/resources`, `/api/guilds/${G.plain}/members?query=a`]) {
-      const r = await authed(path, { cookie });
-      assert.equal(r.status, 403, path);
-      assert.equal(r.json.error, 'forbidden', path);
+    assert.deepEqual(list.json.guilds.map((g) => g.name), ['beta', 'Broken', 'zeta', 'Alpha'], 'their own list is unchanged');
+    assert.deepEqual(list.json.ownerGuilds, [
+      { id: G.botOnly, name: 'Bot only', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true },
+      { id: G.plain, name: 'Plain', iconUrl: null, botPresent: true, inviteUrl: null, ownerAccess: true },
+    ]);
+
+    // A member without rights (Plain) and a server they are not in (Bot only) both open.
+    for (const [id, name] of [[G.plain, 'Plain'], [G.botOnly, 'Bot only']]) {
+      const r = await authed(`/api/guilds/${id}/settings`, { cookie });
+      assert.equal(r.status, 200, id);
+      assert.equal(r.json.guild.name, name);
     }
+    // The bot still has to be there.
+    const absent = await authed(`/api/guilds/${G.stranger}/settings`, { cookie });
+    assert.equal(absent.status, 404);
+    assert.equal(absent.json.error, 'bot_not_in_guild');
   });
 
   test('Discord failures on /api/guilds', async () => {
@@ -1952,6 +2000,21 @@ describe('HTTP server', () => {
     await new Promise((res) => setImmediate(res));
     assert.deepEqual(fakes.calls.revokeToken, [TOKEN]);
     assert.deepEqual(fakes.calls.forgetUser, [USER_ID]);
+  });
+
+  // Last on purpose: it writes the shared fake settings row.
+  test('the bot owner writes to a server they are not in, as its owner: no role-hierarchy lookup, the bot rules stay', async () => {
+    const cookie = sessionCookie({ uid: OWNER_ID });
+    const send = (changes) => patch(G.botOnly, { changes }, { cookie });
+    assert.equal((await send({ autoroleIds: [] })).status, 200);
+    // RL.mid is not below a plain member's top role (it is refused for them above); the bot owner may give it.
+    const ok = await send({ autoroleIds: [RL.mid] });
+    assert.equal(ok.status, 200, ok.json?.message);
+    assert.deepEqual(ok.json.values.autoroleIds, [RL.mid]);
+    assert.equal(fakes.calls.getMember.some((c) => c.userId === OWNER_ID), false, 'no member lookup for the bot owner');
+    const high = await send({ autoroleIds: [RL.high] });
+    assert.equal(high.status, 400);
+    assert.match(high.json.message, /above the bot/);
   });
 
   test('logs never contain tokens or secrets', () => {

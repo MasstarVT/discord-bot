@@ -41,4 +41,3 @@ graphify-out/
 # Local Claude tooling (not part of the bot)
 claude-code-hooks/
 claude-token-saver/
-HANDOFF.md

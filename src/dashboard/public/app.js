@@ -31,6 +31,7 @@ const SAVED_TOAST_DELAY_MS = 350; // a burst of saves shows one "Saved" toast
 const state = {
   user: null,
   guilds: null, // /api/guilds, cached for the session
+  ownerGuilds: [], // /api/guilds ownerGuilds (bot owner only)
   guildsPromise: null,
   catalog: null, // /api/catalog, cached for the session
   catalogPromise: null,
@@ -67,6 +68,8 @@ function loadGuilds({ force = false } = {}) {
   const promise = api('/api/guilds')
     .then((data) => {
       state.guilds = Array.isArray(data?.guilds) ? data.guilds : [];
+      // Only the bot owner gets ownerGuilds: every other server the bot is in.
+      state.ownerGuilds = Array.isArray(data?.ownerGuilds) ? data.ownerGuilds : [];
       return state.guilds;
     })
     .finally(() => {
@@ -577,7 +580,7 @@ function serverCard(guild) {
     return h(
       'a',
       { class: 'card server-card', href: `#/guild/${encodeURIComponent(guild.id)}` },
-      serverIdentity(guild, 'Bot is in this server'),
+      serverIdentity(guild, guild.ownerAccess ? 'Bot owner access' : 'Bot is in this server'),
       h('span', { class: 'server-action' }, 'Manage', icon('forward')),
     );
   }
@@ -598,6 +601,22 @@ function serverCard(guild) {
   );
 }
 
+/** The bot owner's part of the picker: the servers the bot is in that are not in their own list. */
+function ownerPickerSection(ownerGuilds) {
+  if (!ownerGuilds || !ownerGuilds.length) return null;
+  return h(
+    'section',
+    { class: 'owner-servers', 'aria-label': 'All servers the bot is in' },
+    h(
+      'div',
+      { class: 'page-head' },
+      h('h2', { class: 'page-title' }, 'All servers the bot is in'),
+      h('p', { class: 'page-sub' }, 'Bot owner access: you can manage these even where you are not an admin or a member.'),
+    ),
+    h('div', { class: 'server-grid' }, ownerGuilds.map(serverCard)),
+  );
+}
+
 function renderPickerBody(body, guilds) {
   const head = h(
     'div',
@@ -605,7 +624,8 @@ function renderPickerBody(body, guilds) {
     h('h1', { class: 'page-title' }, 'Your servers'),
     h('p', { class: 'page-sub' }, 'Choose a server to manage its bot settings.'),
   );
-  if (!guilds.length) {
+  const owned = ownerPickerSection(state.ownerGuilds);
+  if (!guilds.length && !owned) {
     body.replaceChildren(
       head,
       statusCard({
@@ -619,7 +639,10 @@ function renderPickerBody(body, guilds) {
     );
     return;
   }
-  body.replaceChildren(head, h('div', { class: 'server-grid' }, guilds.map(serverCard)));
+  const mine = guilds.length
+    ? h('div', { class: 'server-grid' }, guilds.map(serverCard))
+    : h('p', { class: 'page-sub' }, 'You do not manage any servers yourself.');
+  body.replaceChildren(head, mine, ...(owned ? [owned] : []));
 }
 
 function renderPickerError(body, err) {
@@ -834,6 +857,13 @@ function renderServerList(slot, guilds, guildId) {
     guilds
       ? h('nav', { 'aria-label': 'Servers' }, h('ul', { class: 'side-list server-list' }, guilds.map((g) => serverListItem(g, guildId))))
       : h('p', { class: 'side-note' }, 'Could not load your servers.'),
+    ...(guilds && state.ownerGuilds?.length
+      ? [
+        h('h2', { class: 'side-title side-title-gap' }, 'Bot owner'),
+        h('nav', { 'aria-label': 'All servers the bot is in' },
+          h('ul', { class: 'side-list server-list' }, state.ownerGuilds.map((g) => serverListItem(g, guildId)))),
+      ]
+      : []),
     h('ul', { class: 'side-list' }, h('li', {}, h('a', { class: 'side-item', href: '#/' }, icon('back'), h('span', { class: 'side-name' }, 'All servers')))),
   );
 }

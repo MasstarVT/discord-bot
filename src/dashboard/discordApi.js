@@ -324,6 +324,8 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
   const userInflight = new Map();
 
   let botGuilds = null;
+  /** The bot's servers as Discord listed them, `[{ id, name, icon }]`; refreshed together with botGuilds. */
+  let botGuildEntries = Object.freeze([]);
   let botGuildsAt = 0;
   let botInflight = null;
   /** guildId -> expiry of a recent "bot is not there" answer. */
@@ -390,6 +392,7 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
 
   async function refreshBotGuilds() {
     const ids = new Set();
+    const entries = [];
     let after = '0';
     let retriesLeft = BOT_GUILDS_MAX_RETRIES;
     // One page; a short 429 is waited out and the same page retried (a few times per refresh), anything else fails.
@@ -408,13 +411,22 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     for (let page = 0; page < BOT_GUILDS_MAX_PAGES; page++) {
       const data = await fetchPage();
       if (!Array.isArray(data)) throw new DiscordApiError('Discord returned an unexpected guild list', { code: 'unavailable' });
-      for (const g of data) if (typeof g?.id === 'string' && SNOWFLAKE_RE.test(g.id)) ids.add(g.id);
+      for (const g of data) {
+        if (typeof g?.id !== 'string' || !SNOWFLAKE_RE.test(g.id) || ids.has(g.id)) continue;
+        ids.add(g.id);
+        entries.push(Object.freeze({
+          id: g.id,
+          name: typeof g.name === 'string' && g.name ? g.name : 'Unknown server',
+          icon: typeof g.icon === 'string' ? g.icon : null,
+        }));
+      }
       if (data.length < 200) break;
       const last = data[data.length - 1]?.id;
       if (typeof last !== 'string' || !SNOWFLAKE_RE.test(last)) break;
       after = last;
     }
     botGuilds = ids;
+    botGuildEntries = Object.freeze(entries);
     botGuildsAt = now();
     botMisses.clear();
     return ids;
@@ -499,6 +511,17 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     },
 
     getBotGuildIds,
+
+    /**
+     * The servers the bot is in, from the same cached list as getBotGuildIds (for the bot owner's part of the server
+     * list). A server that only isBotInGuild's verify step found is missing until the next refresh.
+     * @returns {Promise<readonly { id: string, name: string, icon: string|null }[]>}
+     * @throws {DiscordApiError} only when no list was ever loaded
+     */
+    async getBotGuilds() {
+      await getBotGuildIds();
+      return botGuildEntries;
+    },
 
     /**
      * Whether the bot is in a guild. Uses the cached list; with `verify` (default) a guild missing from it

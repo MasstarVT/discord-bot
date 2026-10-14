@@ -793,6 +793,8 @@ kbd {
 .page-title { font-size: var(--text-xl); font-weight: 800; letter-spacing: -0.02em; }
 .page-sub { margin-top: var(--space-1); color: var(--text-2); }
 
+.owner-servers { margin-top: var(--space-7); }
+
 .server-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));

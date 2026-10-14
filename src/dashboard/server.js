@@ -271,12 +271,30 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     return guilds;
   }
 
-  /** The OAuth guild entry when the user may manage the guild and the bot is in it; otherwise answers and returns null. */
+  /** BOT_OWNER_ID may manage every server the bot is in, member or not (the owner part of the server list). */
+  const isBotOwner = (session) => Boolean(config.botOwnerId) && session.uid === config.botOwnerId;
+
+  /** The bot's own entry for a server ({ id, name, icon }), or null when Discord cannot say. */
+  async function botGuildEntry(guildId) {
+    try {
+      return (await discord.getBotGuilds()).find((g) => g.id === guildId) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * The guild entry the routes use when the user may manage the guild and the bot is in it; otherwise answers and
+   * returns null. A user needs the guild in their OAuth list as owner, Administrator or Manage Server. The bot owner
+   * may open any server the bot is in and acts there as its owner (`owner: true` for the ping and role rules).
+   */
   async function managedGuild(ctx, session, guildId) {
     const guilds = await userGuilds(ctx, session);
     if (!guilds) return null;
     const guild = guilds.find((g) => g.id === guildId);
-    if (!canManageGuild(guild)) {
+    const botOwner = isBotOwner(session);
+    // Checked before the bot's presence, so other users cannot probe which servers the bot is in.
+    if (!botOwner && !canManageGuild(guild)) {
       fail(ctx, 403, 'forbidden', 'You need the Manage Server or Administrator permission in this server.');
       return null;
     }
@@ -291,7 +309,15 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       fail(ctx, 404, 'bot_not_in_guild', 'The bot is not in this server yet.', { inviteUrl: discord.inviteUrl(guildId) });
       return null;
     }
-    return guild;
+    if (!botOwner) return guild;
+    const listed = guild ?? await botGuildEntry(guildId);
+    return {
+      id: guildId,
+      name: typeof listed?.name === 'string' ? listed.name : 'Unknown server',
+      icon: listed?.icon ?? null,
+      owner: true,
+      permissions: guild?.permissions ?? '0',
+    };
   }
 
   // ── Routes ──────────────────────────────────────────────────────────────────
@@ -396,7 +422,26 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     list.sort((a, b) => (Number(b.botPresent) - Number(a.botPresent))
       || nameCollator.compare(a.name, b.name)
       || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    json(ctx, 200, { guilds: list });
+    if (!isBotOwner(session)) {
+      json(ctx, 200, { guilds: list });
+      return;
+    }
+    json(ctx, 200, { guilds: list, ownerGuilds: await ownerGuildList(new Set(list.map((g) => g.id))) });
+  }
+
+  /** For the bot owner: every server the bot is in that is not in their own list. A Discord failure leaves it empty. */
+  async function ownerGuildList(skip) {
+    let all;
+    try {
+      all = await discord.getBotGuilds();
+    } catch (err) {
+      logger.warn(`Dashboard: could not list the bot's servers for the bot owner: ${err?.message ?? err}`);
+      return [];
+    }
+    return all
+      .filter((g) => !skip.has(g.id))
+      .map((g) => ({ id: g.id, name: g.name, iconUrl: guildIconUrl(g), botPresent: true, inviteUrl: null, ownerAccess: true }))
+      .sort((a, b) => nameCollator.compare(a.name, b.name) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   }
 
   /** Answers 429 and returns false when the user is over the write rate limit. */
@@ -468,7 +513,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
           + 'The bot does not hand those out; pick a role without them.');
       }
     }
-    if (res.guild.ownerId === session.uid) return true;
+    if (res.guild.ownerId === session.uid || isBotOwner(session)) return true;
     let member;
     try {
       member = await discord.getMember(guildId, session.uid);
