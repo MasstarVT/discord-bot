@@ -154,6 +154,12 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Code:** engine and hooks in `src/plugins/liverole.js`: `presenceUpdate:liverole` (needs the privileged `GuildPresences` intent) and `guildReady:liverole`, neither `always`.
 - **Behaviour:** `ActivityType.Streaming` earns the role; optional `liveRoleRequiredRoleId`.
 
+### 🔢 Counting — `counting`
+- **Commands:** `/counting set|reset|status` (ADMIN); default off, `set` picks `countingChannelId` and turns the module on. `reset number:N` carries on from N (never raises `best`).
+- **Code:** rules and the `CountingState` row (one per guild: `count`, `lastUserId`, `lastMessageId`, `best`) in `src/services/countingService.js`; hooks `messageCreate:counting` (right after automod) and `messageDelete:counting` in `src/plugins/counting.js`.
+- **Rules:** only a message that is just a number (up to 9 digits) counts; anything else is chat. The next number from someone other than the last counter gets ✅; a wrong number or a second count in a row gets ❌ and resets to 0 with a note. At 0 a wrong number only gets ❌ plus a "starts at 1" hint at most once a minute. Deleting the message with the current count posts the next number.
+- **Gotchas:** every count and `/counting set|reset` runs under `runLocked(guildId)`, entered before any await in the hook, so counts are judged in the order they reach the hook; hooks ahead of it (automod) can still swap two near-simultaneous messages. A row whose `channelId` is not `countingChannelId` (changed on the dashboard) starts from 0 and keeps `best`. Edited numbers are not re-judged.
+
 ### Core commands (no module)
 - `/help`, `/module` (ADMIN): `/help` hides commands above the caller's level or of disabled modules; custom commands show as `!name` (`/tag use name:x` when `customPrefix === ''`).
 - `/settings show|timezone|color|prefix|urban` (ADMIN): timezone IANA or `UTC`; `embedColor` only for info/neutral embeds (`applyGuildColor`/`guildEmbed`), never 0; `customPrefix` 1-5 code points, custom commands only, `off` stores `''`.

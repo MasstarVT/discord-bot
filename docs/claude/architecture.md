@@ -48,7 +48,7 @@ Three directories are auto-discovered; **never edit `commandLoader.js`, `eventLo
 - `permissionLevel` (default MEMBER) and `subcommandPermissions` `{ 'sub': level, 'group sub': level }` (a key that is not a real subcommand is a bug; tests check).
 - `allowInDMs`: `true` only for DM-safe commands; all others fail closed outside a cached guild. `autocomplete`: gated exactly like `execute`; a refusal answers an empty list.
 
-ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (76 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
+ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (77 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
 
 **Events** (`src/events/*.js`, `{ name, once, execute }`; the client is injected last) are thin dispatchers: pre-filter, then `await runHooks('<event>', { client, guild, ...fields })`. **Never put feature logic in `src/events/`.** They may import only `discord.js`, `hookRegistry`, `settingsService`, `scheduler`, `redis`, `config/jobTypes`, `utils/async`, `utils/logger` (tested). Besides gateway events there are the synthetic `guildReady` and the internal `levelUp` and `economyPurchase` points. `messageCreate` passes only real user messages (no bots, webhooks or system messages).
 
@@ -130,6 +130,7 @@ XP and coins are granted through providers, so giveaways, achievements and autom
 | `feeds` | `feedsEnabled` | on | 📰 Social Feeds | `/feed` |
 | `search` | `searchEnabled` | on | 🔎 Search Anything | `/settings` |
 | `liverole` | `liveRoleEnabled` | off | 🔴 Live Role | `/liverole` |
+| `counting` | `countingEnabled` | off | 🔢 Counting | `/counting` |
 
 `levelingEnabled` is deprecated and never read (`xpEnabled` is used).
 

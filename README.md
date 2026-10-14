@@ -32,15 +32,16 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 📰 **Social Feeds** (MEE6: RSS / YouTube / Reddit / Bluesky / Podcast alerts) — post new RSS, YouTube channel, Reddit, Bluesky and podcast items to a channel, keyless.
 - 🔎 **Search Anything** (MEE6: Search Anything) — `/anime`, `/manga` (AniList), `/pokemon`, `/urban`, keyless.
 - 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API).
+- 🔢 **Counting** (beyond MEE6) — *off by default.* A channel where members count up from 1 in turns: the bot reacts ✅ to each right number, and a wrong number or counting twice in a row starts the count again from 1. `/counting set` picks the channel.
 - 🖥️ **Web Dashboard** — log in with Discord and change each server's settings in a browser: every module's switch and options, the time zone, embed colour and command prefix, and lists such as saved embeds, custom commands, reminders and feeds; a separate process, see [Web dashboard](#web-dashboard).
 
 **Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`.
 
-**Beyond MEE6:** Auto-Translate, the Scrabble and other free games, and a per-server economy without premium limits. **Research only:** Twitch, YouTube Data API, Reddit API, X, Instagram, TikTok and Kick alerts, social counters, music and AI features are written up in [docs/external-api-research.md](docs/external-api-research.md) but not built.
+**Beyond MEE6:** Auto-Translate, Counting, the Scrabble and other free games, and a per-server economy without premium limits. **Research only:** Twitch, YouTube Data API, Reddit API, X, Instagram, TikTok and Kick alerts, social counters, music and AI features are written up in [docs/external-api-research.md](docs/external-api-research.md) but not built.
 
 ## Commands
 
-76 slash commands, registered automatically on startup when the command set changes (hash-checked). Commands of a module that is switched off are refused with a pointer to `/module`; an admin's configuration command for that module still works so it can be set up first. Admin commands are hidden from regular members by Discord permissions (Manage Server) and re-checked by the bot.
+77 slash commands, registered automatically on startup when the command set changes (hash-checked). Commands of a module that is switched off are refused with a pointer to `/module`; an admin's configuration command for that module still works so it can be set up first. Admin commands are hidden from regular members by Discord permissions (Manage Server) and re-checked by the bot.
 
 | Command | Module | Who | Description |
 |---|---|---|---|
@@ -112,6 +113,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/pokemon` | 🔎 Search Anything | Everyone | Look up a Pokémon on PokeAPI: types, abilities, stats. |
 | `/urban` | 🔎 Search Anything | Everyone | Look up a word or phrase on Urban Dictionary. |
 | `/liverole` | 🔴 Live Role | Admins | Give a role while members stream (MEE6 Twitch Alerts live-streaming role). |
+| `/counting` | 🔢 Counting | Admins | A channel where members count up from 1, one number each. |
 | `/detectlanguage` | Core | Everyone | Detect the language of a piece of text. |
 | `/emoji` | Core | Admins | Add, list or delete emojis (MEE6 /add_emoji) |
 | `/help` | Core | Everyone | Show the commands you can use here. |
@@ -134,7 +136,7 @@ npm run dev                 # start with auto-restart
 
 - **Migrations:** `npx prisma migrate deploy` applies everything in `prisma/migrations/` and is what production (and the Docker image) runs. Developers who change `prisma/schema.prisma` run `npm run db:migrate` to create a new migration; CI fails when the schema and the migrations disagree. The `20261010120000_mee6_parity` migration is additive and turns on the modules that already worked before module toggles existed (moderation, reaction roles, and custom commands for servers that already had tags). Existing global economy balances are copied once, lazily, into each server's own balance the first time a member uses the economy there.
 - **Font:** `assets/fonts/Nunito-Bold.ttf` must exist (it is committed). Without it the welcome and rank cards render blank text.
-- **Privileged gateway intents:** enable **Server Members**, **Presence** and **Message Content** under Bot → Privileged Gateway Intents in the Developer Portal; without them Discord closes the connection with code 4014. Server Members powers welcome messages, autoroles, invite tracking and member counters. Presence powers the online and peak statistics counters and the Live Role. Message Content powers auto-moderation, XP, custom commands and triggers, and auto-translate.
+- **Privileged gateway intents:** enable **Server Members**, **Presence** and **Message Content** under Bot → Privileged Gateway Intents in the Developer Portal; without them Discord closes the connection with code 4014. Server Members powers welcome messages, autoroles, invite tracking and member counters. Presence powers the online and peak statistics counters and the Live Role. Message Content powers auto-moderation, XP, custom commands and triggers, auto-translate and counting.
 - **Permissions:** the bot checks what it needs before each action and tells you which permission is missing. Giving it a role with the permissions of the modules you use (Manage Roles, Manage Channels, Ban/Kick/Moderate Members, Manage Messages, Manage Server for invite tracking) is enough; role-based features need the bot's top role above the roles it manages.
 - **Creating roles and channels from a command:** next to each role or channel picker in the setup commands is a matching `new_…` option (for example `/liverole set new_role:Live` or `/logging enable new_channel:mod-logs`). Pick an existing role or channel, or type a name there instead and the bot creates it, reusing one that already has exactly that name (but never a role with powerful permissions, or a public channel where a private log channel is wanted). New roles get no permissions. Log and transcript channels are created hidden from @everyone. Creating needs **Manage Roles** or **Manage Channels**, both for you and for the bot. After updating, run `npm run deploy` so Discord shows the new options.
 - **Production:** `npm run pm2:start`, `pm2:reload`, `pm2:logs`.

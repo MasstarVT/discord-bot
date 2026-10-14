@@ -27,7 +27,7 @@ export const CATEGORIES = Object.freeze([
     id: 'engagement',
     label: 'Levels & Economy',
     description: 'Reward activity with XP, achievements, coins and games.',
-    modules: Object.freeze(['leveling', 'achievements', 'economy', 'games']),
+    modules: Object.freeze(['leveling', 'achievements', 'economy', 'games', 'counting']),
   }),
   Object.freeze({
     id: 'tools',
@@ -65,6 +65,7 @@ export const DESCRIPTIONS = Object.freeze({
   feeds: 'Posts new RSS, YouTube, Reddit, Bluesky and podcast items to a channel.',
   search: 'Look up anime, manga, Pokémon and Urban Dictionary definitions.',
   liverole: 'Gives members a role while they stream. Switching it off here leaves it on current streamers; /liverole disable in Discord removes it too.',
+  counting: 'A channel where members count up from 1 in turns; a wrong number starts the count again.',
 });
 
 /** The boolean sub-settings of each module (their descriptors live in fields.js). */

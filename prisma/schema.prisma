@@ -85,6 +85,7 @@ model GuildSettings {
   feedsEnabled          Boolean @default(true)
   searchEnabled         Boolean @default(true)
   liveRoleEnabled       Boolean @default(false)
+  countingEnabled       Boolean @default(false)
 
   // ── General (/settings) ────────────────────────────────────────────────────
   // IANA zone name, validated with Intl.DateTimeFormat before saving.
@@ -274,6 +275,10 @@ model GuildSettings {
   // Only members with this role get the live role (null = everyone).
   liveRoleRequiredRoleId String?
 
+  // ── Counting ────────────────────────────────────────────────────────────────
+  // The channel members count up in (null = not set up). The count itself lives in CountingState.
+  countingChannelId String?
+
   // ── Relations ───────────────────────────────────────────────────────────────
   infractions          Infraction[]
   reactionRoleGroups   ReactionRoleGroup[]
@@ -284,6 +289,7 @@ model GuildSettings {
   autoTriggers         AutoTrigger[]
   translateChannels    TranslateChannel[]
   translateStats       TranslateStat[]
+  countingState        CountingState?
   scheduledJobs        ScheduledJob[]
   personalInvites      PersonalInvite[]
   savedEmbeds          SavedEmbed[]
@@ -636,6 +642,20 @@ model TranslateStat {
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@id([guildId, channelId, via, direction, lang])
+}
+
+// The counting game, one row per guild: the last number counted, who counted it and the best run. A row whose
+// channelId is not GuildSettings.countingChannelId belongs to an old channel, so the next count starts from 1 again.
+model CountingState {
+  guildId       String   @id
+  channelId     String
+  count         Int      @default(0)
+  lastUserId    String?
+  lastMessageId String?
+  best          Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

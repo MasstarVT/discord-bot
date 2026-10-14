@@ -1135,6 +1135,14 @@ export const MODULE_GROUPS = {
         description: 'Only members with this role get the live role. Empty = everyone who streams.' },
     ],
   }],
+  counting: [{
+    id: 'counting',
+    title: 'Counting channel',
+    description: 'A new channel starts from 1 at the next count. /counting set in Discord also posts the rules there.',
+    fields: [
+      channel('countingChannelId', 'Counting channel', 'Members count up here, one number per message.'),
+    ],
+  }],
 };
 for (const key of MODULE_NAMES) MODULE_GROUPS[key] ??= [];
 

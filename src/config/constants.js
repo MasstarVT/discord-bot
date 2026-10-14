@@ -70,6 +70,7 @@ export const DEFAULT_MODULE_SETTINGS = Object.freeze({
   feeds: true,
   search: true,
   liverole: false,
+  counting: false,
 });
 
 export const XP_DEFAULTS = {

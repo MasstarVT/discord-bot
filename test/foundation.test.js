@@ -100,7 +100,7 @@ test('HOOK_ORDER ids are well-formed and hookIndex works', () => {
   assert.deepEqual([...hookPoints.SYNTHETIC_HOOK_POINTS], ['guildReady']);
   for (const e of [...hookPoints.INTERNAL_HOOK_POINTS, ...hookPoints.SYNTHETIC_HOOK_POINTS]) assert.ok(e in hookPoints.HOOK_ORDER);
   assert.equal(hookPoints.hookIndex('messageCreate', 'automod'), 0);
-  assert.equal(hookPoints.hookIndex('messageCreate', 'custom-commands:triggers'), 6);
+  assert.equal(hookPoints.hookIndex('messageCreate', 'custom-commands:triggers'), 7);
   assert.equal(hookPoints.hookIndex('messageCreate', 'nope'), -1);
   assert.equal(hookPoints.hookIndex('noSuchEvent', 'automod'), -1);
 });

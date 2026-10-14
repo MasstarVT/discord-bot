@@ -84,7 +84,7 @@ const PACKAGE_IDS = Object.freeze([
   'automod', 'logging', 'welcome', 'levels', 'invites', 'settings', 'translation-fixes', 'games-fixes',
   'embeds', 'reminders', 'giveaways', 'polls', 'starboard', 'reaction-roles', 'tickets', 'temp-voice',
   'stat-channels', 'birthdays', 'custom-commands', 'economy', 'economy-casino', 'achievements', 'automations',
-  'captcha', 'feeds', 'search', 'liverole', 'emojis', 'dashboard-tasks', 'integration',
+  'captcha', 'feeds', 'search', 'liverole', 'counting', 'emojis', 'dashboard-tasks', 'integration',
 ]);
 // Owners that are not plugins. They may own collector/field prefixes, and only the
 // persistent prefixes that registerCoreComponents() registers (today: 'noop').
@@ -97,7 +97,7 @@ const EXPECTED_PLUGIN_MODULE = Object.freeze({
   starboard: 'starboard', 'reaction-roles': 'reactionroles', tickets: 'tickets',
   'temp-voice': 'tempvoice', 'stat-channels': 'stats', birthdays: 'birthdays',
   'custom-commands': 'customcommands', economy: 'economy', achievements: 'achievements',
-  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole', 'dashboard-tasks': null,
+  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole', counting: 'counting', 'dashboard-tasks': null,
 });
 // Only these files may call ctx.stop() (automod and custom-commands).
 const STOP_ALLOWED_FILES = Object.freeze([
@@ -121,6 +121,7 @@ const EXPECTED_COMMANDS = Object.freeze({
   'automation':         { file: 'src/commands/admin/automation.js',         module: 'automations',    gated: false, level: 'ADMIN',     budget: 2000 },
   'automod':            { file: 'src/commands/admin/automod.js',            module: 'automod',        gated: false, level: 'ADMIN',     budget: 2600 },
   'autotranslate':      { file: 'src/commands/admin/autotranslate.js',      module: 'translation',    gated: false, level: 'ADMIN',     budget:  450 },
+  'counting':           { file: 'src/commands/admin/counting.js',           module: 'counting',       gated: false, level: 'ADMIN',     budget:  700 },
   'birthday-config':    { file: 'src/commands/admin/birthday-config.js',    module: 'birthdays',      gated: false, level: 'ADMIN',     budget: 1200 },
   'captcha':            { file: 'src/commands/admin/captcha.js',            module: 'captcha',        gated: false, level: 'ADMIN',     budget: 1200 },
   'economy-admin':      { file: 'src/commands/admin/economy-admin.js',      module: 'economy',        gated: false, level: 'ADMIN',     budget: 3400 },
@@ -358,7 +359,7 @@ describe('A commands', () => {
       ['commands missing from EXPECTED_COMMANDS', diff(actual, expected).map((n) => `/${n}`)],
       ['duplicate command names', sortedUnique(names.filter((n, i) => names.indexOf(n) !== i))],
     ]);
-    assert.equal(COMMANDS.length, 76, `${COMMANDS.length} command files (expected 76)`);
+    assert.equal(COMMANDS.length, 77, `${COMMANDS.length} command files (expected 77)`);
     assert.ok(COMMANDS.length <= 100, `${COMMANDS.length} commands exceed Discord's limit of 100`);
   });
 
