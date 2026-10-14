@@ -53,7 +53,7 @@ export function parseDashboardUrl(raw) {
  *   warnings: string[],
  *   config: {
  *     clientId: string, botToken: string, clientSecret: string, sessionSecret: string,
- *     databaseUrl: string, redisUrl: string, botOwnerId: string|null,
+ *     databaseUrl: string, redisUrl: string,
  *     url: string, urlIsDefault: boolean, origin: string, redirectUri: string, secureCookies: boolean,
  *     port: number, host: string,
  *   },
@@ -90,12 +90,6 @@ export function loadDashboardConfig(env = process.env) {
 
   const host = read(env, 'DASHBOARD_HOST') || DASHBOARD_DEFAULTS.host;
 
-  let botOwnerId = read(env, 'BOT_OWNER_ID') || null;
-  if (botOwnerId && !SNOWFLAKE_RE.test(botOwnerId)) {
-    warnings.push('BOT_OWNER_ID is not a Discord user id (17-20 digits); it is ignored by the dashboard.');
-    botOwnerId = null;
-  }
-
   const config = Object.freeze({
     clientId,
     botToken: read(env, 'DISCORD_TOKEN'),
@@ -103,7 +97,6 @@ export function loadDashboardConfig(env = process.env) {
     sessionSecret,
     databaseUrl: read(env, 'DATABASE_URL'),
     redisUrl: read(env, 'REDIS_URL'),
-    botOwnerId,
     url,
     origin: new URL(url).origin,
     urlIsDefault: rawUrl === '',

@@ -276,7 +276,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     const guilds = await userGuilds(ctx, session);
     if (!guilds) return null;
     const guild = guilds.find((g) => g.id === guildId);
-    if (!canManageGuild(guild, session.uid, config.botOwnerId)) {
+    if (!canManageGuild(guild)) {
       fail(ctx, 403, 'forbidden', 'You need the Manage Server or Administrator permission in this server.');
       return null;
     }
@@ -378,7 +378,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (!session) return;
     const guilds = await userGuilds(ctx, session, { allowStale: true });
     if (!guilds) return;
-    const manageable = guilds.filter((g) => canManageGuild(g, session.uid, config.botOwnerId));
+    const manageable = guilds.filter((g) => canManageGuild(g));
     let present;
     try {
       present = await Promise.all(manageable.map((g) => discord.isBotInGuild(g.id, { verify: false })));
@@ -468,7 +468,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
           + 'The bot does not hand those out; pick a role without them.');
       }
     }
-    if (res.guild.ownerId === session.uid || (config.botOwnerId && config.botOwnerId === session.uid)) return true;
+    if (res.guild.ownerId === session.uid) return true;
     let member;
     try {
       member = await discord.getMember(guildId, session.uid);

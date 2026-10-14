@@ -242,16 +242,13 @@ export async function revokeToken({ config, fetchImpl = fetch }, accessToken) {
 
 /**
  * Whether a user may manage a guild from the dashboard (the bot's ADMIN level): the guild must be in
- * the user's OAuth guild list, and the user owns it, has Administrator or Manage Server there, or is
- * BOT_OWNER_ID.
+ * the user's OAuth guild list, and the user owns it or has Administrator or Manage Server there.
+ * BOT_OWNER_ID gets no bypass: the dashboard shows and opens only the servers the user really manages.
  * @param {{ owner?: boolean, permissions?: string }|null|undefined} oauthGuild entry of GET /users/@me/guilds
- * @param {string} userId
- * @param {string|null} [botOwnerId]
  * @returns {boolean}
  */
-export function canManageGuild(oauthGuild, userId, botOwnerId = null) {
+export function canManageGuild(oauthGuild) {
   if (!oauthGuild || typeof oauthGuild !== 'object') return false;
-  if (botOwnerId && typeof userId === 'string' && userId === botOwnerId) return true;
   if (oauthGuild.owner === true) return true;
   const raw = oauthGuild.permissions;
   if (typeof raw !== 'string' || !/^\d{1,30}$/.test(raw)) return false;

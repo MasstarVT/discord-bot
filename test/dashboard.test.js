@@ -767,7 +767,6 @@ describe('config', () => {
     assert.equal(r.config.origin, 'http://localhost:8080');
     assert.equal(r.config.redirectUri, 'http://localhost:8080/auth/callback');
     assert.equal(r.config.secureCookies, false);
-    assert.equal(r.config.botOwnerId, null);
     assert.equal(r.config.urlIsDefault, true);
     assert.equal(loadDashboardConfig({}).config.urlIsDefault, true);
   });
@@ -782,13 +781,12 @@ describe('config', () => {
   });
 
   test('an https DASHBOARD_URL makes cookies secure; the trailing slash is dropped', () => {
-    const r = loadDashboardConfig(baseEnv({ DASHBOARD_URL: 'https://dash.example.com/', DASHBOARD_PORT: '9000', BOT_OWNER_ID: OWNER_ID }));
+    const r = loadDashboardConfig(baseEnv({ DASHBOARD_URL: 'https://dash.example.com/', DASHBOARD_PORT: '9000' }));
     assert.equal(r.ok, true);
     assert.equal(r.config.url, 'https://dash.example.com');
     assert.equal(r.config.redirectUri, 'https://dash.example.com/auth/callback');
     assert.equal(r.config.secureCookies, true);
     assert.equal(r.config.port, 9000);
-    assert.equal(r.config.botOwnerId, OWNER_ID);
   });
 
   test('invalid values are reported by key', () => {
@@ -807,10 +805,11 @@ describe('config', () => {
       assert.equal(r.ok, false, `${JSON.stringify(extra)} was accepted`);
       assert.deepEqual(r.invalid.map((i) => i.key), [key]);
     }
+    // The dashboard does not read BOT_OWNER_ID (no bot-owner bypass), so any value is ignored.
     const owner = loadDashboardConfig(baseEnv({ BOT_OWNER_ID: 'me' }));
     assert.equal(owner.ok, true);
-    assert.equal(owner.config.botOwnerId, null);
-    assert.equal(owner.warnings.length, 1);
+    assert.equal('botOwnerId' in owner.config, false);
+    assert.equal(owner.warnings.length, 0);
   });
 
   test('every key the dashboard reads is documented in .env.example', () => {
@@ -887,26 +886,24 @@ describe('auth', () => {
     assert.equal(url.searchParams.get('prompt'), 'none');
   });
 
-  test('canManageGuild mirrors the ADMIN level', () => {
+  test('canManageGuild mirrors the ADMIN level, with no BOT_OWNER_ID bypass', () => {
     const cases = [
-      [{ owner: true, permissions: '0' }, USER_ID, null, true],
-      [{ owner: false, permissions: '8' }, USER_ID, null, true],
-      [{ owner: false, permissions: '32' }, USER_ID, null, true],
-      [{ owner: false, permissions: '1099511627775' }, USER_ID, null, true],
-      [{ owner: false, permissions: '0' }, USER_ID, null, false],
-      [{ owner: false, permissions: '16' }, USER_ID, null, false],
-      [{ owner: false, permissions: '1099511627735' }, USER_ID, null, false], // every bit but 0x8 and 0x20
-      [{ owner: false, permissions: 'abc' }, USER_ID, null, false],
-      [{ owner: false, permissions: '-8' }, USER_ID, null, false],
-      [{ owner: false }, USER_ID, null, false],
-      [{ owner: 'true', permissions: '0' }, USER_ID, null, false],
-      [{ owner: false, permissions: '0' }, OWNER_ID, OWNER_ID, true],
-      [{ owner: false, permissions: '0' }, USER_ID, OWNER_ID, false],
-      [undefined, OWNER_ID, OWNER_ID, false], // the guild must be in the user's list
-      [null, USER_ID, null, false],
+      [{ owner: true, permissions: '0' }, true],
+      [{ owner: false, permissions: '8' }, true],
+      [{ owner: false, permissions: '32' }, true],
+      [{ owner: false, permissions: '1099511627775' }, true],
+      [{ owner: false, permissions: '0' }, false],
+      [{ owner: false, permissions: '16' }, false],
+      [{ owner: false, permissions: '1099511627735' }, false], // every bit but 0x8 and 0x20
+      [{ owner: false, permissions: 'abc' }, false],
+      [{ owner: false, permissions: '-8' }, false],
+      [{ owner: false }, false],
+      [{ owner: 'true', permissions: '0' }, false],
+      [undefined, false], // the guild must be in the user's list
+      [null, false],
     ];
-    for (const [guild, uid, owner, expected] of cases) {
-      assert.equal(auth.canManageGuild(guild, uid, owner), expected, JSON.stringify([guild, uid, owner]));
+    for (const [guild, expected] of cases) {
+      assert.equal(auth.canManageGuild(guild), expected, JSON.stringify(guild));
     }
   });
 
@@ -1511,7 +1508,7 @@ function sessionCookie(overrides = {}) {
 const WRITE_HEADERS = Object.freeze({ 'content-type': 'application/json', 'x-dashboard': '1', origin: 'http://localhost:8080' });
 
 describe('HTTP server', () => {
-  const { config } = loadDashboardConfig(baseEnv());
+  const { config } = loadDashboardConfig(baseEnv({ BOT_OWNER_ID: OWNER_ID })); // set, so a returning bot-owner bypass is caught
   const fakes = createFakes();
   const log = recordingLogger();
   let publicDir;
@@ -1600,6 +1597,18 @@ describe('HTTP server', () => {
     const zeta = r.json.guilds.find((g) => g.id === G.zeta);
     assert.deepEqual(zeta, { id: G.zeta, name: 'zeta', iconUrl: null, botPresent: true, inviteUrl: null });
     assert.equal(r.json.guilds.some((g) => g.id === G.plain), false, 'no permission: not listed');
+  });
+
+  test('BOT_OWNER_ID gets no bypass: the bot owner sees and opens only the servers they manage', async () => {
+    const cookie = sessionCookie({ uid: OWNER_ID });
+    const list = await authed('/api/guilds', { cookie });
+    assert.equal(list.status, 200);
+    assert.deepEqual(list.json.guilds.map((g) => g.name), ['beta', 'Broken', 'zeta', 'Alpha']);
+    for (const path of [`/api/guilds/${G.plain}/settings`, `/api/guilds/${G.plain}/resources`, `/api/guilds/${G.plain}/members?query=a`]) {
+      const r = await authed(path, { cookie });
+      assert.equal(r.status, 403, path);
+      assert.equal(r.json.error, 'forbidden', path);
+    }
   });
 
   test('Discord failures on /api/guilds', async () => {
