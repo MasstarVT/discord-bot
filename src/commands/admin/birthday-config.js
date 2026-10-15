@@ -229,6 +229,10 @@ async function handleSetUser(interaction, settings) {
   let desc = `${member}'s birthday is now **${formatBirthday(r)}**.`; // no year: the reply is public
   if (res.late) desc += "\nIt is today and today's celebration time has passed, so it counts from next year.";
   else if (res.alreadyCelebrated) desc += '\nThey were already celebrated this year, so the new date counts from next year.';
+  // The year and the age stay out of this public reply, but the announcement shows the age when the year is known.
+  if (r.year !== null && settings.birthdayChannelId && /\{age\}/i.test(pickTemplate(settings, 1))) {
+    desc += `\nBecause a birth year was given, their age will be shown in the public announcement in <#${settings.birthdayChannelId}>.`;
+  }
   return send(interaction, successEmbed('Birthday Saved', desc + moduleNote(settings)));
 }
 

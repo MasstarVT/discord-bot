@@ -688,6 +688,10 @@ test('db: create, list, edit, button numbers, self references, delete', { skip: 
 
   // Server checks: missing saved embed, a reward module that is off, members.
   await expectRecordError(storeCreate(store, { name: 'e', actions: [action('SEND_EMBED', { embedName: 'nope' })] }), 'invalid', 'actions.0.embedName');
+  // A saved embed whose text pings a role the user could not ping is refused like /automation's embed action (the owner may).
+  await prisma.savedEmbed.create({ data: { guildId: GUILD, name: 'pinger', template: { content: `<@&${ROLE}>` }, createdBy: USER } });
+  await expectRecordError(storeCreate(store, { name: 'e', actions: [action('SEND_EMBED', { embedName: 'pinger' })] },
+    { ...actor(), userId: OTHER, member: { owner: false, permissions: '0' } }), 'invalid', 'actions.0.embedName');
   await expectRecordError(storeCreate(store, { name: 'e', actions: [action('GIVE_XP', { amount: 5 })] }), 'invalid', 'actions.0.type');
   assert.equal((await storeCreate(store, { name: 'coins', actions: [action('GIVE_COINS', { amount: 5 })] })).actions[0].amount, 5);
   await expectRecordError(storeCreate(store, {

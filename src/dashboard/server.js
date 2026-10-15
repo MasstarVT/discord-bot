@@ -15,7 +15,7 @@ import {
 } from './auth.js';
 import { buildCatalog } from './catalog.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
-import { FieldError, checkRefs, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
+import { FieldError, checkRefs, collectAssignableRoles, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
 import { collectSettingsRefKeys, collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
 import { COLLECTIONS, RECORD_ID_RE, validateRecordInput } from './collections/index.js';
 import { RecordError, unwrapResult } from './collections/errors.js';
@@ -29,7 +29,15 @@ export const PROPAGATION_SECONDS = 30;
 export const WRITE_RATE_LIMIT = Object.freeze({ max: 20, windowMs: 10_000 });
 /** Member searches (user pickers search as the admin types). */
 export const SEARCH_RATE_LIMIT = Object.freeze({ max: 30, windowMs: 10_000 });
+/**
+ * Login callbacks that get as far as Discord's token endpoint (a matching state and a well-formed code; every one costs a
+ * POST with the app credentials): at most 10 per client address and 60 for the whole dashboard per minute. A real login
+ * is one request, so this only bites a flood of junk that would otherwise get the app or the address rate limited.
+ */
+export const LOGIN_RATE_LIMIT = Object.freeze({ max: 10, windowMs: 60_000 });
+export const LOGIN_GLOBAL_RATE_LIMIT = Object.freeze({ max: 60, windowMs: 60_000 });
 const RATE_LIMIT_KEYS_MAX = 10_000;
+const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 const ACTION_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
 /** Channels tried for a bot-owner invite before giving up. */
@@ -86,6 +94,22 @@ export function createRateLimiter({ max, windowMs, now }) {
     while (hits.size > RATE_LIMIT_KEYS_MAX) hits.delete(hits.keys().next().value);
     return { ok: true };
   };
+}
+
+/**
+ * The client address the login limit counts. The dashboard has no trusted-proxy setting, so a request is counted under
+ * its socket address; only when that is the loopback address (a reverse proxy on the same host) is the last
+ * `X-Forwarded-For` entry, the one that proxy appended, used instead. From any other peer the header is ignored, so a
+ * client cannot pick its own key.
+ * @param {import('node:http').IncomingMessage} req
+ * @returns {string}
+ */
+export function clientAddress(req) {
+  const peer = req.socket?.remoteAddress ?? 'unknown';
+  if (!LOOPBACK_ADDRESSES.has(peer)) return peer;
+  const header = req.headers?.['x-forwarded-for'];
+  const last = typeof header === 'string' ? header.split(',').at(-1).trim() : '';
+  return last !== '' && last.length <= 64 ? last : peer;
 }
 
 const formatColor = (n) => (Number.isInteger(n) && n >= 0 && n <= 0xffffff
@@ -196,6 +220,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   const catalogJson = JSON.stringify(buildCatalog());
   const limitWrites = createRateLimiter({ ...WRITE_RATE_LIMIT, now });
   const limitSearches = createRateLimiter({ ...SEARCH_RATE_LIMIT, now });
+  const limitLoginsByAddress = createRateLimiter({ ...LOGIN_RATE_LIMIT, now });
+  const limitLoginsOverall = createRateLimiter({ ...LOGIN_GLOBAL_RATE_LIMIT, now });
 
   // ── Response helpers ────────────────────────────────────────────────────────
 
@@ -344,6 +370,17 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (!statesMatch(expected, q.get('state'))) return failed('the state did not match (expired or forged login)');
     const code = q.get('code');
     if (!code || code.length > 512 || !/^[\w.~-]+$/.test(code)) return failed('missing or malformed code');
+
+    // From here on the request costs a POST to Discord, so it is counted (per address first: a flood from one address
+    // must not use up the overall allowance of everyone else).
+    const address = clientAddress(ctx.req);
+    const limited = limitLoginsByAddress(address);
+    const limitedOverall = limited.ok ? limitLoginsOverall('all') : limited;
+    if (!limitedOverall.ok) {
+      logger.warn(`Dashboard login rate limited: ${limited.ok ? 'overall limit' : forLog(address)}`);
+      return fail(ctx, 429, 'rate_limited', `Too many login attempts. Try again in ${limitedOverall.retryAfter} s.`,
+        { retryAfter: limitedOverall.retryAfter }, { 'Retry-After': String(limitedOverall.retryAfter) });
+    }
 
     let token;
     let user;
@@ -610,6 +647,38 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     const top = Math.max(0, ...(member?.roles ?? []).map((id) => map.roles.get(id)?.position ?? 0));
     const above = given.find((ref) => map.roles.get(ref.id).position >= top);
     return above ? problem(above, 'That role is not below your highest role, so you cannot have the bot give it.') : true;
+  }
+
+  /**
+   * For a collection that opts in (`checkStoredRoles`): a record that gives or takes a role at or above the user's highest role
+   * cannot be changed by that user, whatever the change is (verifyRefs only looks at the ids a request sets, so enabling or
+   * editing a stored record would pass unchecked). Looks at every assignable role of the record as it will be saved; the guild
+   * owner and the bot owner are exempt. Answers and returns false on a problem.
+   * @param {object} saved the record as it will be stored (stored fields merged with the request)
+   * @param {object} changed the fields the request sets
+   */
+  async function verifyStoredRoles(ctx, session, guildId, collection, saved, changed) {
+    const held = collectAssignableRoles(collection.fields, saved);
+    if (held.length === 0) return true;
+    let res;
+    let member;
+    try {
+      res = await discord.getGuildResources(guildId);
+      if (res.guild.ownerId === session.uid || isBotOwner(session)) return true;
+      member = await discord.getMember(guildId, session.uid);
+    } catch (err) {
+      discordFailure(ctx, err, false);
+      return false;
+    }
+    const map = refResources(res);
+    const top = Math.max(0, ...(member?.roles ?? []).map((id) => map.roles.get(id)?.position ?? 0));
+    const above = held.find((ref) => (map.roles.get(ref.id)?.position ?? -1) >= top);
+    if (!above) return true;
+    const field = above.path.split('.')[0];
+    fail(ctx, 400, 'invalid_request',
+      `This ${collection.singular} gives or takes a role that is not below your highest role, so you cannot change it.`,
+      Object.hasOwn(changed ?? {}, field) ? { path: above.path } : {});
+    return false;
   }
 
   async function guildSettings(ctx, guildId) {
@@ -886,6 +955,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
         ? (r) => collection.refKeyOf(r, valid.data)
         : (r) => refKey(r.path, r.id);
       if (!await verifyRefs(ctx, session, guildId, valid.refs, keep, keyOf)) return;
+      if (mode === 'update' && collection.checkStoredRoles === true
+        && !await verifyStoredRoles(ctx, session, guildId, collection, { ...current, ...valid.data }, valid.data)) return;
 
       if (mode === 'create') {
         const { item, message } = unwrapResult(await records.create(guildId, key, valid.data, user));

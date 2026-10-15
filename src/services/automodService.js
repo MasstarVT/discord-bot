@@ -155,11 +155,23 @@ const INVISIBLE_RE = /[\u{AD}\u{34F}\u{61C}\u{180E}\u{200B}-\u{200F}\u{202A}-\u{
 /** Removes invisible characters. */
 export const stripInvisible = (s) => String(s ?? '').replace(INVISIBLE_RE, '');
 
+// A literal underscore (typed `\_`) is held as this private-use character while markdown is stripped.
+const LITERAL_UNDERSCORE = '\u{E000}';
+// A run of `_` at the edge of a word (start, end, or next to a non-word character) is Discord italics/underline.
+const EDGE_UNDERSCORES_RE = /(?<![\p{L}\p{N}_\u{E000}])_+|_+(?![\p{L}\p{N}_\u{E000}])/gu;
+
 /**
  * Bad words and patterns. NFKC folds fullwidth and math-styled letters, markdown emphasis, spoiler
- * bars and escapes are removed so "b**a**d" and "||bad||" still match. `_` stays: it is a word character.
+ * bars and escapes are removed so "b**a**d" and "||bad||" still match. Underscores at the edge of a word
+ * (`_bad_`, `__bad__`, `bad_`) are italics/underline, so they become spaces; an underscore between two word
+ * parts (`snake_case`) and an escaped `\_` stay word characters.
  */
-export const textForWords = (content) => stripInvisible(String(content ?? '').normalize('NFKC')).replace(/[\\*~|`]/g, '');
+export const textForWords = (content) => stripInvisible(String(content ?? '').normalize('NFKC'))
+  .replaceAll(LITERAL_UNDERSCORE, '')
+  .replace(/\\([\s\S]?)/g, (_m, c) => (c === '_' ? LITERAL_UNDERSCORE : c))
+  .replace(/[\\*~|`]/g, '')
+  .replace(EDGE_UNDERSCORES_RE, ' ')
+  .replaceAll(LITERAL_UNDERSCORE, '_');
 
 /** Invites and links: NFKC, invisible characters removed, and unescaped (discord\.gg). */
 export const textForLinks = (content) => stripInvisible(String(content ?? '').normalize('NFKC')).replace(/\\/g, '');
@@ -329,6 +341,13 @@ export const activeRuleKeys = (config) => RULE_KEYS.filter((k) => config?.rules?
 
 let warnedFallback = false;
 
+// Scripts written without spaces between words (Hangul is spaced, so it is not here). A listed word made only
+// of these characters is matched as a substring: a whole-word match would never find it in running text.
+const SPACELESS_WORD_RE = /^[\p{scx=Han}\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Thai}\p{scx=Lao}\p{scx=Khmer}\p{scx=Myanmar}]+$/u;
+
+/** True for a listed word written only in a script without word spaces (matched as a substring). */
+export const isSpacelessWord = (word) => SPACELESS_WORD_RE.test(String(word ?? ''));
+
 /**
  * Compiles the bad-word alternation and the user patterns of a config.
  * The word regex is one escaped-literal alternation with no user regex syntax, so it cannot backtrack
@@ -342,10 +361,16 @@ export function buildMatchers(config) {
   const words = Array.isArray(config?.badWords) ? config.badWords : [];
   if (words.length > 0) {
     try {
-      const alts = [...words]
+      const alt = (list) => [...list]
         .sort((a, b) => b.length - a.length)
-        .map((w) => escapeRegex(w).replace(/ /g, '\\s+'));
-      badWordsRe = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${alts.join('|')})(?![\\p{L}\\p{N}_])`, 'iu');
+        .map((w) => escapeRegex(w).replace(/ /g, '\\s+'))
+        .join('|');
+      const spaced = words.filter((w) => !isSpacelessWord(w));
+      const spaceless = words.filter(isSpacelessWord);
+      const parts = [];
+      if (spaced.length > 0) parts.push(`(?<![\\p{L}\\p{N}_])(?:${alt(spaced)})(?![\\p{L}\\p{N}_])`);
+      if (spaceless.length > 0) parts.push(`(?:${alt(spaceless)})`);
+      badWordsRe = new RegExp(parts.join('|'), 'iu');
     } catch (err) {
       if (!warnedFallback) {
         warnedFallback = true;
@@ -434,8 +459,9 @@ export function claimPunishment(guildId, userId, rank, now = Date.now()) {
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
-// Invites. No nested quantifiers. Global flag: use only through matchAll (findInvites).
-export const INVITE_RE = /(?<![\w.-])(?:https?:\/\/)?(?:(?:www|ptb|canary)\.)?(?:discord(?:app)?\.com\/invite|discord\.gg)\/([a-z0-9-]{2,32})/gi;
+// Invites. No nested quantifiers. Global flag: use only through matchAll (findInvites). An underscore before the
+// link is allowed: "_discord.gg/abc_" is a markdown-italic link in Discord, not part of a longer hostname.
+export const INVITE_RE = /(?<![A-Za-z0-9.-])(?:https?:\/\/)?(?:(?:www|ptb|canary)\.)?(?:discord(?:app)?\.com\/invite|discord\.gg)\/([a-z0-9-]{2,32})/gi;
 
 /** Every invite code in `text` (original case). */
 export function findInvites(text) {
@@ -443,8 +469,9 @@ export function findInvites(text) {
 }
 
 // Links: only scheme URLs and www. hosts. A bare "word.word" is ignored (R126).
-const URL_RE = /\bhttps?:\/\/[^\s<>"'`|]+/gi;
-const WWW_RE = /(?<![\w./-])www\.[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi;
+// "_" is not a boundary character here (so "_https://x.com_" is found) and trailing markdown marks are cut below.
+const URL_RE = /(?<![A-Za-z0-9])https?:\/\/[^\s<>"'`|]+/gi;
+const WWW_RE = /(?<![A-Za-z0-9./-])www\.[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi;
 
 /** An exact or dot-suffix match on a parsed hostname (R127): netflix.com is not x.com. */
 export function hostMatches(host, domain) {
@@ -465,7 +492,8 @@ export function extractLinkHosts(text) {
     } catch { /* not a URL */ }
   };
   const s = String(text ?? '');
-  for (const m of s.matchAll(URL_RE)) push(m[0].replace(/[)\].,!?:;'"]+$/, ''));
+  // Trailing punctuation and markdown marks ("**https://x.com**", "~~…~~", "_…_") are not part of the host.
+  for (const m of s.matchAll(URL_RE)) push(m[0].replace(/[)\].,!?:;'"*_~]+$/, ''));
   for (const m of s.matchAll(WWW_RE)) push(`https://${m[0]}`);
   return out;
 }
@@ -641,7 +669,8 @@ function makeMatch(config, key, detail) {
 }
 
 /**
- * Bad words (whole-word, R034) then regex patterns (sandboxed, R128).
+ * Bad words (whole-word, R034; entries in scripts without word spaces match as a substring) then regex patterns
+ * (sandboxed, R128).
  * @returns {{ rule: string, action: string, detail: string, timeoutSeconds: number }|null}
  */
 export function checkBadWords(content, config, matchers) {
@@ -651,7 +680,8 @@ export function checkBadWords(content, config, matchers) {
     const m = matchers.badWordsRe.exec(t);
     if (m) return makeMatch(config, 'badWords', `word "${clampText(m[0], 40)}"`);
   } else if (matchers?.fallbackWords) {
-    const w = matchers.fallbackWords.find((word) => containsWord(t, word));
+    const lower = t.toLowerCase();
+    const w = matchers.fallbackWords.find((word) => (isSpacelessWord(word) ? lower.includes(word.toLowerCase()) : containsWord(t, word)));
     if (w !== undefined) return makeMatch(config, 'badWords', `word "${clampText(w, 40)}"`);
   }
   if (matchers?.patterns?.length) {

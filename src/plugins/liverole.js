@@ -419,6 +419,15 @@ async function onPresenceUpdate(ctx) {
   await reconcileMember(ctx.guild, userId, { mode: 'sync', settings, source: 'presence' });
 }
 
+/** Gaining or losing the required role changes who qualifies without any presence update: re-check that member. */
+async function onMemberUpdate(ctx) {
+  const settings = await ctx.getSettings();
+  const required = settings?.liveRoleRequiredRoleId;
+  if (!settings?.liveRoleEnabled || !settings.liveRoleId || !required) return;
+  if (ctx.oldMember.roles.cache.has(required) === ctx.newMember.roles.cache.has(required)) return;
+  await reconcileMember(ctx.guild, ctx.newMember.id, { mode: 'sync', settings, source: 'sync' }); // audit reason: "not eligible"
+}
+
 async function onGuildReady(ctx) {
   const settings = await ctx.getSettings();
   if (!settings?.liveRoleEnabled || !settings.liveRoleId) return;
@@ -426,7 +435,7 @@ async function onGuildReady(ctx) {
   await syncGuild(ctx.guild, { mode: 'sync', reason: ctx.reason === 'join' ? 'join' : 'startup' });
 }
 
-// Hook ids are the bare 'liverole' (HOOK_ORDER lists it). Neither hook is `always`: while the module is off the bot never touches
+// Hook ids are the bare 'liverole' (HOOK_ORDER lists it). No hook is `always`: while the module is off the bot never touches
 // the live role from events; /liverole disable is the cleanup path.
 export const plugin = {
   id: 'liverole',
@@ -444,6 +453,14 @@ export const plugin = {
       id: 'liverole',
       run: onGuildReady,
       timeoutMs: 120_000, // a full member fetch plus up to 50 role edits can exceed the 10 s default
+    },
+    {
+      event: 'guildMemberUpdate',
+      id: 'liverole',
+      // An uncached old member cannot be diffed (onMemberUpdate compares the required role).
+      filter: (ctx) => ctx.oldKnown === true && !ctx.newMember?.user?.bot,
+      run: onMemberUpdate,
+      timeoutMs: 30_000,
     },
   ],
   components: [],

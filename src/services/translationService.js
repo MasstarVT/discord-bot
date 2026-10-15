@@ -5,10 +5,11 @@
 // detectLanguage and getGuildTranslateConfig, which throw TranslationError / the Postgres error.
 import { createHash } from 'node:crypto';
 import { EmbedBuilder } from 'discord.js';
+import { Prisma } from '@prisma/client';
 import prisma from '../database/client.js';
 import { cache } from './redis.js';
 import { STAT_VIA, recordTranslation } from './translateStatsService.js';
-import { COLORS } from '../config/constants.js';
+import { COLORS, LIMITS } from '../config/constants.js';
 import logger from '../utils/logger.js';
 import { clampText } from '../utils/text.js';
 import { applyGuildColor, errorEmbed, warnEmbed } from '../utils/embedBuilder.js';
@@ -287,6 +288,7 @@ let lastPauseSync = 0;
 let ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
 let runtimeUnsupported = new Set();
 let channelMemo = new Map();
+let channelGen = new Map(); // per guild: bumped by every invalidation, so a read that began earlier never memoises
 let autoInflight = 0;
 const googleBlockedUntil = new Map();
 let langCache = { key: '', value: LANGUAGES };
@@ -1006,6 +1008,16 @@ function memoize(guildId, map) {
   while (channelMemo.size > CHANNEL_MEMO_MAX) channelMemo.delete(channelMemo.keys().next().value);
 }
 
+const genOf = (guildId) => channelGen.get(guildId) ?? 0;
+
+function bumpGen(guildId) {
+  const next = genOf(guildId) + 1;
+  channelGen.delete(guildId);
+  channelGen.set(guildId, next);
+  while (channelGen.size > CHANNEL_MEMO_MAX) channelGen.delete(channelGen.keys().next().value);
+  return next;
+}
+
 const toMap = (rows) => new Map(rows.map((r) => [r.channelId, normalizeTargetList(r.targetLangs).valid.slice(0, MAX_TARGETS)]));
 
 async function loadRows(guildId) {
@@ -1023,14 +1035,15 @@ async function loadRows(guildId) {
 export async function getGuildTranslateConfig(guildId) {
   const memo = channelMemo.get(guildId);
   if (memo && Date.now() - memo.at < CHANNELS_MEMO_TTL_MS) return memo.map;
+  const gen = genOf(guildId); // a change that lands while this read is in flight must not be overwritten by it
   let rows = await cache.get(channelsKey(guildId));
   if (!validRows(rows)) {
     rows = await loadRows(guildId);
     // setNX: a reader that loaded rows just before an /autotranslate change must not overwrite the new list.
-    await cache.setNX(channelsKey(guildId), rows, CHANNELS_CACHE_TTL_S);
+    if (genOf(guildId) === gen) await cache.setNX(channelsKey(guildId), rows, CHANNELS_CACHE_TTL_S);
   }
   const map = toMap(rows);
-  memoize(guildId, map);
+  if (genOf(guildId) === gen) memoize(guildId, map);
   return map;
 }
 
@@ -1056,15 +1069,59 @@ export async function getChannelTargets(guildId, channelId) {
  * @returns {Promise<void>}
  */
 export async function refreshTranslateCache(guildId) {
+  const gen = bumpGen(guildId); // reads that began before this change no longer store what they loaded
   try {
     const rows = await loadRows(guildId);
+    if (genOf(guildId) !== gen) return; // a newer refresh superseded this one and writes the newer list
     await cache.set(channelsKey(guildId), rows, CHANNELS_CACHE_TTL_S);
+    if (genOf(guildId) !== gen) return;
+    bumpGen(guildId); // also reads that began while this refresh ran
     memoize(guildId, toMap(rows));
   } catch (err) {
+    bumpGen(guildId);
     channelMemo.delete(guildId);
     await cache.del(channelsKey(guildId));
     logger.warn(`translationService: could not refresh the channel config of guild ${guildId}: ${err?.message ?? err}`);
   }
+}
+
+// ── Capped writes ─────────────────────────────────────────────────────────────
+
+const TX_OPTS = { timeout: 10_000, maxWait: 10_000 };
+const channelsLockSql = (guildId) => Prisma.sql`SELECT 1 AS ok FROM pg_advisory_xact_lock(hashtext(${`translate-channels:${guildId}`}))`;
+
+export const RAW_SQL = Object.freeze([
+  { name: 'translation.channelsLock', build: () => channelsLockSql('0') },
+]);
+
+/**
+ * Adds a translated channel, or sets the languages of an existing one, under LIMITS.TRANSLATE_CHANNELS. The advisory
+ * lock per guild makes the cap exact when /autotranslate and the dashboard save at the same time; both writers use it.
+ * The caller does ensureGuildSettings first and refreshTranslateCache after.
+ * @param {string} guildId
+ * @param {string} channelId
+ * @param {string[]} targetLangs canonical codes
+ * @param {{ updateExisting?: boolean }} [opts] false: an existing row is reported as 'EXISTS' instead of updated
+ * @returns {Promise<{ ok: true, created: boolean, row: object } | { ok: false, code: 'LIMIT', count: number } | { ok: false, code: 'EXISTS' }>}
+ */
+export async function saveTranslateChannel(guildId, channelId, targetLangs, { updateExisting = true } = {}) {
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(channelsLockSql(guildId));
+    const existing = await tx.translateChannel.findUnique({
+      where: { guildId_channelId: { guildId, channelId } }, select: { id: true },
+    });
+    if (existing && !updateExisting) return { ok: false, code: 'EXISTS' };
+    if (!existing) {
+      const count = await tx.translateChannel.count({ where: { guildId } });
+      if (count >= LIMITS.TRANSLATE_CHANNELS) return { ok: false, code: 'LIMIT', count };
+    }
+    const row = await tx.translateChannel.upsert({
+      where: { guildId_channelId: { guildId, channelId } },
+      update: { targetLangs },
+      create: { guildId, channelId, targetLangs },
+    });
+    return { ok: true, created: !existing, row };
+  }, TX_OPTS);
 }
 
 /** @deprecated Alias of refreshTranslateCache, kept for compatibility. */
@@ -1177,6 +1234,7 @@ export const __testing = Object.freeze({
     ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
     runtimeUnsupported = new Set();
     channelMemo = new Map();
+    channelGen = new Map();
     autoInflight = 0;
     googleBlockedUntil.clear();
     langCache = { key: '', value: LANGUAGES };

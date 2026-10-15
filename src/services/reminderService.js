@@ -5,6 +5,7 @@
 //
 // State lives only in Postgres (Reminder + ScheduledJob rows): no Redis keys. The per-guild create lock is an
 // in-process mutex, which is enough because a guild's commands always reach the same shard.
+import { createHash } from 'node:crypto';
 import { PermissionFlagsBits, ChannelType } from 'discord.js';
 import prisma from '../database/client.js';
 import { COLORS, LIMITS } from '../config/constants.js';
@@ -606,8 +607,46 @@ async function checkActivity(r, channel) {
 
 const GONE_CHANNEL_CODES = new Set([10003, 50001]); // Unknown Channel, Missing Access
 
-/** @returns {Promise<'sent'|'skipped'|'disabled'>} */
-async function deliver(r, slot, settings, ctx, { gate }) {
+// Send failures. Permanent: retrying cannot help (missing access / permissions, unknown channel / user, cannot DM, bad
+// form body). Everything else is transient: a Discord 5xx, a 429, a network error, a timeout.
+const PERMANENT_SEND_CODES = new Set([50001, 50013, 10003, 10013, 50007, 50035]);
+// Mirrors scheduler.js: after failed attempt n the job waits 30 s * 2^(n-1), at most 1 h.
+const SCHEDULER_RETRY_BASE_MS = 30_000;
+const SCHEDULER_RETRY_MAX_MS = 60 * MINUTE_MS;
+// Discord's nonce check only remembers "the past few minutes", so a send that timed out (and may still land) is retried
+// only while the retry is this close; later the claim stays and the occurrence counts as sent (at most once).
+const TIMEOUT_RETRY_MAX_DELAY_MS = MINUTE_MS;
+const RETRY = Symbol('reminder.retry');
+
+/** @returns {boolean} true when a failed send may succeed later (a timeout, 408, 429, 5xx, a network error) */
+export function isTransientSendError(err) {
+  if (err instanceof TimeoutError) return true;
+  const code = err?.code;
+  if (typeof code === 'number' && PERMANENT_SEND_CODES.has(code)) return false;
+  const status = err?.status;
+  if (Number.isInteger(status) && status >= 400 && status < 500) return status === 408 || status === 429;
+  return true;
+}
+
+/** @returns {number} how long the scheduler waits after failed attempt `attempt` (1-based) */
+export const schedulerRetryDelayMs = (attempt) => Math.min(SCHEDULER_RETRY_BASE_MS * 2 ** Math.max(attempt - 1, 0), SCHEDULER_RETRY_MAX_MS);
+
+/**
+ * Whether a failed attempt may ask the scheduler for another one: not the final attempt, and the retry still falls inside
+ * the late tolerance of the occurrence. Without `attempt` / `maxAttempts` (not run by the scheduler) there is no retry.
+ * @param {{ attempt?: number, maxAttempts?: number, lateMs: number, toleranceMs: number }} p
+ * @returns {boolean}
+ */
+export function mayRetry({ attempt, maxAttempts, lateMs, toleranceMs }) {
+  if (!Number.isInteger(attempt) || !Number.isInteger(maxAttempts) || attempt >= maxAttempts) return false;
+  return lateMs + schedulerRetryDelayMs(attempt) < toleranceMs;
+}
+
+/** @returns {string} the Discord nonce of one occurrence (max 25 chars): a retry of the same occurrence is dropped as a duplicate */
+export const occurrenceNonce = (reminderId, slot) => createHash('sha1').update(`${reminderId}:${slot.getTime()}`).digest('hex').slice(0, 25);
+
+/** @returns {Promise<'sent'|'skipped'|'disabled'|'retry'>} 'retry' only when `retryable`: the caller asks the scheduler for another attempt */
+async function deliver(r, slot, settings, ctx, { gate, retryable = false }) {
   const { guild } = ctx;
 
   // 1. Resolve the channel. A cache miss is not a deletion: only a REST answer of 10003 / 50001 pauses the reminder.
@@ -619,6 +658,10 @@ async function deliver(r, slot, settings, ctx, { gate }) {
       if (GONE_CHANNEL_CODES.has(err?.code)) {
         await autoDisable(r, 'its channel no longer exists or I lost access');
         return 'disabled';
+      }
+      if (retryable && isTransientSendError(err)) {
+        logger.warn(`Reminder "${r.name}" (${r.id}) in guild ${r.guildId}: could not look up its channel (${err?.message}); retrying`);
+        return 'retry';
       }
       warnOnce(r, 'fetch', err?.message);
       return 'skipped';
@@ -655,15 +698,20 @@ async function deliver(r, slot, settings, ctx, { gate }) {
   });
   if (count !== 1) return 'skipped';
 
-  // 6. Send.
+  // 6. Send. The nonce is the same on every attempt at this occurrence, so Discord drops a duplicate of a send that did land.
   try {
-    const msg = await withTimeout(channel.send(payload), SEND_TIMEOUT_MS, `reminder send ${r.id}`);
+    const msg = await withTimeout(
+      channel.send({ ...payload, nonce: occurrenceNonce(r.id, slot), enforceNonce: true }), SEND_TIMEOUT_MS, `reminder send ${r.id}`,
+    );
     await prisma.reminder.update({ where: { id: r.id }, data: { lastMessageId: msg.id } })
       .catch((e) => logger.warn(`Reminder ${r.id}: could not store lastMessageId: ${e?.message}`));
     return 'sent';
   } catch (err) {
-    // A timeout may still land, so its claim stays; any other failure gives the occurrence back.
-    if (!(err instanceof TimeoutError)) {
+    const timedOut = err instanceof TimeoutError;
+    const willRetry = retryable && isTransientSendError(err)
+      && (!timedOut || schedulerRetryDelayMs(ctx.attempt) <= TIMEOUT_RETRY_MAX_DELAY_MS);
+    // A timeout may still land, so its claim stays unless a quick retry is coming; any other failure gives the occurrence back.
+    if (!timedOut || willRetry) {
       await prisma.reminder.updateMany({ where: { id: r.id, lastSentAt: claimedAt }, data: { lastSentAt: r.lastSentAt } }).catch(() => {});
     }
     if (GONE_CHANNEL_CODES.has(err?.code)) {
@@ -673,6 +721,10 @@ async function deliver(r, slot, settings, ctx, { gate }) {
     if (err?.code === 50035) {
       await autoDisable(r, `Discord rejected its message: ${clampText(err.message, 200)}`);
       return 'disabled';
+    }
+    if (willRetry) {
+      logger.warn(`Reminder "${r.name}" (${r.id}) in guild ${r.guildId}: the send failed (${err?.message}); retrying`);
+      return 'retry';
     }
     warnOnce(r, 'send', err?.message);
     return 'skipped';
@@ -688,7 +740,11 @@ async function runRecurring(r, settings, tz, now, ctx) {
   const slot = dueSlot(r, tz, now);
   if (!slot) return { nextRunAt: next }; // not due yet, missed beyond the tolerance, or a timezone / edit mismatch
   if (!isModuleEnabled(settings, 'reminders')) return { nextRunAt: next }; // keep rescheduling without sending
-  const outcome = await deliver(r, slot, settings, ctx, { gate: r.requireActivity });
+  const retryable = mayRetry({
+    attempt: ctx.attempt, maxAttempts: ctx.maxAttempts, lateMs: now.getTime() - slot.getTime(), toleranceMs: lateToleranceMs(r),
+  });
+  const outcome = await deliver(r, slot, settings, ctx, { gate: r.requireActivity, retryable });
+  if (outcome === 'retry') return RETRY;
   return outcome === 'disabled' ? undefined : { nextRunAt: next };
 }
 
@@ -707,16 +763,23 @@ async function runOneShot(r, settings, tz, now, ctx) {
     await autoDisable(r, 'the Reminders module was off at its time');
     return undefined;
   }
-  await deliver(r, r.runAt, settings, ctx, { gate: false });
+  const retryable = mayRetry({
+    attempt: ctx.attempt, maxAttempts: ctx.maxAttempts, lateMs: now.getTime() - r.runAt.getTime(), toleranceMs: ONE_SHOT_LATE_MS,
+  });
+  const outcome = await deliver(r, r.runAt, settings, ctx, { gate: false, retryable });
+  if (outcome === 'retry') return RETRY; // a transient failure: still enabled, the scheduler runs it again with backoff
   await prisma.reminder.updateMany({ where: { id: r.id }, data: { enabled: false } }); // finished, whatever the outcome
   return undefined;
 }
 
 /**
- * Scheduler handler of `reminder.fire`. Throws only when the first DB read fails (the scheduler retries with
- * backoff, maxAttempts 10). Every other failure is caught and a recurring reminder is rescheduled, so it never dies.
- * @param {{ guildId: string, payload: { reminderId?: string } }} job
- * @param {{ client: object, guild: object }} ctx
+ * Scheduler handler of `reminder.fire`. Throws when the first DB read fails, and when a send failed for a transient reason
+ * (Discord 5xx, 429, network error, timeout) with attempts left and the occurrence still inside its late tolerance: the
+ * scheduler then retries with backoff (maxAttempts 10) and the claim of the occurrence was given back, so it is sent once.
+ * It never throws on the final attempt, so a recurring reminder is not marked FAILED; a one-shot is finished then.
+ * Every other failure is caught and a recurring reminder is rescheduled, so it never dies.
+ * @param {{ guildId: string, maxAttempts?: number, payload: { reminderId?: string } }} job
+ * @param {{ client: object, guild: object, attempt?: number }} ctx
  * @returns {Promise<{ nextRunAt: Date }|undefined>} undefined deletes the job
  */
 export async function fireReminder(job, ctx) {
@@ -728,13 +791,18 @@ export async function fireReminder(job, ctx) {
   const settings = await getSettingsSafe(job.guildId);
   if (!settings) return { nextRunAt: new Date(now.getTime() + MINUTE_MS) }; // dueSlot decides on the retry
   const tz = resolveTimeZone(settings.timezone);
+  const runCtx = { ...ctx, maxAttempts: job.maxAttempts };
+  let result;
   try {
-    return r.mode === 'ONE_SHOT'
-      ? await runOneShot(r, settings, tz, now, ctx)
-      : await runRecurring(r, settings, tz, now, ctx);
+    result = r.mode === 'ONE_SHOT'
+      ? await runOneShot(r, settings, tz, now, runCtx)
+      : await runRecurring(r, settings, tz, now, runCtx);
   } catch (err) {
     logger.error(`reminder.fire ${r.id} (guild ${r.guildId}) failed unexpectedly`, err);
     const next = r.mode === 'ONE_SHOT' ? null : safeNext(r, tz, now);
     return { nextRunAt: validDate(next) ? next : new Date(now.getTime() + 15 * MINUTE_MS) };
   }
+  // Outside the catch above, which would turn the retry into a reschedule.
+  if (result === RETRY) throw new Error(`reminder ${r.id}: transient send failure, retrying (attempt ${ctx?.attempt}/${job.maxAttempts})`);
+  return result;
 }

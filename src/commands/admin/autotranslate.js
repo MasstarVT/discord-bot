@@ -4,7 +4,7 @@ import prisma from '../../database/client.js';
 import { ensureGuildSettings, getSettings, updateSettings } from '../../services/settingsService.js';
 import {
   getGuildTranslateConfig, isSupportedTarget, languageChoices, languageName, loadLanguageSupport, normalizeTargetList,
-  providerLabel, providerName, refreshTranslateCache, suggestLanguage, warmLanguageSupport,
+  providerLabel, providerName, refreshTranslateCache, saveTranslateChannel, suggestLanguage, warmLanguageSupport,
 } from '../../services/translationService.js';
 import { errorEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { checkChannelUsable, respondAutocomplete } from '../../utils/interactionHelpers.js';
@@ -150,25 +150,14 @@ export async function execute(interaction) {
       });
     }
 
-    const existing = await prisma.translateChannel.findUnique({
-      where: { guildId_channelId: { guildId, channelId: channel.id } },
-      select: { id: true },
-    });
-    if (!existing) {
-      const n = await prisma.translateChannel.count({ where: { guildId } });
-      if (n >= LIMITS.TRANSLATE_CHANNELS) {
-        return interaction.editReply({
-          embeds: [errorEmbed('Limit Reached', `This server already has ${n} auto-translate channels (max ${LIMITS.TRANSLATE_CHANNELS}). Turn one off first.`)],
-        });
-      }
-    }
-
     await ensureGuildSettings(guildId); // the parent row first (R213)
-    await prisma.translateChannel.upsert({
-      where: { guildId_channelId: { guildId, channelId: channel.id } },
-      update: { targetLangs: targets },
-      create: { guildId, channelId: channel.id, targetLangs: targets },
-    });
+    // The cap check and the insert run under one per-guild lock, shared with the dashboard.
+    const saved = await saveTranslateChannel(guildId, channel.id, targets);
+    if (!saved.ok) {
+      return interaction.editReply({
+        embeds: [errorEmbed('Limit Reached', `This server already has ${saved.count} auto-translate channels (max ${LIMITS.TRANSLATE_CHANNELS}). Turn one off first.`)],
+      });
+    }
 
     let moduleTurnedOn = false;
     const settings = await getSettings(guildId);

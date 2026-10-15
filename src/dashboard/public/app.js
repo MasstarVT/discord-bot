@@ -44,6 +44,7 @@ let currentView = null; // { kind, destroy, ... }; settings pages also expose is
 let activeShell = null;
 let activeSearch = null;
 let acceptedHash = ''; // the hash of the page being shown; a hashchange back to it is a cancelled navigation
+let leaving = false; // set once the admin agreed to lose unsaved work (log out), so beforeunload does not ask again
 
 function loadCatalog() {
   if (state.catalog) return Promise.resolve(state.catalog);
@@ -204,15 +205,42 @@ class GuildStore {
     this.running = false;
     this.timer = 0;
     this.listeners = new Set();
+    this.writes = 0; // successful writes so far (a PATCH that came back, or settings the forms saved)
+    this.writtenAt = new Map(); // field -> the number of the latest write that set it
   }
 
-  load(values) {
-    this.confirmed = { ...values };
+  /** Call just before a settings GET is sent; hand the result to load() with that response. */
+  mark() {
+    return this.writes;
+  }
+
+  /**
+   * Takes the values of a settings GET. A response to a request sent before the latest write to a field is older than that
+   * write (the PATCH may have been answered while the GET was on its way): that field keeps the value the write confirmed.
+   * @param {object} values
+   * @param {number|null} [since] the mark() taken before the request
+   * @returns {object} the values as stored now (a copy): what a page built from this response should show
+   */
+  load(values, since = null) {
+    const next = { ...values };
+    if (since !== null) {
+      for (const [field, at] of this.writtenAt) {
+        if (at > since && Object.hasOwn(this.confirmed, field)) next[field] = this.confirmed[field];
+      }
+    }
+    this.confirmed = next;
+    return { ...next };
+  }
+
+  noteWrite(values) {
+    this.writes += 1;
+    for (const field of Object.keys(values)) this.writtenAt.set(field, this.writes);
   }
 
   /** Records values saved elsewhere (the settings forms) so the overview switches match. */
   confirm(values) {
     Object.assign(this.confirmed, values);
+    this.noteWrite(values);
     this.emit();
   }
 
@@ -269,7 +297,9 @@ class GuildStore {
         try {
           const sent = Object.fromEntries(this.inflight);
           const res = await api(`/api/guilds/${encodeURIComponent(this.id)}/settings`, { method: 'PATCH', body: { changes: sent } });
-          Object.assign(this.confirmed, res && res.values ? res.values : sent);
+          const done = res && res.values ? res.values : sent;
+          Object.assign(this.confirmed, done);
+          this.noteWrite(done);
           this.inflight = new Map();
           this.emit();
           noteSaved();
@@ -320,6 +350,9 @@ function reportSaveError(err) {
 /* ------------------------------------------------------------------ */
 
 async function logout(btn) {
+  // Ask before the session is revoked: if the prompt came from beforeunload after the request, "stay" would leave a
+  // page whose next Save answers 401 and loses the edits.
+  if (hasUnsavedWork() && !window.confirm(LEAVE_PROMPT)) return;
   btn.disabled = true;
   try {
     await api('/auth/logout', { method: 'POST', body: {} });
@@ -330,6 +363,7 @@ async function logout(btn) {
       return;
     }
   }
+  leaving = true;
   location.reload();
 }
 
@@ -842,6 +876,7 @@ async function showGuild(guildId, section) {
     (guilds) => ({ guilds }),
     () => ({ guilds: null }),
   );
+  const since = getStore(guildId).mark();
   const [settingsRes, catalogRes] = await Promise.allSettled([
     api(`/api/guilds/${encodeURIComponent(guildId)}/settings`),
     loadCatalog(),
@@ -855,7 +890,7 @@ async function showGuild(guildId, section) {
     return;
   }
 
-  const view = buildGuildView({ guildId, data: settingsRes.value, catalog: catalogRes.value, shell });
+  const view = buildGuildView({ guildId, data: settingsRes.value, catalog: catalogRes.value, shell, since });
   currentView = view;
   shell.main.replaceChildren(view.main);
   document.title = `${view.guildName} · ${APP_NAME}`;
@@ -1011,9 +1046,9 @@ function buildModuleNav({ guildId, model, store, currentKey }) {
  * Builds the whole settings page for one guild and returns handles for the router.
  * Switches are painted from the GuildStore, so toggles never re-render the page.
  */
-function buildGuildView({ guildId, data, catalog, shell }) {
+function buildGuildView({ guildId, data, catalog, shell, since = null }) {
   const store = getStore(guildId);
-  store.load(data && typeof data.values === 'object' && data.values ? data.values : {});
+  store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
   const model = normalizeCatalog(catalog);
   const guild = (data && data.guild) || { id: guildId, name: 'Server', iconUrl: null };
   const general = (data && data.general) || {};
@@ -1538,6 +1573,7 @@ async function showModule(guildId, moduleKey) {
     (guilds) => ({ guilds }),
     () => ({ guilds: null }),
   );
+  const since = getStore(guildId).mark();
   const [settingsRes, catalogRes, resourcesRes] = await Promise.allSettled([api(`${base}/settings`), loadCatalog(), api(`${base}/resources`)]);
   if (token !== routeToken) return;
 
@@ -1572,7 +1608,7 @@ async function showModule(guildId, moduleKey) {
   }
 
   const resources = resourcesRes.status === 'fulfilled' && isResources(resourcesRes.value) ? resourcesRes.value : null;
-  const view = buildSettingsView({ guildId, data: settingsRes.value, catalog, model, page, resources, shell });
+  const view = buildSettingsView({ guildId, data: settingsRes.value, catalog, model, page, resources, shell, since });
   currentView = view;
   shell.main.replaceChildren(view.main);
   document.title = `${page.label} · ${view.guildName} · ${APP_NAME}`;
@@ -1589,10 +1625,10 @@ async function showModule(guildId, moduleKey) {
  * section per collection, and the unsaved-changes bar. Boolean flags are painted from the GuildStore, so the
  * switch here and the overview stay in sync; everything else is saved explicitly with ONE PATCH.
  */
-function buildSettingsView({ guildId, data, catalog, model, page, resources, shell }) {
+function buildSettingsView({ guildId, data, catalog, model, page, resources, shell, since = null }) {
   const store = getStore(guildId);
-  const values = data && typeof data.values === 'object' && data.values ? data.values : {};
-  store.load(values);
+  // The values the forms start from: the GET's, except a field a save has answered since the request was sent.
+  const values = store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
   const guild = (data && data.guild) || { id: guildId, name: 'Server', iconUrl: null };
   const propagation = Number(data && data.propagationSeconds) > 0 ? Number(data.propagationSeconds) : DEFAULT_PROPAGATION_S;
   const mod = page.mod;
@@ -1610,7 +1646,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     resources,
     placeholders: Array.isArray(catalog.placeholders) ? catalog.placeholders : [],
     // Previews of embeds without their own colour use the server's embed colour, like the bot does.
-    defaultEmbedColor: Number.isInteger(data?.values?.embedColor) ? data.values.embedColor : null,
+    defaultEmbedColor: Number.isInteger(values.embedColor) ? values.embedColor : null,
     reloadResources: () => reloadResources(),
   };
 
@@ -1621,7 +1657,9 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
 
   function reloadResources() {
     if (resourcesPromise) return resourcesPromise;
-    const promise = api(`/api/guilds/${encodeURIComponent(guildId)}/resources`)
+    // Always an explicit reload (the Refresh and Retry buttons): skip the server's 30 s cache, or a channel the admin
+    // just created would not show up.
+    const promise = api(`/api/guilds/${encodeURIComponent(guildId)}/resources?fresh=1`)
       .then((res) => {
         if (!isResources(res)) throw new ApiError(502, 'bad_response', '', null);
         ctx.resources = res;
@@ -1634,7 +1672,10 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
         return res;
       })
       .catch((err) => {
-        if (!destroyed) handleAuthError(err);
+        // Every caller is a button the admin pressed; the pickers swallow the rejection, so say what went wrong here.
+        if (!destroyed && !handleAuthError(err)) {
+          toast(describeError(err).message, { kind: 'error', key: 'resources-error', ms: TOAST_ERROR_MS });
+        }
         throw err;
       })
       .finally(() => {
@@ -1648,7 +1689,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
   retryResources.addEventListener('click', () => {
     retryResources.disabled = true;
     reloadResources()
-      .catch((err) => toast(describeError(err).message, { kind: 'error', key: 'resources-error', ms: TOAST_ERROR_MS }))
+      .catch(() => { /* reloadResources already told the admin */ })
       .finally(() => { retryResources.disabled = false; });
   });
   const resourcesWarning = banner('warn', "Couldn't load this server's channels, roles and emojis. You can still edit other settings; pickers may be limited.", [retryResources]);
@@ -1951,8 +1992,27 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     toast(message, { kind: 'error', key: 'save-error', ms: TOAST_ERROR_MS });
   }
 
+  /**
+   * A number box that was emptied (or typed out of range) still shows its error but holds the last valid number, which
+   * would be sent as if nothing were wrong; Ctrl+S gets here before the box loses focus. Stops the save on the first one,
+   * with the field's own message, as a field the server refused.
+   */
+  function blockedByField() {
+    let first = null;
+    for (const entry of entries) {
+      let problems = [];
+      try { problems = entry.form.validate([...dirty]); } catch { /* a control that cannot be checked is saved as it is */ }
+      if (problems.length && !first) first = { entry, problem: problems[0] };
+    }
+    if (!first) return false;
+    try { first.entry.form.focusPath(first.problem.path); } catch { first.entry.card.scrollIntoView({ block: 'center' }); }
+    toast(first.problem.message, { kind: 'error', key: 'save-error', ms: TOAST_ERROR_MS });
+    return true;
+  }
+
   async function save() {
     if (saving || dirty.size === 0 || destroyed) return;
+    if (blockedByField()) return;
     saving = true;
     paintBar();
     const changes = {};
@@ -2013,8 +2073,14 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     kind: 'settings',
     main,
     guildName: guild.name,
-    isDirty: () => dirty.size > 0,
+    // An open record editor (a dialog over the page) counts too: leaving the page would throw its edits away.
+    isDirty: () => dirty.size > 0 || handles.some((handle) => typeof handle.isDirty === 'function' && handle.isDirty()),
     save,
+    // Ctrl+S while a list's dialog is open saves that dialog (when it can) and never the page behind it.
+    dialogOpen: () => handles.some((handle) => typeof handle.dialogOpen === 'function' && handle.dialogOpen()),
+    saveDialog() {
+      for (const handle of handles) if (typeof handle.saveEditor === 'function' && handle.saveEditor()) return;
+    },
     renderServers: (guilds) => renderServerList(shell.serversSlot, guilds, guildId),
     /** Scrolls the sidebar so the current module is visible. */
     revealNav() {
@@ -2065,6 +2131,13 @@ function hasUnsavedChanges() {
   return Boolean(currentView && typeof currentView.isDirty === 'function' && currentView.isDirty());
 }
 
+/** Unsaved edits on the page, or module switches still on their way to the server. */
+function hasUnsavedWork() {
+  if (hasUnsavedChanges()) return true;
+  for (const store of stores.values()) if (store.busy) return true;
+  return false;
+}
+
 function route() {
   if (!state.user) return;
   acceptedHash = location.hash;
@@ -2110,6 +2183,26 @@ async function boot() {
   route();
 }
 
+/**
+ * Ctrl/Cmd+S on a settings page. While a dialog is open (a record editor over the page) the page behind it is not what
+ * the user is looking at: the dialog's own Save runs when it has one, otherwise nothing is saved. The browser's "save
+ * page" dialog is suppressed either way.
+ * @param {{ key?: string, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean, shiftKey?: boolean, preventDefault: () => void }} event
+ * @param {{ save?: () => unknown, dialogOpen?: () => boolean, saveDialog?: () => unknown }|null} view
+ * @returns {boolean} whether the key was taken
+ */
+function handleSaveShortcut(event, view) {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || String(event.key).toLowerCase() !== 's') return false;
+  if (!view || typeof view.save !== 'function') return false;
+  event.preventDefault();
+  if (typeof view.dialogOpen === 'function' && view.dialogOpen()) {
+    if (typeof view.saveDialog === 'function') view.saveDialog();
+    return true;
+  }
+  view.save();
+  return true;
+}
+
 function start() {
   const stored = readStoredTheme();
   if (stored) applyTheme(stored);
@@ -2130,25 +2223,12 @@ function start() {
   });
 
   // Ctrl/Cmd+S saves the settings page instead of the browser's "save page" dialog.
-  document.addEventListener('keydown', (event) => {
-    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || String(event.key).toLowerCase() !== 's') return;
-    if (!currentView || typeof currentView.save !== 'function') return;
-    event.preventDefault();
-    currentView.save();
-  });
+  document.addEventListener('keydown', (event) => handleSaveShortcut(event, currentView));
 
   window.addEventListener('beforeunload', (event) => {
-    if (hasUnsavedChanges()) {
+    if (!leaving && hasUnsavedWork()) {
       event.preventDefault();
       event.returnValue = '';
-      return;
-    }
-    for (const store of stores.values()) {
-      if (store.busy) {
-        event.preventDefault();
-        event.returnValue = '';
-        return;
-      }
     }
   });
 
@@ -2162,6 +2242,6 @@ function start() {
   boot();
 }
 
-export { parseRoute, normalizeCatalog, initialsOf };
+export { parseRoute, normalizeCatalog, initialsOf, GuildStore, handleSaveShortcut };
 
 if (typeof document !== 'undefined') start();

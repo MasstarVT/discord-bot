@@ -203,6 +203,14 @@ function writeThrough(guildId, row) {
   return revived;
 }
 
+// A failed SET (Redis timed out or is reconnecting) would leave the previous row in Redis, and when the memo expires
+// 30 s later the read-through would bring that stale row back (a module just switched off reads as on again until the
+// key's TTL). So when the write fails, drop the key: the next read then loads the new row from Postgres.
+async function publishRow(guildId, row) {
+  const key = settingsKey(guildId);
+  if (!(await cache.set(key, withMarker(row), SETTINGS_TTL_SECONDS))) await cache.del(key);
+}
+
 /**
  * Upserts scalar GuildSettings fields and writes the result through to the memo and Redis
  * (a plain SET that overwrites). Use updateSettingsWith for arrays/JSON read-modify-write.
@@ -220,9 +228,8 @@ export async function updateSettings(guildId, data) {
     if (err?.code !== 'P2002') throw err;
     row = await prisma.guildSettings.update({ where: { guildId }, data });
   }
-  const cached = withMarker(row);
   const revived = writeThrough(guildId, row);
-  await cache.set(settingsKey(guildId), cached, SETTINGS_TTL_SECONDS);
+  await publishRow(guildId, row);
   return revived;
 }
 
@@ -262,9 +269,8 @@ export async function updateSettingsWith(guildId, mutator) {
     if (!data || Object.keys(data).length === 0) return current;
     return tx.guildSettings.update({ where: { guildId }, data });
   });
-  const cached = withMarker(row);
   const revived = writeThrough(guildId, row);
-  await cache.set(settingsKey(guildId), cached, SETTINGS_TTL_SECONDS);
+  await publishRow(guildId, row);
   return revived;
 }
 

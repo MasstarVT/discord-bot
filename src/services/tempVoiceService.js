@@ -142,6 +142,8 @@ export const MSG = Object.freeze({
   BOT_MISSING: msg('error', 'Missing Permissions', (p) => `I need **${(p.names ?? []).join(', ')}** in <#${p.channelId}> to do that.`),
   DISCORD_ERROR: msg('error', 'Something Went Wrong', (p) => `Discord rejected that change (${describeDiscordError(p.code)}). Please try again in a moment.`),
   DB_ERROR: msg('error', 'Something Went Wrong', 'The channel changed, but I could not save it. Please try again.'),
+  // Not in the spec table: the hub channel was deleted, so there is no permission template left to rebuild the overwrites from.
+  HUB_GONE: msg('error', 'Hub Deleted', 'The hub this channel came from was deleted, so its permissions cannot be changed safely any more. Lock, unlock, hide, reveal, ban, unban, transfer and claim are unavailable here; kick, limit and rename still work.'),
   INTERNAL: msg('error', 'Something Went Wrong', 'Something went wrong. Please try again in a moment.'),
   NOT_IN_GUILD: msg('error', 'Server Only', 'This only works in a server.'),
   // Not in the spec table: a pre-acknowledgement lookup ran out of its 3-second budget (rule 21).
@@ -408,6 +410,12 @@ export function computeVoiceOverwrites({
   if (hidden) denyBits(everyone, P.ViewChannel);
   if (locked) denyBits(everyone, P.Connect);
   if (hidden || locked) {
+    // A template allow (e.g. a category that denies @everyone and allows a Verified role) beats the @everyone deny, so it
+    // would leave the channel open to that role: while locked or hidden only exempt roles (and the owner, below) keep it.
+    const stripped = (hidden ? P.ViewChannel : 0n) | (locked ? P.Connect : 0n);
+    for (const o of map.values()) {
+      if (o.id !== everyoneId && !exempt.includes(o.id)) o.allow &= ~stripped;
+    }
     for (const roleId of exempt) {
       if (roleId === everyoneId) continue;
       const o = ensure(roleId, OverwriteType.Role);
@@ -691,6 +699,11 @@ async function retireHubIfDone(guild, hubId, knownHub = null) {
 
 /** Forgets a temp channel's row, jobs, limiter state and timers (caller holds `ch:` when it can). */
 export async function purgeRow(guild, row) {
+  // The voice channel is gone, so its companion text channel goes too. Callers that already deleted it leave nothing in the cache;
+  // without this a purge triggered by a leave event, a panel click or the cleanup job (instead of channelDelete) orphans the chat.
+  if (row.textChannelId && guild.channels.cache.has(row.textChannelId)) {
+    await deleteDiscordChannel(guild, row.textChannelId, 'Temp voice: channel closed', 'delete text');
+  }
   await prisma.tempVoiceChannel.deleteMany({ where: { channelId: row.channelId } });
   await cancelJobs({ dedupeKey: cleanupKey(row.channelId) });
   renameStamps.delete(row.channelId);
@@ -788,6 +801,9 @@ export async function syncTextOverwrites(guild, channelId) {
 export async function applyVoiceOverwrites(guild, vc, state, settings, reason) {
   const hub = state.hub;
   const hubChannel = guild.channels.cache.get(hub.channelId);
+  // A retired hub (its channel was deleted, its temporary channels are still open) has no template left to copy. Rewriting the whole
+  // list from an empty one would silently drop what the hub restricted (e.g. a private hub's channels become visible to everyone).
+  if (!hub.syncPermissions && !hubChannel) return { ok: false, code: null, hubGone: true };
   const parent = vc.parent ?? null;
   const template = snapshotOverwrites(hub.syncPermissions ? parent : hubChannel);
   return discordCall('overwrites', () => vc.permissionOverwrites.set(computeVoiceOverwrites({
@@ -1094,7 +1110,10 @@ export async function runVoiceAction(req) {
 }
 
 async function recordRename(channelId, recent) {
-  const next = [...recent, Date.now()];
+  // Strictly increasing: renameChannel merges these with the Redis copy through a Set, which would fold two renames
+  // stamped in the same millisecond into one and let a third through.
+  const last = recent.length ? recent[recent.length - 1] : 0;
+  const next = [...recent, Math.max(Date.now(), last + 1)];
   renameStamps.set(channelId, next);
   while (renameStamps.size > RENAME_STAMPS_MAX) renameStamps.delete(renameStamps.keys().next().value);
   await cache.set(renameKey(channelId), next, 600); // fail-open: Redis down keeps only the in-memory stamps
@@ -1127,7 +1146,7 @@ async function renameChannel({ guild, vc, row, value, reason }) {
 async function changeOwner(guild, vc, row, newOwnerId, settings, reason) {
   const bannedUserIds = row.bannedUserIds.filter((id) => id !== newOwnerId);
   const applied = await applyVoiceOverwrites(guild, vc, { ...row, ownerId: newOwnerId, bannedUserIds }, settings, reason);
-  if (!applied.ok) return { ok: false, key: 'DISCORD_ERROR', params: { code: applied.code } };
+  if (!applied.ok) return { ok: false, key: applied.hubGone ? 'HUB_GONE' : 'DISCORD_ERROR', params: { code: applied.code } };
   try {
     await prisma.tempVoiceChannel.update({ where: { channelId: row.channelId }, data: { ownerId: newOwnerId, ownerLeftAt: null, bannedUserIds } });
   } catch (err) {
@@ -1169,7 +1188,7 @@ async function runVoiceActionLocked({ guild, actor, channelId, action, targetId 
   /** Applies a state patch to the overwrites, then saves it. Returns an error result or null. */
   const applyAndSave = async (patch) => {
     const applied = await applyVoiceOverwrites(guild, vc, { ...row, ...patch }, settings, reason);
-    if (!applied.ok) return failResult('DISCORD_ERROR', { code: applied.code });
+    if (!applied.ok) return failResult(applied.hubGone ? 'HUB_GONE' : 'DISCORD_ERROR', { code: applied.code });
     try {
       await prisma.tempVoiceChannel.update({ where: { channelId }, data: patch });
     } catch (err) {

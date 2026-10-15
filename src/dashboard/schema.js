@@ -446,6 +446,35 @@ export function collectStoredRefs(desc, raw, out = { channels: new Set(), roles:
 }
 
 /**
+ * Every role id of a stored record that sits in an `assignable` field (a role the bot gives or takes), with the path of the field
+ * that holds it. Never throws.
+ * @param {object[]} fields the collection's field descriptors
+ * @param {object} record
+ * @returns {{ id: string, path: string }[]}
+ */
+export function collectAssignableRoles(fields, record) {
+  const out = [];
+  const walk = (desc, raw, path) => {
+    try {
+      if (raw === null || raw === undefined) return;
+      switch (desc.type) {
+        case 'role': if (desc.assignable && isSnowflake(raw)) out.push({ id: raw, path }); break;
+        case 'roles':
+          if (desc.assignable && Array.isArray(raw)) raw.forEach((id, i) => { if (isSnowflake(id)) out.push({ id, path: `${path}.${i}` }); });
+          break;
+        case 'object': if (isPlainObject(raw)) for (const f of desc.fields) walk(f, raw[f.field], `${path}.${f.field}`); break;
+        case 'objectList':
+          if (Array.isArray(raw)) raw.forEach((item, i) => { if (isPlainObject(item)) for (const f of desc.itemFields) walk(f, item[f.field], `${path}.${i}.${f.field}`); });
+          break;
+        default: break;
+      }
+    } catch { /* a malformed stored value simply holds nothing */ }
+  };
+  for (const desc of fields ?? []) walk(desc, record?.[desc.field], desc.field);
+  return out;
+}
+
+/**
  * The key of an id at a place in a value, with list indexes dropped: refKey('tiers.2.roleAdd', id) equals
  * refKey('tiers.0.roleAdd', id) but not refKey('tiers.0.roleRemove', id).
  * @param {string} path

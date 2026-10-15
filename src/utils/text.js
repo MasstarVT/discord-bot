@@ -205,3 +205,20 @@ export function sanitizeName(str, { max = 32, fallback = 'item' } = {}) {
     return fallback;
   }
 }
+
+/**
+ * Whole percentages of each count in the sum of the counts (multi-choice polls count every choice), by the largest-remainder
+ * method: every share is rounded down, then the leftover points go to the largest remainders (ties: the larger count, then
+ * the earlier option). They add up to exactly 100 when anyone voted, and are all 0 otherwise.
+ * @param {number[]} counts
+ * @returns {number[]}
+ */
+export function percentages(counts) {
+  const list = (counts ?? []).map((c) => Math.max(0, Math.trunc(Number(c)) || 0));
+  const sum = list.reduce((a, b) => a + b, 0);
+  if (sum === 0) return list.map(() => 0);
+  const out = list.map((c) => Math.floor((c * 100) / sum));
+  const order = list.map((c, i) => ({ i, c, rem: (c * 100) % sum })).sort((a, b) => b.rem - a.rem || b.c - a.c || a.i - b.i);
+  for (let left = 100 - out.reduce((a, b) => a + b, 0), k = 0; left > 0; left -= 1, k += 1) out[order[k].i] += 1;
+  return out;
+}

@@ -456,7 +456,7 @@ export function renderEmbed(spec, renderCtx, { defaultColor = COLORS.INFO } = {}
     }
 
     const color = Number.isInteger(s.color) ? s.color : defaultColor;
-    if (color !== null && color !== undefined) data.color = color;
+    if (color !== null && color !== undefined) data.color = color === 0 ? COLOR_NAMES.black : color; // Discord draws 0 as "no colour"
     if (s.timestamp) data.timestamp = new Date().toISOString();
     return new EmbedBuilder(data);
   } catch (err) {

@@ -3,7 +3,8 @@
 // lock and the shape check; deleteAutomation), which also drop the automation cache in Redis (`guild:{g}:automations`).
 // The bot memoises a server's automations for up to 60 s per shard, so a change reaches it within a minute.
 // What /automation checks against the server is checked here too: saved embeds exist, reward modules are on, members
-// exist (and are not bots where the command refuses them) and "Clicked this button" points at a real button. Channel and
+// exist (and are not bots where the command refuses them), a role mention in a message is one the user may ping
+// (mentionable, or the user can mention every role) and "Clicked this button" points at a real button. Channel and
 // role ids (kinds, @everyone, roles the bot and the user can give) are checked by the dashboard server from the
 // descriptors before a write reaches this store.
 import prisma from '../../database/client.js';
@@ -11,13 +12,13 @@ import { LIMITS } from '../../config/constants.js';
 import { cache } from '../../services/redis.js';
 import { getSettings, getSettingsSafe, isModuleEnabled } from '../../services/settingsService.js';
 import { REWARD_MODULES } from '../../services/rewards.js';
-import { getSavedEmbedTemplate } from '../../services/embedService.js';
+import { extractRoleMentionIds, getSavedEmbedTemplate } from '../../services/embedService.js';
 import {
   AutomationError, buildPresetAutomation, createAutomation, deleteAutomation, isUniqueViolation, mutateAutomation,
   normalizeAction, normalizeAutomationName, normalizeCondition, normalizeList,
 } from '../../services/automationService.js';
 import { RecordError } from './errors.js';
-import { isDiscordApiError } from './embeds.js';
+import { isDiscordApiError, memberFor, pingRoleProblem } from './embeds.js';
 import {
   ACTION_RULES, NEEDS_ACTIONS, SELF_REF_ID, actionToStored, automationItem, conditionToStored, planButtons,
   problemKey,
@@ -188,26 +189,53 @@ async function checkMember(guildId, ctx, userId, path, { people = null } = {}) {
 }
 
 /**
+ * The role-ping rule of /automation (rolePingRefusal, here with the guild-level permissions of the dashboard user): a
+ * `<@&id>` typed in a message pings only when the role is mentionable or the user may mention every role (owner,
+ * Administrator or Mention @everyone; the bot owner counts as owner). Refuses the first role that fails.
+ * @param {{ path: string, text: string|null|undefined }[]} texts the message texts the form adds, each with its field path
+ * @param {Set<string>} [keep] role ids the stored automation already pinged (kept without a check)
+ * @param {object|null} [resources] getGuildResources, when the caller has them already
+ */
+async function checkRolePings(guildId, ctx, texts, { keep = new Set(), resources = null } = {}) {
+  const pings = texts.flatMap(({ path, text }) => extractRoleMentionIds(text).filter((id) => !keep.has(id)).map((id) => ({ path, id })));
+  if (!pings.length) return;
+  const res = resources ?? await discordCall(() => needDiscord(ctx, 'getGuildResources').getGuildResources(guildId), 'The roles');
+  const member = memberFor(ctx, res);
+  for (const { path, id } of pings) {
+    const problem = pingRoleProblem(res, id, member);
+    if (problem) throw new RecordError('invalid', problem, { path });
+  }
+}
+
+/**
  * The checks /automation action add and condition add make against the server, for what the form adds (entries the
- * stored automation already had are kept without a check, so an unrelated edit never fails on them).
+ * stored automation already had are kept without a check, so an unrelated edit never fails on them), including the
+ * role-ping rule for message texts and saved embeds (exported for the tests).
  * @param {object[]|null} conditions form conditions (null: unchanged)
  * @param {object[]|null} actions form actions (null: unchanged)
  * @param {object} before the stored row (hydrated), or empty lists on create
  */
-async function checkAgainstServer(guildId, ctx, { conditions, actions, before }) {
+export async function checkAgainstServer(guildId, ctx, { conditions, actions, before }) {
   const had = (list, key) => new Set(asList(list).flatMap(key));
   const oldEmbeds = had(before.actions, (a) => (a.type === 'SEND_EMBED' ? [a.embedName] : []));
   const oldRewards = had(before.actions, (a) => (ACTION_RULES[a.type]?.reward ? [`${a.type}:${a.amount}`] : []));
   const oldThreadUsers = had(before.actions, (a) => (a.type === 'ADD_TO_THREAD' ? a.userIds : []));
   const oldUsers = had(before.conditions, (c) => (c.type === 'USER_IS' ? c.userIds : []));
+  const oldPings = had(before.actions, (a) => (ACTION_RULES[a.type]?.button ? extractRoleMentionIds(a.content) : []));
+  const pingTexts = [];
 
   let settings = null;
   for (const [i, a] of asList(actions).entries()) {
     const at = `actions.${i}`;
+    if (ACTION_RULES[a.type]?.button) pingTexts.push({ path: `${at}.content`, text: a.content });
     if (a.type === 'SEND_EMBED') {
       const name = normalizeAutomationName(a.embedName);
-      if (!oldEmbeds.has(name) && !(await getSavedEmbedTemplate(guildId, name))) {
-        throw new RecordError('invalid', `There is no saved embed called "${name}". Create it under Embed Messages first.`, { path: `${at}.embedName` });
+      if (!oldEmbeds.has(name)) {
+        const template = await getSavedEmbedTemplate(guildId, name);
+        if (!template) {
+          throw new RecordError('invalid', `There is no saved embed called "${name}". Create it under Embed Messages first.`, { path: `${at}.embedName` });
+        }
+        pingTexts.push({ path: `${at}.embedName`, text: template.content });
       }
     }
     const kind = ACTION_RULES[a.type]?.reward;
@@ -230,6 +258,7 @@ async function checkAgainstServer(guildId, ctx, { conditions, actions, before })
       if (!oldUsers.has(u.userId)) await checkMember(guildId, ctx, u.userId, `conditions.${i}.users.${k}.userId`);
     }
   }
+  await checkRolePings(guildId, ctx, pingTexts, { keep: oldPings });
 }
 
 /**
@@ -293,6 +322,7 @@ async function presetShape(guildId, data, ctx) {
       throw new RecordError('invalid', 'Pick a text or announcement channel.', { path: 'presetChannelId' });
     }
     if (data.preset === 'welcomer') {
+      await checkRolePings(guildId, ctx, [{ path: 'presetMessage', text: data.presetMessage }], { resources: res });
       Object.assign(opts, { channelId: data.presetChannelId, message: data.presetMessage?.trim() || null, roleId: data.presetRoleId ?? null });
     } else {
       Object.assign(opts, { channelId: data.presetChannelId, emoji: data.presetEmoji ?? null, threshold: data.presetThreshold });

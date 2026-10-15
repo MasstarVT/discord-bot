@@ -463,6 +463,7 @@ test('plugin declaration', async () => {
   assert.deepEqual(plugin.hooks.map((h) => ({ event: h.event, id: h.id })), [
     { event: 'presenceUpdate', id: 'liverole' },
     { event: 'guildReady', id: 'liverole' },
+    { event: 'guildMemberUpdate', id: 'liverole' },
   ]);
   for (const h of plugin.hooks) {
     assert.ok(HOOK_ORDER[h.event].includes(h.id), `${h.event}:${h.id} is in HOOK_ORDER`);
@@ -977,4 +978,22 @@ test('reconcileMember: a presence decision made on stale settings is dropped aft
   assert.equal(w.calls.length, 0);
   // sync-sourced calls are not affected by the memo
   assert.equal(await reconcileMember(w.guild, 'U', { mode: 'sync', settings: current, source: 'sync' }), 'added');
+});
+
+test('guildMemberUpdate hook: losing or gaining the required role while streaming re-checks the live role', async () => {
+  const hook = plugin.hooks.find((h) => h.event === 'guildMemberUpdate');
+  const w = world({ roleHeld: true, streaming: true, requiredRoleId: 'R' }); // streaming, holds L, no longer has R
+  const ctx = (oldHadRequired) => ({
+    guild: w.guild, getSettings: async () => w.settings, oldKnown: true,
+    oldMember: { roles: { cache: new Set(oldHadRequired ? ['R'] : []) } }, newMember: w.member,
+  });
+  assert.equal(hook.filter(ctx(true)), true);
+  assert.equal(hook.filter({ ...ctx(true), oldKnown: false }), false, 'an uncached old member cannot be diffed');
+  await hook.run(ctx(true));
+  assert.deepEqual(w.calls, [['remove', 'L', REASONS.syncRemove]], 'lost the required role: the live role goes');
+  await hook.run(ctx(false));
+  assert.equal(w.calls.length, 1, 'no change to the required role: nothing to do');
+  w.member.roles.cache.add('R');
+  await hook.run(ctx(false));
+  assert.deepEqual(w.calls[1], ['add', 'L', REASONS.syncAdd], 'gained it while streaming: the live role comes back');
 });

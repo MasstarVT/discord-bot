@@ -276,6 +276,7 @@ const CONDITION_FIELDS = Object.freeze([
     description: 'The whole message must be one of these (any case).',
     maxItems: AUTOMATION_LIMITS.idList,
     itemMaxLength: AUTOMATION_LIMITS.exactText,
+    commaSeparated: false, // a whole message may contain commas
     default: [],
     showWhen: showFor(['EXACT']),
   },
@@ -738,6 +739,9 @@ export const collection = Object.freeze({
   // (server.js verifyRefs). Server-only, never sent to the browser.
   refKeys: actionRoleKeys,
   refKeyOf: actionRoleKeyOf,
+  // Any update re-checks every role the saved automation gives or takes against the user's highest role (server.js
+  // verifyStoredRoles), so enabling or editing an existing automation cannot be done by someone it outranks.
+  checkStoredRoles: true,
 });
 
 const ACTION_ROLE_PATH_RE = /^actions\.(\d+)\.roleIds\.\d+$/;

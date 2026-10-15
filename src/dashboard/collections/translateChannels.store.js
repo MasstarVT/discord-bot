@@ -4,12 +4,9 @@
 import prisma from '../../database/client.js';
 import { LIMITS } from '../../config/constants.js';
 import { ensureGuildSettings, getSettings, updateSettings } from '../../services/settingsService.js';
-import { normalizeTargetList, refreshTranslateCache } from '../../services/translationService.js';
+import { normalizeTargetList, refreshTranslateCache, saveTranslateChannel } from '../../services/translationService.js';
 import { RecordError } from './errors.js';
-import { lockGuildSettingsSql } from './levelRoles.store.js';
 import { MAX_TARGETS, describeLanguages } from './translateChannels.js';
-
-const TX_OPTS = { timeout: 10_000, maxWait: 10_000 };
 
 const toItem = (row) => {
   const targetLangs = normalizeTargetList(row.targetLangs).valid.slice(0, MAX_TARGETS);
@@ -43,23 +40,19 @@ export const store = Object.freeze({
   async create(guildId, data, ctx = {}) {
     const targetLangs = cleanLanguages(data.targetLangs);
     await ensureGuildSettings(guildId);
-    let row;
+    let saved;
     try {
-      row = await prisma.$transaction(async (tx) => {
-        await tx.$queryRaw(lockGuildSettingsSql(guildId));
-        const existing = await tx.translateChannel.findUnique({
-          where: { guildId_channelId: { guildId, channelId: data.channelId } }, select: { id: true },
-        });
-        if (existing) throw alreadySet();
-        if ((await tx.translateChannel.count({ where: { guildId } })) >= LIMITS.TRANSLATE_CHANNELS) {
-          throw new RecordError('limit',
-            `This server already has ${LIMITS.TRANSLATE_CHANNELS} auto-translate channels (the maximum). Turn one off first.`);
-        }
-        return tx.translateChannel.create({ data: { guildId, channelId: data.channelId, targetLangs } });
-      }, TX_OPTS);
+      // The same per-guild lock as /autotranslate, so the cap holds when both save at once.
+      saved = await saveTranslateChannel(guildId, data.channelId, targetLangs, { updateExisting: false });
     } catch (err) {
       throw err?.code === 'P2002' ? alreadySet() : err;
     }
+    if (!saved.ok) {
+      if (saved.code === 'EXISTS') throw alreadySet();
+      throw new RecordError('limit',
+        `This server already has ${LIMITS.TRANSLATE_CHANNELS} auto-translate channels (the maximum). Turn one off first.`);
+    }
+    const { row } = saved;
     // /autotranslate switches the module on when a channel is added; the dashboard does the same.
     const settings = await getSettings(guildId);
     if (settings.translationEnabled !== true) await updateSettings(guildId, { translationEnabled: true });

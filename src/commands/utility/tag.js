@@ -25,6 +25,7 @@ import { paginate } from '../../utils/paginator.js';
 import { parseDuration } from '../../utils/parseDuration.js';
 import { clampText, joinWithLimit } from '../../utils/text.js';
 import { resolvePermissionLevel } from '../../utils/permissionChecker.js';
+import { memberChannelProblem, roleHierarchyProblem } from '../../utils/privacyGuards.js';
 import { TimeoutError, ackBudgetMs, withTimeout } from '../../utils/async.js';
 import logger from '../../utils/logger.js';
 
@@ -120,6 +121,19 @@ const notFound = (interaction, name, { hint = false } = {}) => respond(
   errorEmbed('Not Found', `${notFoundText(name)}${hint ? ' See `/tag list`.' : ''}`),
 );
 
+/**
+ * A command that gives or takes a role at or above the admin's highest role cannot be changed, enabled or disabled by that admin
+ * (the guild owner is exempt). Wraps the mutator of writeTag, so it checks the row as it is stored when the write happens.
+ */
+const guarded = (interaction, mutator) => (tag) => {
+  const ids = getEffectiveActions(tag).map((a) => a.roleId).filter(Boolean);
+  const problem = roleHierarchyProblem(interaction.guild, interaction.member, ids);
+  if (problem) {
+    throw new TagError('HIERARCHY', 'Role Not Allowed', `${problem}\nThis command gives or takes a role at or above your highest role, so you cannot change it.`);
+  }
+  return mutator(tag);
+};
+
 const cleanDescription = (s) => {
   const t = clampText(String(s ?? '').trim(), DESCRIPTION_MAX);
   return t === '' ? null : t;
@@ -151,6 +165,10 @@ function unknownVariablesLine(texts, interaction) {
 const shownName = (prefix, name) => (prefix === null ? `/tag use ${name}` : `${prefix}${name}`);
 
 const PREFIX_OFF_NOTE = 'Prefix commands are off (`/settings prefix`); run it with `/tag use`.';
+
+/** Members never see disabled commands (/tag list and the autocomplete hide them too); admins can inspect and edit them. */
+const hiddenFromMember = (tag, interaction, settings) => tag.enabled === false
+  && resolvePermissionLevel(interaction.member, settings) < PERMISSION_LEVELS.ADMIN;
 
 const timeTag = (date, style = 'R') => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;
 
@@ -289,7 +307,7 @@ async function edit(interaction) {
   }
   if (content !== null && content.trim() === '') return respond(interaction, errorEmbed('Empty', 'The reply text cannot be empty.'));
 
-  const row = await writeTag(guildId, name, (tag) => {
+  const row = await writeTag(guildId, name, guarded(interaction, (tag) => {
     const out = {};
     if (content !== null || embed !== null) {
       const actions = normalizeActions(tag.actions);
@@ -321,7 +339,7 @@ async function edit(interaction) {
     if (description !== null) out.description = description === '-' ? null : cleanDescription(description);
     if (deleteUsage !== null) out.deleteInvocation = deleteUsage;
     return out;
-  });
+  }));
 
   const lines = [];
   if (content !== null) lines.push('Reply text updated.');
@@ -360,7 +378,7 @@ async function toggle(interaction) {
   const { guildId } = interaction;
   const name = normalizeTagName(interaction.options.getString('name', true));
   if (!name) return notFound(interaction, interaction.options.getString('name', true));
-  const row = await writeTag(guildId, name, (t) => ({ enabled: !t.enabled }));
+  const row = await writeTag(guildId, name, guarded(interaction, (t) => ({ enabled: !t.enabled })));
   return respond(interaction, successEmbed(
     row.enabled ? 'Custom Command Enabled' : 'Custom Command Disabled',
     `\`${row.name}\` is now **${row.enabled ? 'on' : 'off'}**.`,
@@ -390,7 +408,7 @@ async function cooldown(interaction) {
     if (ms > COOLDOWN_MAX_SECONDS * 1000) return respond(interaction, errorEmbed('Too Long', 'The longest cooldown is 365 days.'));
     patch = { cooldownScope: scope, cooldownSeconds: Math.round(ms / 1000) };
   }
-  const row = await writeTag(guildId, name, () => patch);
+  const row = await writeTag(guildId, name, guarded(interaction, () => patch));
   await clearTagCooldowns(guildId, row.id);
   return respond(interaction, successEmbed('Cooldown Updated', `\`${row.name}\`: **${cooldownLabel(row)}**${note}`));
 }
@@ -439,7 +457,7 @@ async function permissions(interaction, settings) {
       return lists;
     };
   }
-  const row = await writeTag(guildId, name, mutator);
+  const row = await writeTag(guildId, name, guarded(interaction, mutator));
   const embed = applyGuildColor(successEmbed('Permissions Updated', `\`${row.name}\``), settings);
   embed.addFields(
     { name: 'Allowed roles', value: formatIdList(row.allowRoleIds, { kind: 'role', guild, empty: 'Everyone' }), inline: true },
@@ -496,6 +514,9 @@ async function actionAdd(interaction) {
         needs: embed ? ['ViewChannel', 'SendMessages', 'EmbedLinks'] : ['ViewChannel', 'SendMessages'],
       });
       if (!usable.ok) return respond(interaction, errorEmbed('Missing Permissions', usable.reason ?? `I cannot post in <#${channel.id}>.`));
+      // The admin must be able to post there too: a command is not a way into a channel the admin cannot use.
+      const access = memberChannelProblem(guild.channels.cache.get(channel.id) ?? channel, interaction.member);
+      if (access) return respond(interaction, errorEmbed('No Access', access));
     }
     // 5. ping_role (R031/R049/R169): the executor needs Mention Everyone, or the role must be mentionable.
     if (pingRole) {
@@ -516,7 +537,7 @@ async function actionAdd(interaction) {
 
   // 7. Write.
   let count = 0;
-  await writeTag(guildId, name, (tag) => {
+  await writeTag(guildId, name, guarded(interaction, (tag) => {
     const list = normalizeActions(tag.actions) ?? legacyActions(tag);
     if (list.length >= LIMITS.TAG_ACTIONS) {
       throw new TagError('LIMIT', 'Limit Reached', `A custom command can have at most ${LIMITS.TAG_ACTIONS} actions.`);
@@ -524,7 +545,7 @@ async function actionAdd(interaction) {
     const next = [...list, action];
     count = next.length;
     return { actions: next, ...syncLegacyColumns(next) };
-  });
+  }));
 
   // 8. Reply.
   const lines = [`Action ${count}: ${describeAction(action, guild)}`];
@@ -541,7 +562,7 @@ async function actionRemove(interaction) {
   if (!name) return notFound(interaction, options.getString('name', true));
   const n = options.getInteger('action', true);
   let removed = null;
-  await writeTag(guildId, name, (tag) => {
+  await writeTag(guildId, name, guarded(interaction, (tag) => {
     const list = normalizeActions(tag.actions) ?? legacyActions(tag);
     if (n > list.length) throw new TagError('NOT_FOUND', 'Not Found', `This command has ${list.length} action(s).`);
     if (list.length === 1) {
@@ -550,7 +571,7 @@ async function actionRemove(interaction) {
     removed = list[n - 1];
     const next = list.filter((_, i) => i !== n - 1);
     return { actions: next, ...syncLegacyColumns(next) };
-  });
+  }));
   return respond(interaction, successEmbed('Action Removed', `Removed: ${describeAction(removed, guild)}`));
 }
 
@@ -558,7 +579,7 @@ async function actionList(interaction, settings) {
   const { guild, guildId } = interaction;
   const rawName = interaction.options.getString('name', true);
   const tag = await findTag(guildId, rawName);
-  if (!tag) return notFound(interaction, normalizeTagName(rawName) || rawName);
+  if (!tag || hiddenFromMember(tag, interaction, settings)) return notFound(interaction, normalizeTagName(rawName) || rawName);
   const lines = [];
   getEffectiveActions(tag).forEach((a, i) => {
     lines.push(`\`${i + 1}.\` ${describeAction(a, guild)}`);
@@ -583,7 +604,7 @@ async function responseAdd(interaction) {
   const action = options.getInteger('action');
   let where = 0;
   let count = 0;
-  await writeTag(guildId, name, (tag) => {
+  await writeTag(guildId, name, guarded(interaction, (tag) => {
     const list = normalizeActions(tag.actions) ?? legacyActions(tag);
     const i = action ? action - 1 : primaryMessageIndex(list);
     if (i < 0 || i >= list.length || !list[i].responses) {
@@ -599,7 +620,7 @@ async function responseAdd(interaction) {
     where = i + 1;
     count = next[i].responses.length;
     return { actions: next, ...syncLegacyColumns(next) };
-  });
+  }));
   const lines = [`Action ${where} now has ${count} replies; one is picked at random each time.`];
   const unknown = unknownVariablesLine([text], interaction);
   if (unknown) lines.push(unknown);
@@ -613,7 +634,7 @@ async function responseRemove(interaction) {
   const n = options.getInteger('action', true);
   const k = options.getInteger('reply', true);
   let left = 0;
-  await writeTag(guildId, name, (tag) => {
+  await writeTag(guildId, name, guarded(interaction, (tag) => {
     const list = normalizeActions(tag.actions) ?? legacyActions(tag);
     const a = list[n - 1];
     if (!a?.responses) throw new TagError('NOT_FOUND', 'Not Found', `Action ${n} is not a message action.`);
@@ -625,7 +646,7 @@ async function responseRemove(interaction) {
     next[n - 1].responses.splice(k - 1, 1);
     left = next[n - 1].responses.length;
     return { actions: next, ...syncLegacyColumns(next) };
-  });
+  }));
   return respond(interaction, successEmbed('Reply Removed', `Removed reply ${k} of action ${n}; ${left} left.`));
 }
 
@@ -635,7 +656,7 @@ async function info(interaction, settings) {
   const { guild, guildId } = interaction;
   const rawName = interaction.options.getString('name', true);
   const tag = await findTag(guildId, rawName);
-  if (!tag) return notFound(interaction, normalizeTagName(rawName) || rawName);
+  if (!tag || hiddenFromMember(tag, interaction, settings)) return notFound(interaction, normalizeTagName(rawName) || rawName);
 
   const prefix = effectivePrefix(settings?.customPrefix);
   const usageLines = [];
@@ -676,11 +697,11 @@ async function info(interaction, settings) {
 
 // ── raw (R252, R253) ──────────────────────────────────────────────────────────
 
-async function raw(interaction) {
+async function raw(interaction, settings) {
   const { guildId } = interaction;
   const rawName = interaction.options.getString('name', true);
   const tag = await findTag(guildId, rawName);
-  if (!tag) return notFound(interaction, normalizeTagName(rawName) || rawName);
+  if (!tag || hiddenFromMember(tag, interaction, settings)) return notFound(interaction, normalizeTagName(rawName) || rawName);
 
   const text = tag.content ?? '';
   const actions = normalizeActions(tag.actions);

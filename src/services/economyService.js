@@ -5,7 +5,8 @@
 // Invariants (pkg-economy.md §3.2):
 //  - 0 <= EconomyAccount.balance <= economyConfig(settings).maxBalance <= COIN_MAX (1e9) < 2^31. Every balance write is
 //    ONE SQL statement (or one transaction) using ::bigint maths and LEAST(..., cap) / a conditional WHERE. There is no
-//    read-modify-write in JS, so int4 overflow and double spending are impossible (R007, R136, R207, R236).
+//    read-modify-write in JS, so int4 overflow and double spending are impossible (R007, R136, R207, R236). The one
+//    exception to the per-server cap: refundPurchase returns the full price up to COIN_MAX, so a refund is never lost.
 //  - UserEconomy (the legacy global wallet) is read only, and only by getAccount / peekAccount (the lazy copy).
 //  - Never call anything that uses the global `prisma` (getAccount, ensureGuildSettings, getSettings, ...) from inside a
 //    $transaction callback: the pool may hold a single connection, so such a call would wait for the transaction itself.
@@ -681,13 +682,14 @@ export async function reserveBet(guildId, userId, bet, settings) {
 
 /**
  * Settles an escrowed game: credits the GROSS `payout` (stake included; 0 for a loss, the stake for a push). The net winnings
- * are limited to economyMaxPayout first (clampPayout) and the balance to the server maximum. A failed credit is retried once;
- * a second failure is logged ("pay manually") and thrown.
+ * are limited to economyMaxPayout first (clampPayout) and the balance to the server maximum. A bet settles AT MOST ONCE: the
+ * credit is retried (once) only when the failure proves the statement never reached the database (failedBeforeSend); any
+ * other failure may mean the credit committed and only the response was lost, so it is logged and thrown, never repeated.
  * @param {number} payout integer >= 0
  * @param {{ stake: number }} opts `stake` is REQUIRED: the total amount escrowed for this game (2x the bet after a double-down)
  * @returns {Promise<{ balance: number, capped: boolean, payoutCapped: boolean }>} `capped`: the server maximum limited the
  *   balance; `payoutCapped`: the max payout limited the winnings
- * @throws EconomyError('INVALID') for a missing/non-integer stake or a bad payout; DB failures after the retry
+ * @throws EconomyError('INVALID') for a missing/non-integer stake or a bad payout; DB failures (see above)
  */
 export async function settleBet(guildId, userId, payout, settings, { stake } = {}) {
   if (!Number.isSafeInteger(stake) || stake < 0 || !Number.isSafeInteger(payout) || payout < 0) throw new EconomyError('INVALID');
@@ -699,16 +701,32 @@ export async function settleBet(guildId, userId, payout, settings, { stake } = {
   let result;
   try {
     result = await credit(guildId, userId, final, settings);
-  } catch {
+  } catch (first) {
+    if (!failedBeforeSend(first)) {
+      logger.error('Economy: settlement outcome unknown — check the balance, then pay manually if the payout is missing', { guildId, userId, payout: final }, first);
+      throw first;
+    }
     await sleep(250);
     try {
       result = await credit(guildId, userId, final, settings);
     } catch (err) {
-      logger.error('Economy: settlement failed — pay manually', { guildId, userId, payout: final }, err);
+      logger.error('Economy: settlement failed — outcome may be unknown, check the balance, then pay manually if the payout is missing', { guildId, userId, payout: final }, err);
       throw err;
     }
   }
   return { balance: result.balance, capped: result.capped, payoutCapped };
+}
+
+/**
+ * True only for database errors that PROVE a statement never reached the server, so repeating it cannot apply it twice: the
+ * client could not initialise or open a connection (PrismaClientInitializationError, P1001) or no pooled connection was free
+ * (P2024). A timeout, a dropped connection (P1008, P1017), an unknown or plain error may have happened after the commit.
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+export function failedBeforeSend(err) {
+  if (err instanceof Prisma.PrismaClientInitializationError) return true;
+  return err instanceof Prisma.PrismaClientKnownRequestError && (err.code === 'P1001' || err.code === 'P2024');
 }
 
 // ── Claims (atomic; R137, R138) ───────────────────────────────────────────────
@@ -956,16 +974,17 @@ export async function purchaseItem({ guildId, userId, itemId, quantity, settings
 }
 
 /**
- * Compensation when the post-commit role grant fails: restores stock, refunds the price (capped) and removes the copies.
+ * Compensation when the post-commit role grant fails: restores stock, refunds the FULL price and removes the copies. The refund
+ * is clamped to COIN_MAX only, never to the server's maximum balance: the buyer may have reached it since the purchase, and a
+ * refund must not lose coins.
  * @throws logs and re-throws on failure
  */
 export async function refundPurchase({ guildId, userId, item, quantity, total, toInventory, settings }) {
-  const cap = economyConfig(settings).maxBalance;
   try {
     await getAccount(guildId, userId, settings);
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(SQL.restoreStock(guildId, item.id, quantity));
-      await tx.$queryRaw(SQL.credit(guildId, userId, total, cap));
+      await tx.$queryRaw(SQL.credit(guildId, userId, total, COIN_MAX));
       if (toInventory) {
         await tx.$executeRaw(SQL.reduceInventory(guildId, userId, item.id, quantity));
         await tx.$executeRaw(SQL.deleteEmptyInventory(guildId, userId, item.id));

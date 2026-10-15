@@ -12,6 +12,7 @@ import { createKeyedMutex, createThrottle, mapLimit, sleep } from '../utils/asyn
 import { markBotDeletion, wasDeletedByBot } from '../utils/deletionTracker.js';
 import { clampText, formatNumber, joinWithLimit } from '../utils/text.js';
 import { checkChannelUsable } from '../utils/interactionHelpers.js';
+import { copyLeaksPrivate } from '../utils/privacyGuards.js';
 import logger from '../utils/logger.js';
 
 export const STAR_COLOR = 0xFFAC33;
@@ -167,12 +168,16 @@ export function channelChain(channel) {
 
 export const isNsfwChannel = (channel) => (channel.isThread?.() ? !!channel.parent?.nsfw : !!channel.nsfw);
 
-/** @returns {null|'board-channel'|'ignored'|'nsfw'} why a channel cannot feed this board */
+/**
+ * @returns {null|'board-channel'|'ignored'|'nsfw'|'private'} why a channel cannot feed this board. 'private': the channel (or any
+ * private thread) is hidden from @everyone while the board channel is not, so a repost would show it to people who cannot see it.
+ */
 export function sourceSkipReason({ board, channel, boardChannelIds, boardChannel }) {
   const chain = channelChain(channel);
   if (chain.some((id) => boardChannelIds.has(id))) return 'board-channel';
   if (chain.some((id) => (board.ignoredChannelIds ?? []).includes(id))) return 'ignored';
   if (isNsfwChannel(channel) && !(board.allowNsfw && boardChannel?.nsfw === true)) return 'nsfw';
+  if (copyLeaksPrivate(channel, boardChannel)) return 'private';
   return null;
 }
 
@@ -842,16 +847,23 @@ async function mirrorEdit(ctx) {
   const entries = await prisma.starboardEntry.findMany({
     where: { sourceMessageId: message.id, boardMessageId: { not: null }, blocked: false, starboardId: { in: enabled.map((b) => b.id) } },
   });
+  if (!entries.length) return;
+  // The source may have become ineligible since it was reposted (NSFW, or hidden from @everyone while the board is not):
+  // like a sync, an ineligible source is left alone, so the repost is not edited with the new text.
+  const channel = message.channel ?? guild.channels.cache.get(message.channelId) ?? null;
+  if (!channel) return;
+  const boardChannelIds = new Set(boards.map((b) => b.channelId));
   for (const entry of entries) {
     try {
       const board = enabled.find((b) => b.id === entry.starboardId);
       if (!board) continue;
+      const bc = await resolveBoardChannel(guild, board);
+      if (!bc) continue;
+      if (sourceSkipReason({ board, channel, boardChannelIds, boardChannel: bc }) !== null) continue;
       const qualifying = [...(message.reactions?.cache?.values() ?? [])].filter((r) => boardMatchesEmoji(board, emojiKeyOf(r.emoji)));
       const payload = buildRepostPayload({
         message, count: entry.count, emojiText: pickDisplayEmoji({ board, qualifying, client: ctx.client, message }),
       });
-      const bc = await resolveBoardChannel(guild, board);
-      if (!bc) continue;
       await editRepost({ guild, board, entry, bc, payload });
     } catch (err) {
       logSyncError(err);

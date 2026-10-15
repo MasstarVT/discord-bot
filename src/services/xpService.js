@@ -3,7 +3,7 @@
 // that src/plugins/levels.js wires up. Settings are read through settingsService only; the cache never
 // throws (a Redis failure is decided fail-open or fail-closed at each call site).
 import { randomUUID } from 'node:crypto';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from 'discord.js';
 import { Prisma } from '@prisma/client';
 import prisma, { SQL_NOW } from '../database/client.js';
 import { cache } from './redis.js';
@@ -323,7 +323,7 @@ export function templateMentionsPlayer(template) {
 export function levelUpVars({ user, member, level, xp, rank }) {
   return {
     player: `<@${user.id}>`,
-    'player.name': member?.displayName ?? user.globalName ?? user.username,
+    'player.name': escapeMarkdown(String(member?.displayName ?? user.globalName ?? user.username ?? '')), // like achievements: a name is not markdown
     level: String(level),
     rank: rank == null ? '?' : String(rank),
     xp: formatNumber(xp),

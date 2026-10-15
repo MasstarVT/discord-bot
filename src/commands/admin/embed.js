@@ -50,6 +50,7 @@ import {
   templateToJson,
 } from '../../utils/customEmbed.js';
 import { respondAutocomplete, awaitConfirm, isInteractionGone, permissionNames } from '../../utils/interactionHelpers.js';
+import { memberChannelProblem } from '../../utils/privacyGuards.js';
 import { clampText } from '../../utils/text.js';
 import { errorEmbed, guildEmbed, infoEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { paginate } from '../../utils/paginator.js';
@@ -478,7 +479,7 @@ async function publishEmbed(interaction) {
   }
   switch (result.code) {
     case 'MEMBER_NO_ACCESS':
-      return sendError(interaction, errorEmbed('No Access', `You can't view ${channel}.`));
+      return sendError(interaction, errorEmbed('No Access', `You need **View Channel** and **Send Messages** in ${channel} to post there.`));
     case 'CHANNEL':
       return sendError(interaction, errorEmbed(
         'Missing Permissions',
@@ -506,6 +507,8 @@ async function updateEmbed(interaction) {
   }
   const channelId = row.channelId;
   switch (result.code) {
+    case 'MEMBER_NO_ACCESS':
+      return sendError(interaction, errorEmbed('No Access', `You need **View Channel** in <#${channelId}> to edit the message published there.`));
     case 'NOT_PUBLISHED':
       return sendError(interaction, warnEmbed(
         'Not Published',
@@ -560,6 +563,10 @@ async function deleteEmbed(interaction, client) {
   const row = await precheck(interaction, getSavedEmbed(interaction.guildId, name));
   if (row === undefined) return undefined;
   if (!row) return sendError(interaction, E_NOTFOUND(name));
+  // A published embed lives in a channel: removing its record (and maybe the message) needs access to that channel.
+  const where = row.channelId ? interaction.guild.channels.cache.get(row.channelId) : null;
+  const noAccess = memberChannelProblem(where, interaction.member, ['ViewChannel']);
+  if (noAccess) return sendError(interaction, errorEmbed('No Access', `**${name}** is published in <#${row.channelId}>. ${noAccess}`));
   const deleteMessage = interaction.options.getBoolean('delete_message') ?? false;
   const consequence = row.messageId
     ? (deleteMessage ? ' The published message will be deleted too.' : ' The published message stays but will no longer be tracked.')

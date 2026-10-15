@@ -131,17 +131,31 @@ function openModal({ title, subtitle = null, description = null, wide = false, s
   };
 }
 
-/** A yes/no question in a small dialog. Resolves true when confirmed. */
-function confirmModal({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
+/**
+ * A yes/no question in a small dialog. Resolves true when confirmed. `track` is the caller's set of open dialogs: the
+ * question is in it while it is open, so closing them all (leaving the page) closes it too and answers it "no".
+ */
+export function confirmModal({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false, track = null }) {
   return new Promise((resolve) => {
     let done = false;
+    const handle = {
+      close: (opts) => {
+        modal.close(opts);
+        finish(false);
+      },
+      get closed() {
+        return modal.closed;
+      },
+    };
     const finish = (answer) => {
       if (done) return;
       done = true;
+      track?.delete(handle);
       modal.close();
       resolve(answer);
     };
     const modal = openModal({ title, size: 'small', onRequestClose: () => finish(false) });
+    track?.add(handle);
     modal.el.setAttribute('role', 'alertdialog');
     const msgId = `cl-confirm-${dialogSeq}`;
     modal.el.setAttribute('aria-describedby', msgId);
@@ -1000,7 +1014,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     if (!action.fields.length) {
       if (action.confirm) {
         const ok = await confirmModal({
-          title: action.label, message: action.confirm, confirmLabel: action.label, danger: action.danger,
+          title: action.label, message: action.confirm, confirmLabel: action.label, danger: action.danger, track: modals,
         });
         if (!ok) return;
       }
@@ -1099,6 +1113,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         ? ' The posted message stays in Discord; delete the posted message first if you want it gone too.' : ''}`,
       confirmLabel: 'Delete',
       danger: true,
+      track: modals,
     });
     if (!ok) return false;
     busy(trigger, true, { announce });
@@ -1326,6 +1341,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
           confirmLabel: 'Discard',
           cancelLabel: 'Keep editing',
           danger: true,
+          track: modals,
         });
         if (!discard) return;
       }
@@ -1342,18 +1358,26 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
         } catch { /* ignore */ }
       }
       const values = valuesNow();
-      let request;
+      const data = {};
       if (mode === 'create') {
-        request = { method: 'POST', url: base, data: values };
+        Object.assign(data, values);
       } else {
-        const data = {};
         for (const [k, v] of Object.entries(values)) if (canonical(v) !== canonical(baseValues[k])) data[k] = v;
         if (!Object.keys(data).length) {
           if (!keepOpen) finish();
           return current;
         }
-        request = { method: 'PATCH', url: `${base}/${encodeURIComponent(current.id)}`, data };
       }
+      // A box the field still shows as wrong (an emptied number) is not what getValues() holds: stop, as the field says.
+      const problems = mainForm.validate(Object.keys(data));
+      if (problems.length) {
+        setStatus(status, 'Please fix the highlighted field.');
+        mainForm.focusPath(problems[0].path);
+        return null;
+      }
+      const request = mode === 'create'
+        ? { method: 'POST', url: base, data }
+        : { method: 'PATCH', url: `${base}/${encodeURIComponent(current.id)}`, data };
       saving = true;
       busy(saveBtn, true, { announce });
       cancelBtn.disabled = true;
@@ -1417,8 +1441,11 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     }
 
     const ctl = {
+      modal,
       isDirty,
       save,
+      // What the dialog's Save button would do right now (Ctrl+S asks): it is shown, and enabled (an unchanged item has nothing to save).
+      canSave: () => Boolean(mainForm) && !saving && (mode === 'create' || (c.canEdit && !saveBtn.disabled)),
       itemId: () => current?.id ?? null,
       updateItem(next) {
         current = next;
@@ -1441,6 +1468,16 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
 
   return {
     refresh: () => load(),
+    // True while an open editor holds edits that were not saved (the page asks before it navigates away).
+    isDirty: () => Boolean(editor && editor.isDirty()),
+    // True while a dialog of this list is open (the editor, an action form, a question).
+    dialogOpen: () => modals.size > 0,
+    // Ctrl+S inside a dialog: saves the editor when it is the dialog on top and has a Save to press. Returns whether it did.
+    saveEditor() {
+      if (!editor || [...modals].at(-1) !== editor.modal || !editor.canSave()) return false;
+      editor.save();
+      return true;
+    },
     destroy() {
       destroyed = true;
       loadSeq += 1;
