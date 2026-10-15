@@ -19,6 +19,7 @@ import { ensureGuildSettings, getSettingsSafe, peekSettings } from './settingsSe
 import { COLORS, LIMITS as GUILD_LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
 import { parseCustomId } from '../config/customIds.js';
 import { resolvePermissionLevel } from '../utils/permissionChecker.js';
+import { memberChannelProblem } from '../utils/privacyGuards.js';
 import {
   emptyTemplate,
   isHttpUrl,
@@ -766,7 +767,8 @@ export async function deleteSavedEmbedAndMessage({ guild, row, deleteMessage = f
  */
 export async function publishSavedEmbed({ row, channel, member, settings = null }) {
   return embedLock.run(row.id, async () => {
-    if (!channel.permissionsFor(member)?.has(PermissionFlagsBits.ViewChannel)) return { ok: false, code: 'MEMBER_NO_ACCESS' };
+    // The member needs View Channel and Send Messages there (the owner and Administrators are exempt).
+    if (memberChannelProblem(channel, member)) return { ok: false, code: 'MEMBER_NO_ACCESS' };
     const usable = checkChannelUsable(channel);
     if (!usable.ok) return { ok: false, code: 'CHANNEL', missing: usable.missing, reason: usable.reason };
 
@@ -833,6 +835,8 @@ export async function updatePublishedEmbed({ row, guild, member, settings = null
         return { ok: false, code: 'CHANNEL_GONE' };
       }
     }
+    // Editing a message the member cannot see would let them change a private channel's embed.
+    if (memberChannelProblem(channel, member, ['ViewChannel'])) return { ok: false, code: 'MEMBER_NO_ACCESS' };
     const usable = checkChannelUsable(channel, { needs: ['ViewChannel', 'ReadMessageHistory', 'EmbedLinks'] });
     if (!usable.ok) return { ok: false, code: 'NO_ACCESS', missing: usable.missing };
 

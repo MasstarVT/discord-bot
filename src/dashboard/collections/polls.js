@@ -9,7 +9,7 @@
 // test/dashboard-giveaways-polls.test.js fails when they drift apart.
 import { LIMITS } from '../../config/constants.js';
 import { parseDuration } from '../../utils/parseDuration.js';
-import { clampText } from '../../utils/text.js';
+import { clampText, percentages } from '../../utils/text.js';
 import { messageUrl } from './embeds.js';
 
 export const QUESTION_MAX = 256;
@@ -46,6 +46,7 @@ const fields = Object.freeze([
       + '(one choice) or a menu (several choices).',
     maxItems: LIMITS.POLL_OPTIONS,
     itemMaxLength: OPTION_MAX,
+    commaSeparated: false, // "Yes, definitely" is one answer
     default: [],
     required: true,
   }),
@@ -178,14 +179,12 @@ export function checkPoll(data) {
 
 const iso = (d) => (d instanceof Date && !Number.isNaN(d.getTime()) ? d.toISOString() : null);
 const utc = (d) => (d instanceof Date && !Number.isNaN(d.getTime()) ? `${d.toISOString().slice(0, 16).replace('T', ' ')} UTC` : '?');
-const percent = (n, total) => (total ? Math.round((n * 100) / total) : 0);
-
 /** Who is ahead: "leading: Margherita (56%)", "won: ..." once ended, "tie: A, B"; null before the first vote. */
 function leadText(options, counts, votes, ended) {
   const top = Math.max(0, ...counts);
   if (!votes || !top) return null;
   const names = options.filter((_, i) => counts[i] === top).map((o) => clampText(o, 40));
-  if (names.length === 1) return `${ended ? 'won' : 'leading'}: ${names[0]} (${percent(top, votes)}%)`;
+  if (names.length === 1) return `${ended ? 'won' : 'leading'}: ${names[0]} (${percentages(counts)[counts.indexOf(top)]}%)`;
   return `tie: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`;
 }
 
@@ -213,6 +212,7 @@ export function pollItem(row, { tally = null, names = new Map() } = {}) {
   const options = Array.isArray(row.options) ? row.options : [];
   const counts = options.map((_, i) => tally?.counts?.[i] ?? 0);
   const votes = Math.max(tally?.votes ?? 0, counts.reduce((a, b) => a + b, 0));
+  const shown = percentages(counts); // add up to 100, like the poll message
   return {
     id: row.id,
     question: row.question,
@@ -225,7 +225,7 @@ export function pollItem(row, { tally = null, names = new Map() } = {}) {
     hideResults: row.hideResults === true,
     status: STATUS_LABELS[row.status] ?? String(row.status),
     summary: pollSummary(row, { votes, counts }),
-    results: options.map((o, i) => `${i + 1}. ${o}: ${counts[i] === 1 ? '1 vote' : `${counts[i]} votes`} (${percent(counts[i], votes)}%)`),
+    results: options.map((o, i) => `${i + 1}. ${o}: ${counts[i] === 1 ? '1 vote' : `${counts[i]} votes`} (${shown[i]}%)`),
     votes,
     voters: tally?.voters ?? 0,
     endsAt: iso(row.endsAt),

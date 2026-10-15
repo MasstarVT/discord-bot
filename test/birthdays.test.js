@@ -1631,9 +1631,11 @@ test('DB: /birthday-config set-user, unset-user, show and test', { skip: skipDb 
   assert.match(titleOf(i), /Birthday Saved/);
   assert.match(descOf(i), /birthday is now \*\*April 5\*\*/);
   assert.ok(!/\b(19|20)\d{2}\b/.test(descOf(i)), 'the public reply never carries a year');
+  assert.ok(!/age will be shown/.test(descOf(i)), 'no year given: no age in the announcement');
   i = await run('set-user', { 'member:member': target, date: '1990-04-06' });
   assert.match(descOf(i), /\*\*April 6\*\*/);
   assert.ok(!/1990/.test(descOf(i)));
+  assert.match(descOf(i), /their age will be shown in the public announcement/, 'a year puts the age in the announcement and the admin is told');
   assert.equal((await rowOf(guild.id, target.id)).year, 1990);
   i = await run('set-user', { 'member:member': target, date: '13-40' });
   assert.match(titleOf(i), /Invalid Date/);

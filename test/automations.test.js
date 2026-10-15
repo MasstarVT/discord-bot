@@ -1511,11 +1511,14 @@ test('DB: /automation walks through create-blank, condition, action, enable, inf
   r = await run(guild, { group: 'action', sub: 'add', opts: { name: 'panel', type: 'SEND_MESSAGE', channel: text, text: 'Again', button_label: 'Accept' } });
   assert.match(r.description, /Its button number is \*\*2\*\*/);
 
-  // A typed role mention that will not ping is called out at configuration time.
+  // A typed role mention the admin could not ping is refused at configuration time (it used to be a note on the success reply).
   const quietChannel = fakeChannel(guild, ID(530), { name: 'quiet', missing: ['MentionEveryone'] });
   r = await run(guild, { group: 'action', sub: 'add', opts: { name: 'panel', type: 'SEND_MESSAGE', channel: quietChannel, text: `Hey <@&${role.id}>` } });
-  assert.match(r.title, /Action Added/);
-  assert.match(r.description, /These roles will not be pinged/);
+  assert.match(r.title, /Role Not Pingable/);
+  assert.match(r.description, /not mentionable and you lack/);
+  const open = fakeRole(guild, ID(514), { mentionable: true });
+  r = await run(guild, { group: 'action', sub: 'add', opts: { name: 'panel', type: 'SEND_MESSAGE', channel: quietChannel, text: `Hey <@&${open.id}>` } });
+  assert.match(r.title, /Action Added/, 'a mentionable role is fine');
 });
 
 test('DB: /automation create presets validate their inputs; autocomplete answers', { skip: skipDb }, async () => {

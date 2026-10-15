@@ -245,10 +245,12 @@ export function templateWarnings(type, template) {
   return out;
 }
 
+// Third-party text: also neutralise masked links and line-leading headings / lists (off by default in discord.js).
+const escapeThirdParty = (s) => escapeMarkdown(String(s ?? ''), { maskedLink: true, heading: true, bulletedList: true, numberedList: true });
+
 /** The variables for a message template. Text values are markdown-escaped; URLs are not. */
 export function buildFeedVars(feed, item, { cardStyle = false } = {}) {
-  // Third-party text: also neutralise masked links and line-leading headings / lists (off by default in discord.js).
-  const esc = (s) => escapeMarkdown(String(s ?? ''), { maskedLink: true, heading: true, bulletedList: true, numberedList: true });
+  const esc = escapeThirdParty;
   const link = item.url ? (cardStyle ? `<${item.url}>` : item.url) : '';
   const vars = { title: esc(item.title), url: link, link, author: esc(item.author), feed: esc(feed.displayName) };
   switch (feed.type) {
@@ -275,7 +277,7 @@ export function buildFeedVars(feed, item, { cardStyle = false } = {}) {
 export function buildItemEmbed(feed, item, { feedImage = null } = {}) {
   const e = neutralEmbed(
     clampText(item.title, 256),
-    item.summary ? clampText(item.summary, 350) : undefined,
+    item.summary ? escapeThirdParty(clampText(item.summary, 350)) : undefined, // a description renders masked links
     clampText(feed.displayName, 2048),
   ).setColor(TYPE_COLORS[feed.type]);
   e.setTimestamp(item.publishedAt instanceof Date && !Number.isNaN(item.publishedAt.getTime()) ? item.publishedAt : new Date());
@@ -341,6 +343,7 @@ export function describeFetchError(type, err) {
     case 'TOO_MANY_REDIRECTS': base = 'Too many redirects'; break;
     case 'INVALID_URL': base = 'Invalid URL'; break;
     case 'NETWORK': base = `Network error (${clampText(e.message, 80)})`; break;
+    case 'UNEXPECTED_304': base = 'The server answered "304 Not Modified" to a request that was not conditional, so it sent no feed'; break;
     case 'HTML_PAGE': base = 'The URL returned a web page, not a feed'; break;
     case 'NOT_A_FEED': base = 'Not an RSS or Atom feed'; break;
     case 'INVALID_XML': base = 'Feed XML could not be parsed'; break;
@@ -434,7 +437,12 @@ export async function fetchAndParse(url, type, { headers = {} } = {}) {
     return fail({ code: 'NETWORK', message: clampText(err?.message ?? 'network error', 120) });
   }
   const resHeaders = res.headers ?? {};
-  if (res.status === 304) return { ok: true, notModified: true };
+  if (res.status === 304) {
+    // Not modified only answers a conditional request. An unprompted 304 carries no feed: a bad response.
+    const conditional = Object.entries(headers).some(([k, v]) => /^(if-none-match|if-modified-since)$/i.test(k) && String(v ?? '').trim() !== '');
+    if (conditional) return { ok: true, notModified: true };
+    return fail({ code: 'UNEXPECTED_304', status: 304, message: 'HTTP 304 without a conditional request' });
+  }
   if (!res.ok) {
     return fail({
       code: 'HTTP',

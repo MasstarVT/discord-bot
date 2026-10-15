@@ -362,7 +362,7 @@ export function buildGiveawayEmbed(g, { settings = null, entryCount = 0, roleExi
   if (prize.length) lines.push(`**Bonus prize:** ${prize.join(' + ')} each`);
   const embed = guildEmbed(settings, clampText(`🎉 ${g.prize}`, 256), clampText(lines.join('\n'), 4096), `ID: ${g.id} · Ends at`)
     .setTimestamp(g.endsAt);
-  if (Number.isInteger(g.embedColor) && g.embedColor >= 0 && g.embedColor <= 0xffffff) embed.setColor(g.embedColor);
+  if (Number.isInteger(g.embedColor) && g.embedColor >= 0 && g.embedColor <= 0xffffff) embed.setColor(g.embedColor || 0x010101); // Discord draws 0 as "no colour"
   return embed;
 }
 
@@ -505,12 +505,15 @@ export async function announceWinners(channel, g, newWinnerIds, { settings = nul
       });
       return true;
     }
-    const chunks = packMentions(newWinnerIds, ANNOUNCE_CHUNK);
     const line = prizeLine(g, settings);
     const n = newWinnerIds.length;
-    const head = reroll
-      ? `🎉 New winner${n === 1 ? '' : 's'}: ${chunks[0]}! Congratulations, you won **${clampText(g.prize, 200)}**!`
-      : `🎉 Congratulations ${chunks[0]}! You won **${clampText(g.prize, 200)}**!`;
+    const headOf = (mentions) => (reroll
+      ? `🎉 New winner${n === 1 ? '' : 's'}: ${mentions}! Congratulations, you won **${clampText(g.prize, 200)}**!`
+      : `🎉 Congratulations ${mentions}! You won **${clampText(g.prize, 200)}**!`);
+    // The first message also carries the prize text and the bonus-prize line: leave room for them inside Discord's 2000.
+    const room = Math.max(100, Math.min(ANNOUNCE_CHUNK, 2000 - headOf('').length - (line ? line.length + 1 : 0)));
+    const chunks = packMentions(newWinnerIds, room);
+    const head = headOf(chunks[0]);
     await channel.send({
       content: line ? `${head}\n${line}` : head,
       reply,
@@ -655,7 +658,10 @@ export function endGiveaway({ client, guild, giveawayId, source, attempt = 1 }) 
       channel = loc.channel;
     }
 
-    const entries = await prisma.giveawayEntry.findMany({ where: { giveawayId: g.id }, select: { userId: true }, orderBy: { createdAt: 'asc' } });
+    // The draw sees the entries made up to `endedAt`, which is taken before they are read: an entry created later (a click
+    // that passed its status check just before the claim) was never in the draw, so a reroll must not draw it either.
+    const endedAt = new Date();
+    const entries = await prisma.giveawayEntry.findMany({ where: { giveawayId: g.id, createdAt: { lte: endedAt } }, select: { userId: true }, orderBy: { createdAt: 'asc' } });
     const entryCount = entries.length;
     const draw = await drawWinners({
       userIds: entries.map((e) => e.userId),
@@ -670,32 +676,57 @@ export function endGiveaway({ client, guild, giveawayId, source, attempt = 1 }) 
       logger.warn(`Giveaway ${g.id}: ending with ${draw.unknown} unresolved entrant(s) (complete=${draw.complete})`);
     }
 
+    // A manual end leaves the Participate button open while the draw runs (endsAt is still ahead), and a click never takes the
+    // lock: a winner who clicked Leave meanwhile was told they left, so they are replaced instead of announced and paid.
+    let winnerIds = draw.winnerIds;
+    if (winnerIds.length) {
+      const stillIn = new Set((await prisma.giveawayEntry.findMany({
+        where: { giveawayId: g.id, userId: { in: winnerIds } }, select: { userId: true },
+      })).map((e) => e.userId));
+      const kept = winnerIds.filter((id) => stillIn.has(id));
+      if (kept.length < winnerIds.length) {
+        const fresh = await prisma.giveawayEntry.findMany({ where: { giveawayId: g.id, createdAt: { lte: endedAt } }, select: { userId: true }, orderBy: { createdAt: 'asc' } });
+        const keptSet = new Set(kept);
+        const redraw = await drawWinners({
+          userIds: fresh.map((e) => e.userId).filter((id) => !keptSet.has(id)),
+          count: winnerIds.length - kept.length,
+          maxWeight: maxWeightFor(g, guild),
+          resolve: makeResolver(guild, g),
+          deadline: Date.now() + DRAW_BUDGET_MS,
+        });
+        if (!redraw.complete || redraw.unknown > 0) {
+          if (source === 'command') return failure('RESOLVE_FAILED');
+          if (retry) throw new Error(`giveaway ${g.id}: could not check every entrant (${redraw.unknown} unknown, complete=${redraw.complete})`);
+        }
+        winnerIds = [...kept, ...redraw.winnerIds];
+      }
+    }
+
     // The claim is the idempotency gate: prizes are paid only after it, so they are paid at most once.
-    const endedAt = new Date();
     const claim = await prisma.giveaway.updateMany({
       where: { id: g.id, status: 'ACTIVE' },
-      data: { status: 'ENDED', endedAt, winnerIds: draw.winnerIds },
+      data: { status: 'ENDED', endedAt, winnerIds },
     });
     if (!claim.count) return failure('NOT_ACTIVE');
     await cancelJobs({ dedupeKey: endJobKey(g.id) });
 
     // From here on nothing may throw.
-    const ended = { ...g, status: 'ENDED', endedAt, winnerIds: draw.winnerIds };
+    const ended = { ...g, status: 'ENDED', endedAt, winnerIds };
     let announced = false;
     let payWarnings = [];
     try {
       if (canPost) {
         await editGiveawayMessage(channel, g.messageId, ended, { settings, entryCount, disabled: true });
-        announced = await announceWinners(channel, ended, draw.winnerIds, { settings, reroll: false });
+        announced = await announceWinners(channel, ended, winnerIds, { settings, reroll: false });
       }
-      const pay = await payPrizes({ guild, giveaway: ended, winnerIds: draw.winnerIds, channel: canPost ? channel : null });
+      const pay = await payPrizes({ guild, giveaway: ended, winnerIds, channel: canPost ? channel : null });
       payWarnings = pay.warnings;
       for (const w of payWarnings) logger.warn(`Giveaway ${g.id}: ${w}`);
       if (canPost) await sendWarnings(channel, payWarnings);
     } catch (err) {
       logger.error(`Giveaway ${g.id}: finishing the end failed`, err);
     }
-    return { ok: true, winnerIds: draw.winnerIds, entryCount, announced, payWarnings };
+    return { ok: true, winnerIds, entryCount, announced, payWarnings };
   });
 }
 
@@ -710,7 +741,12 @@ export function rerollGiveaway({ guild, giveawayId, count }) {
     if (!g || g.guildId !== guild.id) return failure('NOT_FOUND');
     if (g.status !== 'ENDED') return failure('NOT_ENDED');
 
-    const entries = await prisma.giveawayEntry.findMany({ where: { giveawayId: g.id }, select: { userId: true }, orderBy: { createdAt: 'asc' } });
+    // Only entries made up to `endedAt` were in the draw; a later one (a join that raced the end) is not eligible.
+    const entries = await prisma.giveawayEntry.findMany({
+      where: { giveawayId: g.id, ...(g.endedAt ? { createdAt: { lte: g.endedAt } } : {}) },
+      select: { userId: true },
+      orderBy: { createdAt: 'asc' },
+    });
     const exclude = new Set(g.winnerIds);
     const draw = await drawWinners({
       userIds: entries.map((e) => e.userId).filter((id) => !exclude.has(id)),

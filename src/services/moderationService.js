@@ -190,7 +190,12 @@ export function buildAuditReason(reason, moderator, source) {
   if (source === 'command') text = `${reason} | by ${by}`;
   else if (source === 'dashboard') text = `[Dashboard] ${reason} | by ${by}`; // the bot is the audit-log executor
   else if (source === 'escalation') text = String(reason);
-  else text = `[${SOURCE_LABEL[source] ?? source}] ${reason}`;
+  else {
+    // Automod and captcha reasons already carry their own tag ("[Automod] …", "Captcha: …"): never tag them twice.
+    const label = SOURCE_LABEL[source] ?? source;
+    const own = String(reason ?? '');
+    text = own.startsWith(`[${label}]`) || own.startsWith(`${label}:`) ? own : `[${label}] ${own}`;
+  }
   return clampText(text, AUDIT_REASON_MAX);
 }
 

@@ -18,7 +18,7 @@ import { errorEmbed, guildEmbed, successEmbed } from '../utils/embedBuilder.js';
 import { checkChannelUsable, isInteractionGone, permissionNames, safeDefer, safeReply } from '../utils/interactionHelpers.js';
 import logger from '../utils/logger.js';
 import { parseDuration } from '../utils/parseDuration.js';
-import { clampText, formatNumber, joinWithLimit, progressBar } from '../utils/text.js';
+import { clampText, formatNumber, joinWithLimit, percentages, progressBar } from '../utils/text.js';
 import { discordTimestamp } from '../utils/time.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -185,21 +185,23 @@ export function winners(counts) {
   return max === 0 ? [] : counts.flatMap((c, i) => (c === max ? [i] : []));
 }
 
-/** Percentages are relative to the total number of votes, so they add up to about 100 even in multi-choice polls. */
+/** One option's share of the votes, rounded on its own (the shown numbers come from `percentages`, which add up to 100). */
 export const percent = (count, total) => (total ? Math.round((count * 100) / total) : 0);
+
+export { percentages }; // pure, in utils/text.js so the dashboard can use it without loading this service
 
 const plural = (n, word) => `${word}${n === 1 ? '' : 's'}`;
 
 /** @returns {string} one block per option, joined with newlines */
 export function formatOptionLines(options, tally, { hidden = false, ended = false } = {}) {
   const counts = tally?.counts ?? [];
-  const total = Math.max(Number(tally?.votes) || 0, counts.reduce((a, b) => a + b, 0));
+  const shown = percentages(options.map((_, i) => counts[i] ?? 0));
   const win = ended && !hidden ? new Set(winners(counts)) : new Set();
   return options.map((opt, i) => {
     if (hidden) return `**${i + 1}.** ${opt}`;
     const c = counts[i] ?? 0;
-    const bar = progressBar(total ? c / total : 0, POLL.BAR_WIDTH);
-    return `**${i + 1}.** ${win.has(i) ? '🏆 ' : ''}${opt}\n${bar} **${percent(c, total)}%** · ${formatNumber(c)} ${plural(c, 'vote')}`;
+    const bar = progressBar(shown[i] / 100, POLL.BAR_WIDTH); // drawn from the number beside it
+    return `**${i + 1}.** ${win.has(i) ? '🏆 ' : ''}${opt}\n${bar} **${shown[i]}%** · ${formatNumber(c)} ${plural(c, 'vote')}`;
   }).join('\n');
 }
 
@@ -286,7 +288,7 @@ function summaryLine(poll, tally) {
   if (!w.length) return 'No votes were cast.';
   const c = tally.counts[w[0]];
   if (w.length === 1) {
-    return `🏆 **${clampText(poll.options[w[0]], POLL.OPTION_MAX)}** won with **${formatNumber(c)}** ${plural(c, 'vote')} (${percent(c, tally.votes)}%).`;
+    return `🏆 **${clampText(poll.options[w[0]], POLL.OPTION_MAX)}** won with **${formatNumber(c)}** ${plural(c, 'vote')} (${percentages(poll.options.map((_, i) => tally.counts[i] ?? 0))[w[0]]}%).`;
   }
   const names = w.map((i) => `**${clampText(poll.options[i], POLL.OPTION_MAX)}**`);
   return `🤝 Tie between ${joinWithLimit(names, { max: 1024 })} with **${formatNumber(c)}** ${plural(c, 'vote')} each.`;

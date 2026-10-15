@@ -55,7 +55,7 @@ console.error = console.warn = console.log = console.debug = console.info = () =
 
 const G = (n) => `955025000000000${String(n).padStart(4, '0')}`;
 const U = (n) => `955025900000000${String(n).padStart(4, '0')}`;
-const GUILDS = Array.from({ length: 24 }, (_, i) => G(i + 1));
+const GUILDS = Array.from({ length: 25 }, (_, i) => G(i + 1));
 const USERS = Array.from({ length: 60 }, (_, i) => U(i + 1));
 
 after(async () => {
@@ -842,6 +842,19 @@ test('shop: use-on-buy role items skip the inventory; refundPurchase restores ev
   assert.deepEqual([(await account(g, U(33))).balance, (await svc.resolveItem(g, gem.id)).stock], [1000, 2]);
 });
 
+test('shop: a refund returns the full price even when the buyer reached the server maximum meanwhile', { skip: skipDb }, async () => {
+  const g = G(21);
+  const capped = S({ economyMaxBalance: 1000 });
+  await seedAccount(g, U(51), { balance: 1000 });
+  const item = await svc.createItem(g, { name: 'Cap Refund', price: 300, type: 'ROLE', roleId: '4243', useOnBuy: true, destroyOnUse: true, canBuyMultiple: false, stock: 3 });
+  const res = await svc.purchaseItem({ guildId: g, userId: U(51), itemId: item.id, quantity: 1, settings: capped });
+  assert.equal(res.balance, 700);
+  await svc.setBalance(g, U(51), 1000, capped); // the buyer earned their way back to the server maximum before the refund
+  await svc.refundPurchase({ guildId: g, userId: U(51), item: res.item, quantity: 1, total: res.total, toInventory: res.toInventory, settings: capped });
+  assert.equal((await account(g, U(51))).balance, 1300, 'the refund is not clamped to economyMaxBalance');
+  assert.equal((await svc.resolveItem(g, item.id)).stock, 3);
+});
+
 test('inventory: consume, restore, give (hard cap), take, search and delete cascade', { skip: skipDb }, async () => {
   const g = G(22);
   await seedAccount(g, U(34), { balance: 0 });
@@ -1041,6 +1054,34 @@ test('/shop buy: purchase, economyPurchase hook with channel, and a refund when 
   const unknown = buyer({ item: 'nope' });
   await cmd.shop.execute(unknown);
   assert.match(titleOf(unknown.calls[2]), /Item Not Found/);
+});
+
+test('/shop buy: two use-on-buy role buys sent together charge once (serialised, checked on a fresh member)', { skip: skipDb }, async () => {
+  const g = G(25);
+  await settingsSvc.updateSettings(g, { economyEnabled: true });
+  await seedAccount(g, U(47), { balance: 1000 });
+  const vip = await svc.createItem(g, { name: 'VIP Race', price: 400, type: 'ROLE', roleId: '4343', useOnBuy: true, destroyOnUse: true, canBuyMultiple: false });
+  const live = new Map(); // the member's roles as Discord holds them (what a forced fetch returns)
+  const add = async (roleId) => { await new Promise((r) => setTimeout(r, 20)); live.set(roleId, { id: roleId }); };
+  const buyer = () => fakeInteraction({
+    guildId: g, user: { id: U(47), bot: false, username: 'racer' }, sub: 'buy', options: { item: vip.id },
+    guild: {
+      id: g,
+      members: {
+        me: { permissions: { has: () => true }, roles: { highest: { position: 10 } } },
+        fetch: async () => ({ roles: { cache: new Map(live) } }),
+      },
+      roles: { cache: new Map([['4343', { id: '4343', position: 1, managed: false, permissions: { has: () => false }, toString: () => '<@&4343>' }]]) },
+    },
+    // Both payloads were built before either grant landed: neither shows the role.
+    member: { displayName: 'Racer', roles: { cache: new Map(), add } },
+  });
+  const [a, b] = [buyer(), buyer()];
+  await Promise.all([cmd.shop.execute(a), cmd.shop.execute(b)]);
+  assert.equal((await account(g, U(47))).balance, 600, 'charged once');
+  const titles = [a, b].map((i) => titleOf(i.calls[i.calls.length - 1]));
+  assert.equal(titles.filter((t) => /Purchase Complete/.test(t)).length, 1);
+  assert.equal(titles.filter((t) => /Already Owned/.test(t)).length, 1);
 });
 
 test('/use consumes a copy, gives the item back when the role grant fails, and refuses collectibles', { skip: skipDb }, async () => {

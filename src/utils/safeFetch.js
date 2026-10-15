@@ -122,6 +122,7 @@ export function isBlockedAddress(ip) {
     if (!g) return true;
     let embedded = null;
     if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) embedded = v4From(g[6], g[7]); // v4-mapped
+    else if (g.slice(0, 4).every((x) => x === 0) && g[4] === 0xffff && g[5] === 0) embedded = v4From(g[6], g[7]); // v4-translated (SIIT, RFC 2765)
     else if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((x) => x === 0)) embedded = v4From(g[6], g[7]); // NAT64
     else if (g[0] === 0x64 && g[1] === 0xff9b && g[2] === 1) embedded = v4From(g[6], g[7]); // local-use NAT64 (RFC 8215)
     else if (g[0] === 0x2002) embedded = v4From(g[1], g[2]); // 6to4

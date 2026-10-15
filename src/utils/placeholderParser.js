@@ -22,6 +22,10 @@ const IMAGE_OPTS = Object.freeze({ extension: 'png', size: 256 });
 
 const stamp = (ms, style) => (Number.isFinite(ms) ? `<t:${Math.floor(ms / 1000)}:${style}>` : '');
 
+// A display name or nickname is free text: "<@123>" in one would render (and, with parse: ['users'], ping) as a mention.
+// A zero-width space after "<" keeps the text as typed but no longer a mention, role or channel tag.
+const unmention = (s) => String(s).replace(/<(?=[@#])/g, '<\u200b');
+
 function channelTypeName(type) {
   switch (type) {
     case ChannelType.GuildText: return 'text';
@@ -50,7 +54,7 @@ const BUILTINS = [
   [['{user.avatar}', '{user.avatar_url}'], 'user', 'Avatar URL', ({ u, m }) => (m ?? u).displayAvatarURL?.(IMAGE_OPTS) ?? ''],
   [['{user.bot}'], 'user', 'True or False', ({ u }) => (u.bot ? 'True' : 'False')],
   [['{user.display_name}', '{user.nick}', '{user.nickname}'], 'user', 'Server nickname, falling back to the display name',
-    ({ u, m }) => m?.displayName ?? u.globalName ?? u.username ?? ''],
+    ({ u, m }) => unmention(m?.displayName ?? u.globalName ?? u.username ?? '')],
   [['{user.created}'], 'user', 'Account age, relative', ({ u }) => stamp(u.createdTimestamp, 'R')],
   [['{user.created_at}'], 'user', 'Account creation date', ({ u }) => stamp(u.createdTimestamp, 'D')],
   [['{user.joined}'], 'user', 'Time since joining the server, relative', ({ m }) => stamp(m?.joinedTimestamp, 'R')],

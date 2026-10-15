@@ -193,7 +193,9 @@ const countSpoilerMarks = (s) => (s.match(/\|\|/g) ?? []).length;
 
 /** AniList description (HTML-ish, with ~!spoiler!~) to safe Discord markdown, at most `max` characters. */
 export function stripAniListHtml(text, max = 1000) {
-  let s = String(text ?? '').replace(/\r\n?/g, '\n');
+  // Only the first `max` characters survive, so a longer source is cut first: several passes below (and discord.js's masked-link
+  // escape) are quadratic on a long run of spaces, `[` or `~!`, and the API allows a body of up to 512 KB.
+  let s = String(text ?? '').slice(0, max * 10).replace(/\r\n?/g, '\n');
   s = s.replace(/<br\s*\/?>/gi, '\n');
   s = s.replace(/<[^<>]{0,200}>/g, '');
   s = s.replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,8});/gi, (whole, body) => {
@@ -221,7 +223,7 @@ export function stripUrbanBrackets(text) {
 }
 
 export function cleanUrbanText(text, max) {
-  let s = String(text ?? '').replace(/\r\n?/g, '\n');
+  let s = String(text ?? '').slice(0, max * 8).replace(/\r\n?/g, '\n'); // same bound as stripAniListHtml
   s = stripUrbanBrackets(s);
   s = defangMentions(s);
   s = escapeBlock(s);

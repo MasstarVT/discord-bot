@@ -31,7 +31,8 @@ export function readRankCursor(cursor) {
   const m = RANK_CURSOR_RE.exec(String(cursor ?? ''));
   if (!m) return null;
   const value = Number(m[1]);
-  return Number.isSafeInteger(value) ? { value, userId: m[2] } : null;
+  // xp and balance are int4 columns: a bigger value makes Prisma throw.
+  return value <= 2_147_483_647 ? { value, userId: m[2] } : null;
 }
 
 /**

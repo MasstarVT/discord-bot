@@ -514,6 +514,7 @@ const AUTOMOD_LIST_FIELDS = {
     field: 'automodBadWordPatterns', type: 'stringList', label: 'Bad word patterns', default: [],
     description: 'Regular expressions (case-insensitive) for words the list cannot catch. Unsafe or catch-all patterns are refused.',
     maxItems: LIMITS.AUTOMOD_PATTERNS, itemMaxLength: MAX_PATTERN_LENGTH,
+    commaSeparated: false, // a comma is part of a pattern (\d{2,4})
     check: patternsProblem,
   },
   automodBlockedDomains: {

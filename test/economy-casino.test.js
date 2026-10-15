@@ -377,18 +377,23 @@ test('roulette autocomplete lists the named spaces first, filters by prefix and 
 test('item 23: slotsPayout multiplies the lines, floors, and pays at least one coin of profit', () => {
   const apples = grid3('🍎');
   assert.equal(slots.checkWins(apples).length, 1);
-  assert.equal(slots.slotsPayout(apples, 1).payout, 2);
-  assert.equal(slots.slotsPayout(apples, 100).payout, 150);
-  assert.equal(slots.slotsPayout(apples, 3).payout, 4, 'floor(4.5) = 4');
+  assert.equal(slots.slotsPayout(apples, 1).payout, 3);
+  assert.equal(slots.slotsPayout(apples, 100).payout, 300);
+  assert.equal(slots.slotsPayout(apples, 3).payout, 9);
   const none = ['🍎', '🍋', '🍒', '🍇', '💎', '7️⃣', '🍎', '🍋', '🍒'].map((e) => slots.SYMBOLS.find((s) => s.emoji === e));
   assert.deepEqual(slots.slotsPayout(none, 100), { payout: 0, multiplier: 0, wins: [] });
   const diamonds = grid3('💎');
-  assert.equal(slots.slotsPayout(diamonds, 100).payout, 500);
+  assert.equal(slots.slotsPayout(diamonds, 100).payout, 1500);
   const allDiamonds = Array(9).fill(slots.SYMBOLS[0]);
   const jackpot = slots.slotsPayout(allDiamonds, 1_000_000_000);
   assert.equal(jackpot.wins.length, 5);
-  assert.equal(jackpot.payout, 25_000_000_000);
+  assert.equal(jackpot.payout, 75_000_000_000);
   assert.ok(Number.isSafeInteger(jackpot.payout));
+  // floor() and the "at least bet + 1" rule still apply to a fractional multiplier (the shipped table has none).
+  const half = Object.freeze({ emoji: '🍎', weight: 6, multiplier: 1.5 });
+  const halfGrid = grid3('🍎').map((s) => (s.emoji === '🍎' ? half : s));
+  assert.equal(slots.slotsPayout(halfGrid, 1).payout, 2, 'a winning spin returns at least bet + 1');
+  assert.equal(slots.slotsPayout(halfGrid, 3).payout, 4, 'floor(4.5) = 4');
   for (const sym of slots.SYMBOLS) {
     const p = slots.slotsPayout(grid3(sym.emoji, sym.emoji === '🍋' ? '🍎' : '🍋'), 1).payout;
     assert.ok(p >= 2, `${sym.emoji} at bet 1 returns ${p}`);
@@ -580,25 +585,25 @@ test('slots: a win settles the gross payout with the stake, shows payout / net /
   const world = mkWorld({ spin: () => grid3('🍎') });
   const it = mkSlash({ timeline: world.timeline, bet: 100 });
   await slots.execute(it, null, world.deps);
-  assert.deepEqual(world.state.settles, [{ payout: 150, stake: 100 }]);
-  assert.equal(world.state.balance, 1050);
+  assert.deepEqual(world.state.settles, [{ payout: 300, stake: 100 }]);
+  assert.equal(world.state.balance, 1200);
   const e = embedOf(lastEdit(it));
   assert.equal(fieldOf(e, 'Bet'), '🪙 **100** coins');
-  assert.equal(fieldOf(e, 'Payout'), '🪙 **150** coins');
-  assert.equal(fieldOf(e, 'Net'), '+🪙 **50** coins');
-  assert.equal(fieldOf(e, 'Balance'), '1,000 → 1,050 coins');
-  assert.match(e.description, /1 winning line \(1\.5× payout\) — \+🪙 \*\*50\*\* coins!/);
+  assert.equal(fieldOf(e, 'Payout'), '🪙 **300** coins');
+  assert.equal(fieldOf(e, 'Net'), '+🪙 **200** coins');
+  assert.equal(fieldOf(e, 'Balance'), '1,000 → 1,200 coins');
+  assert.match(e.description, /1 winning line \(3× payout\) — \+🪙 \*\*200\*\* coins!/);
   assert.equal(e.color, 0x57f287);
-  assert.deepEqual(world.timeline.slice(-3), ['settle:150/100', 'edit', 'unlock']);
+  assert.deepEqual(world.timeline.slice(-3), ['settle:300/100', 'edit', 'unlock']);
   assert.equal(world.state.locked.size, 0);
 });
 
-test('slots: at bet 1 an apple line returns 2 (net +1), never "wins" the stake back', async () => {
+test('slots: at bet 1 an apple line returns 3 (net +2), never "wins" the stake back', async () => {
   const world = mkWorld({ spin: () => grid3('🍎') });
   const it = mkSlash({ timeline: world.timeline, bet: 1 });
   await slots.execute(it, null, world.deps);
-  assert.deepEqual(world.state.settles, [{ payout: 2, stake: 1 }]);
-  assert.equal(fieldOf(embedOf(lastEdit(it)), 'Net'), '+🪙 **1** coins');
+  assert.deepEqual(world.state.settles, [{ payout: 3, stake: 1 }]);
+  assert.equal(fieldOf(embedOf(lastEdit(it)), 'Net'), '+🪙 **2** coins');
 });
 
 test('slots: a loss settles 0, shows the negative net and the lower balance', async () => {
@@ -618,7 +623,7 @@ test('slots: the max payout caps the winnings, settleBet gets the stake and the 
   const world = mkWorld({ spin: () => grid3('💎'), settings: { economyMaxPayout: 120 } });
   const it = mkSlash({ timeline: world.timeline, bet: 100 });
   await slots.execute(it, null, world.deps);
-  assert.deepEqual(world.state.settles, [{ payout: 500, stake: 100 }]);
+  assert.deepEqual(world.state.settles, [{ payout: 1500, stake: 100 }]);
   assert.equal(world.state.balance, 900 + 220, 'stake + max payout comes back');
   const e = embedOf(lastEdit(it));
   assert.equal(fieldOf(e, 'Payout'), '🪙 **220** coins');
@@ -639,7 +644,7 @@ test('slots: the result embed failing to send still leaves the bet settled and t
   const world = mkWorld({ spin: () => grid3('🍎') });
   const it = mkSlash({ timeline: world.timeline, bet: 100, editFails: true });
   await assert.doesNotReject(() => slots.execute(it, null, world.deps));
-  assert.deepEqual(world.state.settles, [{ payout: 150, stake: 100 }]);
+  assert.deepEqual(world.state.settles, [{ payout: 300, stake: 100 }]);
   assert.equal(world.state.locked.size, 0);
 });
 
@@ -1263,9 +1268,10 @@ test('DB slots: win, max payout and the server maximum all land exactly', { skip
     return it;
   };
   await run({}, grid3('🍎'), 100);
-  assert.equal(await balanceOf(g, u), 1050);
+  assert.equal(await balanceOf(g, u), 1200);
   await run({ economyMaxPayout: 20 }, grid3('💎'), 100);
-  assert.equal(await balanceOf(g, u), 1050 - 100 + 120, 'stake + max payout');
+  assert.equal(await balanceOf(g, u), 1200 - 100 + 120, 'stake + max payout');
+  await seedAccount(g, u, 1000);
   const capped = await run({ economyMaxBalance: 1100 }, grid3('💎'), 100);
   assert.equal(await balanceOf(g, u), 1100, 'clamped to the server maximum');
   assert.match(fieldOf(embedOf(lastEdit(capped)), 'Balance'), /\(server maximum\)$/);

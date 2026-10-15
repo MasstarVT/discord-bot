@@ -1032,6 +1032,12 @@ export async function runTimeoutJob(job, ctx, deps = {}) {
   const guild = ctx?.guild;
   const { userId } = job?.payload ?? {};
   if (typeof userId !== 'string' || !/^\d{17,20}$/.test(userId)) throw new PermanentJobError('captcha.timeout: invalid payload');
+  // Same key as the Verify / answer handlers: a member who passes at the deadline is either verified before this
+  // runs (the checks below see the role and the deleted row) or kicked first; never verified mid-kick and removed.
+  return userMutex.run(`${guild.id}:${userId}`, () => kickIfStillPending(ctx, deps, guild, userId));
+}
+
+async function kickIfStillPending(ctx, deps, guild, userId) {
   const settings = await getSettings(guild.id); // a database failure throws: the scheduler retries
   if (!settings.captchaEnabled || !(settings.captchaTimeoutMinutes > 0)) return; // module off or "never": no kick, row kept
   const role = settings.captchaRoleId ? guild.roles.cache.get(settings.captchaRoleId) : null;

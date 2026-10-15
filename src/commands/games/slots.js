@@ -22,14 +22,22 @@ export const permissionLevel = PERMISSION_LEVELS.MEMBER;
 
 // ── Pure helpers (unit-tested) ───────────────────────────────────────────────
 
-// Rarer symbols have lower weight and higher payout multipliers (per winning line)
+// Rarer symbols have lower weight and higher payout multipliers (per winning line).
+//
+// Expected return (RTP). Every cell is an independent weighted draw (P(symbol) = weight / TOTAL_WEIGHT = weight / 21) and the
+// three cells of a line are distinct cells, so by linearity of expectation the multipliers of the 5 lines add up to
+//   RTP = LINES.length * SUM(weight^3 * multiplier) / TOTAL_WEIGHT^3
+//       = 5 * (1*15 + 8*11 + 27*7 + 64*5 + 125*4 + 216*3) / 21^3 = 5 * 1760 / 9261 = 8800 / 9261 = 95.02 %.
+// (Confirmed by enumerating all 6^9 grids: 0.950221; 21.3 % of spins win something.) Every multiplier is an integer >= 2, so
+// floor() and the "at least bet + 1" rule of slotsPayout never change a payout and the RTP is the same at every bet size.
+// The previous table (5 / 4 / 3 / 2.5 / 2 / 1.5) returned only 46 %.
 export const SYMBOLS = Object.freeze([
-  Object.freeze({ emoji: '💎', weight: 1, multiplier: 5 }),
-  Object.freeze({ emoji: '7️⃣', weight: 2, multiplier: 4 }),
-  Object.freeze({ emoji: '🍇', weight: 3, multiplier: 3 }),
-  Object.freeze({ emoji: '🍒', weight: 4, multiplier: 2.5 }),
-  Object.freeze({ emoji: '🍋', weight: 5, multiplier: 2 }),
-  Object.freeze({ emoji: '🍎', weight: 6, multiplier: 1.5 }),
+  Object.freeze({ emoji: '💎', weight: 1, multiplier: 15 }),
+  Object.freeze({ emoji: '7️⃣', weight: 2, multiplier: 11 }),
+  Object.freeze({ emoji: '🍇', weight: 3, multiplier: 7 }),
+  Object.freeze({ emoji: '🍒', weight: 4, multiplier: 5 }),
+  Object.freeze({ emoji: '🍋', weight: 5, multiplier: 4 }),
+  Object.freeze({ emoji: '🍎', weight: 6, multiplier: 3 }),
 ]);
 
 export const TOTAL_WEIGHT = SYMBOLS.reduce((sum, s) => sum + s.weight, 0);

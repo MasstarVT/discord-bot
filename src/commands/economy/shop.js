@@ -10,7 +10,7 @@ import {
   resolveItem, searchItems,
 } from '../../services/economyService.js';
 import { getSettings, getSettingsSafe } from '../../services/settingsService.js';
-import { ackBudgetMs, withTimeout } from '../../utils/async.js';
+import { ackBudgetMs, createKeyedMutex, withTimeout } from '../../utils/async.js';
 import { isHttpUrl } from '../../utils/customEmbed.js';
 import { guildEmbed, successEmbed } from '../../utils/embedBuilder.js';
 import { checkAssignableRole, respondAutocomplete } from '../../utils/interactionHelpers.js';
@@ -23,6 +23,7 @@ export const module = 'economy';
 export const permissionLevel = PERMISSION_LEVELS.MEMBER;
 
 const PER_PAGE = 6;
+const roleBuys = createKeyedMutex(); // use-on-buy role purchases, per member (see buy)
 
 export const data = new SlashCommandBuilder()
   .setName('shop')
@@ -138,7 +139,7 @@ async function info(interaction, settings) {
 // ── /shop buy ─────────────────────────────────────────────────────────────────
 
 /** @returns {Promise<boolean>} true when a role item is fine to hand out (otherwise a private error was shown) */
-async function checkRoleItem(interaction, item) {
+async function checkRoleItem(interaction, item, member) {
   const role = interaction.guild.roles.cache.get(item.roleId);
   if (!role) {
     await replyFail(interaction, 'Item Broken', "This item's role no longer exists. Ask an admin to fix the item.");
@@ -149,7 +150,7 @@ async function checkRoleItem(interaction, item) {
     await replyFail(interaction, 'Item Broken', `I can't give this item's role: ${chk.reason}`);
     return false;
   }
-  if (interaction.member.roles.cache.has(role.id)) {
+  if (member.roles.cache.has(role.id)) {
     await replyFail(interaction, 'Already Owned', `You already have the ${role} role.`);
     return false;
   }
@@ -165,14 +166,28 @@ async function buy(interaction, settings) {
   const value = interaction.options.getString('item', true);
   const item = await resolveItem(guildId, value, { enabledOnly: true });
   if (!item) return notFound(interaction, value);
+  if (item.type !== 'ROLE' || !item.useOnBuy) return buyItem(interaction, settings, item, quantity, interaction.member);
 
+  // Two buys sent together each carry a member payload without the role, so both passed the "already owned" check and
+  // both were charged for one role. Role buys are serialised per member and checked against a fresh fetch instead.
+  return roleBuys.run(`${guildId}:${user.id}`, async () => {
+    let member = interaction.member;
+    try {
+      member = await interaction.guild.members.fetch({ user: user.id, force: true });
+    } catch { /* keep the payload member */ }
+    return buyItem(interaction, settings, item, quantity, member);
+  });
+}
+
+async function buyItem(interaction, settings, item, quantity, member) {
+  const { guildId, user } = interaction;
   // Pre-checks are for a friendly message only; the transaction re-checks everything atomically.
   if (!item.canBuyMultiple && quantity > 1) return replyFail(interaction, 'One Per Member', `You can only own one ${itemLabel(item)}.`);
   if (item.type === 'ROLE' && item.useOnBuy && quantity > 1) return replyFail(interaction, 'One At A Time', 'Role items are bought one at a time.');
   if (item.stock !== null && item.stock < quantity) {
     return replyFail(interaction, 'Sold Out', item.stock === 0 ? `${itemLabel(item)} is sold out.` : `Only ${item.stock} left.`);
   }
-  if (item.type === 'ROLE' && item.useOnBuy && !(await checkRoleItem(interaction, item))) return undefined;
+  if (item.type === 'ROLE' && item.useOnBuy && !(await checkRoleItem(interaction, item, member))) return undefined;
   if (goesToInventory(item)) {
     const owned = await getOwnedQuantity(guildId, user.id, item.id);
     const max = effectiveMaxOwned(item);

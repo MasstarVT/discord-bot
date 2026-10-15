@@ -23,10 +23,16 @@ const COLLECTOR_GRACE_MS = 2500;
 
 async function safeReply(interaction, payload) {
   try {
-    if (interaction.replied || interaction.deferred) {
+    if (!interaction.replied && !interaction.deferred) {
+      return await interaction.reply({ ...payload, ephemeral: true });
+    }
+    // Only deferReply() leaves a boolean `ephemeral`; it is the one state where @original is a placeholder
+    // for this answer. After deferUpdate()/update() (ephemeral null) @original is the message that was clicked
+    // (a public panel), and after an earlier reply it is that reply: never overwrite either with an error.
+    if (interaction.deferred && !interaction.replied && typeof interaction.ephemeral === 'boolean') {
       return await interaction.editReply(payload);
     }
-    return await interaction.reply({ ...payload, ephemeral: true });
+    return await interaction.followUp({ ...payload, ephemeral: true });
   } catch {
     // Interaction may have expired — silently discard
   }

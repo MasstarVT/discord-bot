@@ -664,6 +664,8 @@ export function createField(desc, opts = {}) {
   const api = {
     el,
     getValue: () => built.getValue(),
+    // Problems in what the control shows that getValue() hides: [{ path (inside the field, '' = the field), message }].
+    validate: () => built.validate?.() ?? [],
     setValue(next) {
       built.setValue(next === undefined ? defaultFor(desc ?? {}) : next);
       serverError = null;
@@ -718,6 +720,7 @@ function delegateField(desc, opts) {
   const api = {
     el: ctl.el,
     getValue: () => ctl.getValue(),
+    validate: () => [],
     setValue: (v) => ctl.setValue(v === undefined ? defaultFor(desc) : v),
     setError: (message, subPath = '') => ctl.setError?.(message, subPath),
     setResources: (resources) => ctl.setResources?.(resources),
@@ -851,6 +854,16 @@ function buildNumber(desc, st) {
     inputs: [input],
     labelFor: input.id,
     describedBy: rangeHint ? [rangeHint.id] : [],
+    // What is typed right now, which an emptied or out-of-range box leaves unlike getValue() (the last valid number, until
+    // the box loses focus). A save made before that (Ctrl+S) must stop on it instead of sending a number the box does not show.
+    validate() {
+      const raw = input.value.trim();
+      let message = null;
+      if (raw === '') message = desc.nullable ? null : 'Enter a number.';
+      else message = Number.isFinite(Number(raw)) ? check(Number(raw)) : 'Enter a number.';
+      st.setLocalError(message);
+      return message ? [{ path: '', message }] : [];
+    },
     getValue: () => current,
     setValue(v) {
       current = num(v) ?? (desc.nullable ? null : current);
@@ -2409,6 +2422,7 @@ function buildObject(desc, st) {
     body: form.el,
     inputs: [],
     getValue: () => (untouchedNull ? null : form.getValues()),
+    validate: () => form.validate(),
     setValue(v) {
       untouchedNull = v === null && desc.nullable === true;
       form.setValues(isObject(v) ? v : {});
@@ -2568,6 +2582,16 @@ function buildObjectList(desc, st) {
     group: body,
     inputs: [],
     getValue: () => entries.map((e) => e.form.getValues()),
+    validate() {
+      return entries.flatMap((entry, i) => {
+        const problems = entry.form.validate();
+        if (problems.length) {
+          entry.open = true; // a collapsed item must not hide the field that stops the save
+          paintEntry(entry);
+        }
+        return problems.map((p) => ({ path: p.path ? `${i}.${p.path}` : String(i), message: p.message }));
+      });
+    },
     setValue: setItems,
     routeError(sub, message) {
       const [first, ...rest] = sub.split('.');
@@ -2649,6 +2673,7 @@ const BUILDERS = {
  * @returns {{ el: HTMLElement, getValue: (field: string) => unknown, getValues: () => object,
  *   setValues: (values: object) => void, setErrors: (errors: { path: string, message: string }[]) => void,
  *   addErrors: (errors: { path: string, message: string }[]) => void,
+ *   validate: (only?: string[]) => { path: string, message: string }[],
  *   focusPath: (path: string) => void, setResources: (resources: object|null) => void,
  *   setDisabled: (disabled: boolean) => void, destroy: () => void }}
  */
@@ -2718,6 +2743,17 @@ export function createForm({ fields = [], values = {}, ctx = null, onChange, dis
     el,
     getValue: (field) => controls.get(field)?.getValue(),
     getValues: () => Object.fromEntries([...controls].map(([field, control]) => [field, control.getValue()])),
+    // The problems a save must not skip: entries a control shows but getValue() does not hold (an emptied number).
+    // Marks each on its field and returns [{ path, message }]. Fields hidden by showWhen are not looked at, and `only`
+    // (field names) limits it to the fields the save sends, so a stored value that is out of range never blocks another edit.
+    validate(only = null) {
+      const problems = [];
+      for (const [field, control] of controls) {
+        if (control.el.hidden || (only && !only.includes(field))) continue;
+        for (const p of control.validate()) problems.push({ path: p.path ? `${field}.${p.path}` : field, message: p.message });
+      }
+      return problems;
+    },
     setValues(next) {
       if (!next) return;
       for (const [field, control] of controls) {

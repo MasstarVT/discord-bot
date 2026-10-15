@@ -1,6 +1,8 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import { MODULES, MODULE_NAMES, getModule } from '../../config/modules.js';
+import { refreshSnapshot } from '../../services/inviteTracker.js';
+import { cache } from '../../services/redis.js';
 import { getSettingsSafe, peekSettings, updateSettings } from '../../services/settingsService.js';
 import { withTimeout } from '../../utils/async.js';
 import { applyGuildColor, errorEmbed, neutralEmbed, successEmbed } from '../../utils/embedBuilder.js';
@@ -89,6 +91,11 @@ export async function execute(interaction) {
       embeds: [errorEmbed('Update Failed', 'The setting could not be saved. Please try again in a moment.')],
     });
   }
+  // Like /levelconfig disable: open voice sessions are dropped without credit, or the time spent while the module
+  // was off would be paid once it is switched back on.
+  if (key === 'leveling' && !enable) await cache.invalidate(`voice:start:${guildId}:*`);
+  // The invite snapshot is only warmed at startup: without this the first join after switching invites on is unattributed.
+  if (key === 'invites' && enable && interaction.guild) void refreshSnapshot(interaction.guild);
 
   return interaction.editReply({
     embeds: [successEmbed(

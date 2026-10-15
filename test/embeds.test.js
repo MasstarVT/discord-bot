@@ -77,7 +77,7 @@ function makeGuild({ id = GUILD, roles = [], botPerms = BOT_PERMS, vanity = null
 }
 
 let msgSeq = 0;
-function makeChannel(guild, { id = '900000000000000500', botPerms = BOT_PERMS, memberPerms = ['ViewChannel'], everyoneCanSend = false, type = ChannelType.GuildText } = {}) {
+function makeChannel(guild, { id = '900000000000000500', botPerms = BOT_PERMS, memberPerms = ['ViewChannel', 'SendMessages'], everyoneCanSend = false, type = ChannelType.GuildText } = {}) {
   const ch = {
     id, name: 'general', type, guild, sent: [], fetched: new Map(), deleted: [],
     isTextBased: () => true,
@@ -630,7 +630,7 @@ test('db: publishSavedEmbed posts, tracks, reports refused roles and replaced co
   const R1 = '123456789012345678';
   const guild = makeGuild({ roles: [{ id: R1, mentionable: false }] });
   const channel = makeChannel(guild);
-  const member = makeMember(guild, { perms: ['ViewChannel'] });
+  const member = makeMember(guild, { id: '900000000000000011', perms: ['ViewChannel'] }); // not the owner: the owner sees every channel
   const row = await svc.createSavedEmbed(GUILD, 'pub', { content: `ping <@&${R1}>`, embed: { title: 'T' }, buttons: [{ label: 'L', url: 'https://a.b' }] }, ADMIN);
 
   const noView = makeChannel(guild, { id: '900000000000000502', memberPerms: [] });

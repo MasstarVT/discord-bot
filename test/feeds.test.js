@@ -682,9 +682,14 @@ test('fetchAndParse: 304, HTTP errors, Retry-After, thrown SafeFetchErrors, HTML
     stubFetch(async () => { if (response instanceof Error) throw response; return response; });
     return S.fetchAndParse('https://feed.test/f.xml', type);
   };
-  assert.deepEqual(await run(resp(304)), { ok: true, notModified: true });
+  // A 304 is "not modified" only for a conditional request; an unprompted one is a bad response.
+  stubFetch(async () => resp(304));
+  assert.deepEqual(await S.fetchAndParse('https://feed.test/f.xml', 'RSS', { headers: { 'if-none-match': '"v1"' } }), { ok: true, notModified: true });
+  let r = await run(resp(304));
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, 'UNEXPECTED_304');
 
-  let r = await run(resp(429, 'slow down', { 'retry-after': '120' }), 'REDDIT');
+  r = await run(resp(429, 'slow down', { 'retry-after': '120' }), 'REDDIT');
   assert.equal(r.ok, false);
   assert.equal(r.error.code, 'HTTP');
   assert.equal(r.error.status, 429);

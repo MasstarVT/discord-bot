@@ -24,6 +24,7 @@ import {
   checkAssignableRole, checkChannelUsable, missingBotPermissions, pingableRoleIds, permissionNames,
 } from '../utils/interactionHelpers.js';
 import { markBotDeletion, wasDeletedByBot } from '../utils/deletionTracker.js';
+import { copyLeaksPrivate, memberChannelProblem } from '../utils/privacyGuards.js';
 import { clampText, formatNumber, joinWithLimit } from '../utils/text.js';
 import { guildEmbed } from '../utils/embedBuilder.js';
 import { TimeoutError, createKeyedMutex, createThrottle, withTimeout } from '../utils/async.js';
@@ -1806,7 +1807,7 @@ export async function conditionParamsFromOptions(type, opts = {}, { guild } = {}
  * @returns {Promise<{ ok: boolean, params?: object, error?: string, errorKind?: 'value'|'perms'|'role'|'reward'|'embed',
  *   missing?: string[], channel?: object, rewardKind?: string, embedName?: string, ignored: string[] }>}
  */
-export async function actionParamsFromOptions(type, opts = {}, { guild, member = null, settings = null } = {}) {
+export async function actionParamsFromOptions(type, opts = {}, { guild, member = null, settings = null, channel: fallbackChannel = null } = {}) {
   if (!isActionType(type)) return { ...fail('Unknown action type. Pick one from the list.'), ignored: [] };
   const ignored = ignoredOptions(ACTION_OPTION_USE[type], ALL_ACTION_OPTIONS, opts);
   const done = (r) => ({ ignored, ...r });
@@ -1836,12 +1837,16 @@ export async function actionParamsFromOptions(type, opts = {}, { guild, member =
           const check = checkChannelUsable(targetChannel, { needs: ['ViewChannel', 'SendMessages'] });
           if (!check.ok) return done(channelProblem(targetChannel, check));
         }
+        const ping = rolePingRefusal(member, targetChannel ?? fallbackChannel, text);
+        if (ping) return done(fail(ping, 'ping'));
         return withButton({ content: text, channelId: targetChannel?.id ?? null });
       }
       case 'REPLY':
       case 'SEND_IN_THREAD': {
         if (!text) return done(fail('Give the message in text.'));
         if (text.length > CONTENT_MAX) return done(fail(`The message can be at most ${CONTENT_MAX} characters.`));
+        const ping = rolePingRefusal(member, fallbackChannel, text);
+        if (ping) return done(fail(ping, 'ping'));
         return withButton({ content: text });
       }
       case 'REPOST': {
@@ -1887,11 +1892,14 @@ export async function actionParamsFromOptions(type, opts = {}, { guild, member =
       case 'SEND_EMBED': {
         const embedName = normalizeAutomationName(opts.embed);
         if (!embedName) return done(fail('Give the saved embed name in embed.'));
-        if (!(await getSavedEmbedTemplate(guild.id, embedName))) return done(fail('Embed not found.', 'embed', { embedName }));
+        const template = await getSavedEmbedTemplate(guild.id, embedName);
+        if (!template) return done(fail('Embed not found.', 'embed', { embedName }));
         if (targetChannel) {
           const check = checkChannelUsable(targetChannel, { needs: ['ViewChannel', 'SendMessages', 'EmbedLinks'] });
           if (!check.ok) return done(channelProblem(targetChannel, check));
         }
+        const ping = rolePingRefusal(member, targetChannel ?? fallbackChannel, template.content);
+        if (ping) return done(fail(ping, 'ping'));
         return done({ ok: true, params: { embedName, channelId: targetChannel?.id ?? null } });
       }
       default:
@@ -1904,6 +1912,101 @@ export async function actionParamsFromOptions(type, opts = {}, { guild, member =
 }
 
 // ── Import references (spec 6.12) ────────────────────────────────────────────
+
+/**
+ * The hierarchy rule of `action add`, applied to imported JSON: the importing admin may only hand out roles below their own highest
+ * role (the guild owner is exempt). Run time has no executor to check, and a warning only saves the automation off (`enable` does not
+ * look at the importer's roles), so an import that fails this is refused outright. Roles the server does not have are left to
+ * resolveImportReferences (a deleted role can never be assigned). Never throws.
+ * @param {object} guild
+ * @param {object|null} member the importing admin
+ * @param {object[]} actions normalised actions
+ * @returns {string|null} the first problem, or null
+ */
+export function importRoleHierarchyProblem(guild, member, actions) {
+  try {
+    if (!member || member.id === guild.ownerId) return null;
+    const top = member.roles.highest.position;
+    if (!Number.isFinite(top)) return 'Your roles could not be checked.';
+    for (const [k, a] of (Array.isArray(actions) ? actions : []).entries()) {
+      for (const id of a.roleIds ?? []) {
+        const role = guild.roles.cache.get(id);
+        if (role && role.position >= top) return `Action ${k + 1}: That role is above your highest role.`;
+      }
+    }
+    return null;
+  } catch {
+    return 'Your roles could not be checked.';
+  }
+}
+
+// ── Configuration-time checks of the admin who writes an automation ───────────
+
+/** What the member who sets a target channel needs there, by action type (the guild owner and Administrators are exempt). */
+const EXECUTOR_CHANNEL_NEEDS = Object.freeze({
+  SEND_MESSAGE: ['ViewChannel', 'SendMessages'],
+  SEND_EMBED: ['ViewChannel', 'SendMessages'],
+  REPOST: ['ViewChannel', 'SendMessages'],
+  CREATE_THREAD: ['ViewChannel', 'CreatePublicThreads'],
+});
+
+/**
+ * An automation must not post into (or open threads in) a channel its author cannot use: the first action whose target channel the
+ * member lacks access to. Channels the server does not have are left to the reference check. Never throws.
+ * @param {object} guild
+ * @param {object|null} member the configuring admin
+ * @param {object[]} actions normalised actions
+ * @param {{ first?: number }} [opts] the number shown for the first action
+ * @returns {string|null} "Action N: You need ..." or null
+ */
+export function actionChannelAccessProblem(guild, member, actions, { first = 1 } = {}) {
+  try {
+    for (const [k, a] of (Array.isArray(actions) ? actions : []).entries()) {
+      const needs = EXECUTOR_CHANNEL_NEEDS[a?.type];
+      const channel = needs && a.channelId ? guild.channels.cache.get(a.channelId) : null;
+      if (!channel) continue;
+      const problem = memberChannelProblem(channel, member, needs);
+      if (problem) return `Action ${first + k}: ${problem}`;
+    }
+    return null;
+  } catch {
+    return 'Your channel access could not be checked.';
+  }
+}
+
+/**
+ * Configuration-time half of the role-ping rule (the send-time half is allowedMentionsFor): role mentions in `text` that the
+ * member could not ping themselves in `channel` (not mentionable, no Mention Everyone). Same rule as /tag, /feed and /reminder.
+ * No member or no channel means nothing to compare with.
+ * @returns {string|null} the refusal text, or null
+ */
+export function rolePingRefusal(member, channel, text) {
+  if (!member || !channel) return null;
+  const ids = unique([...String(text ?? '').matchAll(/<@&(\d{17,20})>/g)].map((m) => m[1]));
+  if (!ids.length) return null;
+  const { refused } = pingableRoleIds(channel, member, ids);
+  if (!refused.length) return null;
+  return `${refused.map((id) => `<@&${id}>`).join(' ')} ${refused.length === 1 ? 'is' : 'are'} not mentionable and you lack **Mention @everyone, @here and All Roles** in <#${channel.id}>.`;
+}
+
+/**
+ * rolePingRefusal over imported actions. A reply or thread message has no fixed channel, so `fallbackChannel` (where the admin
+ * runs the command) stands in. Never throws.
+ * @returns {string|null} "Action N: ..." or null
+ */
+export function importRolePingProblem(guild, member, actions, { fallbackChannel = null } = {}) {
+  try {
+    for (const [k, a] of (Array.isArray(actions) ? actions : []).entries()) {
+      if (a?.type !== 'SEND_MESSAGE' && a?.type !== 'REPLY' && a?.type !== 'SEND_IN_THREAD') continue;
+      const channel = a.channelId ? guild.channels.cache.get(a.channelId) : fallbackChannel;
+      const problem = rolePingRefusal(member, channel, a.content);
+      if (problem) return `Action ${k + 1}: ${problem}`;
+    }
+    return null;
+  } catch {
+    return 'Role mentions could not be checked.';
+  }
+}
 
 /**
  * Checks an imported automation against this server and remaps button references. Returns a copy of `data` and the problems:
@@ -2194,6 +2297,21 @@ function missingPerms(run, base, i, channel, perms) {
   return true;
 }
 
+const MESSAGE_COPY_RE = /\{\s*message\.(?:old_)?content\s*\}/i;
+const copiesMessage = (...texts) => texts.some((t) => MESSAGE_COPY_RE.test(String(t ?? '')));
+
+/**
+ * Run-time privacy rule: a triggering message that sits in a channel @everyone cannot view is never copied (REPOST, or a text that
+ * embeds {message.content}) into a channel @everyone can view. Records the problem like a missing permission; true = skip the action.
+ */
+function leaksPrivateMessage(run, base, i, target, copies) {
+  if (!copies || !base.message || !target) return false;
+  const source = base.channel ?? base.message.channel ?? null;
+  if (!copyLeaksPrivate(source, target)) return false;
+  recordProblem(run.automation, i, `Skipped: the message is in a channel @everyone cannot see, but <#${target.id}> is visible to @everyone.`, base.guildId);
+  return true;
+}
+
 async function repostEmbed(message, base, run) {
   const author = message.author;
   const member = base.member?.id === author?.id ? base.member : (message.member ?? null);
@@ -2276,6 +2394,7 @@ const ACTION_RUNNERS = Object.freeze({
       if (!ch) { recordProblem(a, i, 'The channel was deleted', base.guildId); return 'skipped'; }
       if (!TEXT_OR_ANNOUNCEMENT.includes(ch.type) || !ch.threads?.create) { recordProblem(a, i, 'That channel cannot hold threads', base.guildId); return 'skipped'; }
       if (missingPerms(run, base, i, ch, ['ViewChannel', 'CreatePublicThreads', 'SendMessagesInThreads'])) return 'skipped';
+      if (leaksPrivateMessage(run, base, i, ch, copiesMessage(action.name))) return 'skipped';
       run.thread = await ch.threads.create({
         name,
         autoArchiveDuration: action.autoArchiveMinutes,
@@ -2303,6 +2422,7 @@ const ACTION_RUNNERS = Object.freeze({
   async SEND_MESSAGE(action, run, base, i) {
     const ch = usableTarget(action, base, run, i, ['ViewChannel', 'SendMessages']);
     if (!ch) return 'skipped';
+    if (leaksPrivateMessage(run, base, i, ch, copiesMessage(action.content, action.button?.label))) return 'skipped';
     const content = renderText(action.content, base, run, CONTENT_MAX, ch);
     if (!content.trim()) return 'skipped';   // Discord rejects an empty message
     await ch.send({
@@ -2318,6 +2438,7 @@ const ACTION_RUNNERS = Object.freeze({
     if (!tpl) { recordProblem(run.automation, i, `Saved embed "${action.embedName}" not found`, base.guildId); return 'skipped'; }
     const ch = usableTarget(action, base, run, i, ['ViewChannel', 'SendMessages', 'EmbedLinks']);
     if (!ch) return 'skipped';
+    if (leaksPrivateMessage(run, base, i, ch, copiesMessage(JSON.stringify(tpl)))) return 'skipped';
     const payload = renderTemplate(tpl, renderContext(base, run, ch), {
       defaultColor: run.settings?.embedColor ?? COLORS.INFO,
       allowedMentions: allowedMentionsFor(ch, base.guild, tpl.content),
@@ -2352,6 +2473,7 @@ const ACTION_RUNNERS = Object.freeze({
     if (!message) return 'skipped';
     const ch = usableTarget(action, { ...base, channel: null }, run, i, ['ViewChannel', 'SendMessages', 'EmbedLinks']);
     if (!ch) return 'skipped';
+    if (leaksPrivateMessage(run, base, i, ch, true)) return 'skipped';
     const key = repostKey(a.id, message.id);
     // Degrade decision: at most one repost per source message. setNX null (Redis down) falls back to this process's set (this
     // shard owns the guild), so a Redis outage can never repost the same message twice from here.
@@ -2444,6 +2566,7 @@ const ACTION_RUNNERS = Object.freeze({
     if (!thread) return 'skipped';
     const check = checkChannelUsable(thread, { needs: ['ViewChannel', 'SendMessages'] });
     if (!check.ok) { recordProblem(run.automation, i, check.reason, base.guildId); return 'skipped'; }
+    if (leaksPrivateMessage(run, base, i, thread, copiesMessage(action.content, action.button?.label))) return 'skipped';
     const content = renderText(action.content, base, run, CONTENT_MAX, thread);
     if (!content.trim()) return 'skipped';
     await thread.send({
@@ -2503,6 +2626,13 @@ async function takeCooldown(guildId, automationId, userId, seconds) {
   return localCooldowns.add(key, seconds * 1000);
 }
 
+/** Undoes takeCooldown for a run that did not start. Never throws (the cache swallows its own errors). */
+async function giveBackCooldown(guildId, automationId, userId) {
+  const key = cooldownKey(guildId, automationId, userId);
+  localCooldowns.delete(key);
+  await cache.del(key);
+}
+
 function enqueueRun(guildId, fn) {
   if ((pending.get(guildId) ?? 0) >= MAX_PENDING_RUNS) {
     if (warnThrottle(`queue:${guildId}`)) logger.warn(`automations: run queue is full in ${guildId}; dropping a run`);
@@ -2551,12 +2681,18 @@ export async function dispatch(trigger, base, { awaitRuns = false } = {}) {
     candidates = candidates.filter((a) => evaluateConditions(splitConditions(a.conditions).needsMessage, facts));
 
     for (const a of candidates) {
-      if (a.cooldownSeconds > 0 && !(await takeCooldown(guildId, a.id, facts.userId ?? 'none', a.cooldownSeconds))) continue;
+      const cooled = a.cooldownSeconds > 0;
+      const cooldownUser = facts.userId ?? 'none';
+      if (cooled && !(await takeCooldown(guildId, a.id, cooldownUser, a.cooldownSeconds))) continue;
       if (!budget.take(guildId)) {
+        // Nothing ran, so the member must not sit out a cooldown (up to 7 days) for a run that never happened.
+        if (cooled) await giveBackCooldown(guildId, a.id, cooldownUser);
         if (warnThrottle(`budget:${guildId}`)) logger.warn(`automations: run budget exceeded in ${guildId}`);
         break;
       }
-      const p = enqueueRun(guildId, () => executeAutomation(a, b));
+      // enqueueRun resolves false for a run it dropped because the guild's queue is full: the cooldown goes back too.
+      const p = enqueueRun(guildId, () => executeAutomation(a, b))
+        .then((ran) => (ran === false && cooled ? giveBackCooldown(guildId, a.id, cooldownUser) : undefined));
       if (awaitRuns) await p.catch((err) => logger.error('automations: run failed', err));
       else p.catch((err) => logger.error('automations: run failed', err));
     }

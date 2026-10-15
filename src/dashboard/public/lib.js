@@ -191,6 +191,10 @@ function getToastRoot() {
     toastRoot = h('div', { class: 'toasts', role: 'status', 'aria-live': 'polite' });
     document.body.append(toastRoot);
   }
+  // A modal <dialog> is drawn in the top layer above the page, so a toast shown while one is open must live inside it.
+  const open = document.querySelectorAll('dialog[open]');
+  const host = open.length ? open[open.length - 1] : document.body;
+  if (toastRoot.parentElement !== host) host.append(toastRoot);
   return toastRoot;
 }
 
@@ -208,6 +212,7 @@ function toast(message, { kind = 'info', key = null, ms = TOAST_MS } = {}) {
   if (entry) {
     clearTimeout(entry.timer);
     entry.msg.textContent = message;
+    getToastRoot();
   } else {
     const msg = h('span', { class: 'toast-msg' }, message);
     const el = h(

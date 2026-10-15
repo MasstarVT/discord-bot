@@ -15,7 +15,7 @@ export const HOOK_ORDER = Object.freeze({
   "voiceStateUpdate": Object.freeze(["temp-voice","levels","logging","automations"]),
   "guildMemberAdd": Object.freeze(["invites","moderation","logging","captcha","welcome","automations","stat-channels"]),
   "guildMemberRemove": Object.freeze(["invites","logging","welcome","captcha","stat-channels"]),
-  "guildMemberUpdate": Object.freeze(["welcome","captcha","logging","achievements","automations"]),
+  "guildMemberUpdate": Object.freeze(["welcome","captcha","logging","achievements","automations","liverole"]),
   "presenceUpdate": Object.freeze(["liverole"]),
   "channelCreate": Object.freeze(["logging"]),
   "channelUpdate": Object.freeze(["logging"]),

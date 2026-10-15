@@ -9,3 +9,8 @@ state
 .github
 .claude
 *.log
+# Local tooling and audit output (git-ignored, large): never part of the image.
+graphify-out
+.audit-checkpoint
+claude-code-hooks
+claude-token-saver

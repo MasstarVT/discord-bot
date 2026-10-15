@@ -36,7 +36,9 @@ const {
 } = svc;
 
 const realFetch = globalThis.fetch;
-const realDelegates = { translateChannel: prisma.translateChannel, guildSettings: prisma.guildSettings };
+const realDelegates = {
+  translateChannel: prisma.translateChannel, guildSettings: prisma.guildSettings, $transaction: prisma.$transaction, $queryRaw: prisma.$queryRaw,
+};
 
 after(async () => {
   globalThis.fetch = realFetch;
@@ -733,6 +735,9 @@ describe('/autotranslate', () => {
         return row;
       },
     };
+    // saveTranslateChannel runs its cap check and upsert in a transaction (the advisory lock is a no-op here).
+    prisma.$transaction = async (fn) => fn(prisma);
+    prisma.$queryRaw = async () => [];
     db = { rows, settings };
   });
 

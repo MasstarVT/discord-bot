@@ -8,7 +8,7 @@ import { getSettingsSafe, isModuleEnabled } from '../../services/settingsService
 import { isRewardAvailable } from '../../services/rewards.js';
 import * as auto from '../../services/automationService.js';
 import {
-  respondAutocomplete, awaitConfirm, checkChannelUsable, checkAssignableRole, permissionNames, pingableRoleIds, safeDefer, isInteractionGone,
+  respondAutocomplete, awaitConfirm, checkChannelUsable, checkAssignableRole, permissionNames, safeDefer, isInteractionGone,
 } from '../../utils/interactionHelpers.js';
 import {
   successEmbed, errorEmbed, warnEmbed, guildEmbed,
@@ -139,6 +139,7 @@ const E = {
     ? `I need **${permissionNames(missing).join(', ')}** in ${channel ? `<#${channel.id}>` : 'that channel'} for that.`
     : (reason ?? 'I cannot use that channel.')),
   reward: (kind) => errorEmbed('Not Available', `${kind === 'xp' ? 'XP' : 'Coin'} rewards need the ${kind === 'xp' ? 'Levels' : 'Economy'} module. Turn it on with \`/module enable ${kind === 'xp' ? 'leveling' : 'economy'}\`.`),
+  noAccess: (text) => errorEmbed('No Access', text),
   db: () => errorEmbed('Something Went Wrong', 'I could not do that right now. Please try again in a moment.'),
 };
 
@@ -162,6 +163,7 @@ function embedForError(err, ctx) {
       case 'NAME': return E.name();
       case 'NOACTIONS': return errorEmbed('No Actions', err.message);
       case 'NOSUCH': return errorEmbed(ctx.removeKind === 'condition' ? 'No Such Condition' : 'No Such Action', err.message);
+      case 'HIERARCHY': return errorEmbed('Role Not Allowed', err.message);
       default: return errorEmbed('Could Not Save', err.message);
     }
   }
@@ -173,6 +175,7 @@ function embedForParams(p) {
   switch (p.errorKind) {
     case 'perms': return E.perms(p.missing, p.channel, p.error);
     case 'role': return errorEmbed('Role Not Allowed', p.error);
+    case 'ping': return errorEmbed('Role Not Pingable', p.error);
     case 'reward': return E.reward(p.rewardKind);
     case 'embed': return errorEmbed('Embed Not Found', `There is no saved embed called **${p.embedName}**. See \`/embed list\`.`);
     default: return errorEmbed('Invalid Value', p.error);
@@ -188,15 +191,14 @@ const summaryOf = (row, { guild, settings }) => {
 /** The shared tail of a success description. */
 const tail = (ctx, { disabledName = null, ignored = [] } = {}) => `${disabledName ? offLine(disabledName) : ''}${ignoredLine(ignored)}${ctx.moduleOff ? MODULE_OFF_LINE : ''}`;
 
-/** Configuration-time half of the role-ping rule (the send-time half runs in the service): roles typed in a message that will not ping. */
-function rolePingNote(interaction, content, channel) {
-  const ids = [...new Set([...String(content ?? '').matchAll(/<@&(\d{17,20})>/g)].map((m) => m[1]))];
-  if (!ids.length) return '';
-  const target = channel ? (interaction.guild.channels.cache.get(channel.id) ?? channel) : interaction.channel;
-  const { refused } = pingableRoleIds(target, interaction.member, ids);
-  return refused.length
-    ? `\n⚠️ These roles will not be pinged (they are not mentionable and you cannot mention every role there): ${refused.map((id) => `<@&${id}>`).join(' ')}`
-    : '';
+/**
+ * An automation that gives or takes a role at or above the admin's highest role cannot be changed, enabled or disabled by that
+ * admin (the guild owner is exempt). Runs on the locked row inside every mutation, so the check sees what is really stored.
+ */
+function guardRoles(ctx, cur) {
+  if (!cur.actions.some((a) => a.roleIds?.length)) return;
+  const problem = auto.importRoleHierarchyProblem(ctx.guild, ctx.interaction.member, cur.actions);
+  if (problem) throw new AutomationError(`${problem}\nThis automation gives or takes a role at or above your highest role, so you cannot change it.`, 'HIERARCHY');
 }
 
 function nameFrom(ctx, optionName = 'name') {
@@ -242,6 +244,8 @@ async function create(ctx) {
       const rc = checkAssignableRole(guild, guild.roles.cache.get(role.id) ?? role, { executor: interaction.member });
       if (!rc.ok) return send(interaction, errorEmbed('Role Not Allowed', rc.reason));
     }
+    const ping = auto.rolePingRefusal(interaction.member, fullChannel, message);
+    if (ping) return send(interaction, errorEmbed('Role Not Pingable', ping));
     Object.assign(opts, { channelId: channel.id, message: message?.trim() || null, roleId: role?.id ?? null });
   } else if (preset === 'starboard') {
     if (!channel) return send(interaction, errorEmbed('Channel Needed', 'The Starboard preset needs a channel to repost to.'));
@@ -265,6 +269,8 @@ async function create(ctx) {
   }
 
   const built = auto.buildPresetAutomation(preset, opts);
+  const access = auto.actionChannelAccessProblem(guild, interaction.member, built.actions);
+  if (access) return send(interaction, E.noAccess(access));
   const row = await auto.createAutomation(guildId, { name, ...built, enabled: true, cooldownSeconds: 0 }, interaction.user.id);
   return send(interaction, successEmbed('Automation Created', `${summaryOf(row, { guild, settings })}${tail(ctx, { ignored })}`));
 }
@@ -294,6 +300,7 @@ async function edit(ctx) {
     ctx.name = newName;   // a P2002 on the rename reports the new name
   }
   const { row, result } = await auto.mutateAutomation(guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     const patch = {};
     if (newName && newName !== cur.name) patch.name = newName;
     if (cooldown !== null && cooldown !== cur.cooldownSeconds) patch.cooldownSeconds = cooldown;
@@ -326,6 +333,7 @@ async function conditionAdd(ctx) {
   const p = await auto.conditionParamsFromOptions(type, opts, { guild, member: interaction.member, settings, row });
   if (!p.ok) return send(interaction, embedForParams(p));
   const { row: saved, result } = await auto.mutateAutomation(guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     const r = auto.addCondition(cur, type, p.params);
     return { data: r.addedNew ? { conditions: r.conditions } : {}, result: r };
   });
@@ -345,6 +353,7 @@ async function conditionRemove(ctx) {
   const index = interaction.options.getInteger('index', true);
   ctx.removeKind = 'condition';
   const { row, result } = await auto.mutateAutomation(guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     if (index < 1 || index > cur.conditions.length) {
       throw new AutomationError(`**${name}** has ${cur.conditions.length} condition(s).`, 'NOSUCH');
     }
@@ -373,9 +382,12 @@ async function actionAdd(ctx) {
     emoji: o.getString('emoji'), amount: o.getInteger('amount'), embed: o.getString('embed'),
     buttonLabel: o.getString('button_label'), buttonUrl: o.getString('button_url'),
   };
-  const p = await auto.actionParamsFromOptions(type, opts, { guild, member: interaction.member, settings, row });
+  const p = await auto.actionParamsFromOptions(type, opts, { guild, member: interaction.member, settings, row, channel: interaction.channel });
   if (!p.ok) return send(interaction, embedForParams(p));
+  const access = auto.actionChannelAccessProblem(guild, interaction.member, [{ type, ...p.params }], { first: row.actions.length + 1 });
+  if (access) return send(interaction, E.noAccess(access));
   const { row: saved, result } = await auto.mutateAutomation(guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     const r = auto.appendAction({ ...cur, buttonSeq: cur.buttonSeq }, { type, ...p.params });
     return { data: { actions: r.actions, ...(r.buttonSeq != null ? { buttonSeq: r.buttonSeq } : {}) }, result: r };
   });
@@ -383,9 +395,8 @@ async function actionAdd(ctx) {
   const buttonNote = result.buttonIndex != null
     ? `\nIts button number is **${result.buttonIndex}**: use it in a "Button clicked" automation with the condition "Clicked this button".`
     : '';
-  const pingNote = rolePingNote(interaction, action.content, opts.channel);
   return send(interaction, successEmbed('Action Added',
-    `Action ${result.index} of **${name}**: ${describeAction(action, { guild, settings })}${buttonNote}${pingNote}${tail(ctx, { disabledName: saved.enabled ? null : name, ignored: p.ignored })}`));
+    `Action ${result.index} of **${name}**: ${describeAction(action, { guild, settings })}${buttonNote}${tail(ctx, { disabledName: saved.enabled ? null : name, ignored: p.ignored })}`));
 }
 
 async function actionRemove(ctx) {
@@ -395,6 +406,7 @@ async function actionRemove(ctx) {
   const index = interaction.options.getInteger('index', true);
   ctx.removeKind = 'action';
   const { row, result } = await auto.mutateAutomation(guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     if (index < 1 || index > cur.actions.length) {
       throw new AutomationError(`**${name}** has ${cur.actions.length} action(s).`, 'NOSUCH');
     }
@@ -452,6 +464,7 @@ async function setEnabled(ctx, enable) {
   const name = nameFrom(ctx);
   if (!name) return send(interaction, E.name());
   const { row, result } = await auto.mutateAutomation(ctx.guildId, name, (cur) => {
+    guardRoles(ctx, cur);
     if (enable && cur.actions.length === 0) throw new AutomationError(ERROR_TEXTS.needsActions, 'NOACTIONS');
     if (cur.enabled === enable) return { data: {}, result: { unchanged: true } };
     return { data: { enabled: enable }, result: { unchanged: false } };
@@ -517,11 +530,23 @@ async function importJson(ctx) {
   const parsed = auto.parseAutomationJson(text);
   if (!parsed.ok) return send(interaction, errorEmbed('Invalid JSON', parsed.errors.slice(0, 10).map((e) => `• ${e}`).join('\n')));
 
+  // Same hierarchy rule as `action add` / the Welcomer preset: an import must not hand out a role above the importer's own.
+  const escalation = auto.importRoleHierarchyProblem(guild, interaction.member, parsed.data.actions);
+  if (escalation) return send(interaction, errorEmbed('Role Not Allowed', escalation));
+  // The importer must also be allowed to post where the file posts, and to ping the roles it pings.
+  const access = auto.actionChannelAccessProblem(guild, interaction.member, parsed.data.actions);
+  if (access) return send(interaction, E.noAccess(access));
+  const pingProblem = auto.importRolePingProblem(guild, interaction.member, parsed.data.actions, { fallbackChannel: interaction.channel });
+  if (pingProblem) return send(interaction, errorEmbed('Role Not Pingable', pingProblem));
+
   const name = normalizeAutomationName(o.getString('name') ?? parsed.data.name ?? '');
   if (!name) return send(interaction, E.name());
   ctx.name = name;
   const existing = await auto.getAutomationByName(guildId, name);
   if (existing && !overwrite) return send(interaction, E.taken(name, ' Add overwrite:True to replace it.'));
+  // Replacing is a write to the existing automation: refused when it gives or takes a role the importer outranks.
+  const replaced = existing && existing.actions.some((a) => a.roleIds?.length) ? auto.importRoleHierarchyProblem(guild, interaction.member, existing.actions) : null;
+  if (replaced) return send(interaction, errorEmbed('Role Not Allowed', `${replaced}\nThe automation you would replace gives or takes a role at or above your highest role.`));
 
   const { data, warnings, info: notes } = await auto.resolveImportReferences(guild, parsed.data, { settings, existingRow: existing });
   const enabled = parsed.data.enabled && warnings.length === 0 && data.actions.length > 0;

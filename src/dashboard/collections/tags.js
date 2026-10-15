@@ -173,6 +173,9 @@ export const collection = Object.freeze({
   ]),
   actions: Object.freeze([]),
   check: checkTag,
+  // Any update re-checks every role the saved command gives or takes against the user's highest role (server.js
+  // verifyStoredRoles), so enabling or editing an existing command cannot be done by someone it outranks.
+  checkStoredRoles: true,
 });
 
 /**

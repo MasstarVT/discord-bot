@@ -66,7 +66,7 @@ export const store = Object.freeze({
       where.targetUserId = { in: ids };
     }
     const after = CURSOR_RE.exec(String(cursor ?? ''));
-    if (after) where.caseId = { lt: Number(after[1]) };
+    if (after) where.caseId = { lt: Math.min(Number(after[1]), MAX_CASE_ID) };
     const rows = await prisma.infraction.findMany({ where, orderBy: { caseId: 'desc' }, take: PAGE_SIZE + 1 });
     const page = rows.slice(0, PAGE_SIZE);
     const items = await toItems(page, discord, logger);

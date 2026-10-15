@@ -620,29 +620,52 @@ export async function tickGuild(client, guild, { now = new Date() } = {}) {
   });
   const { keep, expired } = partitionMarkers(markers, { enabled, roleId: role ? roleId : null, local, tz });
 
-  let candidates = [];
+  // 4. Members. A throw propagates before anything was changed. An id missing from the map has left the guild.
+  const members = new Map();
+  const asked = new Set();
+  const loadMembers = async (userIds) => {
+    const wanted = [...new Set(userIds)].filter((id) => !asked.has(id));
+    if (!wanted.length) return;
+    for (const id of wanted) asked.add(id);
+    for (const [id, member] of await fetchMembers(guild, wanted)) members.set(id, member);
+  };
+  const markerIds = [...keep, ...expired].map((r) => r.userId);
+
+  // Today's candidates, in pages by userId. Members who left (or bots) are never claimed, so a later tick re-checks them, but they
+  // are paged past here: 50+ of them sharing today's date must not fill the batch and starve the members behind them.
+  const candidates = [];
   if (enabled && (channel || role) && local.hour >= hour) {
-    candidates = await prisma.birthday.findMany({
-      where: {
-        guildId: guild.id,
-        AND: [
-          { OR: todayMatchers(local) },
-          { OR: [{ lastAnnouncedYear: null }, { lastAnnouncedYear: { lt: local.year } }] },
-        ],
-      },
-      orderBy: { userId: 'asc' },
-      take: MAX_EVENTS_PER_TICK + 1,
-      select: { id: true, userId: true, month: true, day: true, year: true },
-    });
-    if (candidates.length > MAX_EVENTS_PER_TICK) {
-      candidates = candidates.slice(0, MAX_EVENTS_PER_TICK);
-      more = true;
+    const where = {
+      guildId: guild.id,
+      AND: [
+        { OR: todayMatchers(local) },
+        { OR: [{ lastAnnouncedYear: null }, { lastAnnouncedYear: { lt: local.year } }] },
+      ],
+    };
+    let cursor = null;
+    let first = true;
+    scan: for (;;) {
+      const page = await prisma.birthday.findMany({
+        where: cursor === null ? where : { ...where, userId: { gt: cursor } },
+        orderBy: { userId: 'asc' },
+        take: MAX_EVENTS_PER_TICK + 1,
+        select: { id: true, userId: true, month: true, day: true, year: true },
+      });
+      if (!page.length) break;
+      cursor = page[page.length - 1].userId;
+      await loadMembers(first ? [...page.map((r) => r.userId), ...markerIds] : page.map((r) => r.userId)); // one gateway request for the first page
+      first = false;
+      for (const row of page) {
+        const member = members.get(row.userId);
+        if (!member || member.user?.bot) continue;
+        if (candidates.length >= MAX_EVENTS_PER_TICK) { more = true; break scan; }
+        candidates.push(row);
+      }
+      if (page.length <= MAX_EVENTS_PER_TICK) break; // the last page
+      if (outOfTime()) { more = true; break; }
     }
   }
-
-  // 4. Members. A throw propagates before anything was changed. An id missing from the result has left the guild.
-  const ids = [...new Set([...candidates, ...keep, ...expired].map((r) => r.userId))];
-  const members = ids.length ? await fetchMembers(guild, ids) : new Map();
+  await loadMembers(markerIds);
 
   // 5. Expired markers: remove the role (also while the module is off).
   for (const m of expired) {
@@ -661,14 +684,10 @@ export async function tickGuild(client, guild, { now = new Date() } = {}) {
     if (res !== 'keep') await clearMarker(m);
   }
 
-  // 6. Claim today's celebrations. Members who left are skipped and not claimed, so later ticks of the day re-check them.
-  const eligible = candidates.filter((r) => {
-    const member = members.get(r.userId);
-    return member && !member.user?.bot;
-  });
+  // 6. Claim today's celebrations (`candidates` holds only present, non-bot members; the others stay unclaimed, so later ticks re-check them).
   let claimed = [];
-  if (eligible.length) {
-    claimed = await claimBirthdays({ guildId: guild.id, ids: eligible.map((r) => r.id), year: local.year, setMarker: Boolean(role) });
+  if (candidates.length) {
+    claimed = await claimBirthdays({ guildId: guild.id, ids: candidates.map((r) => r.id), year: local.year, setMarker: Boolean(role) });
   }
 
   // 7. Announce. Without a usable channel the claims are completed silently (the role is still granted; /birthday-config show reports it).

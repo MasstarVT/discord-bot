@@ -188,17 +188,37 @@ export function decodeXmlBuffer(buffer, contentType = '') {
   return out.charCodeAt(0) === 0xfeff ? out.slice(1) : out;
 }
 
+/**
+ * Index in `s` after any leading `<!-- … -->` comments and the whitespace behind them, in one linear pass. (A regex
+ * `(<!--[\s\S]*?-->\s*)*` backtracks exponentially on a body of `<!---->` repeats that ends in anything else.)
+ */
+function skipLeadingComments(s, from = 0) {
+  let i = from;
+  while (s.startsWith('<!--', i)) {
+    const end = s.indexOf('-->', i + 4);
+    if (end === -1) break;
+    i = end + 3;
+    while (i < s.length && /\s/.test(s[i])) i++;
+  }
+  return i;
+}
+
 /** True for an HTML page (content type, or a leading doctype / html tag). */
 export function looksLikeHtml(textBody, contentType = '') {
   const head = String(textBody ?? '').slice(0, 1000).trim();
   if (/text\/html|application\/xhtml/i.test(String(contentType ?? ''))) {
     // Some servers label a real feed text/html: trust the body when it starts like one.
-    return !/^(<\?xml[^>]*\?>\s*)?(<!--[\s\S]*?-->\s*)*<(rss|feed|rdf:RDF)[\s>]/i.test(head);
+    const decl = /^<\?xml[^>]*\?>\s*/i.exec(head);
+    const rest = head.slice(skipLeadingComments(head, decl ? decl[0].length : 0));
+    return !/^<(rss|feed|rdf:RDF)[\s>]/i.test(rest);
   }
-  return /^(<!--[\s\S]*?-->\s*)*<!doctype html|^(<!--[\s\S]*?-->\s*)*<html[\s>]/i.test(head);
+  const rest = head.slice(skipLeadingComments(head));
+  return /^<!doctype html/i.test(rest) || /^<html[\s>]/i.test(rest);
 }
 
-const ATTR_RE = /([^\s"'<>/=]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+))/g;
+// Name length and tag length are bounded: an unbounded name makes the scan quadratic on one huge `<link aaaa…>` token.
+const ATTR_RE = /([^\s"'<>/=]{1,100})\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+))/g;
+const LINK_TAG_MAX = 4096;
 
 /**
  * RSS and Atom links an HTML page advertises (`<link rel="alternate" type="application/rss+xml">`),
@@ -211,6 +231,7 @@ export function discoverFeedLinks(html, baseUrl) {
   const found = [];
   const head = String(html ?? '').slice(0, HTML_SCAN_MAX);
   for (const tag of head.matchAll(/<link\b[^<>]*>/gi)) {
+    if (tag[0].length > LINK_TAG_MAX) continue;
     const attrs = {};
     for (const m of tag[0].matchAll(ATTR_RE)) attrs[m[1].toLowerCase()] ??= m[2] ?? m[3] ?? m[4] ?? '';
     if (!/(^|\s)alternate(\s|$)/i.test(attrs.rel ?? '')) continue;

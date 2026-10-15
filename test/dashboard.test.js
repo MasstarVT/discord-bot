@@ -2437,9 +2437,25 @@ describe('HTTP role checks across fields', () => {
       return m ? `actions.${data.actions[Number(m[1])].type}|${ref.id}` : schema.refKey(ref.path, ref.id);
     },
   });
+  // A collection that opts in to re-checking every role of the saved record (automations and custom commands do).
+  const LOCKS = Object.freeze({
+    key: 'locks', module: 'embeds', label: 'Locks', singular: 'lock', description: '', limit: 5, titleField: 'name',
+    fields: [
+      { field: 'name', type: 'text', label: 'Name', maxLength: 32, minLength: 1, required: true },
+      { field: 'enabled', type: 'boolean', label: 'Enabled', default: true },
+      {
+        field: 'actions', type: 'objectList', label: 'Actions', maxItems: 5, default: [],
+        itemFields: [{ field: 'roleId', type: 'role', label: 'Role', assignable: true, nullable: true, default: null }],
+      },
+    ],
+    createOnly: [], readOnly: [], actions: [], checkStoredRoles: true,
+  });
   const items = new Map([
     ['p1', { id: 'p1', name: 'One', pingRoleIds: [RL.admin, RL.mid], roleId: null, rewardRoleId: null }],
     ['a1', { id: 'a1', actions: [{ type: 'TAKE', roleIds: [RL.mid] }, { type: 'GIVE', roleIds: [RL.admin] }] }],
+    ['l-high', { id: 'l-high', name: 'High', enabled: false, actions: [{ roleId: RL.low }, { roleId: RL.mid }] }],
+    ['l-low', { id: 'l-low', name: 'Low', enabled: false, actions: [{ roleId: RL.low }] }],
+    ['n-high', { id: 'n-high', name: 'NoFlag', enabled: false, pingRoleIds: [], roleId: RL.mid, rewardRoleId: null }],
   ]);
   const records = {
     async get(guildId, key, id) { return items.get(id) ?? null; },
@@ -2452,7 +2468,7 @@ describe('HTTP role checks across fields', () => {
   const validateRecordInput = (key, data) => {
     const refs = schema.emptyRefs();
     const out = {};
-    const list = key === 'acts' ? ACTS.fields : PERKS.fields;
+    const list = ({ acts: ACTS, locks: LOCKS }[key] ?? PERKS).fields;
     for (const f of list) if (Object.hasOwn(data, f.field)) out[f.field] = schema.validateValue(f, data[f.field], f.field, refs);
     return { data: out, refs };
   };
@@ -2461,7 +2477,7 @@ describe('HTTP role checks across fields', () => {
   before(async () => {
     server = createDashboardServer({
       config, logger: recordingLogger(),
-      deps: { discord: fakes.discord, settings: fakes.settings, records, collections: { COLLECTIONS: { perks: PERKS, acts: ACTS }, validateRecordInput } },
+      deps: { discord: fakes.discord, settings: fakes.settings, records, collections: { COLLECTIONS: { perks: PERKS, acts: ACTS, locks: LOCKS }, validateRecordInput } },
     });
     port = await listen(server);
   });
@@ -2513,6 +2529,33 @@ describe('HTTP role checks across fields', () => {
     assert.equal(flipped.status, 400);
     assert.equal(flipped.json.path, 'actions.0.roleIds.0');
     assert.match(flipped.json.message, /not below your highest role/);
+  });
+
+  test('a collection that opts in re-checks every role of the saved record on any update (enabling, renaming, editing)', async () => {
+    const high = `/api/guilds/${G.zeta}/records/locks/l-high`;
+    const low = `/api/guilds/${G.zeta}/records/locks/l-low`;
+    // The record holds a role at the member's highest role: even an enable-only change (no role in the request) is refused.
+    const enable = await send('PATCH', high, { data: { enabled: true } });
+    assert.equal(enable.status, 400);
+    assert.match(enable.json.message, /gives or takes a role that is not below your highest role/);
+    assert.equal(enable.json.path, undefined, 'the request names no role field');
+    assert.equal(items.get('l-high').enabled, false, 'nothing was saved');
+    const rename = await send('PATCH', high, { data: { name: 'Renamed' } });
+    assert.equal(rename.status, 400);
+    // Sending the held role back unchanged does not get it past the check either; the error points at the field.
+    const same = await send('PATCH', high, { data: { actions: [{ roleId: RL.low }, { roleId: RL.mid }] } });
+    assert.equal(same.status, 400);
+    assert.equal(same.json.path, 'actions.1.roleId');
+    // Taking the high role out of the record is allowed: what is saved holds only roles below the member's own.
+    const trimmed = await send('PATCH', high, { data: { actions: [{ roleId: RL.low }] } });
+    assert.equal(trimmed.status, 200, trimmed.json?.message);
+
+    assert.equal((await send('PATCH', low, { data: { enabled: true } })).status, 200, 'a record of lower roles can be enabled');
+    // The guild owner is exempt.
+    items.set('l-high', { id: 'l-high', name: 'High', enabled: false, actions: [{ roleId: RL.mid }] });
+    assert.equal((await send('PATCH', high, { data: { enabled: true } }, GUILD_OWNER)).status, 200);
+    // A collection without the flag keeps the old behaviour: only new roles are checked.
+    assert.equal((await send('PATCH', `/api/guilds/${G.zeta}/records/perks/n-high`, { data: { name: 'Quiet' } })).status, 200);
   });
 
   test('an empty required text says so', () => {

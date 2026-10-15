@@ -32,8 +32,10 @@ export async function execute(interaction) {
 
   const lines = rows.map((row, i) => `${i < 3 ? MEDALS[i] : `**#${i + 1}**`} <@${row.userId}> — ${formatCoins(row.balance, settings)}`);
   const acc = await peekAccount(guildId, user.id, settings);
+  // Listed members get their list position: getRank shares a rank between tied balances, so it could disagree with the list.
+  const listed = rows.findIndex((r) => r.userId === user.id);
   const footer = acc.exists && acc.balance > 0
-    ? `Your rank: #${formatNumber(await getRank(guildId, acc.balance))} · ${formatCoins(acc.balance, settings, { bold: false })}`
+    ? `Your rank: #${formatNumber(listed >= 0 ? listed + 1 : await getRank(guildId, acc.balance))} · ${formatCoins(acc.balance, settings, { bold: false })}`
     : undefined;
 
   const pages = [];
