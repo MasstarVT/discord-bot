@@ -29,7 +29,7 @@ test('looksLikeHtml: a body of comment repeats cannot make the check backtrack e
   assert.equal(P.looksLikeHtml(hostile, 'text/html'), true);
   assert.equal(P.looksLikeHtml('<!-- a -->'.repeat(90) + '<html>', ''), true);
   assert.equal(P.looksLikeHtml('<!-- '.repeat(190), 'application/xml'), false);
-  assert.ok(Date.now() - t0 < 500, `took ${Date.now() - t0} ms`);
+  assert.ok(Date.now() - t0 < 3000, `took ${Date.now() - t0} ms`);
 });
 
 test('looksLikeHtml: the rules are unchanged (comments, XML declaration, mislabelled feeds)', () => {
@@ -50,7 +50,7 @@ test('discoverFeedLinks: one huge attribute-like token cannot make the scan quad
   assert.deepEqual(P.discoverFeedLinks(`<link ${'a'.repeat(190_000)}>`, 'https://a.test/'), []);
   assert.deepEqual(P.discoverFeedLinks(`<link rel="alternate" type="application/rss+xml" ${'b'.repeat(5000)} href="/late.xml">`, 'https://a.test/'), [],
     'a tag longer than 4096 characters is not a link tag worth reading');
-  assert.ok(Date.now() - t0 < 500, `took ${Date.now() - t0} ms`);
+  assert.ok(Date.now() - t0 < 3000, `took ${Date.now() - t0} ms`);
   assert.deepEqual(
     P.discoverFeedLinks('<link rel="alternate" type="application/rss+xml" title="x" href="/feed.xml">', 'https://a.test/blog/'),
     ['https://a.test/feed.xml'],
@@ -74,13 +74,15 @@ test('buildItemEmbed: a feed summary cannot form a masked link or a heading in t
 
 test('search text cleaners: a long third-party body is cut first, so no pass is quadratic', () => {
   // 200 000 spaces took ~13 s in stripAniListHtml; `[`.repeat(200 000) ~12 s in discord.js's masked-link escape; `~!x` repeats ~3.5 s.
+  // The limits are wide on purpose: CI runs test files in parallel on a slow runner (1.8 s seen for 0.16 s of local work), and the
+  // unfixed code took 30 s or more.
   const t0 = Date.now();
   Search.stripAniListHtml(`${' '.repeat(200_000)}a`);
   Search.stripAniListHtml('~!x'.repeat(100_000));
   Search.stripAniListHtml('['.repeat(200_000));
   Search.cleanUrbanText('['.repeat(200_000), 1800);
   Search.cleanUrbanText('[a'.repeat(100_000), 1800);
-  assert.ok(Date.now() - t0 < 1500, `took ${Date.now() - t0} ms`);
+  assert.ok(Date.now() - t0 < 6000, `took ${Date.now() - t0} ms`);
   // The visible part is unchanged: the text that survives the clamp comes from the start.
   assert.equal(Search.stripAniListHtml('First line<br>Second ~!secret!~ end'), 'First line\nSecond ||secret|| end');
   const out = Search.stripAniListHtml(`${'word '.repeat(300)}~!late spoiler`);
