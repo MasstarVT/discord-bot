@@ -699,6 +699,8 @@ test('DB: through runHooks the join hook enqueues first, so join then leave keep
     const leave = runHooks('guildMemberRemove', { client: g.client, guild: g, member, user: member.user });
     const [joinCtx] = await Promise.all([join, leave]);
     assert.deepEqual(joinCtx.state.invite, { code: 'A', inviterId: 'U1', vanity: false });
+    // The leave hook is fire-and-forget, so its write may still be running: a no-op leave queued behind it waits it out.
+    await trackLeave(g, 'queue-fence');
     const r = await getJoinRecord(gid, 'hooked');
     assert.equal(r.inviterId, 'U1');
     assert.notEqual(r.leftAt, null, 'leftAt was set after the join row existed');
