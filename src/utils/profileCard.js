@@ -89,7 +89,7 @@ async function fetchBackground(url) {
   const img = await loadImage(buffer);
   const canvas = createCanvas(W, H);
   drawCover(canvas.getContext('2d'), img);
-  return canvas.toBuffer('image/png');
+  return canvas.encode('png'); // encoded off the main thread, so a large crop never stalls the shard's events
 }
 
 /**
@@ -338,7 +338,8 @@ export async function generateProfileCard({
   const totalW = ctx.measureText(totalText).width;
   ctx.fillText(totalText, BAR_X + BAR_W - totalW, BAR_Y + BAR_H + 22);
 
-  return canvas.toBuffer('image/png');
+  // encode() compresses on a worker thread; toBuffer() would block every other event of this shard meanwhile.
+  return canvas.encode('png');
 }
 
 // ── Canvas helpers ────────────────────────────────────────────────────────────

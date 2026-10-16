@@ -161,7 +161,14 @@ async function onMemberJoin(ctx) {
   if (!(await ready(ctx, 'memberJoin'))) return;
   // ctx.state.invite: { code, inviterId, vanity } | null (unknown) | undefined (the invites module recorded
   // nothing). Passed through untouched: the builder omits the field for undefined and says Unknown for null.
-  await emit(ctx, 'memberJoin', buildMemberJoinEmbed({ member: ctx.member, invite: ctx.state.invite, now: Date.now() }));
+  const now = Date.now();
+  const send = (invite) => emit(ctx, 'memberJoin', buildMemberJoinEmbed({ member: ctx.member, invite, now }));
+  const pending = ctx.state.invitePromise;
+  if (!pending) return send(ctx.state.invite);
+  // Attribution is still running (see the invites plugin): post the log when it settles instead of holding up the
+  // captcha and welcome hooks that run after this one. invitePromise never rejects.
+  void pending.then(send).catch((err) => logger.error('logging: member join log failed', err));
+  return undefined;
 }
 
 async function onMemberLeave(ctx) {

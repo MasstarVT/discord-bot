@@ -6,6 +6,7 @@ import { missingBotPermissions } from '../utils/interactionHelpers.js';
 import { createThrottle } from '../utils/async.js';
 import { formatNumber } from '../utils/text.js';
 import logger from '../utils/logger.js';
+import { peekSettings } from '../services/settingsService.js';
 import {
   runLocked, parseCount, currentState, judgeCount, loadState, saveState,
 } from '../services/countingService.js';
@@ -60,14 +61,30 @@ export async function postNote(channel, embed) {
   }
 }
 
-/** Judges one message in the counting channel. Runs under the guild's lock. */
-export async function handleCount(ctx) {
+/**
+ * Sync hook filter: false when the memoised settings name another counting channel (or none), so chat elsewhere never
+ * waits on the guild's counting lock. Without a memo it passes and the handler checks after loading the settings.
+ * @param {object} ctx HookContext with `message`
+ * @returns {boolean}
+ */
+export function inCountingChannel(ctx) {
+  const settings = peekSettings(ctx.guildId);
+  if (!settings) return true;
+  return Boolean(settings.countingChannelId) && settings.countingChannelId === ctx.message?.channelId;
+}
+
+/**
+ * Judges one message in the counting channel and saves the new state. Runs under the guild's lock. Returns the replies
+ * (reactions, notes) to send once the lock is released, so REST calls never hold up the next count; null for none.
+ * @returns {Promise<(() => Promise<void>)|null>}
+ */
+export async function judgeMessage(ctx) {
   const { message, guildId } = ctx;
   const settings = await ctx.getSettings();
   const channelId = settings?.countingChannelId;
-  if (!channelId || message.channelId !== channelId) return;
+  if (!channelId || message.channelId !== channelId) return null;
   const number = parseCount(message.content);
-  if (number === null) return;
+  if (number === null) return null;
 
   const state = currentState(await loadState(guildId), channelId);
   const verdict = judgeCount(state, message.author.id, number);
@@ -76,22 +93,31 @@ export async function handleCount(ctx) {
     await saveState(guildId, {
       channelId, count: number, lastUserId: message.author.id, lastMessageId: message.id, best: Math.max(state.best, number),
     });
-    await react(message, COUNTING.OK_EMOJI);
-    return;
+    return () => react(message, COUNTING.OK_EMOJI);
   }
 
   if (state.count === 0) {
     // Nothing to lose yet: no reset and no public shaming, just a hint now and then.
-    await react(message, COUNTING.FAIL_EMOJI);
-    if (startHint(channelId)) await postNote(message.channel, infoEmbed('Counting', 'The count starts at **1**.'));
-    return;
+    const hint = startHint(channelId);
+    return async () => {
+      await react(message, COUNTING.FAIL_EMOJI);
+      if (hint) await postNote(message.channel, infoEmbed('Counting', 'The count starts at **1**.'));
+    };
   }
 
   await saveState(guildId, { channelId, count: 0, lastUserId: null, lastMessageId: null, best: state.best });
-  await react(message, COUNTING.FAIL_EMOJI);
-  await postNote(message.channel, errorEmbed('Count Ruined', ruinedText({
-    userId: message.author.id, count: state.count, reason: verdict.reason, expected: verdict.expected, best: state.best,
-  })));
+  return async () => {
+    await react(message, COUNTING.FAIL_EMOJI);
+    await postNote(message.channel, errorEmbed('Count Ruined', ruinedText({
+      userId: message.author.id, count: state.count, reason: verdict.reason, expected: verdict.expected, best: state.best,
+    })));
+  };
+}
+
+/** Judges one message in the counting channel, then sends its replies (outside any lock). */
+export async function handleCount(ctx) {
+  const reply = await judgeMessage(ctx);
+  if (reply) await reply();
 }
 
 /** Tells the channel the next number when the message holding the current count is deleted. */
@@ -114,13 +140,15 @@ export const plugin = {
     {
       event: 'messageCreate',
       id: 'counting', // HOOK_ORDER.messageCreate: right after automod, so counts keep their gateway order
-      filter: (ctx) => looksLikeCount(ctx.message),
-      // Take the lock before any await: the order messages enter it is the order they are judged.
-      run: (ctx) => runLocked(ctx.guildId, () => handleCount(ctx)),
+      filter: (ctx) => looksLikeCount(ctx.message) && inCountingChannel(ctx),
+      // Take the lock before any await: the order messages enter it is the order they are judged. The reaction and
+      // any note are sent after the lock is released.
+      run: (ctx) => runLocked(ctx.guildId, () => judgeMessage(ctx)).then((reply) => reply?.()),
     },
     {
       event: 'messageDelete',
       id: 'counting',
+      filter: inCountingChannel,
       run: (ctx) => runLocked(ctx.guildId, () => handleDelete(ctx)),
     },
   ],

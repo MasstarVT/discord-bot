@@ -20,9 +20,10 @@ const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const { buildCommandPayload } = await import('../src/handlers/commandLoader.js');
 const { HOOK_ORDER } = await import('../src/config/hookPoints.js');
 const { PERMISSION_LEVELS } = await import('../src/config/constants.js');
+const { updateSettings } = await import('../src/services/settingsService.js');
 
 const { parseCount, currentState, judgeCount, COUNT_MAX } = svc;
-const { looksLikeCount, ruinedText, deletedText, handleCount, handleDelete, plugin, COUNTING } = counting;
+const { looksLikeCount, inCountingChannel, ruinedText, deletedText, handleCount, handleDelete, plugin, COUNTING } = counting;
 
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
 console.error = console.warn = console.log = console.debug = console.info = () => {};
@@ -244,6 +245,47 @@ test('deleting the current count posts the next number', async () => {
   assert.equal(ch.sent.length, 1);
   assert.match(noteText(ch.sent[0]), /<@B> deleted their number \*\*2\*\*\. The next number is \*\*3\*\*/);
   assert.equal(rows.get('G7').count, 2, 'the count is kept');
+});
+
+test('the hook filters skip other channels once the settings are memoised', async () => {
+  // Without a memo the filter passes and the handler decides after loading the settings.
+  assert.equal(inCountingChannel({ guildId: 'G8', message: { channelId: 'ANY' } }), true);
+
+  const upsert = prisma.guildSettings.upsert;
+  prisma.guildSettings.upsert = async ({ where, update }) => ({ guildId: where.guildId, ...update });
+  try {
+    await updateSettings('G8', { countingEnabled: true, countingChannelId: 'C8' });
+  } finally {
+    prisma.guildSettings.upsert = upsert;
+  }
+  const create = plugin.hooks.find((h) => h.event === 'messageCreate');
+  const del = plugin.hooks.find((h) => h.event === 'messageDelete');
+  const here = fakeMessage(fakeChannel('C8'), 'A', '5');
+  const elsewhere = fakeMessage(fakeChannel('OTHER'), 'A', '5');
+  assert.equal(create.filter(ctxFor('G8', here, {})), true);
+  assert.equal(create.filter(ctxFor('G8', elsewhere, {})), false, 'a number in another channel never takes the lock');
+  assert.equal(create.filter(ctxFor('G8', fakeMessage(fakeChannel('C8'), 'A', 'hi'), {})), false, 'chat is still skipped');
+  assert.equal(del.filter(ctxFor('G8', { id: '1', channelId: 'C8' }, {})), true);
+  assert.equal(del.filter(ctxFor('G8', { id: '1', channelId: 'OTHER' }, {})), false, 'deletes elsewhere are skipped');
+});
+
+test('the reaction is sent after the lock is released, so a slow reaction never holds up the next count', async () => {
+  const ch = fakeChannel('C9');
+  const settings = { countingEnabled: true, countingChannelId: 'C9' };
+  const hook = plugin.hooks.find((h) => h.event === 'messageCreate');
+  const slow = fakeMessage(ch, 'A', '1');
+  let release = null;
+  slow.react = (emoji) => new Promise((resolve) => { release = () => { slow.reactions.push(emoji); resolve(); }; });
+
+  const first = hook.run(ctxFor('G9', slow, settings));
+  const next = fakeMessage(ch, 'B', '2');
+  await hook.run(ctxFor('G9', next, settings));
+  assert.deepEqual(next.reactions, [COUNTING.OK_EMOJI], 'judged while the first reaction is still pending');
+  assert.equal(rows.get('G9').count, 2);
+  assert.equal(typeof release, 'function', 'the first reaction was started');
+  release();
+  await first;
+  assert.deepEqual(slow.reactions, [COUNTING.OK_EMOJI]);
 });
 
 // ── Declarations ──────────────────────────────────────────────────────────────

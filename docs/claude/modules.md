@@ -46,7 +46,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Code:** `src/plugins/levels.js`, `src/services/xpService.js`, `src/utils/profileCard.js`. `xpForLevel(l) = 5l^2 + 50l + 100`; `levelFromXp`, `xpIntoLevel`; `RAW_SQL`.
 - **XP:** `xpMin`/`xpMax` replace `xpRate`; cooldown `xp:cooldown:{guildId}:{userId}` fails closed. No `grantXp`/`handleVoiceXp` call sites remain.
 - **Voice:** `voice:start:{guildId}:{userId}` = `{ start, channelId }`; recurring job `levels.voiceSweep` (`levels.voiceSweep:{guildId}`). Turning voice XP, `/levelconfig` or `/module disable leveling` off drops open sessions without credit.
-- **Hooks:** `messageCreate:levels`, `voiceStateUpdate:levels`, `roleDelete:levels` (always), `guildReady:levels`.
+- **Hooks:** `messageCreate:levels`, `voiceStateUpdate:levels` (sync filter `voiceChangeMatters` skips 'state' changes that leave deafen alone; other members are re-checked detached, only when a channel has 1-2 listeners), `roleDelete:levels` (always), `guildReady:levels`.
 - **Level-up:** announce modes (`AnnounceMode`) OFF|CURRENT|DM|CHANNEL; message tokens `{player}` `{level}` `{rank}` `{xp}`; emits `levelUp` (`ctx.member` may be null); `provides.xp` reward provider (grant/take).
 
 ### 🏷️ Custom Commands — `customcommands`
@@ -76,7 +76,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 
 ### 📨 Invite Tracker — `invites`
 - **Commands:** `/invites` (gated).
-- **Code:** `src/plugins/invites.js`, `src/services/inviteTracker.js`. `guildMemberAdd:invites` is `always` and sets `ctx.state.invite`; Redis `guild:{guildId}:invites` (7 d), warmed on guildReady and on `/module enable invites` (not on a dashboard toggle).
+- **Code:** `src/plugins/invites.js`, `src/services/inviteTracker.js`. `guildMemberAdd:invites` is `always`, does not await attribution and sets `ctx.state.invitePromise` (never rejects, null after `JOIN_HOOK_WAIT_MS`; only the join log awaits it, detached) and `ctx.state.invite` when it settles; Redis `guild:{guildId}:invites` (7 d), warmed on guildReady and on `/module enable invites` (not on a dashboard toggle).
 - **Rule:** valid = still here or stayed >=24 h; leaving sooner (or self-invite) = fake. `GuildMemberCache` rows are written for every non-bot join.
 
 ### 🧱 Embed Messages — `embeds`
@@ -168,7 +168,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 
 ### 🔢 Counting — `counting`
 - **Commands:** `/counting set|reset|status` (ADMIN); default off, `set` picks `countingChannelId` and turns the module on. `reset number:N` carries on from N (never raises `best`).
-- **Code:** rules and the `CountingState` row (one per guild: `count`, `lastUserId`, `lastMessageId`, `best`) in `src/services/countingService.js`; hooks `messageCreate:counting` (right after automod) and `messageDelete:counting` in `src/plugins/counting.js`.
+- **Code:** rules and the `CountingState` row (one per guild: `count`, `lastUserId`, `lastMessageId`, `best`) in `src/services/countingService.js`; hooks `messageCreate:counting` (right after automod) and `messageDelete:counting` in `src/plugins/counting.js`. Both filter on `inCountingChannel` (`peekSettings`); `judgeMessage` runs under the guild lock and returns the reaction/note, sent after the lock is released.
 - **Rules:** only a message that is just a number (up to 9 digits) counts; anything else is chat. The next number from someone other than the last counter gets ✅; a wrong number or a second count in a row gets ❌ and resets to 0 with a note. At 0 a wrong number only gets ❌ plus a "starts at 1" hint at most once a minute. Deleting the message with the current count posts the next number.
 - **Gotchas:** every count and `/counting set|reset` runs under `runLocked(guildId)`, entered before any await in the hook, so counts are judged in the order they reach the hook; hooks ahead of it (automod) can still swap two near-simultaneous messages. A row whose `channelId` is not `countingChannelId` (changed on the dashboard) starts from 0 and keeps `best`. Edited numbers are not re-judged.
 

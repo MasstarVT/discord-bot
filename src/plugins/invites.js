@@ -18,15 +18,19 @@ export const plugin = {
     // 1st in guildMemberAdd; always:true so join rows (joinedAt, leftAt = null) stay correct while the module is
     // off, and so NOTHING is awaited before trackJoin enqueues (ordering: the per-guild queue order must equal
     // the gateway order, 01-foundation §8.3).
-    { event: 'guildMemberAdd', id: 'invites', always: true, timeoutMs: 10_000,
-      run: async (ctx) => {
+    // The hook does not wait for attribution (a queued REST invite fetch can take seconds): moderation, captcha and
+    // welcome run at once. ctx.state.invitePromise settles with the attribution, or null after JOIN_HOOK_WAIT_MS,
+    // and never rejects; only the join log awaits it. ctx.state.invite is filled in when it settles.
+    { event: 'guildMemberAdd', id: 'invites', always: true,
+      run: (ctx) => {
         ctx.state.invite = null;
         if (ctx.member?.user?.bot) return;                          // D8: bots never use an invite
         const p = trackJoin(ctx.member, {                            // MUST be the first call: it enqueues synchronously
           isEnabled: async () => isModuleEnabled(await ctx.getSettings(), 'invites'),
         });
-        // Stop waiting after JOIN_HOOK_WAIT_MS: later hooks then see null while the queued work still writes the row.
-        ctx.state.invite = await withTimeout(p, JOIN_HOOK_WAIT_MS, 'invite attribution').catch(() => null);
+        ctx.state.invitePromise = withTimeout(p, JOIN_HOOK_WAIT_MS, 'invite attribution')
+          .catch(() => null)
+          .then((invite) => { ctx.state.invite = invite; return invite; });
       } },
 
     // 1st in guildMemberRemove; always:true: leftAt must be recorded even while the module is off.

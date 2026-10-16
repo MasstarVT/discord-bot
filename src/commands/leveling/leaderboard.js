@@ -24,26 +24,45 @@ export const data = new SlashCommandBuilder()
     o.setName('page').setDescription('Page number').setMinValue(1).setMaxValue(20)
   );
 
-export async function execute(interaction) {
-  await interaction.deferReply();
-
-  const { guild, guildId } = interaction;
-  const settings = await getSettings(guildId);
-  const total = await prisma.userLevel.count({ where: { guildId, xp: { gt: 0 } } });
-  if (total === 0) return interaction.editReply({ embeds: [infoEmbed('Leaderboard', 'No one has earned XP in this server yet!')] });
-
-  const rows = await prisma.userLevel.findMany({
-    where: { guildId, xp: { gt: 0 } },
-    orderBy: [{ xp: 'desc' }, { userId: 'asc' }],
-    take: LEADERBOARD_MAX_ROWS,
-    select: { userId: true, xp: true },
-  });
-
-  // Names without per-row REST calls: one gateway request per chunk of 100 members that are not cached yet.
+// Names without per-row REST calls: one gateway request per chunk of 100 members that are not cached yet. The chunks
+// stay sequential so one command never bursts member requests at the gateway. Never throws.
+async function fetchMissingNames(guild, rows) {
   const missing = rows.map((r) => r.userId).filter((id) => !guild.members.cache.has(id));
   for (let i = 0; i < Math.min(missing.length, MEMBER_CHUNK * MAX_MEMBER_CHUNKS); i += MEMBER_CHUNK) {
     await withTimeout(guild.members.fetch({ user: missing.slice(i, i + MEMBER_CHUNK) }), 5000, 'leaderboard members').catch(() => null);
   }
+}
+
+/** The invoker's place when they are outside the top rows; null without XP. */
+async function ownRank(guildId, userId) {
+  const own = await prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId } }, select: { xp: true } });
+  return own && own.xp > 0 ? getRank(guildId, userId, own.xp) : null;
+}
+
+export async function execute(interaction) {
+  await interaction.deferReply();
+
+  const { guild, guildId } = interaction;
+  // The three reads are independent, so they run together instead of one after another.
+  const where = { guildId, xp: { gt: 0 } };
+  const [settings, total, rows] = await Promise.all([
+    getSettings(guildId),
+    prisma.userLevel.count({ where }),
+    prisma.userLevel.findMany({
+      where,
+      orderBy: [{ xp: 'desc' }, { userId: 'asc' }],
+      take: LEADERBOARD_MAX_ROWS,
+      select: { userId: true, xp: true },
+    }),
+  ]);
+  if (total === 0) return interaction.editReply({ embeds: [infoEmbed('Leaderboard', 'No one has earned XP in this server yet!')] });
+
+  // The invoker's own place (when outside the top rows) is looked up while the member names are fetched.
+  const myIndex = rows.findIndex((r) => r.userId === interaction.user.id);
+  const [, myRank] = await Promise.all([
+    fetchMissingNames(guild, rows),
+    myIndex >= 0 ? myIndex + 1 : ownRank(guildId, interaction.user.id),
+  ]);
 
   const lines = rows.map((row, i) => {
     const rank = i + 1;
@@ -54,12 +73,6 @@ export async function execute(interaction) {
   });
 
   // The paginator appends " • Page X/N" to the footer itself (R244), so the footer carries no page text.
-  const myIndex = rows.findIndex((r) => r.userId === interaction.user.id);
-  let myRank = myIndex >= 0 ? myIndex + 1 : null;
-  if (myRank === null) {
-    const own = await prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId: interaction.user.id } }, select: { xp: true } });
-    if (own && own.xp > 0) myRank = await getRank(guildId, interaction.user.id, own.xp);
-  }
   const footer = `Top ${rows.length} of ${formatNumber(total)} ranked members${myRank ? ` · You: #${formatNumber(myRank)}` : ''}`;
 
   const pages = [];

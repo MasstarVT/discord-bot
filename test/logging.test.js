@@ -1179,6 +1179,23 @@ test('guildMemberAdd hook passes the invite state through untouched', async () =
   assert.equal(await run({ code: 'v', inviterId: null, vanity: true }), 'Vanity URL');
 });
 
+test('guildMemberAdd hook does not wait for pending attribution: the join is logged when it settles', async () => {
+  const { guild, channel, settings } = logSetup(ALL_PERMS, { type: 'joinLeaveChannelId' });
+  const member = fakeMember({ id: '222222222222222223' });
+  const ctx = fakeCtx(guild, settings, { member, user: member.user });
+  let settle;
+  ctx.state.invitePromise = new Promise((resolve) => { settle = resolve; });
+  const before = channel.sent.length;
+  await hook('guildMemberAdd').run(ctx); // returns while attribution is still pending
+  await flushLogQueue();
+  assert.equal(channel.sent.length, before, 'nothing is posted before attribution settles');
+  settle({ code: 'abc', inviterId: '999999999999999999', vanity: false });
+  for (let n = 0; n < 5; n++) await new Promise((resolve) => { setImmediate(resolve); });
+  await flushLogQueue();
+  assert.equal(channel.sent.length, before + 1);
+  assert.equal(channel.sent.at(-1).embeds[0].fields.find((f) => f.name === 'Invite')?.value, 'discord.gg/abc by <@999999999999999999>');
+});
+
 test('guildMemberUpdate hook: partial old members log nothing fake, timeouts dedupe, parts are separate embeds', async () => {
   const { guild, channel, settings } = logSetup(ALL_PERMS, { type: 'memberLogChannelId' });
   const run = (oldMember, newMember, oldKnown, s = settings) => hook('guildMemberUpdate').run(fakeCtx(guild, s, { oldMember, newMember, member: newMember, oldKnown }));

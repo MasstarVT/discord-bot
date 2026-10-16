@@ -32,21 +32,28 @@ export async function execute(interaction) {
 
   if (user.bot) return interaction.editReply({ embeds: [infoEmbed('No Rank', "Bots don't earn XP.")] });
 
-  const record = await prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId: user.id } } });
+  // Independent waits overlap: the avatar download starts at once, the row and settings load together, then the
+  // position and background load together. Sequential, they added up to five round trips.
+  const avatarUrl = (member ?? user).displayAvatarURL({ extension: 'png', size: 256 });
+  const avatarPromise = safeFetchImage(avatarUrl, { maxBytes: 2 * 1024 * 1024, timeoutMs: 5000 }).catch(() => null);
+
+  const [record, settings] = await Promise.all([
+    prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId: user.id } } }),
+    getSettings(guildId),
+  ]);
   if (!record || record.xp <= 0) {
     return interaction.editReply({ embeds: [infoEmbed('No XP Yet', `${name} hasn't earned any XP in this server yet.`)] });
   }
 
-  const settings = await getSettings(guildId);
-  const rank = await getRank(guildId, user.id, record.xp);
   const level = levelFromXp(record.xp);
   const xpCurrent = xpIntoLevel(record.xp);
   const xpNeeded = xpForLevel(level);
   const style = normalizeCardStyle(settings.rankCardStyle);
-  const avatarUrl = (member ?? user).displayAvatarURL({ extension: 'png', size: 256 });
-
-  const avatarBuffer = await safeFetchImage(avatarUrl, { maxBytes: 2 * 1024 * 1024, timeoutMs: 5000 }).catch(() => null);
-  const backgroundBuffer = style.backgroundUrl ? await loadCardBackground(style.backgroundUrl) : null;
+  const [rank, avatarBuffer, backgroundBuffer] = await Promise.all([
+    getRank(guildId, user.id, record.xp),
+    avatarPromise,
+    style.backgroundUrl ? loadCardBackground(style.backgroundUrl) : null,
+  ]);
   const card = await generateProfileCard({
     avatarBuffer,
     username: user.username,

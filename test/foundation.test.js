@@ -251,6 +251,70 @@ test('scheduler handler registry and offline tick', async () => {
   await scheduler.stop({ timeoutMs: 50 });
 });
 
+test('scheduler slot loop: a slow job never holds up the jobs due behind it', async () => {
+  const { registerJobHandler, start, stop, fillSlots, JOB_CONCURRENCY } = scheduler;
+  const total = JOB_CONCURRENCY + 3;
+  const queue = Array.from({ length: total }, (_, n) => ({
+    id: `job-${n}`, guildId: '7', type: 'reminder.fire', payload: { slow: n === 0 }, runAt: new Date(),
+    attempts: 1, maxAttempts: 3, dedupeKey: null, version: 0,
+  }));
+  let releaseSlow;
+  const slow = new Promise((resolve) => { releaseSlow = resolve; });
+  const done = [];
+  let active = 0;
+  let peak = 0;
+  registerJobHandler('reminder.fire', async (job) => {
+    active++;
+    peak = Math.max(peak, active);
+    try {
+      if (job.payload.slow) await slow; else await new Promise((resolve) => { setImmediate(resolve); });
+      done.push(job.id);
+    } finally {
+      active--;
+    }
+  });
+  // Ordinary claims hand out the queue, at most `LIMIT` rows each; the interactive loop's claims get nothing.
+  const limits = [];
+  const real = { queryRaw: prisma.$queryRaw, deleteMany: prisma.scheduledJob.deleteMany };
+  prisma.$queryRaw = async (sql) => {
+    if (!sql.strings.join('?').includes('NOT (type')) return [];
+    const limit = sql.values.find((v) => typeof v === 'number');
+    limits.push(limit);
+    return queue.splice(0, limit);
+  };
+  prisma.scheduledJob.deleteMany = async () => ({ count: 1 });
+  const eventually = async (fn, ms = 2000) => {
+    const end = Date.now() + ms;
+    while (!fn()) {
+      if (Date.now() > end) return false;
+      await new Promise((resolve) => { setTimeout(resolve, 5); });
+    }
+    return true;
+  };
+  try {
+    // Shard 1: no GC timer. The 5 s poll never fires during the test: every claim after the first is a refill.
+    const client = { guilds: { cache: new Map([['7', { id: '7', available: true }]]) }, shard: { ids: [1] } };
+    start(client);
+    assert.equal(await fillSlots(client), JOB_CONCURRENCY, 'claims exactly the free slots');
+    assert.ok(await eventually(() => done.length === total - 1), 'every other job ran while the slow one still holds a slot');
+    assert.equal(done.includes('job-0'), false);
+    assert.ok(peak <= JOB_CONCURRENCY, `never more than ${JOB_CONCURRENCY} at once (peak ${peak})`);
+    assert.ok(limits.every((l) => l >= 1 && l <= JOB_CONCURRENCY), `claims never exceed the free slots (${limits})`);
+    // The queue is drained, so the last claim came back short: finishing the slow job claims nothing more.
+    const claims = limits.length;
+    releaseSlow();
+    assert.ok(await eventually(() => done.includes('job-0')));
+    await new Promise((resolve) => { setImmediate(resolve); });
+    assert.equal(limits.length, claims, 'no backlog: a finished job leaves new work to the poll');
+    await stop({ timeoutMs: 1000 });
+  } finally {
+    releaseSlow();
+    await stop({ timeoutMs: 50 });
+    prisma.$queryRaw = real.queryRaw;
+    prisma.scheduledJob.deleteMany = real.deleteMany;
+  }
+});
+
 // ── 5. SQL helpers ───────────────────────────────────────────────────────────
 
 test('SQL_NOW and sqlUtc', () => {

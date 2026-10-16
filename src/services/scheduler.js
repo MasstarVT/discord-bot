@@ -40,6 +40,13 @@ const handlers = new Map();
 const warnedMissing = new Set();
 /** In-flight ticks, so stop() can wait for running jobs. */
 const inflight = new Set();
+/** Ordinary jobs the slot loop is running now (at most JOB_CONCURRENCY). */
+let running = 0;
+/** The claim in progress, if any, and whether another was asked for meanwhile (see requestFill). */
+let filling = null;
+let refillAsked = false;
+/** The last claim filled every free slot, so more jobs may be due: finished jobs refill at once until one comes back short. */
+let backlog = false;
 let started = false;
 let pollTimer = null;
 let interactiveTimer = null;
@@ -47,8 +54,9 @@ let gcTimer = null;
 
 // ── Raw SQL ───────────────────────────────────────────────────────────────────
 
-// `interactive`: only the interactive job types (their own loop), otherwise every other type.
-const claimSql = (guildIds, owner, { interactive = false } = {}) => Prisma.sql`
+// `interactive`: only the interactive job types (their own loop), otherwise every other type. `limit`: at most this
+// many rows (the slot loop claims only as many jobs as it has free slots).
+const claimSql = (guildIds, owner, { interactive = false, limit = CLAIM_BATCH } = {}) => Prisma.sql`
   WITH due AS (
     SELECT id FROM "ScheduledJob"
     WHERE "guildId" = ANY(${guildIds}::text[])
@@ -56,7 +64,7 @@ const claimSql = (guildIds, owner, { interactive = false } = {}) => Prisma.sql`
       AND "runAt" <= ${SQL_NOW}
       AND (status = 'PENDING' OR (status = 'RUNNING' AND "lockedUntil" < ${SQL_NOW}))
     ORDER BY "runAt" ASC
-    LIMIT ${CLAIM_BATCH}
+    LIMIT ${limit}
     FOR UPDATE SKIP LOCKED
   )
   UPDATE "ScheduledJob" j
@@ -382,6 +390,62 @@ export function tick(client, opts = {}) {
   return run;
 }
 
+/**
+ * The ordinary jobs' loop: claims as many due jobs as there are free slots and starts them without waiting for them,
+ * so one slow job (a feed poll, up to JOB_TIMEOUT_MS) never holds up the jobs due behind it. While the last claim
+ * filled every free slot (a backlog), each finished job refills its slot at once, so the backlog drains without
+ * waiting for the next poll; otherwise new work waits for the poll, which keeps the claim rate low when idle.
+ * Exported for tests. Never throws.
+ * @param {import('discord.js').Client} client
+ * @returns {Promise<number>} jobs claimed
+ */
+export async function fillSlots(client) {
+  const free = JOB_CONCURRENCY - running;
+  if (!started || free <= 0) return 0;
+  try {
+    const guildIds = availableGuildIds(client);
+    if (!guildIds.length) return 0;
+    const rows = await prisma.$queryRaw(claimSql(guildIds, ownerOf(client), { limit: free }));
+    backlog = rows.length === free;
+    for (const row of rows) {
+      running++;
+      const run = runJob(client, row)
+        .catch((err) => logger.error(`Job ${row.type} ${row.id} failed outside its handler`, err))
+        .finally(() => {
+          running--;
+          inflight.delete(run);
+          if (backlog) requestFill(client);
+        });
+      inflight.add(run);
+    }
+    return rows.length;
+  } catch (err) {
+    backlog = false; // the database is failing: leave the retry to the next poll
+    logger.error('Scheduler tick failed', err);
+    return 0;
+  }
+}
+
+// Runs one claim at a time: a request while a claim is running is remembered and served right after it, so two
+// claims never both count the same free slots.
+function requestFill(client) {
+  if (!started) return;
+  if (filling) {
+    refillAsked = true;
+    return;
+  }
+  const run = fillSlots(client).finally(() => {
+    inflight.delete(run);
+    filling = null;
+    if (refillAsked) {
+      refillAsked = false;
+      requestFill(client);
+    }
+  });
+  filling = run;
+  inflight.add(run);
+}
+
 /** Hourly cleanup of finished jobs older than 7 days (shard 0 only). Never throws. @returns {Promise<number>} */
 export async function gc() {
   try {
@@ -397,8 +461,8 @@ export async function gc() {
 const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4));
 
 /**
- * Starts the poll loops (setTimeout chains, not setInterval, ±20 % jitter): every ~5 s for ordinary jobs and every ~1 s
- * for interactive ones. Idempotent. On the
+ * Starts the poll loops (setTimeout chains, not setInterval, ±20 % jitter): every ~5 s the ordinary jobs' slot loop
+ * (fillSlots; finished jobs also refill at once) and every ~1 s the interactive jobs. Idempotent. On the
  * shard whose ids include 0 (or with no sharding) it also starts the hourly GC.
  * @param {import('discord.js').Client} client
  */
@@ -407,14 +471,9 @@ export function start(client) {
   started = true;
   const poll = () => {
     if (!started) return;
-    pollTimer = setTimeout(async () => {
-      try {
-        await tick(client);
-      } catch (err) {
-        logger.error('Scheduler poll failed', err);
-      } finally {
-        poll();
-      }
+    pollTimer = setTimeout(() => {
+      requestFill(client);
+      poll();
     }, jitter(POLL_INTERVAL_MS));
     pollTimer.unref?.();
   };
@@ -466,9 +525,11 @@ export async function stop({ timeoutMs = 5000 } = {}) {
   gcTimer = null;
   if (!inflight.size) return;
   let timer;
-  const timeout = new Promise((resolve) => { timer = setTimeout(resolve, timeoutMs); });
+  let timedOut = false;
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => { timedOut = true; resolve(); }, timeoutMs); });
   try {
-    await Promise.race([Promise.allSettled([...inflight]), timeout]);
+    // A claim that was running when stop() was called starts its jobs afterwards: wait for those too.
+    while (inflight.size && !timedOut) await Promise.race([Promise.allSettled([...inflight]), timeout]);
   } finally {
     clearTimeout(timer);
   }

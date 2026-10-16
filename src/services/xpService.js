@@ -863,6 +863,31 @@ async function seedVoiceSweep(guild) {
 }
 
 /**
+ * Sync filter of the voiceStateUpdate hook. Eligibility depends only on the channel and the deafen state, so a 'state'
+ * change that left both deafen flags alone (mute, camera, stream, suppress) changes nobody's voice XP and is skipped.
+ * Sessions still checkpoint through the 10-minute sweep.
+ * @param {object} ctx HookContext
+ * @returns {boolean}
+ */
+export function voiceChangeMatters(ctx) {
+  if (ctx?.change !== 'state') return true;
+  const deaf = (s) => Boolean(s?.selfDeaf || s?.serverDeaf);
+  return deaf(ctx.oldState) !== deaf(ctx.newState);
+}
+
+// Re-evaluates the other members of the given channels, one at a time (each takes its member's mutex). Never throws.
+async function reconcileOthers({ guild, member, channels, settings, now }) {
+  for (const ch of channels) {
+    let scanned = 0;
+    for (const m of ch.members.values()) {
+      if (m.user?.bot || m.id === member.id) continue;
+      if (scanned++ >= VOICE_CHANNEL_SCAN_CAP) break;
+      await reconcileVoiceMember({ guild, member: m, state: m.voice, settings, now });
+    }
+  }
+}
+
+/**
  * voiceStateUpdate hook. The core dropped bots; `ctx.change` is join / leave / move / state.
  * @param {object} ctx HookContext
  */
@@ -877,19 +902,20 @@ export async function handleVoiceStateXp(ctx) {
   const now = Date.now();
   await reconcileVoiceMember({ guild, member, state: newState, settings, now, freshJoin: ctx.change === 'join' });
 
-  // Other members whose "alone" status may have changed (R191).
+  // Other members whose "alone" status may have changed (R191). Another member is eligible only with at least one
+  // other listener, so their status can flip only when a channel now has one or two listeners (the count crossed
+  // 1 <-> 2); busier channels are skipped. The re-check is detached so logging and automations do not wait for it.
   const channelIds = new Set();
   if (oldState?.channelId && oldState.channelId !== newState?.channelId) channelIds.add(oldState.channelId);
   if (newState?.channelId) channelIds.add(newState.channelId);
+  const channels = [];
   for (const id of channelIds) {
     const ch = guild.channels.cache.get(id);
-    if (!ch?.members) continue;
-    let scanned = 0;
-    for (const m of ch.members.values()) {
-      if (m.user?.bot || m.id === member.id) continue;
-      if (scanned++ >= VOICE_CHANNEL_SCAN_CAP) break;
-      await reconcileVoiceMember({ guild, member: m, state: m.voice, settings, now });
-    }
+    if (ch?.members && countOtherListeners(ch, null) <= 2) channels.push(ch);
+  }
+  if (channels.length) {
+    void reconcileOthers({ guild, member, channels, settings, now })
+      .catch((err) => logger.error('levels: voice re-check of other members failed', asError(err)));
   }
 
   if (ctx.change === 'join' && sweepSeedThrottle(guild.id)) await seedVoiceSweep(guild);

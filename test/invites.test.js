@@ -337,6 +337,37 @@ test('T14: the plugin loads cleanly with its five hooks', async () => {
   assert.deepEqual(p.provides, {});
 });
 
+test('plugin: the join hook returns at once; attribution arrives through ctx.state.invitePromise', async () => {
+  const join = plugin.hooks.find((h) => h.event === 'guildMemberAdd');
+  assert.equal(join.timeoutMs, undefined, 'nothing slow runs inside the hook any more');
+  let openSettings;
+  const settings = new Promise((resolve) => { openSettings = resolve; });
+  const ctx = {
+    state: Object.create(null),
+    member: { id: '955010000000009001', user: { bot: false }, joinedAt: new Date(), guild: { id: '955010000000009998' } },
+    getSettings: () => settings, // held open, so attribution is still queued when run() returns
+  };
+  assert.equal(join.run(ctx), undefined, 'run() does not return a promise the dispatch would wait for');
+  assert.equal(ctx.state.invite, null);
+  assert.ok(ctx.state.invitePromise instanceof Promise);
+  let settled = false;
+  ctx.state.invitePromise.then(() => { settled = true; });
+  await new Promise((resolve) => { setImmediate(resolve); });
+  assert.equal(settled, false, 'the later join hooks run while attribution is pending');
+  // Module off: the join is recorded without an inviter (the writes are stubbed so no database is needed).
+  const real = { settings: prisma.guildSettings.upsert, join: prisma.guildMemberCache.upsert };
+  prisma.guildSettings.upsert = async () => ({});
+  prisma.guildMemberCache.upsert = async () => ({});
+  try {
+    openSettings(null);
+    assert.equal(await ctx.state.invitePromise, null);
+  } finally {
+    prisma.guildSettings.upsert = real.settings;
+    prisma.guildMemberCache.upsert = real.join;
+  }
+  assert.equal(ctx.state.invite, null);
+});
+
 test('plugin: bots are not tracked on join, and the leave hook filters them', async () => {
   const join = plugin.hooks.find((h) => h.event === 'guildMemberAdd');
   const ctx = { state: Object.create(null), member: { id: 'B', user: { bot: true }, guild: { id: '955010000000009999' } }, getSettings: async () => null };
@@ -698,6 +729,8 @@ test('DB: through runHooks the join hook enqueues first, so join then leave keep
     const join = runHooks('guildMemberAdd', { client: g.client, guild: g, member, user: member.user });
     const leave = runHooks('guildMemberRemove', { client: g.client, guild: g, member, user: member.user });
     const [joinCtx] = await Promise.all([join, leave]);
+    // The join hook no longer holds up the dispatch: the attribution arrives through ctx.state.invitePromise.
+    assert.deepEqual(await joinCtx.state.invitePromise, { code: 'A', inviterId: 'U1', vanity: false });
     assert.deepEqual(joinCtx.state.invite, { code: 'A', inviterId: 'U1', vanity: false });
     // The leave hook is fire-and-forget, so its write may still be running: a no-op leave queued behind it waits it out.
     await trackLeave(g, 'queue-fence');

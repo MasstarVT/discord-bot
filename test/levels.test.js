@@ -742,6 +742,60 @@ test('handleVoiceStateXp: voice XP off drops the member key without credit', asy
   assert.equal(store.has(key), false);
 });
 
+test('voiceChangeMatters: mute, camera and stream toggles skip the voice hook; deafen changes do not', () => {
+  const { voiceChangeMatters } = svc;
+  for (const change of ['join', 'leave', 'move']) assert.equal(voiceChangeMatters({ change, oldState: {}, newState: {} }), true, change);
+  const state = (oldState, newState) => voiceChangeMatters({ change: 'state', oldState, newState });
+  assert.equal(state({ selfDeaf: false, selfMute: false }, { selfDeaf: false, selfMute: true }), false, 'a mute');
+  assert.equal(state({ selfVideo: false }, { selfVideo: true }), false, 'a camera');
+  assert.equal(state({ selfDeaf: false }, { selfDeaf: true }), true, 'a self-deafen');
+  assert.equal(state({ serverDeaf: true }, { serverDeaf: false }), true, 'a server undeafen');
+  assert.equal(state({ selfDeaf: true, serverDeaf: false }, { selfDeaf: true, serverDeaf: true }), false, 'still deafened');
+  assert.equal(state(null, null), false);
+  const hook = plugin.hooks.find((h) => h.event === 'voiceStateUpdate');
+  assert.equal(hook.filter, voiceChangeMatters, 'the hook gates on it before any settings or Redis work');
+});
+
+test('handleVoiceStateXp: other members are re-checked only when a channel has one or two listeners', async () => {
+  const store = installFakeCache();
+  const settings = { voiceXpEnabled: true, voiceXpRate: 5, xpMultiplier: 1, noXpChannelIds: [], noXpRoleIds: [], xpBoostRoles: null };
+  const key = (g, u) => `voice:start:${g}:${u}`;
+  const ticks = async (n = 5) => { for (let i = 0; i < n; i++) await new Promise((r) => { setImmediate(r); }); };
+  const setup = (guildId, userIds) => {
+    const guild = fakeGuild(guildId);
+    const members = new Map();
+    const channel = fakeChannel(C(30), { type: ChannelType.GuildVoice, members });
+    guild.channels.cache.set(channel.id, channel);
+    const list = userIds.map((id) => {
+      const m = fakeMember(guild, id, { voice: { channel, channelId: channel.id, selfDeaf: false, serverDeaf: false } });
+      members.set(id, m);
+      return m;
+    });
+    return { guild, list };
+  };
+  // The mover arrives from a channel this guild does not cache, so only the destination is re-checked.
+  const move = (guild, member) => svc.handleVoiceStateXp({
+    guild, member, oldState: { channelId: C(39) }, newState: member.voice, change: 'move', getSettings: async () => settings,
+  });
+
+  // Two listeners now: U(1) was alone before U(2) arrived, so the detached re-check starts U(1)'s session.
+  let { guild, list: [a, b] } = setup(G(3), [U(1), U(2)]);
+  await move(guild, b);
+  assert.ok(store.has(key(G(3), U(2))), "the mover's own session starts before the hook returns");
+  await ticks();
+  assert.ok(store.has(key(G(3), U(1))), 'the member who was alone is re-checked');
+  assert.equal(a.id, U(1));
+
+  // Three listeners: nobody else's status can have changed, so nobody else is touched (U(1) has no session here only
+  // to show that the re-check was skipped).
+  ({ guild, list: [a, , b] } = setup(G(4), [U(1), U(3), U(2)]));
+  await move(guild, b);
+  await ticks();
+  assert.ok(store.has(key(G(4), U(2))));
+  assert.equal(store.has(key(G(4), U(1))), false, 'a busy channel is not re-scanned');
+  assert.equal(store.has(key(G(4), U(3))), false);
+});
+
 test('handleMessageXp: exemptions first, Redis down fails closed', async () => {
   const guild = fakeGuild(G(1));
   const member = fakeMember(guild, U(1), { roles: [R(1)] });
@@ -1636,4 +1690,119 @@ test('DB: a {rank} level-up template shows the real position', { skip: skipDb },
   const settings = { levelUpMode: 'CURRENT', levelUpUseEmbed: false, levelUpMessage: '{player.name} is #{rank} with {xp} XP at level {level}' };
   assert.equal(await svc.announceLevelUp({ guild, member, level: 5, xp: 1200, settings, source: 'message', sourceChannel: ch }), true);
   assert.equal(ch.sent[0].content, 'Alice is #2 with 1,200 XP at level 5');
+});
+
+// ── Command latency: independent reads overlap (no database: Prisma is stubbed) ─
+
+/** Replaces Prisma model methods for one test; returns the restore function. */
+function stubPrisma(model, methods) {
+  const real = {};
+  for (const [name, fn] of Object.entries(methods)) {
+    real[name] = prisma[model][name];
+    prisma[model][name] = fn;
+  }
+  return () => { for (const [name, fn] of Object.entries(real)) prisma[model][name] = fn; };
+}
+
+/** A promise held open until `open()`, to keep a stubbed query in flight. */
+function gate() {
+  let open;
+  const promise = new Promise((resolve) => { open = resolve; });
+  return { promise, open };
+}
+
+const eventually = async (fn, ms = 2000) => {
+  const end = Date.now() + ms;
+  while (!fn()) {
+    if (Date.now() > end) return false;
+    await new Promise((resolve) => { setTimeout(resolve, 5); });
+  }
+  return true;
+};
+
+test('/rank loads the XP row and the settings together, then draws the card off the main thread', async () => {
+  installFakeCache();
+  const guildId = '955009999999999901';
+  const started = [];
+  const rowGate = gate();
+  const settingsGate = gate();
+  const restore = [
+    stubPrisma('userLevel', {
+      findUnique: async () => { started.push('row'); await rowGate.promise; return { guildId, userId: U(1), xp: 500 }; },
+      count: async () => { started.push('rank'); return 1; },
+    }),
+    stubPrisma('guildSettings', {
+      findUnique: async () => { started.push('settings'); await settingsGate.promise; return { guildId, xpEnabled: true }; },
+    }),
+  ];
+  try {
+    const guild = fakeGuild(guildId);
+    const me = fakeUser(U(1));
+    me.displayAvatarURL = () => 'http://127.0.0.1:9/avatar.png'; // blocked by safeFetch: drawn without an avatar
+    const invoker = fakeMember(guild, U(1));
+    invoker.displayAvatarURL = () => 'http://127.0.0.1:9/avatar.png';
+    const i = fakeInteraction(guild, { sub: null, user: me, member: invoker, opts: {} });
+    const run = rankCmd.execute(i);
+    assert.ok(await eventually(() => started.length >= 2));
+    assert.deepEqual([...started].sort(), ['row', 'settings'], 'both reads are in flight before either finishes');
+    rowGate.open();
+    settingsGate.open();
+    await run;
+    assert.ok(started.includes('rank'));
+    const file = i.replies.at(-1).files?.[0];
+    assert.equal(file?.name, 'rank.png');
+    assert.ok(Buffer.isBuffer(file.attachment) && file.attachment.length > 0, 'encode() still yields a PNG buffer');
+  } finally {
+    for (const r of restore) r();
+  }
+});
+
+test('/leaderboard runs its three reads together and finds your place while member names load', async () => {
+  installFakeCache();
+  const guildId = '955009999999999902';
+  const started = [];
+  const gates = { total: gate(), rows: gate(), settings: gate(), names: gate() };
+  const restore = [
+    stubPrisma('userLevel', {
+      count: async ({ where }) => {
+        if (where.OR) { started.push('own-rank'); return 7; } // seven members ahead of the invoker
+        started.push('total');
+        await gates.total.promise;
+        return 2;
+      },
+      findMany: async () => {
+        started.push('rows');
+        await gates.rows.promise;
+        return [{ userId: U(1), xp: 900 }, { userId: U(2), xp: 800 }];
+      },
+      findUnique: async () => { started.push('own-row'); return { xp: 10 }; },
+    }),
+    stubPrisma('guildSettings', {
+      findUnique: async () => { started.push('settings'); await gates.settings.promise; return { guildId, xpEnabled: true }; },
+    }),
+  ];
+  try {
+    const guild = fakeGuild(guildId);
+    guild.members.fetch = async () => { started.push('names'); await gates.names.promise; return null; };
+    const i = fakeInteraction(guild, { sub: null, opts: {}, user: fakeUser(U(3)), member: fakeMember(guild, U(3)) });
+    guild.members.cache.delete(U(3));
+    i.isRepliable = () => true;
+    i.deferred = true;
+    i.editReply = async (p) => { i.replies.push(p); return { id: 'm', createMessageComponentCollector: () => ({ on() {}, stop() {} }) }; };
+    const run = boardCmd.execute(i);
+
+    assert.ok(await eventually(() => started.length >= 3));
+    assert.deepEqual([...started].sort(), ['rows', 'settings', 'total'], 'the three reads are in flight together');
+    gates.total.open();
+    gates.rows.open();
+    gates.settings.open();
+
+    assert.ok(await eventually(() => started.includes('own-rank')), 'your place is looked up while the names still load');
+    assert.ok(started.includes('names'));
+    gates.names.open();
+    await run;
+    assert.match(embedOf(i).footer.text, /^Top 2 of 2 ranked members · You: #8/);
+  } finally {
+    for (const r of restore) r();
+  }
 });
