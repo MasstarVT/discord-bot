@@ -470,7 +470,7 @@ test('plugin declaration', async () => {
     assert.notEqual(h.always, true);
     assert.equal(typeof h.run, 'function');
   }
-  assert.equal(plugin.hooks[1].timeoutMs, 120_000);
+  assert.equal(plugin.hooks[1].timeoutMs, undefined, 'the startup sync is queued, so the hook returns at once');
   assert.deepEqual(plugin.components, []);
   assert.deepEqual(plugin.jobs, []);
   assert.deepEqual(plugin.provides, {});
@@ -550,6 +550,63 @@ test('every subcommand defers, then answers "Settings Unavailable" publicly with
     assert.deepEqual(p.components, [], sub);
     assert.match(p.embeds[0].data.title, /Settings Unavailable/, sub);
   }
+});
+
+// ── DISABLE_PRESENCES and the startup queue ───────────────────────────────────
+
+async function withPresencesOff(fn) {
+  const before = process.env.DISABLE_PRESENCES;
+  process.env.DISABLE_PRESENCES = '1';
+  try {
+    return await fn();
+  } finally {
+    if (before === undefined) delete process.env.DISABLE_PRESENCES;
+    else process.env.DISABLE_PRESENCES = before;
+  }
+}
+
+test('DISABLE_PRESENCES: no role is stripped by sync or the member hook; clear mode still removes it', async () => {
+  await withPresencesOff(async () => {
+    const w = world({ roleHeld: true }); // the empty presence cache makes the holder look offline
+    assert.equal(await rec(w), 'none');
+    assert.equal(await rec(w, { source: 'sync' }), 'none');
+    assert.deepEqual(await syncGuild(w.guild, { mode: 'sync' }), { ok: false, code: 'presence-unavailable' });
+    assert.match(lr.formatSyncResult({ ok: false, code: 'presence-unavailable' }), /DISABLE_PRESENCES/);
+    const hook = plugin.hooks.find((h) => h.event === 'guildMemberUpdate');
+    assert.equal(hook.filter({ oldKnown: true, newMember: w.member }), false);
+    assert.equal(w.calls.length, 0);
+    assert.equal(await rec(w, { mode: 'clear', source: 'sync' }), 'removed');
+    assert.deepEqual(w.calls, [['remove', 'L', REASONS.clear]]);
+  });
+});
+
+test('DISABLE_PRESENCES: /liverole answers "unavailable" except for disable', async () => {
+  await withPresencesOff(async () => {
+    for (const sub of ['set', 'require', 'enable', 'status']) {
+      const i = fakeInteraction(sub);
+      await cmd.execute(i);
+      assert.equal(i.calls.defer, 1, sub);
+      assert.match(i.calls.edits[0].embeds[0].data.title, /Live Role Unavailable/, sub);
+      assert.deepEqual(i.calls.edits[0].allowedMentions, { parse: [] }, sub);
+    }
+  });
+});
+
+test('guildReady: the startup sync is queued once per guild and does not run while presences are off', async () => {
+  let reads = 0;
+  // syncGuild reads `available` first; false ends it at once without touching settings.
+  const guild = { id: 'G-queue', get available() { reads++; return false; } };
+  const ctx = { guild, reason: 'startup', getSettings: async () => ({ liveRoleEnabled: true, liveRoleId: 'L' }) };
+  const hook = plugin.hooks[1];
+  await withPresencesOff(() => hook.run(ctx));
+  await lr.__startupSyncsIdle();
+  assert.equal(reads, 0, 'nothing queued without presences');
+  await Promise.all([hook.run(ctx), hook.run(ctx), hook.run(ctx)]);
+  await lr.__startupSyncsIdle();
+  assert.equal(reads, 1, 'three guildReady runs while one sync waited: one sync');
+  await hook.run(ctx);
+  await lr.__startupSyncsIdle();
+  assert.equal(reads, 2, 'a later guildReady queues a new sync');
 });
 
 // ── Command flows against a real database (TEST_DATABASE_URL, migrated) ───────

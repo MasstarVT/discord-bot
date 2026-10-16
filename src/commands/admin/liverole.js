@@ -11,6 +11,7 @@ import {
 import { joinWithLimit, formatNumber } from '../../utils/text.js';
 import { withTimeout } from '../../utils/async.js';
 import { newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
+import { presencesEnabled } from '../../utils/gatewayFeatures.js';
 import logger from '../../utils/logger.js';
 import {
   LIVEROLE, isStreaming, streamLabel, countLosingHolders,
@@ -50,6 +51,11 @@ const MSG = {
   ),
   SETTINGS_UNAVAILABLE: () => errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.'),
   COULD_NOT_SAVE: () => errorEmbed('Could Not Save', 'The setting could not be saved. Please try again in a moment.'),
+  NO_PRESENCES: () => errorEmbed(
+    'Live Role Unavailable',
+    'This bot runs without presence data (`DISABLE_PRESENCES=1`), so it cannot see who is streaming. '
+      + 'Ask the bot owner to turn presences back on. `/liverole disable` still removes the role from members.',
+  ),
 };
 
 const OFF_NOTE = 'ℹ️ The live role is **off**. Turn it on with `/liverole enable`.';
@@ -328,8 +334,15 @@ async function runStatus(interaction) {
 
 // ── Dispatch ──────────────────────────────────────────────────────────────────
 
+async function runUnavailable(interaction) {
+  if (!(await safeDefer(interaction))) return;
+  return finish(interaction, { embeds: [MSG.NO_PRESENCES()] });
+}
+
 export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
+  // Without presences every member looks offline; only the cleanup (disable) still makes sense.
+  if (sub !== 'disable' && !presencesEnabled()) return runUnavailable(interaction);
   if (sub === 'set') return runSet(interaction);
   if (sub === 'require') return runRequire(interaction);
   if (sub === 'enable') return runEnable(interaction);

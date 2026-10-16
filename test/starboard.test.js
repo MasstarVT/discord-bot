@@ -454,6 +454,30 @@ test('10. createCoalescer, createSemaphore and the burst spacing', async () => {
   const endedAt = Date.now();
   await spaced.request('s', async () => { marks.push(['start', Date.now()]); });
   assert.ok(marks[1][1] - endedAt >= 70, `second run waited ${marks[1][1] - endedAt} ms`);
+
+  // Per-key spacing, decided when a run ends: a reposted message waits longer; the trailing run still happens.
+  const slowKeys = new Set(['hot']);
+  const perKey = sb.createCoalescer({ mutex, semaphore, spacingFor: (key) => (slowKeys.has(key) ? 120 : 10) });
+  const starts = [];
+  await perKey.request('hot', async () => {});
+  const hotEnded = Date.now();
+  const trailing = perKey.request('hot', async () => { starts.push(['hot', Date.now() - hotEnded]); });
+  assert.equal(perKey.request('hot', async () => { starts.push(['dropped', 0]); }), null, 'coalesced into the waiting run');
+  await perKey.request('cold', async () => {});
+  await perKey.request('cold', async () => { starts.push(['cold', 0]); });
+  assert.deepEqual(starts.map((x) => x[0]), ['cold'], 'another key is not held up');
+  await trailing;
+  assert.equal(starts[1][0], 'hot');
+  assert.ok(starts[1][1] >= 110, `the reposted message waited ${starts[1][1]} ms`);
+  // The spacing sleep does not hold the message's mutex (the delete and edit handlers take it too).
+  await perKey.request('hot', async () => {});
+  const sleeping = perKey.request('hot', async () => {});
+  const tookMutex = Date.now();
+  await mutex.run('hot', async () => {});
+  assert.ok(Date.now() - tookMutex < 60, 'the mutex was free while the next sync waited');
+  await sleeping;
+  assert.equal(sb.syncSpacingFor('never-synced'), sb.SYNC_SPACING_MS);
+  assert.ok(sb.REPOST_SYNC_SPACING_MS > sb.SYNC_SPACING_MS);
 });
 
 test('11. plugin declaration', async () => {

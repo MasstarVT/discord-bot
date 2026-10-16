@@ -15,7 +15,7 @@ import prisma from '../database/client.js';
 import { isModuleEnabled } from '../config/modules.js';
 import { LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
 import { ensureGuildSettings, getSettingsSafe } from './settingsService.js';
-import { PermanentJobError, cancelJobs, getJob, scheduleJob } from './scheduler.js';
+import { PermanentJobError, cancelJobs, getJobsByKeys, scheduleJob } from './scheduler.js';
 import { createKeyedMutex, createThrottle, mapLimit, sleep, withTimeout } from '../utils/async.js';
 import { resolvePermissionLevel } from '../utils/permissionChecker.js';
 import logger from '../utils/logger.js';
@@ -1456,10 +1456,14 @@ export async function reconcileExpiries(guild) {
       take: 500,
     });
 
+    const keyOf = (row) => (row.type === 'BAN' ? `mod.unban:${guildId}:${row.targetUserId}` : `mod.expire:${row.id}`);
+    // One lookup for every row; without it nothing is replaced (a healthy job would lose its place).
+    const jobs = rows.length ? await getJobsByKeys(rows.map(keyOf)) : new Map();
+    if (!jobs) return out;
     const results = await mapLimit(rows, 4, async (row) => {
       try {
-        const key = row.type === 'BAN' ? `mod.unban:${guildId}:${row.targetUserId}` : `mod.expire:${row.id}`;
-        const existing = await getJob(key);
+        const key = keyOf(row);
+        const existing = jobs.get(key);
         if (existing && existing.status !== 'FAILED') return false; // pending or running
         if (row.type === 'BAN') {
           await scheduleJob({

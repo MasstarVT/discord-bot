@@ -7,8 +7,13 @@ export const once = false;
 // When the old message was not cached, an edit is recognised by a fresh editedTimestamp.
 const RECENT_EDIT_MS = 15_000;
 
+/** An edit by the rule below: a fresh editedTimestamp (discord.js patches it from the gateway payload, or leaves it null). */
+const recentlyEdited = (message) => message.editedTimestamp != null && Date.now() - message.editedTimestamp < RECENT_EDIT_MS;
+
 export async function execute(oldMessage, newMessage, client) {
   if (!newMessage.guildId) return;
+  // An uncached message that was not freshly edited (an embed unfurl, a pin) is no edit: skip the REST fetch.
+  if (newMessage.partial && oldMessage.partial && !recentlyEdited(newMessage)) return;
   if (newMessage.partial) {
     try {
       newMessage = await newMessage.fetch();
@@ -22,7 +27,7 @@ export async function execute(oldMessage, newMessage, client) {
   const oldKnown = !oldMessage.partial;
   const isEdit = oldKnown
     ? oldMessage.content !== newMessage.content
-    : newMessage.editedTimestamp != null && Date.now() - newMessage.editedTimestamp < RECENT_EDIT_MS;
+    : recentlyEdited(newMessage);
   if (!isEdit) return;
 
   await runHooks('messageUpdate', {

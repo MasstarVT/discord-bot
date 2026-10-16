@@ -23,7 +23,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Code:** `src/plugins/logging.js` (26 hooks, 32 `LOG_EVENTS`), `src/services/loggingService.js`, `src/services/logEvents.js`, `src/utils/deletionTracker.js`.
 - **Events:** message, member (incl. `userUpdate`), voice, channel, thread, role, emoji, invite, server.
 - **Sending:** `sendLog(guild, logType, embed, opts)`, `opts { event?, settings?, files? }`; `LOG_TYPES` MOD ignores `loggingEnabled`. Batched ~1 s; `flushLogQueue()` at shutdown.
-- **Gotchas:** call `markBotDeletion(id, reason)` before bot deletions (read via `wasDeletedByBot`); `logIgnoredChannelIds` mutes message events only.
+- **Gotchas:** call `markBotDeletion(id, reason)` before bot deletions (read via `wasDeletedByBot`); `logIgnoredChannelIds` mutes message events only. `bot.js` sweeps cached messages after 3 h, so edits and deletes of older messages log without their old content.
 
 ### 👋 Welcome & Goodbye — `welcome`
 - **Commands:** `/welcome`, `/goodbye`; ADMIN.
@@ -106,7 +106,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 ### 🌟 Starboards — `starboard`
 - **Code:** `/starboard`, `src/plugins/starboard.js`.
 - **Hooks (id `starboard`):** the four messageReaction* events, `messageUpdate`; `always`: `messageDelete`, `messageDeleteBulk`, `channelDelete`.
-- **Gotchas:** staff-deleted reposts stay `blocked`; NSFW needs `allow_nsfw` and an age-restricted board; board-channel messages never count.
+- **Gotchas:** staff-deleted reposts stay `blocked`; NSFW needs `allow_nsfw` and an age-restricted board; board-channel messages never count. Syncs of one message are spaced `SYNC_SPACING_MS` (1.5 s), or `REPOST_SYNC_SPACING_MS` (10 s) once it has a live repost (each sync re-reads every reactor over REST); the last sync of a burst always runs.
 - **Privacy:** a message in a channel or thread @everyone cannot view (any private thread) is never reposted to a board @everyone can view; a private board may take private posts. `sourceSkipReason` returns `private`; `mirrorEdit` re-checks eligibility (NSFW and privacy) and leaves the repost unedited when the source no longer qualifies.
 
 ### 🎫 Ticketing — `tickets`
@@ -122,7 +122,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Gotchas:** `confirmChannel` (REST) decides before a row is purged; `purgeRow` also deletes a still-cached companion text channel. A channel whose (non-sync) hub was deleted refuses overwrite actions (`MSG.HUB_GONE`): lock, hide, ban, transfer, claim. Lock/hide also clear the Connect/View allows the template gives non-exempt roles and members (else a category's Verified-role allow beats the @everyone deny).
 
 ### 📈 Statistics Channels — `stats`
-- **Code:** `/stats`, `src/plugins/stat-channels.js`. Only `ONLINE`/`PEAK_ONLINE` (`StatKind`) need the Presence intent (`src/bot.js`).
+- **Code:** `/stats`, `src/plugins/stat-channels.js`. Only `ONLINE`/`PEAK_ONLINE` (`StatKind`) need the Presence intent (`src/bot.js`); with `DISABLE_PRESENCES=1` (or above 75,000 members) they show Discord's `approximatePresenceCount` from `guild.fetch()`.
 - **Job:** `stats.refresh` (recurring, 10 min), dedupe `stats.refresh:{guildId}`.
 - **Hooks (id `stat-channels`):** `guildMemberAdd`, `guildMemberRemove`; `always`: `guildReady`, `channelDelete`.
 - **Gotchas:** `StatChannel.lastRenamedAt` limits renames to one per 5 min per channel.
@@ -135,7 +135,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 ### 🏆 Achievements — `achievements`
 - **Code:** `/achievements`, `/achievement-config`, `src/plugins/achievements.js`.
 - **Hooks (id `achievements`):** `messageCreate`, `messageReactionAdd`, `guildMemberUpdate`, `levelUp`, `economyPurchase`.
-- **Gotchas:** unlock = compare-and-set on `AchievementProgress.tier` before payout. `ctx.member` is null in `levelUp`. Embed mode: `<@id>` in content, `allowedMentions` users only.
+- **Gotchas:** unlock = compare-and-set on `AchievementProgress.tier` before payout. `ctx.member` is null in `levelUp`. Embed mode: `<@id>` in content, `allowedMentions` users only. MESSAGES progress is buffered per member (`MESSAGE_FLUSH`: written as one +n UPDATE 5 s after the first waiting message, at once at 50, or when the active set changes), so unlocks come up to 5 s late; `bot.js` calls `flushMessageCounts()` at shutdown and a crash loses at most that window. Tests that need each message written at once call `__setMessageFlush({ delayMs: 0 })`.
 
 ### 🪙 Economy — `economy`
 - **Commands:** `/balance` `/daily` `/pity` `/work` `/pay` `/richest` `/shop` `/inventory` `/use`; admin: `/economy-admin`, `/economy-boost` (up to `LIMITS.ECONOMY_BOOSTS`; multiplies one `/daily` or `/work` payout only).
@@ -165,6 +165,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Commands:** `/liverole set|require|enable|disable|status` (ADMIN); default off.
 - **Code:** engine and hooks in `src/plugins/liverole.js`: `presenceUpdate:liverole` (needs the privileged `GuildPresences` intent), `guildReady:liverole` and `guildMemberUpdate:liverole` (re-checks a member who gained or lost `liveRoleRequiredRoleId`), none `always`.
 - **Behaviour:** `ActivityType.Streaming` earns the role; optional `liveRoleRequiredRoleId`.
+- **Gotchas:** the `guildReady` sync is queued (one guild at a time, a guild at most once) and the hook returns at once; command syncs do not use that queue. With `DISABLE_PRESENCES=1` the presence cache is empty, so `syncGuild` returns `presence-unavailable` and `reconcileMember` does nothing except in clear mode (no role is stripped); `/liverole` answers "Live Role Unavailable" except `disable`.
 
 ### 🔢 Counting — `counting`
 - **Commands:** `/counting set|reset|status` (ADMIN); default off, `set` picks `countingChannelId` and turns the module on. `reset number:N` carries on from N (never raises `best`).

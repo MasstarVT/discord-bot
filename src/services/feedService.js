@@ -12,7 +12,7 @@ import { ChannelType, escapeMarkdown } from 'discord.js';
 import prisma from '../database/client.js';
 import { LIMITS } from '../config/constants.js';
 import { cache } from './redis.js';
-import { cancelJobs, getJob, scheduleJob } from './scheduler.js';
+import { cancelJobs, getJobsByKeys, scheduleJob } from './scheduler.js';
 import { ensureGuildSettings, getSettingsSafe, isModuleEnabled } from './settingsService.js';
 import { TimeoutError, createKeyedMutex, withTimeout } from '../utils/async.js';
 import { neutralEmbed, warnEmbed } from '../utils/embedBuilder.js';
@@ -861,9 +861,12 @@ export async function disableFeedsForChannel(ctx) {
  */
 export async function ensureGuildFeedJobs(guild) {
   const rows = await prisma.feed.findMany({ where: { guildId: guild.id, enabled: true }, select: { id: true, guildId: true, type: true } });
+  if (!rows.length) return;
+  const jobs = await getJobsByKeys(rows.map((r) => feedJobKey(r.id)));
+  if (!jobs) return; // could not look: replacing healthy jobs would reset their timers
   for (const r of rows) {
     try {
-      const job = await getJob(feedJobKey(r.id));
+      const job = jobs.get(feedJobKey(r.id));
       if (job && (job.status === 'PENDING' || job.status === 'RUNNING')) continue; // healthy
       const spread = 30_000 + randomInt(BASE_INTERVAL_MS[r.type]);
       await scheduleFeedJob(r, { runAt: new Date(Date.now() + spread) });

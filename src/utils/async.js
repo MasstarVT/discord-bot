@@ -118,6 +118,34 @@ export function createKeyedMutex() {
   };
 }
 
+/** @returns {{ run: <T>(fn: () => Promise<T>|T) => Promise<T>, active: number, queued: number }} a counting semaphore */
+export function createSemaphore(limit) {
+  let active = 0;
+  const queue = [];
+  const release = () => {
+    active--;
+    const next = queue.shift();
+    if (next) next();
+  };
+  const acquire = () => new Promise((resolve) => {
+    const take = () => { active++; resolve(); };
+    if (active < limit) take();
+    else queue.push(take);
+  });
+  return {
+    async run(fn) {
+      await acquire();
+      try {
+        return await fn();
+      } finally {
+        release();
+      }
+    },
+    get active() { return active; },
+    get queued() { return queue.length; },
+  };
+}
+
 /**
  * At most one call per `intervalMs` per key. Returns true when the call is allowed now.
  * Keeps a Map with lazy cleanup.

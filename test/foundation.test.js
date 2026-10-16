@@ -315,6 +315,56 @@ test('scheduler slot loop: a slow job never holds up the jobs due behind it', as
   }
 });
 
+test('scheduler interactive loop claims by shard, without a guild list', async () => {
+  const seen = [];
+  const real = prisma.$queryRaw;
+  prisma.$queryRaw = async (sql) => { seen.push(sql); return []; };
+  try {
+    const guilds = new Map([['111', { id: '111', available: true }], ['222', { id: '222', available: false }]]);
+    assert.equal(await scheduler.tick({ guilds: { cache: guilds }, shard: { ids: [1, 3], count: 4 } }, { interactive: true }), 0);
+    const sharded = seen.pop();
+    assert.match(sharded.sql, />> 22/);
+    assert.ok(sharded.values.includes(4), 'the shard count');
+    assert.ok(sharded.values.some((v) => Array.isArray(v) && v.join() === '1,3'), 'the shard ids');
+    assert.ok(!sharded.values.some((v) => Array.isArray(v) && v.includes('111')), 'no guild ids');
+    // One process for every guild: no ownership filter at all, even with no guild cached yet.
+    await scheduler.tick({ guilds: { cache: new Map() }, shard: null }, { interactive: true });
+    const unsharded = seen.pop();
+    assert.doesNotMatch(unsharded.sql, />> 22|"guildId" = ANY/);
+    // The ordinary jobs still go by this shard's available guilds.
+    await scheduler.tick({ guilds: { cache: guilds }, shard: { ids: [1], count: 4 } });
+    const ordinary = seen.pop();
+    assert.match(ordinary.sql, /"guildId" = ANY/);
+    assert.ok(ordinary.values.some((v) => Array.isArray(v) && v.join() === '111'), 'only the available guild');
+  } finally {
+    prisma.$queryRaw = real;
+  }
+});
+
+test('scheduler getJobsByKeys: one query per 500 keys, a Map by dedupeKey, null on a database error', async () => {
+  const real = prisma.scheduledJob.findMany;
+  const calls = [];
+  prisma.scheduledJob.findMany = async ({ where }) => {
+    calls.push(where.dedupeKey.in.length);
+    return where.dedupeKey.in.filter((k) => k.endsWith('0')).map((k) => ({ dedupeKey: k, status: 'PENDING' }));
+  };
+  try {
+    const keys = Array.from({ length: 501 }, (_, i) => `k${i}`);
+    const jobs = await scheduler.getJobsByKeys([...keys, 'k1']); // a duplicate is looked up once
+    assert.deepEqual(calls, [500, 1]);
+    assert.equal(jobs.get('k10').status, 'PENDING');
+    assert.equal(jobs.has('k11'), false);
+    assert.equal(jobs.size, 51);
+    calls.length = 0;
+    assert.equal((await scheduler.getJobsByKeys([])).size, 0);
+    assert.deepEqual(calls, [], 'no keys, no query');
+    prisma.scheduledJob.findMany = async () => { throw new Error('db down'); };
+    assert.equal(await scheduler.getJobsByKeys(['a']), null);
+  } finally {
+    prisma.scheduledJob.findMany = real;
+  }
+});
+
 // ── 5. SQL helpers ───────────────────────────────────────────────────────────
 
 test('SQL_NOW and sqlUtc', () => {
@@ -493,6 +543,33 @@ test('cache.* never throws or rejects and returns the documented fallbacks', asy
   const cyclic = {}; cyclic.self = cyclic;
   assert.equal(await cache.set('cyc', cyclic, 10), false, 'cycle does not serialise');
   assert.ok(Date.now() - started < 3000, 'fails fast instead of queueing');
+});
+
+test('cache.invalidateAny: one SCAN pass (COUNT 1000), only the listed patterns, UNLINK', async () => {
+  const { globToRegExp } = await import('../src/services/redis.js');
+  assert.equal(globToRegExp('guild:1.2:*').test('guild:1.2:settings'), true);
+  assert.equal(globToRegExp('guild:1.2:*').test('guild:102:settings'), false, 'a dot is literal');
+  assert.equal(globToRegExp('a?c').test('abc'), true);
+
+  const real = { scan: redis.scan, unlink: redis.unlink };
+  const scans = [];
+  const unlinked = [];
+  const pages = [
+    ['5', ['guild:9:settings', 'tag:cd:9:t1:u1', 'xp:cooldown:9:u1']],
+    ['0', ['voice:start:9:u2', 'guild:99:settings']],
+  ];
+  redis.scan = async (...args) => { scans.push(args); return pages[scans.length - 1]; };
+  redis.unlink = async (...keys) => { unlinked.push(...keys); return keys.length; };
+  try {
+    const n = await cache.invalidateAny('*:9:*', ['guild:9:*', 'xp:cooldown:9:*', 'voice:start:9:*']);
+    assert.equal(n, 3);
+    assert.deepEqual(unlinked, ['guild:9:settings', 'xp:cooldown:9:u1', 'voice:start:9:u2']);
+    assert.deepEqual(scans.map((a) => a[0]), ['0', '5'], 'one pass, following the cursor');
+    assert.deepEqual(scans[0].slice(1), ['MATCH', '*:9:*', 'COUNT', 1000]);
+  } finally {
+    redis.scan = real.scan;
+    redis.unlink = real.unlink;
+  }
 });
 
 // ── 10. rewards bus ──────────────────────────────────────────────────────────

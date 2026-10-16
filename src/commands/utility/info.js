@@ -148,6 +148,7 @@ async function getGuildCounts(guild) {
     at: Date.now(),
     members: res?.approximate_member_count ?? guild.memberCount,
     online: res?.approximate_presence_count ?? null,
+    stickers: Array.isArray(res?.stickers) ? res.stickers.length : null, // bot.js keeps no sticker cache
   };
   remember(GUILD_COUNTS, guild.id, entry);
   return entry;
@@ -230,7 +231,7 @@ export async function buildUserEmbed(interaction, settings) {
  * @returns {Promise<import('discord.js').EmbedBuilder>}
  */
 export async function buildServerEmbed(guild, settings) {
-  const { members, online } = await getGuildCounts(guild);
+  const { members, online, stickers } = await getGuildCounts(guild);
   const embed = guildEmbed(settings, clampText(guild.name, 256)).setFooter({ text: `Server ID: ${guild.id}` });
   if (guild.description) embed.setDescription(clampText(escapeMarkdown(guild.description), 1024));
   const icon = guild.iconURL({ size: 256 });
@@ -257,7 +258,7 @@ export async function buildServerEmbed(guild, settings) {
     { name: '🎭 Roles', value: formatNumber(guild.roles.cache.size - 1), inline: true },
     {
       name: '😀 Emojis & stickers',
-      value: `${emojis.length} emojis (${animated} animated)\n${guild.stickers.cache.size} stickers`,
+      value: `${emojis.length} emojis (${animated} animated)${stickers != null ? `\n${stickers} stickers` : ''}`,
       inline: true,
     },
     {

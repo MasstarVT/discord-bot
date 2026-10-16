@@ -10,7 +10,7 @@ import { PermissionFlagsBits, ChannelType } from 'discord.js';
 import prisma from '../database/client.js';
 import { COLORS, LIMITS } from '../config/constants.js';
 import { ensureGuildSettings, getSettingsSafe, isModuleEnabled } from './settingsService.js';
-import { cancelJobs, getJob, scheduleJob } from './scheduler.js';
+import { cancelJobs, getJobsByKeys, scheduleJob } from './scheduler.js';
 import { TimeoutError, createKeyedMutex, createThrottle, withTimeout } from '../utils/async.js';
 import { normalizeTemplate, renderTemplate } from '../utils/customEmbed.js';
 import { checkChannelUsable, pingableRoleIds } from '../utils/interactionHelpers.js';
@@ -556,8 +556,10 @@ export async function reconcileGuildReminders(guild) {
   if (!rows.length) return;
   const settings = await getSettingsSafe(guild.id);
   if (!settings) return;
+  const jobs = await getJobsByKeys(rows.map((r) => jobKey(r.id)));
+  if (!jobs) return; // could not look: try again on the next guildReady
   for (const r of rows) {
-    const job = await getJob(jobKey(r.id));
+    const job = jobs.get(jobKey(r.id));
     if (job && (job.status === 'PENDING' || job.status === 'RUNNING')) continue;
     try {
       const at = await syncReminderJob(r, settings);

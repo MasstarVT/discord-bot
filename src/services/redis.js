@@ -36,6 +36,15 @@ function noteFailure(op, err) {
   logger.warn(`Redis unavailable: ${op} (${err?.message ?? err})`);
 }
 
+/** Keys SCAN looks at per call: big enough that a purge is a few hundred round trips, not thousands. */
+const SCAN_COUNT = 1000;
+
+/** A Redis glob (`*` and `?`; other characters literal) as an anchored RegExp. Exported for tests. */
+export function globToRegExp(glob) {
+  const body = String(glob).replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
+  return new RegExp(`^${body}$`, 's');
+}
+
 /** MULTI results are [[err, value], ...]; the first error aborts the whole call. */
 function multiValues(results) {
   if (!Array.isArray(results)) throw new Error('transaction aborted');
@@ -231,23 +240,38 @@ export const cache = {
   },
 
   /**
-   * Deletes all keys matching a glob pattern using SCAN (never KEYS).
+   * Deletes all keys matching a glob pattern using SCAN (never KEYS) and UNLINK (freed off the main thread).
    * @param {string} pattern e.g. "guild:*:settings"
+   * @param {{ keep?: (key: string) => boolean }} [opts] keep: only keys it returns true for are deleted (one SCAN pass
+   *   can then serve several patterns, see invalidateAny)
    * @returns {Promise<number>} keys deleted (0 on failure)
    */
-  async invalidate(pattern) {
+  async invalidate(pattern, { keep } = {}) {
     let deleted = 0;
     try {
       let cursor = '0';
       do {
-        const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+        const [nextCursor, found] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', SCAN_COUNT);
         cursor = nextCursor;
-        if (keys.length > 0) deleted += await client.del(...keys);
+        const keys = keep ? found.filter(keep) : found;
+        if (keys.length > 0) deleted += await client.unlink(...keys);
       } while (cursor !== '0');
     } catch (err) {
       noteFailure('invalidate', err);
     }
     return deleted;
+  },
+
+  /**
+   * Deletes the keys matching any of `patterns` in ONE pass over the keyspace. SCAN takes one MATCH, so `match` is a glob
+   * that covers all of them (Redis filters by it) and each key it returns is checked against the patterns here.
+   * @param {string} match e.g. "*:123:*"
+   * @param {string[]} patterns e.g. ["guild:123:*", "xp:cooldown:123:*"]
+   * @returns {Promise<number>} keys deleted (0 on failure)
+   */
+  invalidateAny(match, patterns) {
+    const tests = patterns.map(globToRegExp);
+    return cache.invalidate(match, { keep: (key) => tests.some((re) => re.test(key)) });
   },
 };
 

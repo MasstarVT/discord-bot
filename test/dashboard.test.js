@@ -10,6 +10,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gunzipSync } from 'node:zlib';
 
 process.env.NODE_ENV      ??= 'test';
 process.env.DISCORD_TOKEN ??= 'test-token';
@@ -1537,10 +1538,11 @@ function call(port, method, path, { headers = {}, body } = {}) {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => {
-        const text = Buffer.concat(chunks).toString('utf8');
+        const raw = Buffer.concat(chunks);
+        const text = raw.toString('utf8');
         let json;
         try { json = JSON.parse(text); } catch { json = undefined; }
-        resolvePromise({ status: res.statusCode, headers: res.headers, text, json });
+        resolvePromise({ status: res.statusCode, headers: res.headers, text, json, raw });
       });
     });
     req.on('error', reject);
@@ -1579,6 +1581,7 @@ describe('HTTP server', () => {
     publicDir = mkdtempSync(join(tmpdir(), 'dashboard-public-'));
     writeFileSync(join(publicDir, 'index.html'), '<!doctype html><title>t</title>');
     writeFileSync(join(publicDir, 'app.js'), 'export {};');
+    writeFileSync(join(publicDir, 'styles.css'), 'body { color: red; }\n'.repeat(200));
     server = createDashboardServer({ config, deps: { discord: fakes.discord, settings: fakes.settings }, logger: log, publicDir });
     port = await listen(server);
   });
@@ -2006,6 +2009,35 @@ describe('HTTP server', () => {
       assert.equal(r.status, 404, path);
     }
     assert.equal((await get('/api/nope')).json.error, 'not_found');
+  });
+
+  test('static files: ETag and 304, gzip when it is smaller and asked for', async () => {
+    const css = await get('/styles.css');
+    assert.equal(css.status, 200);
+    assert.equal(css.headers['cache-control'], 'no-cache');
+    assert.match(css.headers.etag, /^"[A-Za-z0-9_-]{27}"$/);
+    assert.equal(css.headers.vary, 'Accept-Encoding');
+    assert.equal(css.headers['content-encoding'], undefined, 'no Accept-Encoding: identity');
+    const zipped = await get('/styles.css', { 'accept-encoding': 'br, gzip;q=0.8' });
+    assert.equal(zipped.headers['content-encoding'], 'gzip');
+    assert.ok(zipped.raw.length < css.raw.length);
+    assert.equal(gunzipSync(zipped.raw).toString('utf8'), css.text);
+    assert.notEqual(zipped.headers.etag, css.headers.etag, 'each encoding has its own ETag');
+    assert.equal((await get('/styles.css', { 'accept-encoding': 'gzip;q=0' })).headers['content-encoding'], undefined);
+
+    for (const tag of [css.headers.etag, `W/${css.headers.etag}`, `"other", ${zipped.headers.etag}`, '*']) {
+      const r = await get('/styles.css', { 'if-none-match': tag });
+      assert.equal(r.status, 304, tag);
+      assert.equal(r.raw.length, 0);
+      assert.ok(r.headers.etag);
+      assert.equal(r.headers['content-length'], undefined);
+    }
+    assert.equal((await get('/styles.css', { 'if-none-match': '"stale"' })).status, 200);
+    // A tiny file gains nothing from gzip: always identity, no Vary.
+    const index = await get('/', { 'accept-encoding': 'gzip' });
+    assert.equal(index.headers['content-encoding'], undefined);
+    assert.equal(index.headers.vary, undefined);
+    assert.equal((await call(port, 'HEAD', '/styles.css')).raw.length, 0);
   });
 
   test('GET /auth/login redirects to Discord with a state cookie', async () => {

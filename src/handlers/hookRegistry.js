@@ -4,7 +4,7 @@
 import { hookIndex } from '../config/hookPoints.js';
 import { isModuleEnabled } from '../config/modules.js';
 import { ensureGuildSettings, getSettingsSafe } from '../services/settingsService.js';
-import { TimeoutError, withTimeout } from '../utils/async.js';
+import { TimeoutError, createSemaphore, createThrottle, withTimeout } from '../utils/async.js';
 import logger from '../utils/logger.js';
 
 export const DEFAULT_HOOK_TIMEOUT_MS = 10_000;
@@ -156,6 +156,7 @@ export async function runHooks(event, fields = {}) {
 export async function runGuildReady(client, guild, reason) {
   try {
     if (!guild || !guild.available) return;
+    if (reason !== 'available') availableGate.record(guild.id); // runGuildAvailable checked and recorded it already
     try {
       await ensureGuildSettings(guild.id);
     } catch (err) {
@@ -164,5 +165,46 @@ export async function runGuildReady(client, guild, reason) {
     await runHooks('guildReady', { client, guild, reason });
   } catch (err) {
     logger.error(`guildReady failed for guild ${guild?.id}`, err instanceof Error ? err : new Error(String(err)));
+  }
+}
+
+/** How many guildAvailable re-runs of the startup work may run at once (an outage ending brings back many guilds). */
+export const AVAILABLE_CONCURRENCY = 2;
+/** A guild whose startup work ran this recently skips a guildAvailable re-run (a flapping guild repeats it otherwise). */
+export const AVAILABLE_COOLDOWN_MS = 10 * 60_000;
+
+/**
+ * The cap and per-guild cooldown in front of guildAvailable re-runs (exported for tests).
+ * `record(id)` starts a guild's cooldown; it returns false (and keeps the older start) while one is running.
+ */
+export function createReadyGate({ concurrency = AVAILABLE_CONCURRENCY, cooldownMs = AVAILABLE_COOLDOWN_MS } = {}) {
+  const slots = createSemaphore(concurrency);
+  const record = createThrottle(cooldownMs);
+  return {
+    record,
+    /** @returns {Promise<boolean>} false when skipped by the cooldown */
+    async run(guildId, fn) {
+      if (!record(guildId)) return false;
+      await slots.run(fn);
+      return true;
+    },
+  };
+}
+
+const availableGate = createReadyGate();
+
+/**
+ * guildAvailable: re-runs the startup work of a guild that came back, at most AVAILABLE_CONCURRENCY at once and at most once
+ * per guild every AVAILABLE_COOLDOWN_MS (counting its startup or join run). A guild skipped at startup because it was
+ * unavailable has no cooldown, so its first arrival always runs. Never throws.
+ * @returns {Promise<boolean>} whether the startup work ran
+ */
+export async function runGuildAvailable(client, guild) {
+  if (!guild?.available) return false;
+  try {
+    return await availableGate.run(guild.id, () => runGuildReady(client, guild, 'available'));
+  } catch (err) {
+    logger.error(`guildAvailable failed for guild ${guild.id}`, err instanceof Error ? err : new Error(String(err)));
+    return false;
   }
 }

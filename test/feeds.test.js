@@ -946,6 +946,32 @@ test('resolveFeedSource never throws (unexpected failures are caught)', async ()
   assert.equal(r2.probe.ok, false);
 });
 
+test('ensureGuildFeedJobs: one job lookup per guild; healthy jobs are kept; a failed lookup replaces nothing', async () => {
+  const real = { feeds: prisma.feed.findMany, jobs: prisma.scheduledJob.findMany, tx: prisma.$transaction, create: prisma.scheduledJob.create };
+  const lookups = [];
+  let writes = 0;
+  prisma.feed.findMany = async () => ['f1', 'f2', 'f3'].map((id) => ({ id, guildId: 'g1', type: 'RSS' }));
+  prisma.scheduledJob.findMany = async ({ where }) => {
+    lookups.push(where.dedupeKey.in);
+    return where.dedupeKey.in.map((dedupeKey) => ({ dedupeKey, status: 'PENDING' }));
+  };
+  prisma.$transaction = async () => { writes++; return null; };
+  prisma.scheduledJob.create = async () => { writes++; return {}; };
+  try {
+    await S.ensureGuildFeedJobs({ id: 'g1' });
+    assert.deepEqual(lookups, [['f1', 'f2', 'f3'].map(S.feedJobKey)]);
+    assert.equal(writes, 0, 'every job is healthy');
+    prisma.scheduledJob.findMany = async () => { throw new Error('db down'); };
+    await S.ensureGuildFeedJobs({ id: 'g1' });
+    assert.equal(writes, 0, 'could not look: nothing is rescheduled');
+  } finally {
+    prisma.feed.findMany = real.feeds;
+    prisma.scheduledJob.findMany = real.jobs;
+    prisma.$transaction = real.tx;
+    prisma.scheduledJob.create = real.create;
+  }
+});
+
 // ── DB cases (TEST_DATABASE_URL) ──────────────────────────────────────────────
 
 const { getJob, cancelJobs } = await import('../src/services/scheduler.js');

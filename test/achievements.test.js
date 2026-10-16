@@ -449,13 +449,15 @@ test('RAW_SQL builders use SQL_NOW and explicit casts', () => {
 test('static scan of the four owned source files', () => {
   const files = ['src/services/achievementService.js', 'src/plugins/achievements.js', 'src/commands/community/achievements.js', 'src/commands/admin/achievement-config.js'];
   const banned = [
-    /setCustomId\(/, /customId:/, /console\./, /setInterval/, /setTimeout/, /roles\.(add|set|remove)\(\[/,
+    /setCustomId\(/, /customId:/, /console\./, /setInterval/, /roles\.(add|set|remove)\(\[/,
     /from '\.\.\/(\.\.\/)?services\/(xpService|economyService)/, /parse: \[[^\]]*everyone/, /guild:\$\{[^}]*\}:settings/,
     /achievementProgress\.(delete|deleteMany)\(/, /LIMITS\.[A-Z_]+\s*\?\?/, /replace\('\{/,
   ];
   for (const f of files) {
     const text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
     for (const re of banned) assert.doesNotMatch(text, re, `${f} matches ${re}`);
+    // The only timer is the message buffer's flush (one per waiting member, started by a message, never at import).
+    assert.equal([...text.matchAll(/setTimeout\(/g)].length, f === 'src/services/achievementService.js' ? 1 : 0, `${f}: setTimeout`);
     for (const m of text.matchAll(/(?:\$queryRaw|\$executeRaw|Prisma\.sql)\s*`([\s\S]*?)`/g)) {
       assert.doesNotMatch(m[1], /(?<![\w.])now\(\)(?!\s*AT\s+TIME\s+ZONE\s+'UTC')/i, `${f} has a bare now()`);
     }
@@ -571,6 +573,8 @@ async function seedAchievement(gid, { name = 'Chatterbox', trigger = 'MESSAGES',
 }
 const rowOf = (achievementId, userId) => prisma.achievementProgress.findUnique({ where: { achievementId_userId: { achievementId, userId } } });
 const msgCtx = (guild, settings, member, channel) => ctxOf(guild, settings, { message: { author: { id: member.id, bot: false } }, member, channel });
+// The DB cases check each message's effect right away: write every message at once (the buffer has its own offline test).
+svc.__setMessageFlush({ delayMs: 0 });
 
 // ── RAW_SQL ───────────────────────────────────────────────────────────────────
 
@@ -582,6 +586,80 @@ test('DB: every RAW_SQL statement executes against the migrated schema (as a gen
 });
 
 // ── Recording: phases, claim, payout, announcement ────────────────────────────
+
+test('offline: the message buffer writes one +n UPDATE per member, flushes at the cap, on a changed set and on demand', { skip: DB ? 'offline only' : false }, async () => {
+  svc.__resetAchievementState();
+  svc.__setMessageFlush({ delayMs: 60, at: 5 });
+  const gid = '955027000000088888';
+  const ach = (id, deadline = null) => ({
+    id, guildId: gid, name: id, trigger: 'MESSAGES', enabled: true, trackPastProgress: false, deadline,
+    tiers: [{ goal: 1000, rewards: [] }], createdAt: new Date(0),
+  });
+  let rows = [ach('a1')];
+  const updates = [];
+  const real = { findMany: prisma.achievement.findMany, queryRaw: prisma.$queryRaw, upsert: prisma.guildSettings.upsert, tx: prisma.$transaction };
+  prisma.achievement.findMany = async () => rows;
+  prisma.guildSettings.upsert = async () => ({});
+  prisma.$transaction = async () => { updates.push({ reset: true }); return []; };
+  // Every progress UPDATE "finds" its row, so no INSERT (Phase 2) runs; the goal is far away, so nothing unlocks.
+  prisma.$queryRaw = async (sql) => {
+    const inc = sql.values[0];
+    const ids = sql.values.find((v) => Array.isArray(v));
+    updates.push({ user: sql.values.find((v) => typeof v === 'string' && /^7\d+$/.test(v)), inc, ids: [...ids] });
+    return ids.map((achievementId) => ({ id: `p-${achievementId}`, achievementId, progress: inc, tier: 0, almostNotified: false }));
+  };
+  const ctx = (userId) => ({ guildId: gid, guild: {}, getSettings: async () => ({}), message: { author: { id: userId } }, member: null, channel: null });
+  try {
+    for (let i = 0; i < 3; i++) await svc.onMessageCreate(ctx('70001'));
+    await svc.onMessageCreate(ctx('70002'));
+    assert.deepEqual(updates, [], 'nothing is written while the messages wait');
+    await sleep(120);
+    assert.deepEqual(updates.map((u) => [u.user, u.inc]).sort(), [['70001', 3], ['70002', 1]], 'one UPDATE per member, +n');
+
+    updates.length = 0;
+    for (let i = 0; i < 5; i++) await svc.onMessageCreate(ctx('70001'));
+    await sleep(10);
+    assert.deepEqual(updates.map((u) => u.inc), [5], 'written at once when `at` messages wait');
+
+    updates.length = 0;
+    await svc.onMessageCreate(ctx('70001'));
+    rows = [ach('a1'), ach('a2')]; // a new achievement: later messages count for both, the waiting one for a1 only
+    await svc.refreshAchievementCache(gid);
+    await svc.onMessageCreate(ctx('70001'));
+    await svc.onMessageCreate(ctx('70001'));
+    await svc.flushMessageCounts();
+    assert.deepEqual(updates.map((u) => [u.inc, u.ids.join()]), [[1, 'a1'], [2, 'a1,a2']]);
+
+    updates.length = 0;
+    await svc.onMessageCreate(ctx('70003'));
+    rows = []; // deleted before the flush: nothing is written for it
+    await svc.refreshAchievementCache(gid);
+    await svc.flushMessageCounts();
+    assert.deepEqual(updates, []);
+
+    // A reset writes the member's waiting messages first, so they cannot land on the reset row afterwards.
+    rows = [ach('a1')];
+    await svc.refreshAchievementCache(gid);
+    await svc.onMessageCreate(ctx('70004'));
+    await svc.onMessageCreate(ctx('70004'));
+    await svc.resetMemberProgress(gid, '70004', ['a1']);
+    assert.deepEqual(updates.map((u) => (u.reset ? 'reset' : u.inc)), [2, 'reset']);
+
+    // The final flush (shutdown): later messages are written at once, no timer is left to fire.
+    updates.length = 0;
+    await svc.onMessageCreate(ctx('70005'));
+    await svc.flushMessageCounts({ final: true });
+    await svc.onMessageCreate(ctx('70005'));
+    assert.deepEqual(updates.map((u) => u.inc), [1, 1]);
+  } finally {
+    prisma.achievement.findMany = real.findMany;
+    prisma.$queryRaw = real.queryRaw;
+    prisma.guildSettings.upsert = real.upsert;
+    prisma.$transaction = real.tx;
+    svc.__setMessageFlush({ delayMs: 0 });
+    svc.__resetAchievementState();
+  }
+});
 
 test('DB: messages count atomically, unlock each tier once, pay the rewards and announce', { skip: skipDb }, async () => {
   const gid = G(1);

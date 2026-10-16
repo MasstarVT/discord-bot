@@ -943,9 +943,8 @@ function fakeGuild(extra = {}) {
     iconURL: () => 'https://cdn.example/icon.png', bannerURL: () => null,
     channels: { cache: new Collection(channels.map((c) => [c.id, c])) },
     emojis: { cache: new Collection([['e1', { animated: true }], ['e2', { animated: false }]]) },
-    stickers: { cache: new Collection([['s1', {}]]) },
     roles: { cache: new Collection() },
-    client: { rest: { calls: 0, async get() { this.calls++; return { approximate_member_count: 1234, approximate_presence_count: 77 }; } } },
+    client: { rest: { calls: 0, async get() { this.calls++; return { approximate_member_count: 1234, approximate_presence_count: 77, stickers: [{ id: 's1' }] }; } } },
     ...extra,
   };
   guild.roles.cache.set(guild.id, { id: guild.id, position: 0, name: '@everyone' });

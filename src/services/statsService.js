@@ -24,6 +24,7 @@ import { clampText, formatNumber } from '../utils/text.js';
 import { missingBotPermissions } from '../utils/interactionHelpers.js';
 import { markBotDeletion } from '../utils/deletionTracker.js';
 import { fetchAllMembers } from '../utils/guildMembers.js';
+import { presencesEnabled } from '../utils/gatewayFeatures.js';
 import logger from '../utils/logger.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -242,9 +243,10 @@ export function countChannels(channels) {
 /**
  * Everything a counter can show, read from the caches only (synchronous).
  * @param {object} guild
- * @param {{ roleIds?: string[], approxOnline?: number|null }} [opts]
+ * @param {{ roleIds?: string[], approxOnline?: number|null, presences?: boolean }} [opts] presences: false when the bot runs
+ *   without the Presence intent (DISABLE_PRESENCES), so the online count is always Discord's approximate one
  */
-export function buildSnapshot(guild, { roleIds = [], approxOnline = null } = {}) {
+export function buildSnapshot(guild, { roleIds = [], approxOnline = null, presences = presencesEnabled() } = {}) {
   const members = Number(guild.memberCount ?? 0);
   const membersComplete = isMemberCacheComplete(guild);
   let humans = null;
@@ -261,7 +263,7 @@ export function buildSnapshot(guild, { roleIds = [], approxOnline = null } = {})
     }
   }
   let online;
-  if (members <= PRESENCE_CACHE_MAX_MEMBERS) {
+  if (presences && members <= PRESENCE_CACHE_MAX_MEMBERS) {
     online = 0;
     for (const p of guild.presences?.cache?.values() ?? []) if (p.status !== 'offline') online++;
   } else {
@@ -534,7 +536,8 @@ export async function collectSnapshot(guild, rows, { allowFetch = true } = {}) {
   }
 
   let approxOnline = null;
-  if (needOnline && members > PRESENCE_CACHE_MAX_MEMBERS) {
+  const presences = presencesEnabled();
+  if (needOnline && (!presences || members > PRESENCE_CACHE_MAX_MEMBERS)) {
     try {
       const g = await withTimeout(guild.fetch(), GUILD_FETCH_TIMEOUT_MS, 'stats guild fetch');
       approxOnline = g?.approximatePresenceCount ?? null;
@@ -544,7 +547,7 @@ export async function collectSnapshot(guild, rows, { allowFetch = true } = {}) {
     }
   }
 
-  return { snap: buildSnapshot(guild, { roleIds, approxOnline }), retryAt };
+  return { snap: buildSnapshot(guild, { roleIds, approxOnline, presences }), retryAt };
 }
 
 // ── The refresh engine ────────────────────────────────────────────────────────

@@ -29,8 +29,9 @@ const { HOOK_ORDER, INTERNAL_HOOK_POINTS, SYNTHETIC_HOOK_POINTS } = await import
 const { CUSTOM_ID_PREFIXES, buildCustomId } = await import('../src/config/customIds.js');
 const { JOB_TYPES } = await import('../src/config/jobTypes.js');
 const { collectPlugins, installPlugins } = await import('../src/handlers/pluginLoader.js');
-const { clearHooks, registerHook, listHooks, runHooks, runGuildReady, createHookContext, DEFAULT_HOOK_TIMEOUT_MS } =
-  await import('../src/handlers/hookRegistry.js');
+const {
+  clearHooks, registerHook, listHooks, runHooks, runGuildReady, runGuildAvailable, createReadyGate, createHookContext, DEFAULT_HOOK_TIMEOUT_MS,
+} = await import('../src/handlers/hookRegistry.js');
 const { HandlerMap, createHandlerMaps, registerCoreComponents } = await import('../src/handlers/componentRegistry.js');
 const { buildCommandPayload, computeDeployHash } = await import('../src/handlers/commandLoader.js');
 const { routeInteraction } = await import('../src/handlers/interactionRouter.js');
@@ -474,6 +475,18 @@ test('messageUpdate only dispatches real edits (R120, R121)', async () => {
   await execute({ partial: true }, { ...base, content: 'b', editedTimestamp: null }, {});   // nothing says it was edited
   await execute({ partial: true }, { ...base, content: 'b', editedTimestamp: Date.now() - 60_000 }, {});
   assert.equal(calls.length, 2);
+
+  // A partial new message (uncached) is fetched only when its editedTimestamp says it was just edited.
+  let fetches = 0;
+  const partialMsg = (editedTimestamp) => ({
+    ...base, partial: true, editedTimestamp, fetch: async () => { fetches++; return { ...base, content: 'c', editedTimestamp }; },
+  });
+  await execute({ partial: true }, partialMsg(null), {});
+  await execute({ partial: true }, partialMsg(Date.now() - 60_000), {});
+  assert.equal(fetches, 0, 'not an edit: no REST fetch');
+  await execute({ partial: true }, partialMsg(Date.now() - 1000), {});
+  assert.equal(fetches, 1);
+  assert.equal(calls.length, 3);
 });
 
 test('thread events dispatch their hook points and skip threads without a guild', async () => {
@@ -554,6 +567,28 @@ test('runGuildReady skips an unavailable guild', async () => {
   registerHook({ event: 'guildReady', id: 'invites', module: null, run: () => { seen.push('ran'); } }, noModule);
   await runGuildReady({}, { id: 'g', available: false }, 'startup');
   assert.deepEqual(seen, []);
+});
+
+test('guildAvailable gate: one re-run per guild per cooldown, a startup run counts, and the cap holds', async () => {
+  const gate = createReadyGate({ concurrency: 1, cooldownMs: 60_000 });
+  let runs = 0;
+  assert.equal(await gate.run('g1', () => { runs++; }), true);
+  assert.equal(await gate.run('g1', () => { runs++; }), false, 'inside the cooldown');
+  gate.record('g2'); // what runGuildReady does for a startup or join run
+  assert.equal(await gate.run('g2', () => { runs++; }), false);
+  assert.equal(runs, 1);
+
+  let release;
+  const order = [];
+  const first = gate.run('a', () => new Promise((resolve) => { order.push('a start'); release = resolve; }));
+  const second = gate.run('b', () => { order.push('b start'); });
+  await new Promise((resolve) => { setImmediate(resolve); });
+  assert.deepEqual(order, ['a start'], 'b waits for the only slot');
+  release();
+  assert.deepEqual(await Promise.all([first, second]), [true, true]);
+  assert.deepEqual(order, ['a start', 'b start']);
+
+  assert.equal(await runGuildAvailable({}, { id: 'g-off', available: false }), false, 'an unavailable guild never runs');
 });
 
 // ── Router ───────────────────────────────────────────────────────────────────

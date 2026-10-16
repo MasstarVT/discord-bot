@@ -54,12 +54,21 @@ let gcTimer = null;
 
 // ── Raw SQL ───────────────────────────────────────────────────────────────────
 
+// Which guilds' jobs a claim may take. `guildIds`: this shard's available guilds. `shards`: every guild of these shards,
+// by Discord's formula (guild_id >> 22) % shard_count, so the interactive loop's 1 s poll sends no guild list; null: all
+// guilds (one process holds them all). The CASE keeps one malformed guildId from failing every claim.
+const ownedSql = ({ guildIds, shards }) => {
+  if (guildIds) return Prisma.sql`"guildId" = ANY(${guildIds}::text[])`;
+  if (!shards) return Prisma.sql`TRUE`;
+  return Prisma.sql`(CASE WHEN "guildId" ~ '^[0-9]{1,19}$' THEN ("guildId"::bigint >> 22) % ${shards.count}::bigint END) = ANY(${shards.ids}::bigint[])`;
+};
+
 // `interactive`: only the interactive job types (their own loop), otherwise every other type. `limit`: at most this
 // many rows (the slot loop claims only as many jobs as it has free slots).
-const claimSql = (guildIds, owner, { interactive = false, limit = CLAIM_BATCH } = {}) => Prisma.sql`
+const claimSql = (owned, owner, { interactive = false, limit = CLAIM_BATCH } = {}) => Prisma.sql`
   WITH due AS (
     SELECT id FROM "ScheduledJob"
-    WHERE "guildId" = ANY(${guildIds}::text[])
+    WHERE ${ownedSql(owned)}
       AND ${interactive ? Prisma.sql`type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[])` : Prisma.sql`NOT (type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[]))`}
       AND "runAt" <= ${SQL_NOW}
       AND (status = 'PENDING' OR (status = 'RUNNING' AND "lockedUntil" < ${SQL_NOW}))
@@ -82,8 +91,9 @@ const gcSql = () => Prisma.sql`
 
 /** One entry per raw statement, with sample parameters (01-foundation §1). */
 export const RAW_SQL = Object.freeze([
-  { name: 'scheduler.claim', build: () => claimSql(['0'], '0:0:0') },
-  { name: 'scheduler.claimInteractive', build: () => claimSql(['0'], '0:0:0', { interactive: true }) },
+  { name: 'scheduler.claim', build: () => claimSql({ guildIds: ['0'] }, '0:0:0') },
+  { name: 'scheduler.claimInteractive', build: () => claimSql({ shards: { count: 2, ids: [0] } }, '0:0:0', { interactive: true }) },
+  { name: 'scheduler.claimInteractiveUnsharded', build: () => claimSql({ shards: null }, '0:0:0', { interactive: true }) },
   { name: 'scheduler.lockDedupe', build: () => lockDedupeSql('sample') },
   { name: 'scheduler.gc', build: () => gcSql() },
 ]);
@@ -240,9 +250,40 @@ export async function getJob(dedupeKey) {
   }
 }
 
+/** Keys per query of getJobsByKeys. */
+const JOB_LOOKUP_CHUNK = 500;
+
+/**
+ * Many getJob calls in one query per 500 keys (the startup repairs check one key per row).
+ * @param {string[]} dedupeKeys
+ * @returns {Promise<Map<string, object>|null>} dedupeKey → job; a key with no job is absent. null on a database error,
+ *   so a caller can tell "no jobs" from "could not look".
+ */
+export async function getJobsByKeys(dedupeKeys) {
+  const keys = [...new Set(dedupeKeys ?? [])];
+  const out = new Map();
+  try {
+    for (let i = 0; i < keys.length; i += JOB_LOOKUP_CHUNK) {
+      const rows = await prisma.scheduledJob.findMany({ where: { dedupeKey: { in: keys.slice(i, i + JOB_LOOKUP_CHUNK) } } });
+      for (const row of rows) out.set(row.dedupeKey, row);
+    }
+    return out;
+  } catch (err) {
+    logger.error('getJobsByKeys failed', err);
+    return null;
+  }
+}
+
 // ── Claim and execute ─────────────────────────────────────────────────────────
 
 const ownerOf = (client) => `${client.shard?.ids?.join(',') ?? '0'}:${process.pid}:${threadId}`;
+
+/** The shards this client runs, for claims by shard; null when this process holds every guild. */
+function shardScope(client) {
+  const count = Number(client.shard?.count ?? 1);
+  const ids = (client.shard?.ids ?? []).map(Number).filter(Number.isInteger);
+  return count > 1 && ids.length ? { count, ids } : null;
+}
 
 function availableGuildIds(client) {
   const ids = [];
@@ -363,9 +404,16 @@ async function runJob(client, row) {
 
 async function runTick(client, { interactive = false } = {}) {
   try {
-    const guildIds = availableGuildIds(client);
-    if (!guildIds.length) return 0;
-    const rows = await prisma.$queryRaw(claimSql(guildIds, ownerOf(client), { interactive }));
+    // Interactive jobs are claimed by shard: a guild that is unavailable right now gets its job refused at once (runJob)
+    // instead of a wait, and the poll does not send every guild id each second.
+    let owned;
+    if (interactive) {
+      owned = { shards: shardScope(client) };
+    } else {
+      owned = { guildIds: availableGuildIds(client) };
+      if (!owned.guildIds.length) return 0;
+    }
+    const rows = await prisma.$queryRaw(claimSql(owned, ownerOf(client), { interactive }));
     if (!rows.length) return 0;
     await mapLimit(rows, JOB_CONCURRENCY, (row) => runJob(client, row));
     return rows.length;
@@ -405,7 +453,7 @@ export async function fillSlots(client) {
   try {
     const guildIds = availableGuildIds(client);
     if (!guildIds.length) return 0;
-    const rows = await prisma.$queryRaw(claimSql(guildIds, ownerOf(client), { limit: free }));
+    const rows = await prisma.$queryRaw(claimSql({ guildIds }, ownerOf(client), { limit: free }));
     backlog = rows.length === free;
     for (const row of rows) {
       running++;

@@ -261,6 +261,9 @@ test('4. buildSnapshot and computeValue', () => {
 
   assert.equal(value('ONLINE', buildSnapshot(fakeGuild({ memberCount: 80_000 }), { approxOnline: 1234 })).value, 1234);
   assert.deepEqual(value('ONLINE', buildSnapshot(fakeGuild({ memberCount: 80_000 }), { approxOnline: null })), { value: null, problem: 'presence-unavailable' });
+  // DISABLE_PRESENCES: the empty presence cache is never counted as "nobody online", whatever the size.
+  assert.equal(value('ONLINE', buildSnapshot(fakeGuild({ memberCount: 4 }), { presences: false, approxOnline: 2 })).value, 2);
+  assert.deepEqual(value('ONLINE', buildSnapshot(fakeGuild({ memberCount: 4 }), { presences: false })), { value: null, problem: 'presence-unavailable' });
 
   const online7 = buildSnapshot(fakeGuild({ memberCount: 7, presences: Array.from({ length: 7 }, () => ({ status: 'online' })) }));
   const online12 = buildSnapshot(fakeGuild({ memberCount: 12, presences: Array.from({ length: 12 }, () => ({ status: 'online' })) }));
@@ -276,6 +279,21 @@ test('4. buildSnapshot and computeValue', () => {
 });
 
 // ── 5. isMemberCacheComplete ──────────────────────────────────────────────────
+
+test('4b. collectSnapshot: without presences a small guild reads the approximate online count', async () => {
+  const before = process.env.DISABLE_PRESENCES;
+  process.env.DISABLE_PRESENCES = '1';
+  try {
+    let fetches = 0;
+    const guild = { ...fakeGuild({ memberCount: 5, presences: [{ status: 'online' }] }), fetch: async () => { fetches++; return { approximatePresenceCount: 3 }; } };
+    const { snap } = await stats.collectSnapshot(guild, [{ kind: 'ONLINE' }]);
+    assert.equal(fetches, 1);
+    assert.equal(snap.online, 3);
+  } finally {
+    if (before === undefined) delete process.env.DISABLE_PRESENCES;
+    else process.env.DISABLE_PRESENCES = before;
+  }
+});
 
 test('5. isMemberCacheComplete', () => {
   const members = (n) => Array.from({ length: n }, () => mkMember(false));

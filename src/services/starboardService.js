@@ -8,7 +8,7 @@ import prisma, { SQL_NOW } from '../database/client.js';
 import { cache } from './redis.js';
 import { ensureGuildSettings } from './settingsService.js';
 import { LIMITS } from '../config/constants.js';
-import { createKeyedMutex, createThrottle, mapLimit, sleep } from '../utils/async.js';
+import { createKeyedMutex, createSemaphore, createThrottle, mapLimit, sleep } from '../utils/async.js';
 import { markBotDeletion, wasDeletedByBot } from '../utils/deletionTracker.js';
 import { clampText, formatNumber, joinWithLimit } from '../utils/text.js';
 import { checkChannelUsable } from '../utils/interactionHelpers.js';
@@ -23,6 +23,11 @@ export const SYNC_CONCURRENCY = 4;         // concurrent syncs per shard
 // A message that was synced a moment ago waits this long before its next sync, so a burst of reactions on one hot message
 // produces a few count edits instead of one per reaction (Discord allows about 5 edits per 5 s per channel).
 export const SYNC_SPACING_MS = 1500;
+// A message that already has a repost waits longer: with the default exclusions (self-stars, bots) every sync re-reads
+// every reactor of every qualifying emoji over REST, only to edit a count. The last sync of a burst still runs (trailing).
+export const REPOST_SYNC_SPACING_MS = 10_000;
+const REPOSTED_TTL_MS = 10 * 60_000;
+const REPOSTED_MAX = 5_000;
 export const BOARD_MEMO_TTL_MS = 60_000;
 const BOARD_CACHE_TTL_S = 300;
 const BOARD_MEMO_MAX = 10_000;
@@ -295,70 +300,75 @@ export function buildRepostPayload({ message, count, emojiText }) {
   };
 }
 
-/** @returns {{ run: <T>(fn: () => Promise<T>|T) => Promise<T>, active: number, queued: number }} a counting semaphore */
-export function createSemaphore(limit) {
-  let active = 0;
-  const queue = [];
-  const release = () => {
-    active--;
-    const next = queue.shift();
-    if (next) next();
-  };
-  const acquire = () => new Promise((resolve) => {
-    const take = () => { active++; resolve(); };
-    if (active < limit) take();
-    else queue.push(take);
-  });
-  return {
-    async run(fn) {
-      await acquire();
-      try {
-        return await fn();
-      } finally {
-        release();
-      }
-    },
-    get active() { return active; },
-    get queued() { return queue.length; },
-  };
-}
+export { createSemaphore }; // moved to utils/async.js; kept here for the starboard tests
 
 /**
  * Per key at most one running sync and one waiting sync: a request while one is already waiting returns null, because the
  * waiting run reads the newest Discord state anyway. Lock order is always mutex, then semaphore. `spacingMs` makes a run
- * wait until that long after the previous run for the same key ended (burst coalescing).
+ * wait until that long after the previous run for the same key ended (burst coalescing); `spacingFor(key)`, asked when a
+ * run ends, can give a key its own spacing.
  */
-export function createCoalescer({ mutex, semaphore, spacingMs = 0 }) {
+export function createCoalescer({ mutex, semaphore, spacingMs = 0, spacingFor = () => spacingMs }) {
   const waiting = new Set();
-  const lastEnd = new Map();
+  /** key → earliest start of its next run */
+  const nextAt = new Map();
   const sweep = (now) => {
-    for (const [k, t] of lastEnd) if (now - t >= spacingMs) lastEnd.delete(k);
+    for (const [k, t] of nextAt) if (t <= now) nextAt.delete(k);
   };
   function request(key, fn) {
     if (waiting.has(key)) return null;
     waiting.add(key);
-    return mutex.run(key, async () => {
-      if (spacingMs > 0) {
-        const wait = (lastEnd.get(key) ?? 0) + spacingMs - Date.now();
-        if (wait > 0) await sleep(wait);
-      }
+    // The spacing is checked under the mutex but slept outside it, so the message's delete and edit handlers (same
+    // mutex) are never held up by a waiting sync.
+    const attempt = () => mutex.run(key, async () => {
+      const wait = (nextAt.get(key) ?? 0) - Date.now();
+      if (wait > 0) return { wait };
       try {
-        return await semaphore.run(async () => { waiting.delete(key); return fn(); });
+        return { value: await semaphore.run(async () => { waiting.delete(key); return fn(); }) };
       } finally {
-        if (spacingMs > 0) {
+        const gap = spacingFor(key);
+        if (gap > 0) {
           const now = Date.now();
-          lastEnd.set(key, now);
-          if (lastEnd.size > 500) sweep(now);
+          nextAt.set(key, now + gap);
+          if (nextAt.size > 500) sweep(now);
         }
       }
     });
+    return (async () => {
+      for (;;) {
+        const out = await attempt();
+        if (!('wait' in out)) return out.value;
+        await sleep(out.wait);
+      }
+    })();
   }
   return { request, waitingSize: () => waiting.size };
 }
 
+/** Source messages last seen with a live repost (messageId → until): their syncs are spaced REPOST_SYNC_SPACING_MS. */
+const reposted = new Map();
+
+function noteReposted(messageId, yes) {
+  reposted.delete(messageId);
+  if (!yes) return;
+  reposted.set(messageId, Date.now() + REPOSTED_TTL_MS);
+  while (reposted.size > REPOSTED_MAX) reposted.delete(reposted.keys().next().value);
+}
+
+/** Spacing of the next sync of a source message. Exported for tests. */
+export function syncSpacingFor(messageId) {
+  const until = reposted.get(messageId);
+  if (until === undefined) return SYNC_SPACING_MS;
+  if (until <= Date.now()) {
+    reposted.delete(messageId);
+    return SYNC_SPACING_MS;
+  }
+  return REPOST_SYNC_SPACING_MS;
+}
+
 const mutex = createKeyedMutex();
 const semaphore = createSemaphore(SYNC_CONCURRENCY);
-const coalescer = createCoalescer({ mutex, semaphore, spacingMs: SYNC_SPACING_MS });
+const coalescer = createCoalescer({ mutex, semaphore, spacingFor: syncSpacingFor });
 
 // ── RAW SQL ───────────────────────────────────────────────────────────────────
 
@@ -695,6 +705,8 @@ export async function syncMessage({ client, guild, channel, messageId, ensureMes
 
   const entries = await prisma.starboardEntry.findMany({ where: { sourceMessageId: messageId, starboardId: { in: candidates.map((b) => b.id) } } });
   const byBoard = new Map(entries.map((e) => [e.starboardId, e]));
+  // A repost only shows the count, so the next syncs of this message may wait longer (see REPOST_SYNC_SPACING_MS).
+  noteReposted(messageId, entries.some((e) => e.boardMessageId && !e.blocked));
 
   // Age pre-check, before any fetch: a message with no entry that is already too old can never be reposted.
   const now = Date.now();

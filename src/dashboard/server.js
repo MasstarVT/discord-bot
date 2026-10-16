@@ -3,10 +3,13 @@
 // createDashboardServer() returns a node:http Server that is not listening yet; dashboard.js (repo root)
 // starts it. Settings, records and Discord access are injected through `deps`, so this file never opens Redis
 // or Postgres connections itself.
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+import { gzip } from 'node:zlib';
 import defaultLogger from '../utils/logger.js';
 import {
   SESSION_COOKIE, STATE_COOKIE, SESSION_MAX_AGE_SECONDS, STATE_MAX_AGE_SECONDS,
@@ -59,6 +62,39 @@ const STATIC_FILES = new Map([
   ['/collections.css', ['collections.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
 ]);
+
+const gzipAsync = promisify(gzip);
+const COMPRESSIBLE_RE = /^(?:text\/|image\/svg\+xml)/;
+
+/** One static file in memory: its bytes, a gzip copy when that is smaller, and a strong ETag per encoding. */
+async function loadStaticEntry(path, type) {
+  const body = await readFile(path);
+  const hash = createHash('sha256').update(body).digest('base64url').slice(0, 27);
+  let zipped = null;
+  if (COMPRESSIBLE_RE.test(type)) {
+    const packed = await gzipAsync(body, { level: 9 });
+    if (packed.length < body.length) zipped = packed;
+  }
+  return { body, etag: `"${hash}"`, gzip: zipped, gzipEtag: `"${hash}-gz"` };
+}
+
+/** True when an Accept-Encoding header allows gzip (`gzip;q=0` refuses it). Exported for tests. */
+export function acceptsGzip(header) {
+  for (const part of String(header ?? '').toLowerCase().split(',')) {
+    const [name, ...params] = part.split(';').map((x) => x.trim());
+    if (name !== 'gzip') continue;
+    const q = params.find((x) => x.startsWith('q='));
+    return !q || Number(q.slice(2)) > 0;
+  }
+  return false;
+}
+
+/** If-None-Match against the current ETags: `*`, a list, and weak (W/) tags all count (RFC 9110 weak comparison). */
+export function etagMatches(header, etags) {
+  if (typeof header !== 'string' || !header.trim()) return false;
+  if (header.trim() === '*') return true;
+  return header.split(',').some((tag) => etags.includes(tag.trim().replace(/^W\//, '')));
+}
 
 export const SECURITY_HEADERS = Object.freeze({
   'Content-Security-Policy': "default-src 'self'; img-src 'self' https://cdn.discordapp.com data:; style-src 'self'; "
@@ -976,17 +1012,38 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     }
   }
 
+  // Static files are read once, on first request (restart the dashboard after editing them), so a page load is served
+  // from memory, gzip'd once, and a revalidation (Cache-Control: no-cache) answers 304 without a body.
+  const staticEntries = new Map();
+  function staticEntry(file, type) {
+    let entry = staticEntries.get(file);
+    if (!entry) {
+      entry = loadStaticEntry(join(publicDir, file), type);
+      staticEntries.set(file, entry);
+      entry.catch(() => staticEntries.delete(file)); // missing or unreadable: look again next time
+    }
+    return entry;
+  }
+
   async function staticFile(ctx, [file, type]) {
     if (!allow(ctx, ['GET', 'HEAD'])) return;
-    let body;
+    let entry;
     try {
-      body = await readFile(join(publicDir, file));
+      entry = await staticEntry(file, type);
     } catch (err) {
       if (err?.code !== 'ENOENT') logger.warn(`Dashboard: could not read ${file}: ${err?.message ?? err}`);
       fail(ctx, 404, 'not_found', 'Not found.');
       return;
     }
-    send(ctx, 200, body, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+    const zipped = entry.gzip !== null && acceptsGzip(ctx.req.headers['accept-encoding']);
+    const headers = { 'Cache-Control': 'no-cache', ETag: zipped ? entry.gzipEtag : entry.etag };
+    if (entry.gzip) headers.Vary = 'Accept-Encoding';
+    if (etagMatches(ctx.req.headers['if-none-match'], [entry.etag, entry.gzipEtag])) {
+      send(ctx, 304, undefined, headers);
+      return;
+    }
+    if (zipped) headers['Content-Encoding'] = 'gzip';
+    send(ctx, 200, zipped ? entry.gzip : entry.body, { 'Content-Type': type, ...headers });
   }
 
   async function route(ctx) {

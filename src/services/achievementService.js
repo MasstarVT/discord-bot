@@ -2,14 +2,16 @@
 // with role / XP / coin rewards and announcements. All logic lives here; the plugin only wires hooks to these
 // exports and the two commands only parse options and render replies.
 //
-// Design in one paragraph: every counted event is ONE atomic UPDATE per member (recordProgress, Phase 1); the
+// Design in one paragraph: every counted event is ONE atomic UPDATE per member (recordProgress, Phase 1); messages are
+// first summed in memory per member and written as one +n UPDATE every few seconds (the message buffer below). The
 // first event of a member per achievement INSERTs the rows (Phase 2, ON CONFLICT DO NOTHING). A tier unlock is
 // claimed with a conditional updateMany (compare-and-set on `tier`) BEFORE anything is paid, so each tier pays
 // out at most once per member (spec D9). Payout and announcements run fire-and-forget so later hooks are never
 // held up. There is deliberately NO keyed mutex on the progress path: an XP reward re-enters this module through
 // the levels `levelUp` hook and would deadlock (spec §6.4). `configLocks` guards config writes only.
 //
-// Nothing here runs at import: no timers, no I/O, no registration. Module-scope Maps and throttles only.
+// Nothing here runs at import: no timers, no I/O, no registration. Module-scope Maps and throttles only; the message
+// buffer starts a timer per waiting member when a message arrives.
 import { randomUUID } from 'node:crypto';
 import { escapeMarkdown } from 'discord.js';
 import { Prisma } from '@prisma/client';
@@ -71,11 +73,14 @@ const seeded = new Map();
 const warnThrottle = createThrottle(10 * 60_000);
 const configLocks = createKeyedMutex();
 
-/** Test helper: forgets every in-process cache. */
+/** Test helper: forgets every in-process cache (waiting message counts are dropped, not written). */
 export function __resetAchievementState() {
   indexMemo.clear();
   indexLoading.clear();
   seeded.clear();
+  for (const entry of pendingMessages.values()) clearTimeout(entry.timer);
+  pendingMessages.clear();
+  bufferStopped = false;
 }
 
 /** Runs `fn` after every earlier config write of the same guild (config only; never the progress or payout path). */
@@ -660,7 +665,9 @@ export async function recordProgress({ ctx, settings, userId, member = null, tri
         }
       }
       const init = (a) => {
-        if (trigger === 'MESSAGES') return a.trackPastProgress ? Math.max(ul?.messageCount ?? 0, incN) : incN;
+        // The first of the incN messages seeds from the history (the levels hook may already have counted it: max, not
+        // plus); the buffered rest add on top, as if each had been written on its own.
+        if (trigger === 'MESSAGES') return a.trackPastProgress ? Math.max(ul?.messageCount ?? 0, 1) + Math.max(incN - 1, 0) : incN;
         if (trigger === 'LEVEL') return floorN;
         return incN;
       };
@@ -957,6 +964,96 @@ export async function sendAlmostThere({ ctx, member = null, userId, achievement:
   }
 }
 
+// ── Message buffer (write-behind) ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * MESSAGES progress is summed in memory and written per member as one UPDATE (+n) once `delayMs` after their first waiting
+ * message, or at once when `at` are waiting: a chatty member costs one statement every few seconds instead of one per
+ * message. Counts are unchanged; unlocks and their announcements come up to `delayMs` late, and a crash loses at most
+ * that window (bot.js flushes at shutdown). At most `maxMembers` members wait; beyond that the oldest is written at once.
+ */
+export const MESSAGE_FLUSH = Object.freeze({ delayMs: 5_000, at: 50, maxMembers: 10_000 });
+let flushConfig = { ...MESSAGE_FLUSH };
+/** @type {Map<string, object>} `${guildId}:${userId}` -> the waiting messages of one member */
+const pendingMessages = new Map();
+/** @type {Map<Promise<void>, string>} writes in progress -> their member key, so flushes and resets can wait for them */
+const runningFlushes = new Map();
+/** Set by the final flush at shutdown: later messages are written at once instead of waiting on a timer. */
+let bufferStopped = false;
+
+/** Test helper: changes the buffer. `delayMs: 0` writes every message at once, as before the buffer. */
+export function __setMessageFlush(over = {}) {
+  flushConfig = { ...MESSAGE_FLUSH, ...over };
+}
+
+function bufferMessage({ ctx, settings, userId, member, channel, achievements }) {
+  const key = `${ctx.guildId}:${userId}`;
+  const ids = achievements.map((a) => a.id);
+  const sig = ids.join(',');
+  let entry = pendingMessages.get(key);
+  // Another set of active achievements (one created or deleted, or past its deadline): the waiting messages belong to the old set.
+  if (entry && entry.sig !== sig) {
+    flushMember(key);
+    entry = null;
+  }
+  if (!entry) {
+    while (pendingMessages.size >= flushConfig.maxMembers) flushMember(pendingMessages.keys().next().value);
+    entry = { guildId: ctx.guildId, userId, sig, ids, inc: 0, timer: null };
+    pendingMessages.set(key, entry);
+    entry.timer = setTimeout(() => flushMember(key), flushConfig.delayMs);
+    entry.timer.unref?.();
+  }
+  entry.inc++;
+  // The newest message wins: an unlock is announced where the member wrote last.
+  entry.ctx = { guildId: ctx.guildId, guild: ctx.guild, client: ctx.client };
+  entry.settings = settings;
+  entry.member = member ?? entry.member ?? null;
+  entry.channel = channel ?? entry.channel ?? null;
+  if (entry.inc >= flushConfig.at) flushMember(key);
+}
+
+/** Starts writing one member's waiting messages. Never rejects. */
+function flushMember(key) {
+  const entry = pendingMessages.get(key);
+  if (!entry) return;
+  pendingMessages.delete(key);
+  clearTimeout(entry.timer);
+  const run = writeMessages(entry)
+    .catch((err) => warnOnce(entry.guildId, 'progress', 'achievements: buffered progress write failed', err))
+    .finally(() => runningFlushes.delete(run));
+  runningFlushes.set(run, key);
+}
+
+/** Writes one member's waiting messages and waits for every write of that member. Never rejects. */
+async function settleMember(guildId, userId) {
+  const key = `${guildId}:${userId}`;
+  flushMember(key);
+  await Promise.allSettled([...runningFlushes].filter(([, k]) => k === key).map(([run]) => run));
+}
+
+async function writeMessages(entry) {
+  // The achievements as they are now (tier edits apply, a deleted one is dropped), limited to the ones these messages counted for.
+  const idx = await getAchievementIndex(entry.guildId);
+  if (!idx) return;
+  const current = new Map((idx.byTrigger.MESSAGES ?? []).map((a) => [a.id, a]));
+  const list = entry.ids.map((id) => current.get(id)).filter(Boolean);
+  if (!list.length) return;
+  await recordProgress({
+    ctx: entry.ctx, settings: entry.settings, userId: entry.userId, member: entry.member,
+    trigger: 'MESSAGES', achievements: list, inc: entry.inc, channel: entry.channel,
+  });
+}
+
+/**
+ * Writes every waiting message count now and waits for all writes. Never rejects. `final` (bot.js, at shutdown): later
+ * messages are written at once, since no timer would fire before the process exits.
+ */
+export async function flushMessageCounts({ final = false } = {}) {
+  if (final) bufferStopped = true;
+  for (const key of [...pendingMessages.keys()]) flushMember(key);
+  await Promise.allSettled([...runningFlushes.keys()]);
+}
+
 // ── Hook filters and runs (spec §5, §6.2) ────────────────────────────────────────────────────────────────
 
 export const messageFilter = (ctx) => !!ctx.guildId && !ctx.message?.author?.bot && mayHaveTriggers(ctx.guildId, MESSAGE_HOOK_TRIGGERS);
@@ -974,7 +1071,8 @@ export async function onMessageCreate(ctx) {
   const channel = ctx.channel ?? null;
   const msgs = activeAchievements(idx.byTrigger.MESSAGES, Date.now());
   if (msgs.length) {
-    await recordProgress({ ctx, settings, userId, member, trigger: 'MESSAGES', achievements: msgs, inc: 1, channel });
+    if (flushConfig.delayMs > 0 && !bufferStopped) bufferMessage({ ctx, settings, userId, member, channel, achievements: msgs });
+    else await recordProgress({ ctx, settings, userId, member, trigger: 'MESSAGES', achievements: msgs, inc: 1, channel });
   }
   await catchUpSeeds({ ctx, settings, idx, userId, member, channel });
 }
@@ -1169,6 +1267,8 @@ export async function getTierStats(achievementId, tierCount) {
 export async function resetMemberProgress(guildId, userId, achievementIds) {
   const ids = [...new Set(achievementIds ?? [])];
   if (!ids.length) return;
+  // Messages still waiting in the buffer were sent before the reset: write them first, so they cannot land on the reset row.
+  await settleMember(guildId, userId);
   await ensureGuildSettings(guildId);
   await prisma.$transaction([
     prisma.achievementProgress.updateMany({

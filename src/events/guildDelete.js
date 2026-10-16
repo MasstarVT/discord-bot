@@ -15,10 +15,8 @@ export async function execute(guild, client) {
 
   try {
     await invalidateSettings(guild.id);
-    // Purge every Redis key scoped to this guild.
-    await cache.invalidate(`guild:${guild.id}:*`);
-    await cache.invalidate(`xp:cooldown:${guild.id}:*`);
-    await cache.invalidate(`voice:start:${guild.id}:*`);
+    // Purge every Redis key scoped to this guild, in one pass over the keyspace.
+    await cache.invalidateAny(`*:${guild.id}:*`, [`guild:${guild.id}:*`, `xp:cooldown:${guild.id}:*`, `voice:start:${guild.id}:*`]);
   } catch (err) {
     logger.error(`guildDelete: cache cleanup failed for guild ${guild.id}`, err instanceof Error ? err : new Error(String(err)));
   }

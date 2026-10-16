@@ -1,12 +1,13 @@
 // Live Role plugin (pkg-liverole.md): a role held while a member's Discord presence shows a Streaming activity (Twitch or YouTube),
 // MEE6's Twitch Alerts "live-streaming role" without the Twitch API. All logic lives here: the plugin declaration, the pure helpers,
 // and the async engine (reconcileMember, syncGuild). src/commands/admin/liverole.js imports the named exports. Nothing runs at import:
-// the only module-scope state is two keyed mutexes, two throttles, a waiting-set and frozen constants.
+// the only module-scope state is three keyed mutexes, two throttles, two waiting-sets and frozen constants.
 import { ActivityType, escapeMarkdown } from 'discord.js';
 import { getSettingsSafe, peekSettings } from '../services/settingsService.js';
 import { checkAssignableRole } from '../utils/interactionHelpers.js';
 import { createKeyedMutex, createThrottle } from '../utils/async.js';
 import { fetchAllMembers } from '../utils/guildMembers.js';
+import { presencesEnabled } from '../utils/gatewayFeatures.js';
 import { clampText, formatNumber } from '../utils/text.js';
 import logger from '../utils/logger.js';
 
@@ -47,6 +48,12 @@ const fetchThrottle = createThrottle(LIVEROLE.FULL_FETCH_INTERVAL_MS);
  * from the cache when it starts, so the final state still converges (at most one running and one waiting).
  */
 const waiting = new Set();
+/**
+ * Startup syncs (guildReady) run one guild at a time, detached from the guildReady hooks: each may fetch a whole member
+ * list. A guild is queued at most once; the queued sync reads the newest settings when it starts.
+ */
+const startupQueue = createKeyedMutex();
+const startupQueued = new Set();
 
 const warn = (guildId, kind, text) => {
   if (warnThrottle(`${guildId}:${kind}`)) logger.warn(`[liverole] ${guildId}: ${text}`);
@@ -141,6 +148,7 @@ export function formatSyncResult(r) {
       case 'no-role': return 'ℹ️ Not synced: no live role is set.';
       case 'role-missing': return '⚠️ Not synced: the live role was deleted.';
       case 'cannot-manage': return `⚠️ Not synced: ${r.reason}`;
+      case 'presence-unavailable': return '⚠️ Not synced: this bot runs without presence data (`DISABLE_PRESENCES=1`).';
       default: return '⚠️ Sync failed. Check the bot logs.';
     }
   }
@@ -274,6 +282,8 @@ export async function reconcileMember(guild, userId, { mode = 'sync', settings, 
   try {
     // Rule 20: an unavailable guild has empty caches, so every role and member would look deleted.
     if (guild.available === false) return 'none';
+    // Without the Presence intent nobody looks like they stream: only the clear mode (/liverole disable) may act.
+    if (mode !== 'clear' && !presencesEnabled()) return 'none';
     const key = `${guild.id}:${userId}`;
     const coalesce = source === 'presence';
     if (coalesce) {
@@ -341,12 +351,14 @@ export async function loadMembers(guild) {
  * @param {import('discord.js').Guild} guild
  * @param {{ mode?: 'sync'|'clear', reason?: string }} [opts]
  * @returns {Promise<{ ok: true, mode: string, added: number, removed: number, failed: number, deferred: number, addsBlocked: string|null, complete: boolean }
- *   | { ok: false, code: 'settings'|'off'|'no-role'|'role-missing'|'cannot-manage'|'error', reason?: string }>}
+ *   | { ok: false, code: 'settings'|'off'|'no-role'|'role-missing'|'cannot-manage'|'presence-unavailable'|'error', reason?: string }>}
  */
 export async function syncGuild(guild, { mode = 'sync', reason = 'startup' } = {}) {
   try {
     // Rule 20: an unavailable guild has empty caches; nothing may be concluded from them.
     if (guild.available === false) return { ok: false, code: 'error' };
+    // DISABLE_PRESENCES: the empty presence cache would make every holder look offline and strip the role from all of them.
+    if (mode === 'sync' && !presencesEnabled()) return { ok: false, code: 'presence-unavailable' };
     return await syncLock.run(guild.id, async () => {
       // Always the current values: a sync queued behind another one may run much later.
       const settings = await getSettingsSafe(guild.id);
@@ -429,10 +441,24 @@ async function onMemberUpdate(ctx) {
 }
 
 async function onGuildReady(ctx) {
+  if (!presencesEnabled()) return;
   const settings = await ctx.getSettings();
   if (!settings?.liveRoleEnabled || !settings.liveRoleId) return;
+  const { guild } = ctx;
+  if (startupQueued.has(guild.id)) return;
+  startupQueued.add(guild.id);
   // 'available' behaves exactly like 'startup'; only a bot join is labelled differently.
-  await syncGuild(ctx.guild, { mode: 'sync', reason: ctx.reason === 'join' ? 'join' : 'startup' });
+  const reason = ctx.reason === 'join' ? 'join' : 'startup';
+  // Detached, so a member fetch never holds up the later guildReady hooks or the next guild's startup.
+  void startupQueue.run('startup', () => {
+    startupQueued.delete(guild.id);
+    return syncGuild(guild, { mode: 'sync', reason });
+  }).catch((err) => logger.error(`[liverole] startup sync failed for ${guild.id}`, err));
+}
+
+/** Test-only: resolves once every startup sync queued so far has finished. */
+export function __startupSyncsIdle() {
+  return startupQueue.run('startup', () => {});
 }
 
 // Hook ids are the bare 'liverole' (HOOK_ORDER lists it). No hook is `always`: while the module is off the bot never touches
@@ -451,14 +477,13 @@ export const plugin = {
     {
       event: 'guildReady',
       id: 'liverole',
-      run: onGuildReady,
-      timeoutMs: 120_000, // a full member fetch plus up to 50 role edits can exceed the 10 s default
+      run: onGuildReady, // queues the sync and returns at once
     },
     {
       event: 'guildMemberUpdate',
       id: 'liverole',
       // An uncached old member cannot be diffed (onMemberUpdate compares the required role).
-      filter: (ctx) => ctx.oldKnown === true && !ctx.newMember?.user?.bot,
+      filter: (ctx) => ctx.oldKnown === true && !ctx.newMember?.user?.bot && presencesEnabled(),
       run: onMemberUpdate,
       timeoutMs: 30_000,
     },
