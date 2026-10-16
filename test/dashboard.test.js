@@ -298,7 +298,7 @@ describe('settings registry', () => {
     const caps = {
       modRoleIds: LIMITS.MOD_ROLES, immuneRoleIds: LIMITS.IMMUNE_ROLES, infractionEscalation: LIMITS.ESCALATION_TIERS,
       autoroleIds: LIMITS.AUTOROLES, noXpRoleIds: LIMITS.NOXP_ROLES, noXpChannelIds: LIMITS.NOXP_CHANNELS,
-      xpBoostRoles: LIMITS.XP_BOOST_ROLES, logIgnoredChannelIds: LIMITS.LOG_IGNORED_CHANNELS,
+      xpBoostRoles: LIMITS.XP_BOOST_ROLES, timezoneRoles: LIMITS.TIMEZONE_ROLES, logIgnoredChannelIds: LIMITS.LOG_IGNORED_CHANNELS,
       economyGameChannelIds: LIMITS.ECONOMY_GAME_CHANNELS, automodBadWords: LIMITS.AUTOMOD_WORDS,
       automodBadWordPatterns: LIMITS.AUTOMOD_PATTERNS, automodBlockedDomains: LIMITS.AUTOMOD_DOMAINS,
       automodAllowedDomains: LIMITS.AUTOMOD_DOMAINS, automodExemptRoleIds: LIMITS.AUTOMOD_EXEMPTIONS,
@@ -394,6 +394,7 @@ describe('settings registry', () => {
         welcomeMessage: '  keep spaces  ', welcomeEmbed: { title: '', description: '' },
         welcomeCardStyle: { enabled: true, background: '#AABBCC', backgroundUrl: null, textColor: null, accentColor: null, overlayOpacity: 0.456 },
         xpBoostRoles: [{ roleId: RL.low, multiplier: 1.255 }],
+        timezoneRoles: [{ roleId: RL.mid, zone: 'america/chicago' }, { roleId: RL.low, zone: 'Asia/Calcutta' }],
       },
     });
     assert.equal(r.ok, true, r.message);
@@ -412,7 +413,9 @@ describe('settings registry', () => {
     assert.equal(c.welcomeEmbed, null, 'an empty embed means the default');
     assert.equal(c.welcomeCardStyle.background, '#AABBCC');
     assert.deepEqual(c.xpBoostRoles, [{ roleId: RL.low, multiplier: 1.25 }]);
-    assert.deepEqual(r.refs.roles.map((x) => [x.id, x.path]), [[RL.low, 'xpBoostRoles.0.roleId']]);
+    assert.deepEqual(c.timezoneRoles, [{ roleId: RL.mid, zone: 'America/Chicago' }, { roleId: RL.low, zone: 'Asia/Kolkata' }]);
+    assert.deepEqual(r.refs.roles.map((x) => [x.id, x.path]).sort((a, b) => a[1].localeCompare(b[1])),
+      [[RL.mid, 'timezoneRoles.0.roleId'], [RL.low, 'timezoneRoles.1.roleId'], [RL.low, 'xpBoostRoles.0.roleId']]);
   });
 
   test('validateSettingsChanges refuses what the commands refuse, naming the path', () => {
@@ -458,6 +461,10 @@ describe('settings registry', () => {
       [{ infractionEscalation: Array.from({ length: 11 }, (_, i) => tier({ warnCount: i + 1 })) }, 'infractionEscalation'],
       [{ xpBoostRoles: [{ roleId: RL.low, multiplier: 2 }, { roleId: RL.low, multiplier: 3 }] }, 'xpBoostRoles.1.roleId'],
       [{ xpBoostRoles: [{ roleId: RL.low, multiplier: 1 }] }, 'xpBoostRoles.0.multiplier'],
+      [{ timezoneRoles: [{ roleId: RL.low, zone: 'UTC' }, { roleId: RL.low, zone: 'Asia/Tokyo' }] }, 'timezoneRoles.1.roleId'],
+      [{ timezoneRoles: [{ roleId: RL.low, zone: 'EST' }] }, 'timezoneRoles.0.zone'],
+      [{ timezoneRoles: [{ roleId: RL.low, zone: 'Mars/Olympus' }] }, 'timezoneRoles.0.zone'],
+      [{ timezoneRoles: Array.from({ length: 26 }, (_, i) => ({ roleId: `7000000000000000${String(i).padStart(2, '0')}`, zone: 'UTC' })) }, 'timezoneRoles'],
       [{ welcomeCardStyle: { overlayOpacity: 1.5 } }, 'welcomeCardStyle.overlayOpacity'],
       [{ welcomeCardStyle: { backgroundUrl: 'ftp://x.example/a.png' } }, 'welcomeCardStyle.backgroundUrl'],
       [{ welcomeCardStyle: { v: 1 } }, 'welcomeCardStyle.v'],

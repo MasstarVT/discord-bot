@@ -303,7 +303,7 @@ function messageField(field, label, description, { maxLength, placeholders = [],
 
 // ── General (/settings) ─────────────────────────────────────────────────────────────────────────────────────
 
-/** The settings of the General page: timezone, embed colour and prefix. */
+/** The settings of the General page: timezone, embed colour, prefix and timezone roles. */
 export const GENERAL_GROUPS = [
   {
     id: 'general',
@@ -326,6 +326,32 @@ export const GENERAL_GROUPS = [
         pattern: '[^\\s`<>@#:\\\\/\\p{C}]{0,5}',
         patternMessage: 'The prefix can be at most 5 characters, without spaces or any of ` < > @ # : \\ /.',
         normalize: (v) => (v.toLowerCase() === 'off' ? '' : v),
+      },
+    ],
+  },
+  {
+    id: 'timezone-roles',
+    title: 'Timezone roles',
+    description: 'Roles such as @CST that give members a time zone in /timestamp (/settings timezone-role).',
+    fields: [
+      {
+        field: 'timezoneRoles', type: 'objectList', label: 'Timezone roles', maxItems: LIMITS.TIMEZONE_ROLES, default: [],
+        description: 'Members with one of these roles get its time zone in /timestamp, unless they saved their own with '
+          + '/timezone set; with several, the highest role wins. Hand the roles out with a Unique reaction-role panel.',
+        itemFields: [
+          { field: 'roleId', type: 'role', label: 'Role', required: true, default: null },
+          { field: 'zone', type: 'timezone', label: 'Time zone', default: 'UTC' },
+        ],
+        read: (row) => (Array.isArray(row?.timezoneRoles) ? row.timezoneRoles : []),
+        check: (list) => {
+          const seen = new Set();
+          for (const [i, l] of list.entries()) {
+            if (seen.has(l.roleId)) return { path: `${i}.roleId`, message: 'That role is already in the list.' };
+            seen.add(l.roleId);
+          }
+          return null;
+        },
+        normalize: (list) => list.map((l) => ({ roleId: l.roleId, zone: canonicalZone(l.zone) })),
       },
     ],
   },
@@ -1184,7 +1210,6 @@ export const NOT_EXPOSED = Object.freeze({
   captchaChannelId: 'changes only together with the posted panel: /captcha setup or /captcha channel posts it',
   captchaMessageId: 'bot-managed: the id of the posted verification panel',
   captchaLockdownPrior: 'bot-managed: what /captcha lock off restores',
-  timezoneRoles: 'edited with /settings timezone-role (role-to-zone links); no dashboard editor yet',
 });
 
 for (const desc of Object.values(SETTINGS_FIELDS)) deepFreeze(desc);
