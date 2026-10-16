@@ -177,3 +177,4 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - `/settings show|timezone|color|prefix|urban` (ADMIN): timezone IANA or `UTC`; `embedColor` only for info/neutral embeds (`applyGuildColor`/`guildEmbed`), never 0; `customPrefix` 1-5 code points, custom commands only, `off` stores `''`.
 - `/info user|server|role` (MEMBER); `/emoji add|list|delete` (ADMIN + Manage Expressions).
 - `/translate` `/detectlanguage` `/languages`: MEMBER, also work in DMs.
+- `/owner` (MEMBER): replies in plain content pinging `BOT_OWNER_ID` (only that user is in `allowedMentions`); ephemeral error when unset.

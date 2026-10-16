@@ -35,7 +35,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 🔢 **Counting** (beyond MEE6) — *off by default.* A channel where members count up from 1 in turns: the bot reacts ✅ to each right number, and a wrong number or counting twice in a row starts the count again from 1. `/counting set` picks the channel.
 - 🖥️ **Web Dashboard** — log in with Discord and change each server's settings in a browser: every module's switch and options, the time zone, embed colour and command prefix, and lists such as saved embeds, custom commands, reminders and feeds; a separate process, see [Web dashboard](#web-dashboard).
 
-**Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`.
+**Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`, `/owner`.
 
 **Beyond MEE6:** Auto-Translate, Counting, the Scrabble and other free games, and a per-server economy without premium limits. **Research only:** Twitch, YouTube Data API, Reddit API, X, Instagram, TikTok and Kick alerts, social counters, music and AI features are written up in [docs/external-api-research.md](docs/external-api-research.md) but not built.
 
@@ -120,6 +120,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/info` | Core | Everyone | User, server and role info (MEE6 /user-info /server-info /role-info) |
 | `/languages` | Core | Everyone | List all supported translation language codes. |
 | `/module` | Core | Admins | Turn bot modules on or off for this server. |
+| `/owner` | Core | Everyone | Show who owns this bot (pings the bot owner). |
 | `/settings` | Core | Admins | Server settings: timezone, embed colour, custom-command prefix, /urban (MEE6 Settings). |
 | `/translate` | Core | Everyone | Translate text into another language. |
 

@@ -192,6 +192,7 @@ const EXPECTED_COMMANDS = Object.freeze({
   'info':               { file: 'src/commands/utility/info.js',             module: null,             gated: null,  level: 'MEMBER',    budget:  280 },
   'invites':            { file: 'src/commands/utility/invites.js',          module: 'invites',        gated: true,  level: 'MEMBER',    budget:  500 },
   'languages':          { file: 'src/commands/utility/languages.js',        module: null,             gated: null,  level: 'MEMBER',    budget:   60 },
+  'owner':              { file: 'src/commands/utility/owner.js',            module: null,             gated: null,  level: 'MEMBER',    budget:   40 },
   'tag':                { file: 'src/commands/utility/tag.js',              module: 'customcommands', gated: true,  level: 'MEMBER',    budget: 2200 },
   'translate':          { file: 'src/commands/utility/translate.js',        module: null,             gated: null,  level: 'MEMBER',    budget:  170 },
 });
@@ -359,7 +360,7 @@ describe('A commands', () => {
       ['commands missing from EXPECTED_COMMANDS', diff(actual, expected).map((n) => `/${n}`)],
       ['duplicate command names', sortedUnique(names.filter((n, i) => names.indexOf(n) !== i))],
     ]);
-    assert.equal(COMMANDS.length, 77, `${COMMANDS.length} command files (expected 77)`);
+    assert.equal(COMMANDS.length, 78, `${COMMANDS.length} command files (expected 78)`);
     assert.ok(COMMANDS.length <= 100, `${COMMANDS.length} commands exceed Discord's limit of 100`);
   });
 
