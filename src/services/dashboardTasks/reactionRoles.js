@@ -272,10 +272,15 @@ async function timezoneTemplate({ guild, client, actor, payload }) {
   if (group.items.length) throw new TaskError('That panel already has roles.');
   let setup;
   try {
+    // The channel first, so roles are never created for a panel that cannot be posted.
+    requireUsable(await postChannel(guild, group.channelId, { strictType: true }), needsFor(group));
     setup = await setupTimezoneRoles(guild, key, {
       executor: actor.member ?? null, reason: `Timezone roles template (dashboard, by ${actor.id})`,
     });
   } catch (err) {
+    // Nothing was posted: drop the empty panel here too, in case the dashboard stopped waiting for this task.
+    await rr.deletePanel(guild.id, group.id).catch(() => {});
+    await rr.invalidatePanelIndex(guild.id);
     if (err instanceof TimezoneSetupError) throw new TaskError(err.message.replace(/\*\*/g, ''));
     throw err;
   }
