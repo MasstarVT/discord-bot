@@ -2699,15 +2699,26 @@ export function createForm({ fields = [], values = {}, ctx = null, onChange, dis
   }
 
   // `showWhen: { field, in?: [...], notIn?: [...] }` hides a field while a sibling field's value does not match
-  // (e.g. a rule's threshold while its action is off). A hidden field keeps its value.
+  // (e.g. a rule's threshold while its action is off). A hidden field keeps its value. A field whose sibling is itself
+  // hidden is hidden too (a panel template hides the role mode, and with it the mode's role limit).
   const conditional = fields.filter((d) => d.showWhen && typeof d.showWhen.field === 'string' && controls.has(d.showWhen.field));
   function paintVisibility() {
-    for (const desc of conditional) {
-      const { field, in: oneOf, notIn } = desc.showWhen;
-      const value = controls.get(field).getValue();
-      const shown = (!Array.isArray(oneOf) || oneOf.includes(value)) && (!Array.isArray(notIn) || !notIn.includes(value));
-      controls.get(desc.field).el.hidden = !shown;
+    const hidden = new Set();
+    for (let pass = 0, changed = true; changed && pass <= conditional.length; pass++) {
+      changed = false;
+      for (const desc of conditional) {
+        const { field, in: oneOf, notIn } = desc.showWhen;
+        const value = controls.get(field).getValue();
+        const shown = !hidden.has(field)
+          && (!Array.isArray(oneOf) || oneOf.includes(value)) && (!Array.isArray(notIn) || !notIn.includes(value));
+        if (shown === hidden.has(desc.field)) {
+          if (shown) hidden.delete(desc.field);
+          else hidden.add(desc.field);
+          changed = true;
+        }
+      }
     }
+    for (const desc of conditional) controls.get(desc.field).el.hidden = hidden.has(desc.field);
   }
   paintVisibility();
 

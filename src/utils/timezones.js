@@ -331,3 +331,54 @@ export function zoneInputError(raw, r) {
       return ['Unknown Timezone', `\`${shownZone(raw)}\` is not a timezone I know. Pick one from the list, e.g. \`America/Chicago\`, \`Europe/London\` or \`Asia/Tokyo\`, or type an abbreviation like \`CST\`, \`EST\` or \`PST\`.`];
   }
 }
+
+// ── Timezone role templates (/reactionrole create template:timezones-*, the dashboard's panel templates) ───────
+
+const tzRole = (name, zone, label, description) => Object.freeze({ name, zone, label, description });
+
+// West to east. `name` is the Discord role (plain abbreviation, linked to `zone` explicitly, so ambiguous names such as IST
+// are fine); `label` and `description` are the panel option (≤ 80 / ≤ 100 characters). At most 20, the reaction limit.
+const US_ROLES = [
+  tzRole('HST', 'Pacific/Honolulu', 'Hawaii (HST)', 'Honolulu'),
+  tzRole('AKST', 'America/Anchorage', 'Alaska (AKST/AKDT)', 'Anchorage, Juneau'),
+  tzRole('PST', 'America/Los_Angeles', 'Pacific (PST/PDT)', 'Los Angeles, Seattle, Vancouver'),
+  tzRole('MST', 'America/Denver', 'Mountain (MST/MDT)', 'Denver, Salt Lake City, Calgary'),
+  tzRole('CST', 'America/Chicago', 'Central (CST/CDT)', 'Chicago, Dallas, Winnipeg'),
+  tzRole('EST', 'America/New_York', 'Eastern (EST/EDT)', 'New York, Toronto, Miami'),
+];
+
+export const TIMEZONE_ROLE_TEMPLATES = Object.freeze({
+  'timezones-us': Object.freeze({
+    label: 'Timezones: US (6 roles)',
+    roles: Object.freeze(US_ROLES),
+  }),
+  'timezones-world': Object.freeze({
+    label: 'Timezones: worldwide (19 roles)',
+    roles: Object.freeze([
+      ...US_ROLES,
+      tzRole('AST', 'America/Halifax', 'Atlantic (AST/ADT)', 'Halifax, Bermuda'),
+      tzRole('BRT', 'America/Sao_Paulo', 'Brasília (BRT)', 'São Paulo, Rio de Janeiro'),
+      tzRole('GMT', 'Europe/London', 'UK & Ireland (GMT/BST)', 'London, Dublin, Lisbon'),
+      tzRole('CET', 'Europe/Berlin', 'Central Europe (CET/CEST)', 'Berlin, Paris, Rome, Madrid'),
+      tzRole('EET', 'Europe/Athens', 'Eastern Europe (EET/EEST)', 'Athens, Helsinki, Kyiv'),
+      tzRole('MSK', 'Europe/Moscow', 'Moscow (MSK)', 'Moscow, Istanbul'),
+      tzRole('GST', 'Asia/Dubai', 'Gulf (GST)', 'Dubai, Abu Dhabi'),
+      tzRole('IST', 'Asia/Kolkata', 'India (IST)', 'Mumbai, Delhi, Bengaluru'),
+      tzRole('ICT', 'Asia/Bangkok', 'Indochina (ICT)', 'Bangkok, Jakarta, Hanoi'),
+      tzRole('SGT', 'Asia/Singapore', 'Singapore & China (UTC+8)', 'Singapore, Beijing, Manila, Perth'),
+      tzRole('JST', 'Asia/Tokyo', 'Japan & Korea (JST/KST)', 'Tokyo, Seoul'),
+      tzRole('AEST', 'Australia/Sydney', 'Sydney (AEST/AEDT)', 'Sydney, Melbourne'),
+      tzRole('NZST', 'Pacific/Auckland', 'New Zealand (NZST/NZDT)', 'Auckland, Wellington'),
+    ]),
+  }),
+});
+
+/** The text of a timezone panel: Unique mode (one role at a time) and a dropdown. */
+export const TIMEZONE_PANEL = Object.freeze({
+  type: 'UNIQUE',
+  layout: 'SELECT',
+  title: '🌍 Timezone Roles',
+  description: 'Pick your timezone so `/timestamp` reads your times right. You can hold one timezone role at a time; '
+    + 'pick another to switch.',
+  placeholder: 'Pick your timezone',
+});

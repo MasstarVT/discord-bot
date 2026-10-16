@@ -6,6 +6,7 @@ import { LIMITS } from '../../config/constants.js';
 import { clampText } from '../../utils/text.js';
 import { RecordError } from './errors.js';
 import { POSTABLE_CHANNEL_KINDS, messageUrl } from './embeds.js';
+import { TIMEZONE_ROLE_TEMPLATES } from '../../utils/timezones.js';
 
 // ── Constants shared with the service and the tasks ──────────────────────────
 
@@ -45,6 +46,18 @@ const LAYOUT_OPTIONS = Object.freeze([
   { value: 'SELECT', label: 'Dropdown' },
   { value: 'REACTIONS', label: 'Emoji reactions' },
 ]);
+/** Create-only panel templates: none, or a timezone role set (TIMEZONE_ROLE_TEMPLATES) the bot creates and links. */
+export const TEMPLATE_OPTIONS = Object.freeze([
+  { value: 'none', label: 'None: pick the roles myself' },
+  ...Object.entries(TIMEZONE_ROLE_TEMPLATES).map(([value, t]) => ({
+    value,
+    label: t.label,
+    description: `Creates (or reuses) ${t.roles.map((r) => r.name).join(', ')}, links each to its time zone for /timestamp, `
+      + 'and posts them as a Unique dropdown.',
+  })),
+]);
+const NO_TEMPLATE = { field: 'template', in: ['none'] };
+
 const STYLE_OPTIONS = Object.freeze([
   { value: 1, label: 'Blue' },
   { value: 2, label: 'Grey' },
@@ -161,6 +174,15 @@ export const collection = Object.freeze({
   subtitleField: 'summary',
   fields: Object.freeze([
     {
+      field: 'template',
+      type: 'enum',
+      label: 'Template',
+      description: 'Start from a ready-made panel. A timezone template creates the roles for you; edit the panel afterwards '
+        + 'to remove the ones you do not need.',
+      options: TEMPLATE_OPTIONS,
+      default: 'none',
+    },
+    {
       field: 'channelId',
       type: 'channel',
       label: 'Channel',
@@ -176,6 +198,7 @@ export const collection = Object.freeze({
       description: 'How members pick roles.',
       options: LAYOUT_OPTIONS,
       default: 'BUTTONS',
+      showWhen: NO_TEMPLATE,
     },
     {
       field: 'type',
@@ -184,6 +207,7 @@ export const collection = Object.freeze({
       description: 'Normal: get and remove roles. Unique: one role at a time. Verify: get roles only. Reverse: using a role removes it.',
       options: TYPE_OPTIONS,
       default: 'NORMAL',
+      showWhen: NO_TEMPLATE,
     },
     {
       field: 'title',
@@ -256,9 +280,10 @@ export const collection = Object.freeze({
       itemFields: ITEM_FIELDS,
       maxItems: Math.max(...Object.values(MAX_ITEMS)),
       default: [],
+      showWhen: NO_TEMPLATE,
     },
   ]),
-  createOnly: Object.freeze(['channelId', 'layout']),
+  createOnly: Object.freeze(['template', 'channelId', 'layout']),
   // `summary` (the row's subtitle) and `attached` (read by the form rules) are also on every item.
   readOnly: Object.freeze([
     {
@@ -385,6 +410,8 @@ export function panelItem(row) {
   const n = items.length;
   return {
     id: row.id,
+    // Create-only: a saved panel shows (locked) as made without a template, so the fields it hides stay visible.
+    template: 'none',
     channelId: row.channelId,
     layout: row.layout,
     type: row.type,

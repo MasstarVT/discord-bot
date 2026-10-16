@@ -13,6 +13,7 @@ import prisma from '../../database/client.js';
 import { LIMITS } from '../../config/constants.js';
 import { ensureGuildSettings } from '../../services/settingsService.js';
 import * as rr from '../../services/reactionRoleService.js';
+import { TIMEZONE_ROLE_TEMPLATES, TIMEZONE_PANEL } from '../../utils/timezones.js';
 import { RecordError, taskOutcome, withMessage } from './errors.js';
 import { isDiscordApiError } from './embeds.js';
 import {
@@ -92,6 +93,28 @@ async function runAfterSave(ctx, kind, payload, { lead, hint }) {
 
 const sentence = (msg) => (msg.endsWith('.') ? msg : `${msg}.`);
 
+/**
+ * The bot creates (or reuses) the template's roles, links them, fills the saved empty panel and posts it. When it refuses,
+ * the empty panel is deleted again so nothing half-made stays in the list.
+ */
+async function createFromTemplate(ctx, guildId, id, template) {
+  let out;
+  try {
+    out = taskOutcome(await ctx.runTask('rr.timezoneTemplate', { groupId: id, template }));
+  } catch (err) {
+    if (err instanceof RecordError && (err.code === 'failed' || err.code === 'unavailable')) {
+      await prisma.reactionRoleGroup.deleteMany({ where: { id, guildId } });
+      await rr.invalidatePanelIndex(guildId);
+      throw new RecordError(err.code, `Nothing was posted: ${sentence(err.message)}`);
+    }
+    throw err;
+  }
+  const message = out.status === 'pending'
+    ? 'The bot is still creating the timezone roles and posting the panel. Refresh in a moment to see it.'
+    : out.message;
+  return withMessage(await getItem(guildId, id), message);
+}
+
 export const store = Object.freeze({
   async list(guildId) {
     const rows = await prisma.reactionRoleGroup.findMany({
@@ -107,6 +130,16 @@ export const store = Object.freeze({
 
   async create(guildId, data, ctx) {
     requireTasks(ctx);
+    // A timezone template: a Unique dropdown whose roles the bot creates (rr.timezoneTemplate), so the role list is ignored.
+    const template = typeof data.template === 'string' && Object.hasOwn(TIMEZONE_ROLE_TEMPLATES, data.template) ? data.template : null;
+    if (template) {
+      data = {
+        ...data, ...TIMEZONE_PANEL, items: [], maxRoles: null,
+        title: data.title.trim() && data.title.trim() !== DEFAULT_TITLE ? data.title : TIMEZONE_PANEL.title,
+        description: data.description ?? TIMEZONE_PANEL.description,
+        placeholder: data.placeholder ?? TIMEZONE_PANEL.placeholder,
+      };
+    }
     const layout = data.layout;
     const type = data.type;
     const items = data.items.length > 0 ? normalizeItems(data.items, layout, await loadResources(ctx, guildId, data.items)) : [];
@@ -151,6 +184,8 @@ export const store = Object.freeze({
     }
     await rr.invalidatePanelIndex(guildId);
     ctx.logger?.info?.(`Dashboard reaction role panel ${id} created in ${guildId} by ${ctx.userId}`);
+
+    if (template) return createFromTemplate(ctx, guildId, id, template);
 
     const posted = await runAfterSave(ctx, 'rr.publish', { groupId: id, mode: 'post' }, {
       lead: 'The panel was saved, but it was not posted:',

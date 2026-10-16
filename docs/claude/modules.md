@@ -40,6 +40,7 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **customIds:** `rr:{groupId}:{roleId}`, `rr-select:{groupId}`; module-gated, no level check.
 - **Hooks (id `reaction-roles`):** the four messageReaction* events; `always`: `messageDelete`, `roleDelete`.
 - **Gotchas:** `safeReply` after `deferUpdate` follows up, so the personal select uses `editReply`.
+- **Timezone templates:** `template:timezones-us|timezones-world` (`/reactionrole create`, and the dashboard's create-only `template` field) use `TIMEZONE_ROLE_TEMPLATES` (`src/utils/timezones.js`). `setupTimezoneRoles` (`src/services/timezoneRoleSetup.js`) checks everything first (Manage Roles, `checkAssignableRole` on reused roles, `LIMITS.TIMEZONE_ROLES`), reuses roles by name or creates them with no permissions, and links them in `GuildSettings.timezoneRoles`; the panel is always Unique (dropdown by default, never emoji reactions). The dashboard saves the panel empty and runs `rr.timezoneTemplate`, which fills and posts it; a refusal deletes the empty panel.
 
 ### ⭐ Levels — `leveling`
 - **Commands:** `/levelconfig`, `/xp` ADMIN; `/rank`, `/leaderboard`. `/xp give target:@Role` caps at 5,000 members.

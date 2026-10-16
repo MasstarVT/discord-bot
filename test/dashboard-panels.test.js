@@ -120,7 +120,7 @@ describe('descriptors', () => {
       assert.deepEqual(JSON.parse(JSON.stringify(pub)), JSON.parse(JSON.stringify(pub)));
       assert.ok(!JSON.stringify(pub).includes('"check"'), `${key}: no server-only hooks in the public copy`);
     }
-    assert.deepEqual([...COLLECTIONS.reactionRoles.createOnly], ['channelId', 'layout']);
+    assert.deepEqual([...COLLECTIONS.reactionRoles.createOnly], ['template', 'channelId', 'layout']);
   });
 
   test('a showWhen only points at a sibling field, and the hidden option id is the only always-hidden field', () => {
@@ -273,7 +273,7 @@ describe('reactionRoles requests', () => {
   test('a minimal create takes the defaults and collects the channel and role ids', () => {
     const { data, refs } = accept('reactionRoles', { channelId: CHAN });
     assert.deepEqual(data, {
-      channelId: CHAN, layout: 'BUTTONS', type: 'NORMAL', title: 'Reaction Roles', description: null, messageContent: null, plainText: false,
+      template: 'none', channelId: CHAN, layout: 'BUTTONS', type: 'NORMAL', title: 'Reaction Roles', description: null, messageContent: null, plainText: false,
       maxRoles: null, placeholder: null, items: [],
     });
     assert.deepEqual(refs.channels.map((c) => [c.id, c.kinds]), [[CHAN, ['text', 'announcement']]]);
@@ -676,7 +676,7 @@ describe('tasks', () => {
   };
   const guild = { id: GUILD, ownerId: OWNER, channels: { cache: new Collection(), fetch: async () => { throw new Error('unexpected'); } } };
   const call = (tasks, kind, actor, payload) => tasks[kind].run({ guild, client: {}, actor, payload, taskId: 't1' });
-  const kinds = [[rrTasks, ['rr.publish', 'rr.repost', 'rr.delete']], [tkTasks, ['ticket.check', 'ticket.publish', 'ticket.refresh', 'ticket.delete']]];
+  const kinds = [[rrTasks, ['rr.publish', 'rr.repost', 'rr.delete', 'rr.timezoneTemplate']], [tkTasks, ['ticket.check', 'ticket.publish', 'ticket.refresh', 'ticket.delete']]];
 
   test('the kinds are well formed and owned by their module', () => {
     for (const [tasks, expected] of kinds) {
@@ -721,6 +721,10 @@ describe('tasks', () => {
       }
     }
     await assert.rejects(call(rrTasks, 'rr.publish', actor, { groupId: 'g1', mode: 'explode' }), (err) => err instanceof TaskError && /not valid/.test(err.message));
+    for (const template of [undefined, 'verify', 'timezones-mars', 5]) {
+      await assert.rejects(call(rrTasks, 'rr.timezoneTemplate', actor, { groupId: 'g1', template }),
+        (err) => err instanceof TaskError && /not valid/.test(err.message), String(template));
+    }
     await assert.rejects(call(tkTasks, 'ticket.check', actor, { categoryIds: ['nope'] }), (err) => err instanceof TaskError);
     await assert.rejects(call(tkTasks, 'ticket.check', actor, { categoryIds: [], transcriptChannelId: 5 }), (err) => err instanceof TaskError);
   });
