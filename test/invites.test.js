@@ -2,7 +2,7 @@
 // the plugin declaration (T14), the removed legacy exports (T15), the store/runtime helpers against fake guilds, a static scan,
 // and (TEST_DATABASE_URL, a migrated database) the SQL, the attribution end to end, and the /invites command flows.
 //   TEST_DATABASE_URL='<url>' node --test --test-concurrency=1 test/invites.test.js
-import { test, after } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
@@ -40,6 +40,10 @@ const {
 // Silence the Redis reconnect and logger noise.
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
 console.error = console.warn = console.log = console.debug = console.info = () => {};
+// A run that was cut short never reaches the cleanup in after(): start from a clean slate so its rows are not counted.
+before(async () => {
+  if (DB) await prisma.guildSettings.deleteMany({ where: { guildId: { startsWith: GUILD_PREFIX } } }).catch(() => {});
+});
 after(async () => {
   Object.assign(console, quiet);
   redis.disconnect();

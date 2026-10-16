@@ -415,6 +415,15 @@ export function checkTagAccess(tag, { member, channel }) {
   const allowChannels = tag?.allowChannelIds ?? [];
   if (denyChannels.some((id) => ids.includes(id))) return { ok: false, code: 'CHANNEL_DENIED' };
   if (allowChannels.length && !allowChannels.some((id) => ids.includes(id))) return { ok: false, code: 'CHANNEL_NOT_ALLOWED' };
+  return checkTagRoles(tag, member);
+}
+
+/**
+ * The role half of checkTagAccess. Also decides what members may read: a command their roles cannot run stays
+ * hidden from /tag info, raw, list and action list, so a role-restricted command's text does not leak.
+ * @returns {{ ok: true }|{ ok: false, code: 'ROLE_DENIED'|'ROLE_NOT_ALLOWED' }}
+ */
+export function checkTagRoles(tag, member) {
   const roles = member?.roles?.cache;
   const denyRoles = tag?.denyRoleIds ?? [];
   const allowRoles = tag?.allowRoleIds ?? [];

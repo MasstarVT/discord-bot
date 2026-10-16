@@ -927,6 +927,16 @@ test('/help lists custom commands as /tag use when the prefix is off, and as pre
     assert.equal(await mod.customCommandGroup('g1', settings({ customCommandsEnabled: false })), null, 'module off: nothing is listed');
     assert.equal(queries.length, before, 'no query when there is nothing to list');
 
+    // A member only sees the commands their roles can run; no viewer (an admin) sees them all.
+    prisma.customTag = {
+      findMany: async () => [{ name: 'rules', description: null, allowRoleIds: [], denyRoleIds: [] },
+        { name: 'staff', description: null, allowRoleIds: ['r-staff'], denyRoleIds: [] }],
+    };
+    const viewer = (ids) => ({ roles: { cache: new Map(ids.map((id) => [id, { id }])) } });
+    assert.deepEqual((await mod.customCommandGroup('g1', settings(), viewer([]))).lines, ['`!rules` — custom command']);
+    assert.equal((await mod.customCommandGroup('g1', settings(), viewer(['r-staff']))).lines.length, 2);
+    assert.equal((await mod.customCommandGroup('g1', settings())).lines.length, 2);
+
     prisma.customTag = { findMany: async () => [] };
     assert.equal(await mod.customCommandGroup('g1', settings({ customPrefix: '' })), null, 'no custom commands: no group');
   } finally {

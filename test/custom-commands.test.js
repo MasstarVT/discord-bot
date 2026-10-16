@@ -28,6 +28,7 @@ const { PERMISSION_LEVELS, LIMITS } = await import('../src/config/constants.js')
 const { buildCommandPayload } = await import('../src/handlers/commandLoader.js');
 const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const tagCmd = await import('../src/commands/utility/tag.js');
+const { tagRolesAllow } = await import('../src/commands/utility/help.js');
 const triggerCmd = await import('../src/commands/admin/trigger.js');
 const { plugin } = await import('../src/plugins/custom-commands.js');
 const settingsSvc = await import('../src/services/settingsService.js');
@@ -36,7 +37,7 @@ const prisma = (await import('../src/database/client.js')).default;
 const {
   normalizeTagName, validateNewTagName, effectivePrefix, parseInvocation, parseArgs, buildUsage, normalizeActions,
   getEffectiveActions, legacyActions, syncLegacyColumns, primaryMessageIndex, channelReplyIndex, pickResponse, planRun,
-  buildMessagePayload, channelScopeIds, checkTagAccess, triggerAppliesHere, validateTriggerPattern, selectTrigger,
+  buildMessagePayload, channelScopeIds, checkTagAccess, checkTagRoles, triggerAppliesHere, validateTriggerPattern, selectTrigger,
   matchesPlain, getTriggerSet, acquireCooldown, tagCooldownKey, runTag, handlePrefixInvocation, handleTriggers,
   isPossibleInvocation, hasTriggerContent, describeAction, actionLabel, cooldownLabel, codeSafe, oneLine, FAILURE_TEXT,
   TAG_NAME_RE, TagError, __testing,
@@ -438,6 +439,14 @@ test('6. channel scope ids and the access matrix', () => {
   assert.deepEqual(check({ allowRoleIds: ['r2'] }, { member: null, channel }), { ok: false, code: 'ROLE_NOT_ALLOWED' });
   assert.deepEqual(check({}, { member: null, channel }), { ok: true });
   assert.deepEqual(check({ denyChannelIds: ['c'], allowRoleIds: ['r1'] }, { member, channel }), { ok: false, code: 'CHANNEL_DENIED' }, 'channel rules come first');
+  // The role half alone decides what a member may read with /tag info, raw, list and action list.
+  assert.deepEqual(checkTagRoles({ ...base, allowRoleIds: ['r2'], denyChannelIds: ['c'] }, member), { ok: false, code: 'ROLE_NOT_ALLOWED' });
+  assert.deepEqual(checkTagRoles({ ...base, denyRoleIds: ['r1'] }, member), { ok: false, code: 'ROLE_DENIED' });
+  assert.deepEqual(checkTagRoles({ ...base, allowRoleIds: ['r1'], denyChannelIds: ['c'] }, member), { ok: true }, 'channel rules do not hide a command');
+  // /help keeps a copy (core must not import tagService); the two must agree.
+  for (const over of [{}, { allowRoleIds: ['r1'] }, { allowRoleIds: ['r2'] }, { denyRoleIds: ['r1'] }, { denyRoleIds: ['r2'], allowRoleIds: ['r1'] }]) {
+    for (const who of [member, null]) assert.equal(tagRolesAllow({ ...base, ...over }, who), checkTagRoles({ ...base, ...over }, who).ok, JSON.stringify(over));
+  }
 
   assert.equal(triggerAppliesHere({ channelIds: ['c'], exemptRoleIds: [] }, { channel: thread, member }), true, 'a thread matches its parent (R282)');
   assert.equal(triggerAppliesHere({ channelIds: ['cat'], exemptRoleIds: [] }, { channel, member }), true, 'a category matches its channels');
@@ -1727,6 +1736,30 @@ describe('17. database', { skip: skipDb }, () => {
     assert.match((await ask('edit', 'sec'))[0].name, /^⏸️ secret/);
     const plain = { ...sc.member, permissions: { has: () => false } };
     assert.equal((await ask('info', '', null, plain)).length, 1, 'members never see disabled commands');
+    await svc.createTagRow({ guildId: DBG3, name: 'staff', content: 'x', createdBy: U, allowRoleIds: [ROLE_A] });
+    assert.deepEqual((await ask('raw', '', null, plain)).map((c) => c.value), ['rules'], 'members never see commands their roles cannot run');
+    const staff = { ...plain, roles: { cache: new Map([[ROLE_A, { id: ROLE_A }]]) } };
+    assert.equal((await ask('raw', '', null, staff)).length, 2, 'a member with the allowed role sees it');
+    assert.equal((await ask('edit', '')).length, 3, 'admins see every command');
+    await prisma.customTag.deleteMany({ where: { guildId: DBG3 } });
+  });
+
+  test('/tag raw, info, list and action list hide role-restricted commands from members who lack the role', async () => {
+    const sc = dbScenario(DBG3);
+    await settingsSvc.ensureGuildSettings(DBG3);
+    await settingsSvc.updateSettings(DBG3, { customCommandsEnabled: true });
+    const SECRET = 'staff-only handbook link';
+    await svc.createTagRow({ guildId: DBG3, name: 'handbook', content: SECRET, createdBy: U, allowRoleIds: [ROLE_A] });
+    await svc.createTagRow({ guildId: DBG3, name: 'nodogs', content: `${SECRET} (deny)`, createdBy: U, denyRoleIds: [ROLE_B] });
+    const plain = { ...sc.member, permissions: { has: () => false }, roles: { cache: new Map([[ROLE_B, { id: ROLE_B }]]) } };
+    const asMember = { ...sc, member: plain };
+    for (const [sub, name, group] of [['raw', 'handbook'], ['info', 'handbook'], ['list'], ['list', 'handbook', 'action'], ['raw', 'nodogs']]) {
+      const i = await tagRun(asMember, sub, name ? { name } : {}, group ?? null);
+      assert.ok(!JSON.stringify(i.calls).includes(SECRET), `${group ? `${group} ` : ''}${sub} ${name ?? ''} leaks nothing`);
+    }
+    const staff = { ...sc, member: { ...plain, roles: { cache: new Map([[ROLE_A, { id: ROLE_A }]]) } } };
+    assert.ok(JSON.stringify((await tagRun(staff, 'raw', { name: 'handbook' })).calls).includes(SECRET), 'the allowed role can read it');
+    assert.ok(JSON.stringify((await tagRun(sc, 'raw', { name: 'nodogs' })).calls).includes(SECRET), 'admins can read it');
     await prisma.customTag.deleteMany({ where: { guildId: DBG3 } });
   });
 

@@ -10,7 +10,7 @@ import {
 } from '../../services/settingsService.js';
 import {
   COOLDOWN_MAX_SECONDS, DESCRIPTION_MAX, EMBED_TEXT_MAX, PLAIN_MAX, TAG_ACCESS_MAX, TagError,
-  actionLabel, buildUsage, clearTagCooldowns, codeSafe, cooldownLabel, createTagRow, describeAction,
+  actionLabel, buildUsage, checkTagRoles, clearTagCooldowns, codeSafe, cooldownLabel, createTagRow, describeAction,
   effectivePrefix, findTag, formatIdList, getEffectiveActions, invalidateTagIndex, legacyActions, normalizeActions,
   normalizeTagName, oneLine, parseArgs, primaryMessageIndex, runTag, syncLegacyColumns, validateNewTagName, writeTag,
 } from '../../services/tagService.js';
@@ -166,8 +166,11 @@ const shownName = (prefix, name) => (prefix === null ? `/tag use ${name}` : `${p
 
 const PREFIX_OFF_NOTE = 'Prefix commands are off (`/settings prefix`); run it with `/tag use`.';
 
-/** Members never see disabled commands (/tag list and the autocomplete hide them too); admins can inspect and edit them. */
-const hiddenFromMember = (tag, interaction, settings) => tag.enabled === false
+/** What a member may not read: disabled commands and commands their roles cannot run. Admins see everything. */
+const memberCannotSee = (tag, member) => tag.enabled === false || !checkTagRoles(tag, member).ok;
+
+/** Members never see disabled or role-restricted commands (/tag list and the autocomplete hide them too); admins can inspect and edit them. */
+const hiddenFromMember = (tag, interaction, settings) => memberCannotSee(tag, interaction.member)
   && resolvePermissionLevel(interaction.member, settings) < PERMISSION_LEVELS.ADMIN;
 
 const timeTag = (date, style = 'R') => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;
@@ -728,7 +731,7 @@ async function raw(interaction, settings) {
 async function list(interaction, settings) {
   const { guildId } = interaction;
   const isAdmin = resolvePermissionLevel(interaction.member, settings) >= PERMISSION_LEVELS.ADMIN;
-  const rows = await prisma.customTag.findMany({
+  const found = await prisma.customTag.findMany({
     where: { guildId, ...(isAdmin ? {} : { enabled: true }) },
     orderBy: [{ uses: 'desc' }, { name: 'asc' }],
     select: {
@@ -736,6 +739,7 @@ async function list(interaction, settings) {
       actions: true, cooldownScope: true, allowRoleIds: true, denyRoleIds: true, allowChannelIds: true, denyChannelIds: true,
     },
   });
+  const rows = isAdmin ? found : found.filter((r) => !memberCannotSee(r, interaction.member));
   if (!rows.length) {
     return respond(interaction, infoEmbed(
       'No Custom Commands',
@@ -813,20 +817,21 @@ export async function autocomplete(interaction) {
 
     if (focused.name === 'name') {
       const q = normalizeTagName(focused.value);
-      // Members never see disabled commands.
+      // Members never see disabled or role-restricted commands.
       const memberView = sub === 'use' || (group === null && ['info', 'raw'].includes(sub)) || (group === 'action' && sub === 'list');
-      const onlyEnabled = sub === 'use'
-        || (memberView && resolvePermissionLevel(interaction.member, settings) < PERMISSION_LEVELS.ADMIN);
-      const rows = await prisma.customTag.findMany({
+      const memberHidden = memberView && resolvePermissionLevel(interaction.member, settings) < PERMISSION_LEVELS.ADMIN;
+      const onlyEnabled = sub === 'use' || memberHidden;
+      const found = await prisma.customTag.findMany({
         where: {
           guildId,
           ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
           ...(onlyEnabled ? { enabled: true } : {}),
         },
         orderBy: [{ uses: 'desc' }, { name: 'asc' }],
-        take: 25,
-        select: { name: true, description: true, enabled: true },
+        take: memberHidden ? LIMITS.CUSTOM_TAGS : 25,
+        select: { name: true, description: true, enabled: true, allowRoleIds: true, denyRoleIds: true },
       });
+      const rows = (memberHidden ? found.filter((r) => checkTagRoles(r, interaction.member).ok) : found).slice(0, 25);
       return respondAutocomplete(interaction, rows.map((r) => ({
         name: `${r.enabled ? '' : '⏸️ '}${r.name}${r.description ? ` — ${r.description}` : ''}`,
         value: r.name,

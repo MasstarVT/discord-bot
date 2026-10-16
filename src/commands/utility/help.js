@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { PERMISSION_LEVELS } from '../../config/constants.js';
+import { LIMITS, PERMISSION_LEVELS } from '../../config/constants.js';
 import { MODULES, MODULE_NAMES, getModule, isModuleEnabled } from '../../config/modules.js';
 import prisma from '../../database/client.js';
 import { buildCommandPayload } from '../../handlers/commandLoader.js';
@@ -152,17 +152,34 @@ export function customCommandLine(tag, prefix) {
   return `\`${usage}\` — ${clampText(tag.description ?? 'custom command', 100)}`;
 }
 
-/** Read-only look at the guild's enabled custom commands (00-overview §10 allows reading CustomTag). */
-export async function customCommandGroup(guildId, settings) {
+/**
+ * Whether a member's roles may run a custom command: the role half of `checkTagAccess` in tagService, duplicated
+ * here because core must not import a feature package.
+ * @param {{ allowRoleIds?: string[], denyRoleIds?: string[] }} tag
+ * @param {import('discord.js').GuildMember|null} member
+ */
+export function tagRolesAllow(tag, member) {
+  const roles = member?.roles?.cache;
+  const allow = tag?.allowRoleIds ?? [];
+  if ((tag?.denyRoleIds ?? []).some((id) => roles?.has(id))) return false;
+  return !allow.length || allow.some((id) => roles?.has(id));
+}
+
+/**
+ * Read-only look at the guild's enabled custom commands (00-overview §10 allows reading CustomTag).
+ * `viewer` (a non-admin member) hides the commands their roles cannot run, as /tag list does.
+ */
+export async function customCommandGroup(guildId, settings, viewer = null) {
   if (!settings || !isModuleEnabled(settings, 'customcommands')) return null;
   const prefix = customPrefixOf(settings.customPrefix);
   try {
-    const tags = await withTimeout(prisma.customTag.findMany({
+    const found = await withTimeout(prisma.customTag.findMany({
       where: { guildId, enabled: true },
       orderBy: [{ uses: 'desc' }, { name: 'asc' }],
-      take: 25,
-      select: { name: true, description: true },
+      take: viewer ? LIMITS.CUSTOM_TAGS : 25,
+      select: { name: true, description: true, allowRoleIds: true, denyRoleIds: true },
     }), 3000, 'help custom commands');
+    const tags = (viewer ? found.filter((t) => tagRolesAllow(t, viewer)) : found).slice(0, 25);
     if (!tags.length) return null;
     return {
       label: CUSTOM_LABEL,
@@ -276,7 +293,7 @@ export async function execute(interaction, client) {
   if (wanted) return showCommand(interaction, client, wanted, userLevel, settings);
 
   const { groups, count } = buildGroups(client, userLevel, settings);
-  const custom = await customCommandGroup(interaction.guildId, settings);
+  const custom = await customCommandGroup(interaction.guildId, settings, userLevel < PERMISSION_LEVELS.ADMIN ? interaction.member : null);
   if (custom) {
     // Custom commands sit before the setup group, which always comes last.
     const setupAt = groups.findIndex((g) => g.label === SETUP_LABEL);
