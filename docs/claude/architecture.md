@@ -49,7 +49,7 @@ Three directories are auto-discovered; **never edit `commandLoader.js`, `eventLo
 - `permissionLevel` (default MEMBER) and `subcommandPermissions` `{ 'sub': level, 'group sub': level }` (a key that is not a real subcommand is a bug; tests check).
 - `allowInDMs`: `true` only for DM-safe commands; all others fail closed outside a cached guild. `autocomplete`: gated exactly like `execute`; a refusal answers an empty list.
 
-ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (77 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
+ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (80 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
 
 **Events** (`src/events/*.js`, `{ name, once, execute }`; the client is injected last) are thin dispatchers: pre-filter, then `await runHooks('<event>', { client, guild, ...fields })`. **Never put feature logic in `src/events/`.** They may import only `discord.js`, `hookRegistry`, `settingsService`, `scheduler`, `redis`, `config/jobTypes`, `utils/async`, `utils/logger` (tested). Besides gateway events there are the synthetic `guildReady` and the internal `levelUp` and `economyPurchase` points. `messageCreate` passes only real user messages (no bots, webhooks or system messages).
 
@@ -188,6 +188,7 @@ Every model with a `guildId` has an FK to `GuildSettings(guildId)` with `onDelet
 - `ScheduledJob`: `dedupeKey` unique globally (`scheduleJob` upserts), `version` bumped on reschedule, lease `lockedBy`/`lockedUntil`.
 - `Infraction`: `caseId` is per guild, `@@unique([guildId, caseId])`, allocated under `pg_advisory_xact_lock`, never MAX+1.
 - `UserLevel` `[guildId, userId]` (`xp` clamped to `XP_MAX`); `LevelRole` `[guildId, level]`: one reward role per level.
+- `UserTimezone`: personal zone by `userId` (global, no guild FK; `/timezone`). `GuildSettings.timezoneRoles` is the role → zone list for `/settings timezone-role`.
 - `UserEconomy`: legacy global wallet by `userId`, never written, only read by `getAccount`/`peekAccount`. `EconomyAccount` is per server: `getAccount` creates it lazily and copies the legacy balance once (`importedGlobal`) unless `economyImportGlobal` is false.
 
 **Schema-change protocol** (after this branch merges): edit `prisma/schema.prisma` and `npx prisma generate`; `npm run db:migrate -- --name <change>` on a scratch database and commit the migration with the schema; **additive only** (never drop or rename columns/tables or change types: rolling back the image does not roll back the database); an enum `ADD VALUE` is not usable as a default or in data statements of the same migration; data fixes are hand-written `UPDATE`s below the generated DDL; CI applies every migration to an empty PostgreSQL 17 and fails on drift; never edit an applied migration. Until `20261010120000_mee6_parity` is deployed, schema changes on branch `mee6-parity` regenerate that single migration instead of adding a second one.

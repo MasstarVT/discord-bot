@@ -136,7 +136,7 @@ const EXPECTED_COMMANDS = Object.freeze({
   'module':             { file: 'src/commands/admin/module.js',             module: null,             gated: null,  level: 'ADMIN',     budget:  260 },
   'reactionrole':       { file: 'src/commands/admin/reactionrole.js',       module: 'reactionroles',  gated: false, level: 'ADMIN',     budget: 2200 },
   'reminder':           { file: 'src/commands/admin/reminder.js',           module: 'reminders',      gated: false, level: 'ADMIN',     budget: 2000 },
-  'settings':           { file: 'src/commands/admin/settings.js',           module: null,             gated: null,  level: 'ADMIN',     budget:  800 },
+  'settings':           { file: 'src/commands/admin/settings.js',           module: null,             gated: null,  level: 'ADMIN',     budget: 1500 },
   'starboard':          { file: 'src/commands/admin/starboard.js',          module: 'starboard',      gated: false, level: 'ADMIN',     budget: 1700 },
   'stats':              { file: 'src/commands/admin/stats.js',              module: 'stats',          gated: false, level: 'ADMIN',     budget:  900 },
   'ticket-panel':       { file: 'src/commands/admin/ticket-panel.js',       module: 'tickets',        gated: false, level: 'ADMIN',     budget: 2900 },
@@ -195,6 +195,8 @@ const EXPECTED_COMMANDS = Object.freeze({
   'owner':              { file: 'src/commands/utility/owner.js',            module: null,             gated: null,  level: 'MEMBER',    budget:   40 },
   'tag':                { file: 'src/commands/utility/tag.js',              module: 'customcommands', gated: true,  level: 'MEMBER',    budget: 2200 },
   'translate':          { file: 'src/commands/utility/translate.js',        module: null,             gated: null,  level: 'MEMBER',    budget:  170 },
+  'timestamp':          { file: 'src/commands/utility/timestamp.js',        module: null,             gated: null,  level: 'MEMBER',    budget:  800 },
+  'timezone':           { file: 'src/commands/utility/timezone.js',         module: null,             gated: null,  level: 'MEMBER',    budget:  500 },
 });
 
 // Test files each package owns (P0). Every other id owns test/<id>.test.js.
@@ -360,7 +362,7 @@ describe('A commands', () => {
       ['commands missing from EXPECTED_COMMANDS', diff(actual, expected).map((n) => `/${n}`)],
       ['duplicate command names', sortedUnique(names.filter((n, i) => names.indexOf(n) !== i))],
     ]);
-    assert.equal(COMMANDS.length, 78, `${COMMANDS.length} command files (expected 78)`);
+    assert.equal(COMMANDS.length, 80, `${COMMANDS.length} command files (expected 80)`);
     assert.ok(COMMANDS.length <= 100, `${COMMANDS.length} commands exceed Discord's limit of 100`);
   });
 

@@ -426,3 +426,185 @@ export function discordTimestamp(date, style = 'f') {
   const st = typeof style === 'string' && style.length === 1 && 'tTdDfFR'.includes(style) ? style : 'f';
   return `<t:${Math.floor(ms / 1000)}:${st}>`;
 }
+
+// ── Free-form times (/timestamp) ───────────────────────────────────────────────
+
+// Abbreviations people type, mapped to the region they name. Each means that region's local time,
+// daylight saving included: "7pm CST" in July is 7 pm in Chicago. Never hand these to Intl, where
+// EST, MST and HST are fixed offsets with no DST. Ambiguous ones are left out on purpose
+// (IST: India, Ireland or Israel; AST: Atlantic or Arabia).
+export const ZONE_ABBREVIATIONS = Object.freeze({
+  et: 'America/New_York', est: 'America/New_York', edt: 'America/New_York',
+  ct: 'America/Chicago', cst: 'America/Chicago', cdt: 'America/Chicago',
+  mt: 'America/Denver', mst: 'America/Denver', mdt: 'America/Denver',
+  pt: 'America/Los_Angeles', pst: 'America/Los_Angeles', pdt: 'America/Los_Angeles',
+  akst: 'America/Anchorage', akdt: 'America/Anchorage', hst: 'Pacific/Honolulu',
+  adt: 'America/Halifax', nst: 'America/St_Johns', ndt: 'America/St_Johns',
+  brt: 'America/Sao_Paulo', art: 'America/Argentina/Buenos_Aires',
+  wet: 'Europe/Lisbon', west: 'Europe/Lisbon', bst: 'Europe/London',
+  cet: 'Europe/Berlin', cest: 'Europe/Berlin', eet: 'Europe/Athens', eest: 'Europe/Athens',
+  msk: 'Europe/Moscow', wat: 'Africa/Lagos', sast: 'Africa/Johannesburg', eat: 'Africa/Nairobi',
+  gst: 'Asia/Dubai', pkt: 'Asia/Karachi', npt: 'Asia/Kathmandu', ict: 'Asia/Bangkok', wib: 'Asia/Jakarta',
+  sgt: 'Asia/Singapore', hkt: 'Asia/Hong_Kong', pht: 'Asia/Manila', jst: 'Asia/Tokyo', kst: 'Asia/Seoul',
+  awst: 'Australia/Perth', acst: 'Australia/Adelaide', acdt: 'Australia/Adelaide',
+  aest: 'Australia/Sydney', aedt: 'Australia/Sydney', nzst: 'Pacific/Auckland', nzdt: 'Pacific/Auckland',
+});
+
+const UTC_WORDS = new Set(['utc', 'gmt', 'z', 'zulu']);
+
+/**
+ * The zone an abbreviation names ('CST' → 'America/Chicago'); 'UTC' and 'GMT' give 'UTC'.
+ * @param {unknown} str
+ * @returns {string | null}
+ */
+export function zoneFromAbbreviation(str) {
+  const s = String(str ?? '').trim().toLowerCase();
+  if (UTC_WORDS.has(s)) return 'UTC';
+  return Object.hasOwn(ZONE_ABBREVIATIONS, s) ? ZONE_ABBREVIATIONS[s] : null;
+}
+
+/**
+ * A whole-hour offset ('utc+2', 'GMT-5', 'utc+05:00') as its Etc/GMT zone. Etc/GMT signs are
+ * inverted (UTC+2 is Etc/GMT-2), and these zones have no daylight saving.
+ * @param {unknown} str
+ * @returns {string | null} null for anything else, including half-hour offsets
+ */
+export function zoneFromOffset(str) {
+  const m = /^(?:utc|gmt)\s*([+\-−])\s*(\d{1,2})(?::?00)?$/i.exec(String(str ?? '').trim());
+  if (!m) return null;
+  const hours = Number(m[2]);
+  if (hours === 0) return 'UTC';
+  const east = m[1] === '+';
+  if (hours > (east ? 14 : 12)) return null;
+  return `Etc/GMT${east ? '-' : '+'}${hours}`;
+}
+
+// A trailing word of /timestamp input that names a zone, or null.
+function zoneToken(tok) {
+  const named = zoneFromAbbreviation(tok) ?? zoneFromOffset(tok);
+  if (named) return named;
+  if (!tok.includes('/') || !isValidTimeZone(tok)) return null;
+  try {
+    return fmt(tok).resolvedOptions().timeZone; // canonical spelling: 'europe/london' → 'Europe/London'
+  } catch {
+    return null;
+  }
+}
+
+const DAY_WORDS = Object.freeze({ yesterday: -1, today: 0, tomorrow: 1, tmrw: 1, tmr: 1 });
+const DAY_WORD_RE = /^(?:yesterday|today|tomorrow|tmrw|tmr)$/;
+const WEEKDAY_RE = /^(?:(next|this) )?([a-z]+)$/;
+const LATEST_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
+
+// '7pm', '19:00', 'noon'; no text means midnight.
+const timeOrMidnight = (part) => (part === undefined ? { hour: 0, minute: 0 } : parseTimeOfDay(part));
+
+// Splits '<day> [time]' or '<time> <day>' where `isDay` recognises the day part. Two-word day
+// parts go first, so '7pm next fri' is not read as 'fri' at '7pm next'.
+function splitDay(s, isDay) {
+  const words = s.split(' ');
+  for (const n of [2, 1]) {
+    if (words.length < n) continue;
+    const head = words.slice(0, n).join(' ');
+    if (isDay(head)) return [head, words.slice(n).join(' ') || undefined];
+    if (words.length > n) {
+      const tail = words.slice(-n).join(' ');
+      if (isDay(tail)) return [tail, words.slice(0, -n).join(' ')];
+    }
+  }
+  return null;
+}
+
+const isWeekdayPart = (part) => {
+  const m = WEEKDAY_RE.exec(part);
+  return Boolean(m && Object.hasOwn(DAY_ALIASES, m[2]));
+};
+
+// The /timestamp-only forms, read in `tz`. undefined = not one of them (parseDateInput decides).
+function parseLocal(s, tz, nowMs) {
+  if (s === 'now') return new Date(nowMs);
+  const today = zonedParts(nowMs, tz);
+
+  const dayWord = splitDay(s, (part) => DAY_WORD_RE.test(part));
+  if (dayWord) {
+    const time = timeOrMidnight(dayWord[1]);
+    if (!time) return null;
+    const d = addDays(today, DAY_WORDS[dayWord[0]]);
+    return zonedToUtc({ year: d.year, month: d.month, day: d.day, ...time }, tz);
+  }
+
+  const weekday = splitDay(s, isWeekdayPart);
+  if (weekday) {
+    const [, which, name] = WEEKDAY_RE.exec(weekday[0]);
+    const time = timeOrMidnight(weekday[1]);
+    if (!time) return null;
+    // 'fri' is the next Friday whose time is still ahead (today counts); 'next fri' never means today.
+    for (let k = which === 'next' ? 1 : 0; k <= 7; k++) {
+      const d = addDays(today, k);
+      if (d.weekday !== DAY_ALIASES[name]) continue;
+      const t = zonedToUtc({ year: d.year, month: d.month, day: d.day, ...time }, tz);
+      if (k > 0 || t.getTime() > nowMs) return t;
+    }
+    return null;
+  }
+
+  const md = /^([a-z]+)\.? (\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?(?:,? (.+))?$/.exec(s)
+    ?? /^(\d{1,2})(?:st|nd|rd|th)? ([a-z]+)\.?(?:,? (\d{4}))?(?:,? (.+))?$/.exec(s);
+  if (md && Object.hasOwn(MONTHS, /^\d/.test(md[1]) ? md[2] : md[1])) {
+    const month = MONTHS[/^\d/.test(md[1]) ? md[2] : md[1]];
+    const day = Number(/^\d/.test(md[1]) ? md[1] : md[2]);
+    const time = timeOrMidnight(md[4]);
+    if (!time || day < 1) return null;
+    if (md[3] !== undefined) {
+      const year = Number(md[3]);
+      if (year < 1970 || day > daysInMonth(year, month)) return null;
+      return zonedToUtc({ year, month, day, ...time }, tz);
+    }
+    // No year: this year unless that date is over, so 'oct 16' on Oct 16 means today.
+    let year = today.year + (month * 100 + day < today.month * 100 + today.day ? 1 : 0);
+    for (let k = 0; k <= 8; k++, year++) {
+      if (day <= daysInMonth(year, month)) return zonedToUtc({ year, month, day, ...time }, tz);
+    }
+    return null;
+  }
+  return undefined;
+}
+
+/**
+ * Parses a time typed for /timestamp. On top of parseDateInput (Discord timestamps, '2h30m',
+ * 'in 2 days', 'YYYY-MM-DD [HH:MM]', 'MM-DD [HH:MM]', '7pm'), it reads 'now',
+ * 'today|tomorrow|yesterday [time]', '[next] fri [time]' (also '7pm fri'), 'oct 20 [2027] [time]' and
+ * '20 oct [time]', with an optional 'at' ('fri at 7pm') and an optional last word naming the zone:
+ * an abbreviation from ZONE_ABBREVIATIONS ('7pm cst'), 'utc', a whole-hour offset ('utc+2') or a
+ * Region/City name. A day with no time means midnight. Past times are returned as they are.
+ * @param {unknown} str
+ * @param {string} tz - the zone used when the text names none
+ * @param {{ now?: Date }} [opts]
+ * @returns {{ date: Date, zone: string, zoneFromInput: boolean } | null}
+ */
+export function parseWhen(str, tz, { now = new Date() } = {}) {
+  let s = String(str ?? '').trim().replace(/\s+/g, ' ');
+  if (!s || s.length > 100) return null;
+  const nowMs = now instanceof Date ? now.getTime() : Number(now);
+  if (!Number.isFinite(nowMs)) return null;
+
+  let zone = safeTz(tz);
+  let zoneFromInput = false;
+  s = s.replace(/\b(utc|gmt) ([+\-−])/gi, '$1$2'); // 'utc +2' → 'utc+2'
+  const last = s.lastIndexOf(' ');
+  if (last > 0) {
+    const named = zoneToken(s.slice(last + 1));
+    if (named) {
+      zone = named;
+      zoneFromInput = true;
+      s = s.slice(0, last);
+    }
+  }
+  s = s.replace(/^at /i, '').replace(/ at /i, ' ');
+
+  let date = parseLocal(s.toLowerCase(), zone, nowMs);
+  if (date === undefined) date = parseDateInput(s, zone, { now: new Date(nowMs) });
+  const ms = date?.getTime();
+  if (!Number.isFinite(ms) || ms < 0 || ms > LATEST_MS) return null;
+  return { date, zone, zoneFromInput };
+}

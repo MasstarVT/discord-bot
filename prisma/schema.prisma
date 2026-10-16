@@ -90,6 +90,9 @@ model GuildSettings {
   // ── General (/settings) ────────────────────────────────────────────────────
   // IANA zone name, validated with Intl.DateTimeFormat before saving.
   timezone     String @default("UTC")
+  // [{ roleId: string, zone: string (IANA) }] — /settings timezone-role. A member's timezone role is
+  // used by /timestamp when they have no personal zone (UserTimezone); the highest-positioned role wins.
+  timezoneRoles Json?
   // 0xRRGGBB applied to info/neutral embeds by applyGuildColor(); null = default.
   embedColor   Int?
   // Prefix for message-invoked custom commands (MEE6 "!name args").
@@ -1476,4 +1479,18 @@ model CaptchaVerification {
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER TIMEZONES
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Personal timezone (/timezone set), global across servers like UserEconomy, so no guild FK.
+// Beats a server's timezone role and the server timezone in /timestamp.
+model UserTimezone {
+  userId    String   @id
+  // IANA zone name or 'UTC', validated (normalizeTimeZone) before saving.
+  zone      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

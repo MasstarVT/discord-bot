@@ -35,13 +35,13 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 🔢 **Counting** (beyond MEE6) — *off by default.* A channel where members count up from 1 in turns: the bot reacts ✅ to each right number, and a wrong number or counting twice in a row starts the count again from 1. `/counting set` picks the channel.
 - 🖥️ **Web Dashboard** — log in with Discord and change each server's settings in a browser: every module's switch and options, the time zone, embed colour and command prefix, and lists such as saved embeds, custom commands, reminders and feeds; a separate process, see [Web dashboard](#web-dashboard).
 
-**Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`, `/owner`.
+**Core (always on):** `/help` (shows only what the member can use and what is enabled), `/module`, `/settings` (time zone, timezone roles, embed colour, custom-command prefix, `/urban` age gate), `/info`, `/emoji`, `/translate`, `/detectlanguage`, `/languages`, `/owner`, `/timestamp` and `/timezone` (Discord timestamps read in each member's timezone: their own, a timezone role such as @CST handed out with `/reactionrole`, or the server's).
 
 **Beyond MEE6:** Auto-Translate, Counting, the Scrabble and other free games, and a per-server economy without premium limits. **Research only:** Twitch, YouTube Data API, Reddit API, X, Instagram, TikTok and Kick alerts, social counters, music and AI features are written up in [docs/external-api-research.md](docs/external-api-research.md) but not built.
 
 ## Commands
 
-77 slash commands, registered automatically on startup when the command set changes (hash-checked). Commands of a module that is switched off are refused with a pointer to `/module`; an admin's configuration command for that module still works so it can be set up first. Admin commands are hidden from regular members by Discord permissions (Manage Server) and re-checked by the bot.
+80 slash commands, registered automatically on startup when the command set changes (hash-checked). Commands of a module that is switched off are refused with a pointer to `/module`; an admin's configuration command for that module still works so it can be set up first. Admin commands are hidden from regular members by Discord permissions (Manage Server) and re-checked by the bot.
 
 | Command | Module | Who | Description |
 |---|---|---|---|
@@ -121,7 +121,9 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/languages` | Core | Everyone | List all supported translation language codes. |
 | `/module` | Core | Admins | Turn bot modules on or off for this server. |
 | `/owner` | Core | Everyone | Show who owns this bot (pings the bot owner). |
-| `/settings` | Core | Admins | Server settings: timezone, embed colour, custom-command prefix, /urban (MEE6 Settings). |
+| `/settings` | Core | Admins | Server settings: timezone, timezone roles (e.g. @CST), embed colour, custom-command prefix, /urban (MEE6 Settings). |
+| `/timestamp` | Core | Everyone | Turn a time ("fri 7pm", "tomorrow 18:30", "7pm CST") into a Discord timestamp everyone sees in their own timezone. |
+| `/timezone` | Core | Everyone | Save your own timezone for /timestamp, see which one it uses, or clear it. |
 | `/translate` | Core | Everyone | Translate text into another language. |
 
 ## Setup

@@ -56,10 +56,10 @@ const WINTER = new Date('2026-01-15T12:00:00Z');
 test('payload: subcommands, limits, autocomplete wiring and exports', () => {
   const json = s.data.toJSON();
   assert.equal(json.name, 'settings');
-  assert.deepEqual(json.options.map((o) => o.name), ['show', 'timezone', 'color', 'prefix', 'urban']);
+  assert.deepEqual(json.options.map((o) => o.name), ['show', 'timezone', 'color', 'prefix', 'urban', 'timezone-role']);
   assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   assert.equal(json.default_member_permissions, '32');
-  assert.ok(charCount(json) <= 800, `payload is ${charCount(json)} characters (budget 800)`);
+  assert.ok(charCount(json) <= 1500, `payload is ${charCount(json)} characters (budget 1500)`);
   for (const sub of json.options) assert.ok(sub.description.length <= 100, `${sub.name} description`);
 
   const opt = (sub, name) => json.options.find((o) => o.name === sub).options.find((o) => o.name === name);
@@ -73,6 +73,11 @@ test('payload: subcommands, limits, autocomplete wiring and exports', () => {
   assert.ok(!opt('prefix', 'prefix').autocomplete);
   assert.equal(opt('urban', 'nsfw-only').type, 5); // Boolean
   assert.equal(opt('urban', 'nsfw-only').required, true);
+  const group = json.options.find((o) => o.name === 'timezone-role');
+  assert.deepEqual(group.options.map((o) => o.name), ['add', 'remove', 'list']);
+  const add = group.options.find((o) => o.name === 'add');
+  assert.equal(add.options.find((o) => o.name === 'zone').autocomplete, true);
+  assert.ok(!add.options.find((o) => o.name === 'zone').required);
 
   assert.equal(s.module, null);
   assert.equal(s.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -335,14 +340,17 @@ test('buildOverviewEmbed: prefix off, enabled custom commands, no mod roles, eve
 
 // ── 10. Autocomplete wiring ──────────────────────────────────────────────────────
 
-function fakeInteraction({ sub = 'show', strings = {}, booleans = {}, focused = null, guildId = '1', guild = fakeGuild() } = {}) {
+function fakeInteraction({ sub = 'show', group = null, strings = {}, booleans = {}, roles = {}, focused = null, guildId = '1', guild = fakeGuild() } = {}) {
   const calls = { reply: [], deferReply: [], editReply: [], followUp: [], respond: [] };
   const it = {
     guildId, guild, user: { id: '42' },
     deferred: false, replied: false, ephemeral: null, responded: false,
     options: {
       getSubcommand: () => sub,
+      getSubcommandGroup: () => group,
       getString: (name) => strings[name] ?? null,
+      getRole: (name) => roles[name] ?? null,
+      get: (name) => (roles[name] ? { value: roles[name].id } : null),
       getBoolean: (name) => booleans[name] ?? null,
       getFocused: () => { if (focused instanceof Error) throw focused; return focused; },
     },
@@ -373,6 +381,29 @@ test('autocomplete: zone and colour suggestions, nothing for other options, alwa
   ({ it, calls } = fakeInteraction({ sub: 'timezone', focused: new Error('boom') }));
   await s.autocomplete(it);
   assert.deepEqual(calls.respond, [[]], 'a throwing option reader still answers');
+});
+
+test('timezone-role add: refusals before any defer, and the zone box suggests the role name first', async () => {
+  const cst = { id: '700000000000000001', name: 'CST' };
+  const guild = { ...fakeGuild(), roles: { cache: new Map([[cst.id, cst]]) } };
+  const cases = [
+    [{ id: '1', name: '@everyone' }, null, /Pick a Role/],
+    [{ id: '700000000000000002', name: 'Gamers' }, null, /Which Timezone/],
+    [cst, 'IST', /Ambiguous Timezone/],
+    [cst, '+05:30', /Pick a City/],
+  ];
+  for (const [role, zone, title] of cases) {
+    const { it, calls } = fakeInteraction({ group: 'timezone-role', sub: 'add', roles: { role }, strings: { zone }, guild });
+    await s.execute(it);
+    assert.equal(calls.deferReply.length, 0, role.name);
+    assert.equal(calls.reply.length, 1, role.name);
+    assert.equal(calls.reply[0].ephemeral, true);
+    assert.match(embedOf(calls.reply[0]).title, title);
+  }
+  const { it, calls } = fakeInteraction({ group: 'timezone-role', sub: 'add', roles: { role: cst }, guild, focused: { name: 'zone', value: '' } });
+  await s.autocomplete(it);
+  assert.equal(calls.respond[0][0].value, 'America/Chicago');
+  assert.match(calls.respond[0][0].name, /from the role name/);
 });
 
 // ── 11. Pre-defer validation replies ─────────────────────────────────────────────
@@ -447,9 +478,11 @@ test('static scan: settingsService only, no prisma, no cache, no console, no sid
   assert.ok(!/\bconsole\./.test(text), 'logger only');
   assert.ok(!/LIMITS\.[A-Z_]+\s*\?\?/.test(text));
   assert.ok(/updateSettings\(/.test(text) && /getSettingsSafe\(/.test(text) && /peekSettings\(/.test(text));
-  // Module-level state is lazy: the zone list starts empty and the formatter cache is a plain Map.
-  assert.match(text, /let zoneList = null;/);
-  assert.match(text, /const offsetFormatters = new Map\(\);/);
+  // Module-level state is lazy: the zone list starts empty and the formatter cache is a plain Map
+  // (both live in utils/timezones.js, which settings.js re-exports).
+  const zones = readFileSync(resolve(ROOT, 'src/utils/timezones.js'), 'utf8');
+  assert.match(zones, /let zoneList = null;/);
+  assert.match(zones, /const offsetFormatters = new Map\(\);/);
 });
 
 // ── 14. End to end against a database (TEST_DATABASE_URL) ────────────────────────

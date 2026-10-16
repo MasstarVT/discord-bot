@@ -1184,6 +1184,7 @@ export const NOT_EXPOSED = Object.freeze({
   captchaChannelId: 'changes only together with the posted panel: /captcha setup or /captcha channel posts it',
   captchaMessageId: 'bot-managed: the id of the posted verification panel',
   captchaLockdownPrior: 'bot-managed: what /captcha lock off restores',
+  timezoneRoles: 'edited with /settings timezone-role (role-to-zone links); no dashboard editor yet',
 });
 
 for (const desc of Object.values(SETTINGS_FIELDS)) deepFreeze(desc);

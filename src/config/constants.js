@@ -39,6 +39,7 @@ export const LIMITS = Object.freeze({
   TRANSLATE_CHANNELS: 50,      // TranslateChannel rows per guild
   ECONOMY_GAME_CHANNELS: 25,   // GuildSettings.economyGameChannelIds
   ECONOMY_BOOSTS: 10,          // EconomyBoost rows per guild (MEE6 "up to 10")
+  TIMEZONE_ROLES: 25,          // GuildSettings.timezoneRoles (/settings timezone-role)
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────

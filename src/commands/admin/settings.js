@@ -1,13 +1,16 @@
-// /settings: general server settings (MEE6 Settings): timezone, default embed colour, custom-command
-// prefix, the /urban age-restriction switch and a read-only overview. Every read and write goes
+// /settings: general server settings (MEE6 Settings): timezone, timezone roles, default embed colour,
+// custom-command prefix, the /urban age-restriction switch and a read-only overview. Every read and write goes
 // through settingsService (00-overview rule 8); nothing here touches Prisma or Redis directly.
 import { SlashCommandBuilder, PermissionFlagsBits, escapeMarkdown } from 'discord.js';
-import { PERMISSION_LEVELS, COLORS } from '../../config/constants.js';
+import { PERMISSION_LEVELS, COLORS, LIMITS } from '../../config/constants.js';
 import { MODULES, MODULE_NAMES, isModuleEnabled } from '../../config/modules.js';
-import { getSettingsSafe, peekSettings, updateSettings } from '../../services/settingsService.js';
+import { getSettingsSafe, peekSettings, updateSettings, updateSettingsWith } from '../../services/settingsService.js';
 import { successEmbed, errorEmbed, infoEmbed, guildEmbed, applyGuildColor } from '../../utils/embedBuilder.js';
 import { parseColor, formatColor } from '../../utils/customEmbed.js';
-import { isValidTimeZone, zonedParts, formatTimeOfDay } from '../../utils/time.js';
+import {
+  normalizeTimeZone, utcOffsetLabel, searchTimeZones, describeLocalTime, parseZoneInput, zoneInputError, zoneFromRoleName,
+  normalizeTimezoneRoles, zoneLabel,
+} from '../../utils/timezones.js';
 import { clampText, joinWithLimit } from '../../utils/text.js';
 import { safeDefer, safeReply, replyError, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
@@ -17,7 +20,7 @@ export const permissionLevel = PERMISSION_LEVELS.ADMIN;
 
 export const data = new SlashCommandBuilder()
   .setName('settings')
-  .setDescription('Server settings: timezone, embed colour, custom-command prefix, /urban (MEE6 Settings).')
+  .setDescription('Server settings: timezone, timezone roles, embed colour, custom-command prefix, /urban.')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('show')
     .setDescription('Show the general settings, enabled modules and moderator roles.'))
@@ -40,164 +43,27 @@ export const data = new SlashCommandBuilder()
     .setDescription('Choose where /urban (Urban Dictionary) may be used.')
     .addBooleanOption((o) => o.setName('nsfw-only')
       .setDescription('True: age-restricted channels only (default). False: every channel.')
-      .setRequired(true)));
+      .setRequired(true)))
+  .addSubcommandGroup((g) => g.setName('timezone-role')
+    .setDescription('Roles such as @CST that give members a timezone in /timestamp.')
+    .addSubcommand((s) => s.setName('add')
+      .setDescription('Link a role to a timezone. Members with the role get it in /timestamp.')
+      .addRoleOption((o) => o.setName('role').setDescription('The timezone role, e.g. @CST.').setRequired(true))
+      .addStringOption((o) => o.setName('zone')
+        .setDescription('Region/City or an abbreviation like CST. Empty: read it from the role name.')
+        .setMaxLength(64).setAutocomplete(true)))
+    .addSubcommand((s) => s.setName('remove')
+      .setDescription('Unlink a timezone role. The role itself is kept.')
+      .addRoleOption((o) => o.setName('role').setDescription('The timezone role.').setRequired(true)))
+    .addSubcommand((s) => s.setName('list')
+      .setDescription('Show the timezone roles and the time in each.')));
 
 // ── Timezones ────────────────────────────────────────────────────────────────
-
-// ICU still lists legacy IANA names. Map them to the current tzdata names so
-// users find "Kolkata"/"Kyiv". A no-op on runtimes that already list the new names.
-export const LEGACY_TZ_NAMES = Object.freeze({
-  'Africa/Asmera': 'Africa/Asmara', 'America/Buenos_Aires': 'America/Argentina/Buenos_Aires',
-  'America/Catamarca': 'America/Argentina/Catamarca', 'America/Cordoba': 'America/Argentina/Cordoba',
-  'America/Jujuy': 'America/Argentina/Jujuy', 'America/Mendoza': 'America/Argentina/Mendoza',
-  'America/Coral_Harbour': 'America/Atikokan', 'America/Godthab': 'America/Nuuk',
-  'America/Indianapolis': 'America/Indiana/Indianapolis', 'America/Louisville': 'America/Kentucky/Louisville',
-  'Asia/Calcutta': 'Asia/Kolkata', 'Asia/Katmandu': 'Asia/Kathmandu', 'Asia/Rangoon': 'Asia/Yangon',
-  'Asia/Saigon': 'Asia/Ho_Chi_Minh', 'Atlantic/Faeroe': 'Atlantic/Faroe', 'Europe/Kiev': 'Europe/Kyiv',
-  'Pacific/Enderbury': 'Pacific/Kanton', 'Pacific/Ponape': 'Pacific/Pohnpei', 'Pacific/Truk': 'Pacific/Chuuk',
-});
-
-// Lower-cased names that all mean UTC. They are accepted and stored as 'UTC'.
-const UTC_ALIASES = new Set(['utc', 'gmt', 'uct', 'zulu', 'universal', 'greenwich', 'etc/utc', 'etc/gmt',
-  'etc/uct', 'etc/zulu', 'etc/universal', 'etc/greenwich', 'gmt0', 'gmt+0', 'gmt-0', 'etc/gmt0', 'etc/gmt+0', 'etc/gmt-0']);
-
-// Shown when the zone box is empty (after the current zone), in this order.
-export const POPULAR_TIMEZONES = Object.freeze(['UTC', 'America/New_York', 'America/Chicago', 'America/Denver',
-  'America/Los_Angeles', 'America/Toronto', 'America/Mexico_City', 'America/Sao_Paulo', 'Europe/London',
-  'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Istanbul', 'Europe/Moscow', 'Africa/Cairo',
-  'Africa/Johannesburg', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Bangkok', 'Asia/Singapore', 'Asia/Shanghai',
-  'Asia/Tokyo', 'Asia/Seoul', 'Australia/Sydney', 'Pacific/Auckland']);
-
-let zoneList = null; // lazily built; never at import
-const offsetFormatters = new Map(); // zone → Intl.DateTimeFormat (≤ ~430 entries)
-
-/**
- * Every timezone the autocomplete offers: 'UTC' first, then the ICU zones (legacy names mapped to
- * the current tzdata names), sorted. Built once on first use.
- * @returns {readonly string[]}
- */
-export function listTimeZones() {
-  if (zoneList) return zoneList;
-  const out = new Set(['UTC']);
-  for (const z of Intl.supportedValuesOf('timeZone')) {
-    const modern = LEGACY_TZ_NAMES[z];
-    out.add(modern && isValidTimeZone(modern) ? modern : z);
-  }
-  zoneList = Object.freeze([...out].sort((a, b) => (a === 'UTC' ? -1 : b === 'UTC' ? 1 : a.localeCompare(b))));
-  return zoneList;
-}
-
-/**
- * Validates and canonicalises a timezone typed by an admin.
- * @param {unknown} input
- * @returns {{ ok: true, zone: string } | { ok: false, code: 'EMPTY'|'UNKNOWN'|'OFFSET'|'ABBREVIATION' }}
- */
-export function normalizeTimeZone(input) {
-  const s = String(input ?? '').trim(); // Intl throws on untrimmed names
-  if (!s) return { ok: false, code: 'EMPTY' };
-  if (s.length > 64) return { ok: false, code: 'UNKNOWN' };
-  if (UTC_ALIASES.has(s.toLowerCase())) return { ok: true, zone: 'UTC' };
-  if (/^[+\-−\d]/.test(s) || /^(?:utc|gmt)\s*[+\-−]\s*\d/i.test(s)) return { ok: false, code: 'OFFSET' };
-  if (!isValidTimeZone(s)) return { ok: false, code: 'UNKNOWN' };
-  if (!s.includes('/')) return { ok: false, code: 'ABBREVIATION' }; // EST → America/Panama, CET, Japan …
-  const lower = s.toLowerCase();
-  const hit = listTimeZones().find((z) => z.toLowerCase() === lower);
-  if (hit) return { ok: true, zone: hit };
-  const canonical = new Intl.DateTimeFormat('en-US', { timeZone: s }).resolvedOptions().timeZone;
-  if (UTC_ALIASES.has(canonical.toLowerCase())) return { ok: true, zone: 'UTC' };
-  const modern = LEGACY_TZ_NAMES[canonical];
-  return { ok: true, zone: modern && isValidTimeZone(modern) ? modern : canonical };
-}
-
-/**
- * 'UTC+05:30'-style label for a zone at an instant (DST aware). Never throws.
- * @param {string} zone
- * @param {Date} [date]
- * @returns {string}
- */
-export function utcOffsetLabel(zone, date = new Date()) {
-  try {
-    let fmt = offsetFormatters.get(zone);
-    if (!fmt) {
-      fmt = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' });
-      offsetFormatters.set(zone, fmt);
-    }
-    const raw = (fmt.formatToParts(date).find((p) => p.type === 'timeZoneName')?.value ?? 'GMT').replace('−', '-');
-    const m = /^GMT([+-]\d{2}:\d{2})$/.exec(raw);
-    return m ? `UTC${m[1]}` : 'UTC+00:00'; // bare "GMT" = +00:00
-  } catch {
-    return 'UTC';
-  }
-}
-
-/**
- * Autocomplete choices for the zone option: by name or city, or by offset ('+5:30', 'utc-3').
- * @param {unknown} query
- * @param {{ current?: string|null, now?: Date, limit?: number }} [opts]
- * @returns {{ name: string, value: string }[]}
- */
-export function searchTimeZones(query, { current = null, now = new Date(), limit = 25 } = {}) {
-  const list = listTimeZones();
-  const known = new Set(list);
-  const q = String(query ?? '').trim().toLowerCase().replace(/\s+/g, '_');
-  const off = /^(?:utc|gmt)?_?([+\-−])_?(\d{1,2})(?::?(\d{2}))?$/.exec(q);
-  let zones;
-  if (!q) {
-    const cur = current && known.has(current) ? [current] : [];
-    zones = [...cur, ...POPULAR_TIMEZONES.filter((z) => known.has(z) && z !== current)];
-  } else if (off) {
-    const hh = Number(off[2]);
-    if (hh > 14) return [];
-    const tail = `${String(hh).padStart(2, '0')}${off[3] ? `:${off[3]}` : ''}`;
-    const prefix = `UTC${off[1] === '+' ? '+' : '-'}${tail}`;
-    const zeroPrefix = `UTC+${tail}`; // "-0" also finds UTC+00:00 zones
-    zones = list
-      .map((z) => [z, utcOffsetLabel(z, now)])
-      .filter(([, label]) => label.startsWith(prefix) || (hh === 0 && label.startsWith(zeroPrefix)))
-      .sort((a, b) => a[1].localeCompare(b[1]) || a[0].localeCompare(b[0]))
-      .map(([z]) => z);
-  } else {
-    const scored = [];
-    for (const z of list) {
-      const zl = z.toLowerCase();
-      const city = zl.slice(zl.lastIndexOf('/') + 1);
-      let score = -1;
-      if (zl === q || city === q) score = 0;
-      else if (city.startsWith(q)) score = 1;
-      else if (zl.startsWith(q)) score = 2;
-      else if (zl.includes(q)) score = 3;
-      if (score >= 0) scored.push([score, z]);
-    }
-    scored.sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1]));
-    zones = scored.map(([, z]) => z);
-  }
-  return zones.slice(0, limit).map((z) => ({
-    name: `${z} (${utcOffsetLabel(z, now)})${z === current ? ' · current' : ''}`,
-    value: z,
-  }));
-}
-
-const WEEKDAY_LONG = Object.freeze(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
-const pad2 = (n) => String(n).padStart(2, '0');
-
-/**
- * Local time in a zone, for replies. An invalid zone falls back to UTC (`valid` is then false).
- * @param {string} zone
- * @param {Date} [now]
- * @returns {{ valid: boolean, zone: string, time: string, date: string, weekday: string, offset: string }}
- */
-export function describeLocalTime(zone, now = new Date()) {
-  const tz = isValidTimeZone(zone) ? zone : 'UTC';
-  const p = zonedParts(now, tz);
-  return {
-    valid: tz === zone,
-    zone: tz,
-    time: formatTimeOfDay({ hour: p.hour, minute: p.minute }),
-    date: `${p.year}-${pad2(p.month)}-${pad2(p.day)}`,
-    weekday: WEEKDAY_LONG[p.weekday],
-    offset: utcOffsetLabel(tz, now),
-  };
-}
+// The helpers live in utils/timezones.js (shared with /timezone and /timestamp); re-exported for the
+// dashboard and the tests.
+export {
+  LEGACY_TZ_NAMES, POPULAR_TIMEZONES, listTimeZones, normalizeTimeZone, utcOffsetLabel, searchTimeZones, describeLocalTime,
+} from '../../utils/timezones.js';
 
 // ── Colour ───────────────────────────────────────────────────────────────────
 
@@ -488,8 +354,114 @@ async function runUrban(interaction) {
   return safeReply(interaction, reply([successEmbed('Urban Dictionary', text)]));
 }
 
+// ── Timezone roles ───────────────────────────────────────────────────────────
+
+class ConfigError extends Error {}
+
+/** "@CST → `America/Chicago` (UTC-05:00) · 14:12 now" for /settings timezone-role list. */
+function timezoneRoleLine(link, guild, now = new Date()) {
+  const role = guild?.roles?.cache?.get(link.roleId);
+  const who = role ? `<@&${link.roleId}>` : `deleted role \`${link.roleId}\``;
+  return `• ${who} → \`${link.zone}\` (${utcOffsetLabel(link.zone, now)}) · ${describeLocalTime(link.zone, now).time} now`;
+}
+
+/**
+ * Writes the timezone-role list through updateSettingsWith. Links to deleted roles are dropped on
+ * every write. Returns the saved row, or null after answering.
+ */
+async function saveTimezoneRoles(interaction, change) {
+  const live = new Set(interaction.guild?.roles?.cache?.keys() ?? []);
+  try {
+    return await updateSettingsWith(interaction.guildId, (cur) => {
+      const list = normalizeTimezoneRoles(cur.timezoneRoles).filter((l) => !live.size || live.has(l.roleId));
+      return { timezoneRoles: change(list) };
+    });
+  } catch (err) {
+    if (err instanceof ConfigError) {
+      await safeReply(interaction, reply([errorEmbed('Not Saved', err.message)]));
+      return null;
+    }
+    logger.error('[settings] timezone-role save failed', err, { guildId: interaction.guildId });
+    await safeReply(interaction, reply([errorEmbed('Could Not Save', 'The timezone roles could not be saved. Please try again in a moment.')]));
+    return null;
+  }
+}
+
+async function runTimezoneRoleAdd(interaction) {
+  const role = interaction.options.getRole('role', true);
+  if (role.id === interaction.guildId) {
+    return replyError(interaction, 'Pick a Role', 'Pick a timezone role such as @CST, not @everyone. To set the timezone for everyone else, use `/settings timezone`.');
+  }
+  const raw = interaction.options.getString('zone');
+  let zone;
+  if (raw) {
+    const r = parseZoneInput(raw);
+    if (!r.ok) return replyError(interaction, ...zoneInputError(raw, r));
+    zone = r.zone;
+  } else {
+    zone = zoneFromRoleName(role.name);
+    if (!zone) {
+      return replyError(interaction, 'Which Timezone?',
+        `I can't tell the timezone from the name **${escapeMarkdown(clampText(role.name, 100))}**. Run it again with \`zone:\`, e.g. \`America/Chicago\` or \`CST\`.`);
+    }
+  }
+  if (!(await safeDefer(interaction))) return;
+  let previous = null;
+  const row = await saveTimezoneRoles(interaction, (list) => {
+    previous = list.find((l) => l.roleId === role.id)?.zone ?? null;
+    if (previous === null && list.length >= LIMITS.TIMEZONE_ROLES) {
+      throw new ConfigError(`You can have at most ${LIMITS.TIMEZONE_ROLES} timezone roles. Remove one first.`);
+    }
+    return [...list.filter((l) => l.roleId !== role.id), { roleId: role.id, zone }];
+  });
+  if (!row) return;
+  logger.info(`[settings] ${interaction.guildId}: timezone role ${role.id} ${JSON.stringify(previous)} → ${zone} by ${interaction.user?.id}`);
+  const lines = [
+    `Members with <@&${role.id}> get **${zoneLabel(zone)}** in /timestamp${raw ? '' : ' (read from the role name)'}.`,
+    `It's **${describeLocalTime(zone).time}** there now. A member's own \`/timezone set\` still wins over the role.`,
+  ];
+  if (previous && previous !== zone) lines.push(`Previously: \`${previous}\`.`);
+  lines.push('', 'Hand the roles out with `/reactionrole` and make the panel type **Unique**, so members hold only one timezone role.');
+  return safeReply(interaction, reply([successEmbed('Timezone Role Saved', lines.join('\n'))]));
+}
+
+async function runTimezoneRoleRemove(interaction) {
+  const role = interaction.options.getRole('role', true);
+  if (!(await safeDefer(interaction))) return;
+  const row = await saveTimezoneRoles(interaction, (list) => {
+    if (!list.some((l) => l.roleId === role.id)) throw new ConfigError(`<@&${role.id}> is not a timezone role.`);
+    return list.filter((l) => l.roleId !== role.id);
+  });
+  if (!row) return;
+  logger.info(`[settings] ${interaction.guildId}: timezone role ${role.id} removed by ${interaction.user?.id}`);
+  return safeReply(interaction, reply([successEmbed('Timezone Role Removed', `<@&${role.id}> no longer gives a timezone. The role itself is unchanged.`)]));
+}
+
+async function runTimezoneRoleList(interaction) {
+  if (!(await safeDefer(interaction))) return;
+  const settings = await getSettingsSafe(interaction.guildId);
+  if (!settings) {
+    return safeReply(interaction, reply([errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.')]));
+  }
+  const links = normalizeTimezoneRoles(settings.timezoneRoles);
+  if (!links.length) {
+    return safeReply(interaction, reply([applyGuildColor(infoEmbed('Timezone Roles',
+      'No timezone roles yet. Link one with `/settings timezone-role add role:@CST`, then hand the roles out with `/reactionrole`.'), settings)]));
+  }
+  const now = new Date();
+  const body = joinWithLimit(links.map((l) => timezoneRoleLine(l, interaction.guild, now)), { sep: '\n', max: 3600 });
+  const tail = `\n\nMembers without one of these roles use \`${settings.timezone ?? 'UTC'}\` (the server timezone) unless they saved their own with \`/timezone set\`. When a member has several, the highest role wins.`;
+  return safeReply(interaction, reply([applyGuildColor(infoEmbed(`Timezone Roles (${links.length}/${LIMITS.TIMEZONE_ROLES})`, body + tail), settings)]));
+}
+
 export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
+  if (interaction.options.getSubcommandGroup(false) === 'timezone-role') {
+    if (sub === 'add') return runTimezoneRoleAdd(interaction);
+    if (sub === 'remove') return runTimezoneRoleRemove(interaction);
+    if (sub === 'list') return runTimezoneRoleList(interaction);
+    return undefined;
+  }
   if (sub === 'show') return runShow(interaction);
   if (sub === 'timezone') return runTimezone(interaction);
   if (sub === 'color') return runColor(interaction);
@@ -497,13 +469,30 @@ export async function execute(interaction) {
   if (sub === 'urban') return runUrban(interaction);
 }
 
+// The zone box of /settings timezone-role add: with nothing typed, the zone the chosen role's name
+// names comes first ('@CST' → America/Chicago).
+function suggestTimezoneRoleZones(interaction, typed) {
+  const choices = searchTimeZones(typed, { abbreviations: true });
+  if (String(typed ?? '').trim()) return choices;
+  const roleId = interaction.options.get('role')?.value;
+  const fromName = zoneFromRoleName(interaction.guild?.roles?.cache?.get(roleId)?.name);
+  if (!fromName) return choices;
+  return [
+    { name: `${fromName} (${utcOffsetLabel(fromName)}) · from the role name`, value: fromName },
+    ...choices.filter((c) => c.value !== fromName),
+  ];
+}
+
 export async function autocomplete(interaction) {
   let choices = [];
   try {
     const sub = interaction.options.getSubcommand(false);
+    const group = interaction.options.getSubcommandGroup(false);
     const focused = interaction.options.getFocused(true); // { name, value }
     const current = peekSettings(interaction.guildId); // sync memo only; may be null: no I/O on keystrokes
-    if (sub === 'timezone' && focused.name === 'zone') {
+    if (group === 'timezone-role') {
+      if (sub === 'add' && focused.name === 'zone') choices = suggestTimezoneRoleZones(interaction, focused.value);
+    } else if (sub === 'timezone' && focused.name === 'zone') {
       choices = searchTimeZones(focused.value, { current: current?.timezone ?? null });
     } else if (sub === 'color' && focused.name === 'value') {
       choices = suggestColors(focused.value, { current: current?.embedColor ?? null });
