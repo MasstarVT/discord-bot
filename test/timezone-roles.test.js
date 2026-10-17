@@ -170,9 +170,10 @@ test('the dashboard template field: create-only, options from the presets, hides
   assert.ok(template.options.every((o) => (o.description ?? '').length <= 300));
   assert.ok(rrd.collection.createOnly.includes('template'));
   for (const name of ['layout', 'type', 'items']) {
-    assert.deepEqual(fields.find((f) => f.field === name).showWhen, { field: 'template', in: ['none'] }, name);
+    assert.deepEqual(fields.find((f) => f.field === name).showWhen, { field: 'template', notIn: Object.keys(tz.TIMEZONE_ROLE_TEMPLATES) }, name);
   }
-  assert.equal(rrd.panelItem({ id: 'g', channelId: '1', layout: 'SELECT', type: 'UNIQUE', title: 't', messageId: '2', items: [] }).template, 'none');
+  // A saved panel carries no template (create-only fields are not sent back on edit), so its fields stay shown.
+  assert.equal(Object.hasOwn(rrd.panelItem({ id: 'g', channelId: '1', layout: 'SELECT', type: 'UNIQUE', title: 't', messageId: '2', items: [] }), 'template'), false);
 });
 
 test('forms.js hides a field whose showWhen sibling is itself hidden', () => {

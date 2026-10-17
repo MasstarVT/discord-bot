@@ -56,7 +56,8 @@ export const TEMPLATE_OPTIONS = Object.freeze([
       + 'and posts them as a Unique dropdown.',
   })),
 ]);
-const NO_TEMPLATE = { field: 'template', in: ['none'] };
+// `notIn`, not `in: ['none']`: a saved panel has no `template`, and its (locked) fields must stay visible.
+const NO_TEMPLATE = { field: 'template', notIn: Object.keys(TIMEZONE_ROLE_TEMPLATES) };
 
 const STYLE_OPTIONS = Object.freeze([
   { value: 1, label: 'Blue' },
@@ -410,8 +411,6 @@ export function panelItem(row) {
   const n = items.length;
   return {
     id: row.id,
-    // Create-only: a saved panel shows (locked) as made without a template, so the fields it hides stay visible.
-    template: 'none',
     channelId: row.channelId,
     layout: row.layout,
     type: row.type,
