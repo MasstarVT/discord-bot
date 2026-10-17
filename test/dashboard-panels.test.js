@@ -676,7 +676,7 @@ describe('tasks', () => {
   };
   const guild = { id: GUILD, ownerId: OWNER, channels: { cache: new Collection(), fetch: async () => { throw new Error('unexpected'); } } };
   const call = (tasks, kind, actor, payload) => tasks[kind].run({ guild, client: {}, actor, payload, taskId: 't1' });
-  const kinds = [[rrTasks, ['rr.publish', 'rr.repost', 'rr.delete', 'rr.timezoneTemplate']], [tkTasks, ['ticket.check', 'ticket.publish', 'ticket.refresh', 'ticket.delete']]];
+  const kinds = [[rrTasks, ['rr.publish', 'rr.repost', 'rr.delete', 'rr.roleTemplate']], [tkTasks, ['ticket.check', 'ticket.publish', 'ticket.refresh', 'ticket.delete']]];
 
   test('the kinds are well formed and owned by their module', () => {
     for (const [tasks, expected] of kinds) {
@@ -722,7 +722,7 @@ describe('tasks', () => {
     }
     await assert.rejects(call(rrTasks, 'rr.publish', actor, { groupId: 'g1', mode: 'explode' }), (err) => err instanceof TaskError && /not valid/.test(err.message));
     for (const template of [undefined, 'verify', 'timezones-mars', 5]) {
-      await assert.rejects(call(rrTasks, 'rr.timezoneTemplate', actor, { groupId: 'g1', template }),
+      await assert.rejects(call(rrTasks, 'rr.roleTemplate', actor, { groupId: 'g1', template }),
         (err) => err instanceof TaskError && /not valid/.test(err.message), String(template));
     }
     await assert.rejects(call(tkTasks, 'ticket.check', actor, { categoryIds: ['nope'] }), (err) => err instanceof TaskError);

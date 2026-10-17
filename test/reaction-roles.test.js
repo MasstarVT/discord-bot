@@ -520,7 +520,8 @@ test('14. command payload and exports', () => {
     assert.ok(sub.description.length >= 1 && sub.description.length <= 100);
     for (const o of sub.options ?? []) assert.ok(o.description.length >= 1 && o.description.length <= 100, `${sub.name}.${o.name}`);
   }
-  assert.ok(charCount(json) <= 2400, `payload is ${charCount(json)} characters`);
+  // Our own budget, well under Discord's 4000-character cap per command (the role-set template choices take ~110).
+  assert.ok(charCount(json) <= 2500, `payload is ${charCount(json)} characters`);
   assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   assert.deepEqual(json.contexts, [0]);
   assert.equal(cmd.module, 'reactionroles');

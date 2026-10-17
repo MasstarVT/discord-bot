@@ -5,8 +5,8 @@
 //               message (and the bot's reactions) up to date with the saved panel
 //   rr.repost   { groupId, channelId? }                              post the panel again and clean up the old message
 //   rr.delete   { groupId }                                          delete the panel and its message
-//   rr.timezoneTemplate { groupId, template }                        create or reuse a timezone template's roles, link them to
-//               their zones, add them to the (empty) panel and post it
+//   rr.roleTemplate { groupId, template }                            create or reuse a role template's roles (a timezone
+//               template's are linked to their zones), add them to the (empty) panel and post it
 // Every task re-checks that the dashboard user is still an admin (the level /reactionrole needs) and re-validates its payload.
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
@@ -17,8 +17,8 @@ import { clampText } from '../../utils/text.js';
 import logger from '../../utils/logger.js';
 import { getSettingsSafe } from '../settingsService.js';
 import * as rr from '../reactionRoleService.js';
-import { setupTimezoneRoles, describeSetup, TimezoneSetupError } from '../timezoneRoleSetup.js';
-import { TIMEZONE_ROLE_TEMPLATES } from '../../utils/timezones.js';
+import { setupRoleTemplate, describeSetup, describeReused, RoleTemplateError } from '../roleTemplateSetup.js';
+import { getRoleTemplate } from '../../utils/roleTemplates.js';
 import { TaskError } from './shared.js';
 
 const ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
@@ -262,41 +262,45 @@ async function remove({ guild, client, actor, payload }) {
     : `Deleted "${name}". I couldn't delete its message, so delete it by hand.`, [], { groupId: group.id });
 }
 
-// ── rr.timezoneTemplate ──────────────────────────────────────────────────────
+// ── rr.roleTemplate ──────────────────────────────────────────────────────────
 
-async function timezoneTemplate({ guild, client, actor, payload }) {
+const plain = (text) => text.replace(/\*\*|`/g, '');
+
+async function roleTemplate({ guild, client, actor, payload }) {
   await authorize(guild, actor);
-  const key = payload?.template;
-  if (typeof key !== 'string' || !Object.hasOwn(TIMEZONE_ROLE_TEMPLATES, key)) throw new TaskError('That template is not valid.');
+  const template = getRoleTemplate(payload?.template);
+  if (!template) throw new TaskError('That template is not valid.');
   const group = await loadGroup(guild, payload);
   if (group.items.length) throw new TaskError('That panel already has roles.');
+  if (group.layout === 'REACTIONS') throw new TaskError('Template panels use a dropdown or buttons.');
   let setup;
   try {
     // The channel first, so roles are never created for a panel that cannot be posted.
     requireUsable(await postChannel(guild, group.channelId, { strictType: true }), needsFor(group));
-    setup = await setupTimezoneRoles(guild, key, {
-      executor: actor.member ?? null, reason: `Timezone roles template (dashboard, by ${actor.id})`,
+    setup = await setupRoleTemplate(guild, payload.template, {
+      executor: actor.member ?? null, reason: `Role template (dashboard, by ${actor.id})`,
     });
   } catch (err) {
     // Nothing was posted: drop the empty panel here too, in case the dashboard stopped waiting for this task.
     await rr.deletePanel(guild.id, group.id).catch(() => {});
     await rr.invalidatePanelIndex(guild.id);
-    if (err instanceof TimezoneSetupError) throw new TaskError(err.message.replace(/\*\*/g, ''));
+    if (err instanceof RoleTemplateError) throw new TaskError(plain(err.message));
     throw err;
   }
   const items = [];
   for (const r of setup.roles) {
     const description = group.layout === 'SELECT' ? r.description : null;
-    items.push(await rr.addItem({ id: group.id, items }, { roleId: r.roleId, label: r.label, style: 2, description }));
+    items.push(await rr.addItem({ id: group.id, items }, { roleId: r.roleId, label: r.label, emoji: r.emoji, style: 2, description }));
   }
   await rr.invalidatePanelIndex(guild.id);
   const posted = await publish({ guild, client, actor, payload: { groupId: group.id, mode: 'post' } });
-  return { ...posted, message: `${describeSetup(setup)} ${posted.message}` };
+  const extra = [describeReused(setup), template.note].filter(Boolean).map((t) => ` ${plain(t)}`).join('');
+  return { ...posted, message: `${describeSetup(setup)} ${posted.message}${extra}` };
 }
 
 export const tasks = Object.freeze({
   'rr.publish': { run: publish },
   'rr.repost': { run: repost },
   'rr.delete': { run: remove },
-  'rr.timezoneTemplate': { run: timezoneTemplate },
+  'rr.roleTemplate': { run: roleTemplate },
 });

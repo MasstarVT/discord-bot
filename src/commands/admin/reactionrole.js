@@ -13,8 +13,8 @@ import { clampText } from '../../utils/text.js';
 import { markBotDeletion } from '../../utils/deletionTracker.js';
 import { getSettingsSafe, ensureGuildSettings, isModuleEnabled } from '../../services/settingsService.js';
 import * as rr from '../../services/reactionRoleService.js';
-import { setupTimezoneRoles, describeSetup, TimezoneSetupError } from '../../services/timezoneRoleSetup.js';
-import { TIMEZONE_ROLE_TEMPLATES, TIMEZONE_PANEL } from '../../utils/timezones.js';
+import { setupRoleTemplate, describeSetup, describeReused, RoleTemplateError } from '../../services/roleTemplateSetup.js';
+import { ROLE_TEMPLATES, getRoleTemplate } from '../../utils/roleTemplates.js';
 import { newChannelOption, newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 
@@ -42,7 +42,7 @@ const STYLE_CHOICES = [
 const TEMPLATE_CHOICES = [
   { name: 'Verify', value: 'verify' },
   { name: 'Notifications', value: 'notifications' },
-  ...Object.entries(TIMEZONE_ROLE_TEMPLATES).map(([value, t]) => ({ name: t.label, value })),
+  ...Object.entries(ROLE_TEMPLATES).map(([value, t]) => ({ name: t.label, value })),
 ];
 const PANEL_CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 const panelOption = (o) => o.setName('panel').setDescription('Panel (type to search)').setRequired(true).setAutocomplete(true).setMaxLength(100);
@@ -57,7 +57,7 @@ export const data = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('title').setDescription('Panel title').setMaxLength(256))
     .addStringOption((o) => o.setName('type').setDescription('Role mode (default Normal)').addChoices(...TYPE_CHOICES))
     .addStringOption((o) => o.setName('layout').setDescription('Default Buttons').addChoices(...LAYOUT_CHOICES))
-    .addStringOption((o) => o.setName('template').setDescription('Preset title, text and mode; Timezones also creates the roles').addChoices(...TEMPLATE_CHOICES))
+    .addStringOption((o) => o.setName('template').setDescription('Preset panel; the role sets also create their roles').addChoices(...TEMPLATE_CHOICES))
     .addStringOption((o) => o.setName('description').setDescription('Embed text under the title').setMaxLength(4000))
     .addStringOption((o) => o.setName('message').setDescription('Plain text sent with the panel').setMaxLength(2000))
     .addBooleanOption((o) => o.setName('plain_text').setDescription('Send text only, no embed (default False)'))
@@ -222,8 +222,8 @@ async function create(c) {
     return respond(interaction, errorEmbed('Panel Limit Reached', `This server already has ${LIMITS.REACTION_ROLE_PANELS} reaction-role panels. Delete one with \`/reactionrole delete\` first.`));
   }
 
-  if (templateKey && Object.hasOwn(TIMEZONE_ROLE_TEMPLATES, templateKey)) {
-    return createTimezonePanel(c, {
+  if (getRoleTemplate(templateKey)) {
+    return createTemplatePanel(c, {
       key: templateKey, channel, layoutOpt, messageOpt, plainText, placeholderOpt, typeOpt,
       title: o.getString('title')?.trim() || null, description: descriptionOpt?.trim() || null, extras: Boolean(roleOpt || emojiOpt || maxRolesOpt !== null),
     });
@@ -288,59 +288,66 @@ async function create(c) {
 }
 
 /**
- * /reactionrole create template:timezones-*: creates (or reuses) the template's roles, links each to its zone for
- * /timestamp, and posts them as a Unique panel (a dropdown, or buttons when asked).
+ * /reactionrole create template:<role set>: creates (or reuses) the template's roles (and links a timezone template's roles
+ * to their zones for /timestamp), then posts them as the template's panel (a dropdown or buttons, never emoji reactions).
  */
-async function createTimezonePanel(c, { key, channel, layoutOpt, messageOpt, plainText, placeholderOpt, typeOpt, title, description, extras }) {
+async function createTemplatePanel(c, { key, channel, layoutOpt, messageOpt, plainText, placeholderOpt, typeOpt, title, description, extras }) {
   const { interaction, guild, guildId, settings } = c;
+  const template = getRoleTemplate(key);
+  const { panel } = template;
   if (layoutOpt === 'REACTIONS') {
-    return respond(interaction, errorEmbed('Pick Another Layout', 'Timezone panels use a dropdown or buttons. Leave `layout` empty for a dropdown.'));
+    return respond(interaction, errorEmbed('Pick Another Layout', 'Template panels use a dropdown or buttons. Leave `layout` empty for the template\'s own.'));
   }
   let setup;
   try {
-    setup = await setupTimezoneRoles(guild, key, { executor: interaction.member ?? null, reason: `Timezone roles template by ${interaction.user.tag}` });
+    setup = await setupRoleTemplate(guild, key, { executor: interaction.member ?? null, reason: `Role template by ${interaction.user.tag}` });
   } catch (err) {
-    if (err instanceof TimezoneSetupError) return respond(interaction, errorEmbed('Timezone Roles Not Created', err.message));
+    if (err instanceof RoleTemplateError) return respond(interaction, errorEmbed('Roles Not Created', err.message));
     throw err;
   }
-  const layout = layoutOpt ?? TIMEZONE_PANEL.layout;
+  const layout = layoutOpt ?? panel.layout;
+  // A timezone panel is always Unique (one zone at a time); a role set's mode can be changed.
+  const type = template.linksZones ? panel.type : (typeOpt ?? panel.type);
   const id = randomUUID();
   const draft = {
-    id, guildId, channelId: channel.id, messageId: '0', title: title || TIMEZONE_PANEL.title,
-    description: description || TIMEZONE_PANEL.description, type: TIMEZONE_PANEL.type, layout, maxRoles: null, plainText,
-    messageContent: messageOpt, attached: false, placeholder: layout === 'SELECT' ? (placeholderOpt ?? TIMEZONE_PANEL.placeholder) : null,
+    id, guildId, channelId: channel.id, messageId: '0', title: title || panel.title,
+    description: description || panel.description, type, layout, maxRoles: null, plainText,
+    messageContent: messageOpt, attached: false, placeholder: layout === 'SELECT' ? (placeholderOpt ?? panel.placeholder) : null,
     items: setup.roles.map((r, i) => rr.draftItem(id, {
-      roleId: r.roleId, label: r.label, style: 2, description: layout === 'SELECT' ? r.description : null,
+      roleId: r.roleId, label: r.label, emoji: r.emoji, style: 2, description: layout === 'SELECT' ? r.description : null,
     }, i)),
   };
-  const linked = `${describeSetup(setup)} Each role is linked to its timezone, so \`/timestamp\` reads a member's times in the zone they pick.`;
+  const done = describeSetup(setup);
+  const reused = describeReused(setup);
 
   await ensureGuildSettings(guildId);
   let sent;
   try {
     sent = await channel.send(rr.buildPanelPayload(draft, { color: settings?.embedColor }));
   } catch (err) {
-    return respond(interaction, errorEmbed('Could Not Post', `${linked}\nBut I couldn't post the panel in <#${channel.id}>: ${rr.describeDiscordError(err)}. Run the command again to retry; it reuses the roles.`));
+    return respond(interaction, errorEmbed('Could Not Post', `${done}\nBut I couldn't post the panel in <#${channel.id}>: ${rr.describeDiscordError(err)}. Run the command again to retry; it reuses the roles.`));
   }
   try {
     await rr.createPanel({ ...draft, messageId: sent.id });
   } catch (err) {
     markBotDeletion(sent.id, 'reaction-roles:rollback');
     await sent.delete().catch(() => {});
-    logger.error('reactionrole create (timezone template) failed to save the panel', err);
-    return respond(interaction, errorEmbed('Something Went Wrong', `${linked}\nBut I could not save the panel, so I removed the message. Please try again.`));
+    logger.error('reactionrole create (role template) failed to save the panel', err);
+    return respond(interaction, errorEmbed('Something Went Wrong', `${done}\nBut I could not save the panel, so I removed the message. Please try again.`));
   }
   await rr.invalidatePanelIndex(guildId);
 
   const warnings = [];
-  if (typeOpt && typeOpt !== 'UNIQUE') warnings.push('Timezone panels are always **Unique**, so members hold one timezone role at a time.');
-  if (extras) warnings.push('`role`, `emoji` and `max_roles` are ignored with a timezone template.');
+  if (template.linksZones && typeOpt && typeOpt !== 'UNIQUE') warnings.push('Timezone panels are always **Unique**, so members hold one timezone role at a time.');
+  if (extras) warnings.push('`role`, `emoji` and `max_roles` are ignored with a role template.');
   const lines = [
     `Panel **${clampText(draft.title, 100)}** posted in <#${channel.id}> · [Jump](${sent.url}).`,
-    linked,
-    'Remove the zones you do not need with `/reactionrole remove`; a member\'s own `/timezone set` still wins over the role.',
+    done,
+    ...(reused ? [reused] : []),
+    ...(template.note ? [template.note] : []),
+    'Remove the roles you do not need with `/reactionrole remove`.',
   ];
-  return respond(interaction, successEmbed('Timezone Panel Created', withWarnings(lines.join('\n'), [...warnings, moduleWarning(settings)])));
+  return respond(interaction, successEmbed('Template Panel Created', withWarnings(lines.join('\n'), [...warnings, moduleWarning(settings)])));
 }
 
 // ── /reactionrole attach ──────────────────────────────────────────────────────

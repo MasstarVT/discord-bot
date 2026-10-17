@@ -13,7 +13,7 @@ import prisma from '../../database/client.js';
 import { LIMITS } from '../../config/constants.js';
 import { ensureGuildSettings } from '../../services/settingsService.js';
 import * as rr from '../../services/reactionRoleService.js';
-import { TIMEZONE_ROLE_TEMPLATES, TIMEZONE_PANEL } from '../../utils/timezones.js';
+import { getRoleTemplate } from '../../utils/roleTemplates.js';
 import { RecordError, taskOutcome, withMessage } from './errors.js';
 import { isDiscordApiError } from './embeds.js';
 import {
@@ -100,7 +100,7 @@ const sentence = (msg) => (msg.endsWith('.') ? msg : `${msg}.`);
 async function createFromTemplate(ctx, guildId, id, template) {
   let out;
   try {
-    out = taskOutcome(await ctx.runTask('rr.timezoneTemplate', { groupId: id, template }));
+    out = taskOutcome(await ctx.runTask('rr.roleTemplate', { groupId: id, template }));
   } catch (err) {
     if (err instanceof RecordError && (err.code === 'failed' || err.code === 'unavailable')) {
       await prisma.reactionRoleGroup.deleteMany({ where: { id, guildId } });
@@ -110,7 +110,7 @@ async function createFromTemplate(ctx, guildId, id, template) {
     throw err;
   }
   const message = out.status === 'pending'
-    ? 'The bot is still creating the timezone roles and posting the panel. Refresh in a moment to see it.'
+    ? 'The bot is still creating the roles and posting the panel. Refresh in a moment to see it.'
     : out.message;
   return withMessage(await getItem(guildId, id), message);
 }
@@ -130,14 +130,15 @@ export const store = Object.freeze({
 
   async create(guildId, data, ctx) {
     requireTasks(ctx);
-    // A timezone template: a Unique dropdown whose roles the bot creates (rr.timezoneTemplate), so the role list is ignored.
-    const template = typeof data.template === 'string' && Object.hasOwn(TIMEZONE_ROLE_TEMPLATES, data.template) ? data.template : null;
+    // A role template: the template's panel, whose roles the bot creates (rr.roleTemplate), so the role list is ignored.
+    const template = getRoleTemplate(data.template) ? data.template : null;
     if (template) {
+      const { panel } = getRoleTemplate(template);
       data = {
-        ...data, ...TIMEZONE_PANEL, items: [], maxRoles: null,
-        title: data.title.trim() && data.title.trim() !== DEFAULT_TITLE ? data.title : TIMEZONE_PANEL.title,
-        description: data.description ?? TIMEZONE_PANEL.description,
-        placeholder: data.placeholder ?? TIMEZONE_PANEL.placeholder,
+        ...data, type: panel.type, layout: panel.layout, items: [], maxRoles: null,
+        title: data.title.trim() && data.title.trim() !== DEFAULT_TITLE ? data.title : panel.title,
+        description: data.description ?? panel.description,
+        placeholder: data.placeholder ?? panel.placeholder,
       };
     }
     const layout = data.layout;

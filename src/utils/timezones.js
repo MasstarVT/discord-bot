@@ -349,11 +349,11 @@ const US_ROLES = [
 
 export const TIMEZONE_ROLE_TEMPLATES = Object.freeze({
   'timezones-us': Object.freeze({
-    label: 'Timezones: US (6 roles)',
+    label: 'Timezones: US',
     roles: Object.freeze(US_ROLES),
   }),
   'timezones-world': Object.freeze({
-    label: 'Timezones: worldwide (19 roles)',
+    label: 'Timezones: worldwide',
     roles: Object.freeze([
       ...US_ROLES,
       tzRole('AST', 'America/Halifax', 'Atlantic (AST/ADT)', 'Halifax, Bermuda'),

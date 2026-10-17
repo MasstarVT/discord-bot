@@ -62,7 +62,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/goodbye` | 👋 Welcome & Goodbye | Admins | Goodbye message when a member leaves (MEE6 Goodbye message). |
 | `/welcome` | 👋 Welcome & Goodbye | Admins | Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye). |
 | `/captcha` | 🛡️ Verification | Admins | Captcha verification for new members (MEE6 Welcome › Captcha verification). |
-| `/reactionrole` | 🎭 Reaction Roles | Admins | Role panels with buttons, a dropdown or emoji reactions (MEE6 Reaction Roles); the Timezones templates create CST, EST… roles for /timestamp |
+| `/reactionrole` | 🎭 Reaction Roles | Admins | Role panels with buttons, a dropdown or emoji reactions (MEE6 Reaction Roles); role-set templates (pronouns, colors, age groups, regions, platforms, DM status, ping roles, timezones) create the roles for you |
 | `/leaderboard` | ⭐ Levels | Everyone | Show the server XP leaderboard (MEE6 /levels). |
 | `/levelconfig` | ⭐ Levels | Admins | Levels settings: XP, level-up messages, role rewards, rank card (MEE6 Levels). |
 | `/rank` | ⭐ Levels | Everyone | Show your rank card or a member's (MEE6 /rank). |

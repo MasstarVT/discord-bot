@@ -6,7 +6,7 @@ import { LIMITS } from '../../config/constants.js';
 import { clampText } from '../../utils/text.js';
 import { RecordError } from './errors.js';
 import { POSTABLE_CHANNEL_KINDS, messageUrl } from './embeds.js';
-import { TIMEZONE_ROLE_TEMPLATES } from '../../utils/timezones.js';
+import { ROLE_TEMPLATES } from '../../utils/roleTemplates.js';
 
 // ── Constants shared with the service and the tasks ──────────────────────────
 
@@ -46,18 +46,21 @@ const LAYOUT_OPTIONS = Object.freeze([
   { value: 'SELECT', label: 'Dropdown' },
   { value: 'REACTIONS', label: 'Emoji reactions' },
 ]);
-/** Create-only panel templates: none, or a timezone role set (TIMEZONE_ROLE_TEMPLATES) the bot creates and links. */
+const PANEL_KINDS = Object.freeze({ SELECT: 'dropdown', BUTTONS: 'button panel' });
+const MODE_NAMES = Object.freeze({ NORMAL: 'Normal', UNIQUE: 'Unique' });
+/** Create-only panel templates: none, or a role set (ROLE_TEMPLATES) the bot creates, and links to zones for timezones. */
 export const TEMPLATE_OPTIONS = Object.freeze([
   { value: 'none', label: 'None: pick the roles myself' },
-  ...Object.entries(TIMEZONE_ROLE_TEMPLATES).map(([value, t]) => ({
+  ...Object.entries(ROLE_TEMPLATES).map(([value, t]) => ({
     value,
-    label: t.label,
-    description: `Creates (or reuses) ${t.roles.map((r) => r.name).join(', ')}, links each to its time zone for /timestamp, `
-      + 'and posts them as a Unique dropdown.',
+    label: `${t.label} (${t.roles.length} roles)`,
+    description: `Creates (or reuses) ${t.roles.map((r) => r.name).join(', ')}`
+      + `${t.linksZones ? ', links each to its time zone for /timestamp,' : ''} and posts them as a `
+      + `${MODE_NAMES[t.panel.type]} ${PANEL_KINDS[t.panel.layout]}.`,
   })),
 ]);
 // `notIn`, not `in: ['none']`: a saved panel has no `template`, and its (locked) fields must stay visible.
-const NO_TEMPLATE = { field: 'template', notIn: Object.keys(TIMEZONE_ROLE_TEMPLATES) };
+const NO_TEMPLATE = { field: 'template', notIn: Object.keys(ROLE_TEMPLATES) };
 
 const STYLE_OPTIONS = Object.freeze([
   { value: 1, label: 'Blue' },
@@ -178,8 +181,8 @@ export const collection = Object.freeze({
       field: 'template',
       type: 'enum',
       label: 'Template',
-      description: 'Start from a ready-made panel. A timezone template creates the roles for you; edit the panel afterwards '
-        + 'to remove the ones you do not need.',
+      description: 'Start from a ready-made panel. A template creates its roles for you (or reuses ones with the same name); '
+        + 'edit the panel afterwards to remove the ones you do not need.',
       options: TEMPLATE_OPTIONS,
       default: 'none',
     },
