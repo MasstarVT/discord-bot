@@ -12,10 +12,15 @@ import {
   ACTION_LABELS,
   DELETING_ACTIONS,
   EXEMPT_CAP,
+  HONEYPOT,
+  HONEYPOT_ACTION_LABELS,
+  HONEYPOT_CAP,
   MAX_TIMEOUT_SECONDS,
   MIN_TIMEOUT_SECONDS,
   RULES,
   RULE_KEYS,
+  describeHoneypot,
+  describeHoneypotValue,
   describeLinksMode,
   describeRuleLine,
   getAutomodConfig,
@@ -28,9 +33,9 @@ import {
 } from '../../services/automodService.js';
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { applyGuildColor, errorEmbed, infoEmbed, neutralEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
-import { missingBotPermissions, respondAutocomplete } from '../../utils/interactionHelpers.js';
+import { checkChannelUsable, missingBotPermissions, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
-import { parseDuration } from '../../utils/parseDuration.js';
+import { formatDurationLong, parseDuration } from '../../utils/parseDuration.js';
 import { paginate } from '../../utils/paginator.js';
 import { compileSafeRegex, safeRegexTest, validateRegex } from '../../utils/safeRegex.js';
 import { chunkLines, clampText, joinWithLimit } from '../../utils/text.js';
@@ -53,6 +58,16 @@ const EXEMPT_CHANNEL_TYPES = [
   ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildMedia,
   ChannelType.GuildVoice, ChannelType.GuildStageVoice, ChannelType.GuildCategory,
 ];
+
+// A honeypot is a channel members can type in; never a category, forum or voice channel.
+const HONEYPOT_CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+const HONEYPOT_CHOICES = [
+  { name: 'Softban (default)', value: 'softban' },
+  { name: 'Ban', value: 'ban' },
+  { name: 'Kick', value: 'kick' },
+  { name: 'Timeout', value: 'timeout' },
+];
+const HONEYPOT_CHANNEL_NAME = 'do-not-post';
 
 export const data = new SlashCommandBuilder()
   .setName('automod')
@@ -98,7 +113,16 @@ export const data = new SlashCommandBuilder()
     .addSubcommand((s) => s.setName('remove').setDescription("Remove a role and/or channel from the exemptions or a rule's list.")
       .addRoleOption((o) => o.setName('role').setDescription('Role to remove.'))
       .addChannelOption((o) => o.setName('channel').setDescription('Channel or category to remove.').addChannelTypes(...EXEMPT_CHANNEL_TYPES))
-      .addStringOption((o) => o.setName('rule').setDescription("Only this rule's list (leave empty for all rules).").setAutocomplete(true))));
+      .addStringOption((o) => o.setName('rule').setDescription("Only this rule's list (leave empty for all rules).").setAutocomplete(true))))
+  .addSubcommandGroup((g) => g.setName('honeypot').setDescription('Trap channels for spam bots: whoever posts in one is punished at once.')
+    .addSubcommand((s) => s.setName('add').setDescription('Make a channel a honeypot, or create one.')
+      .addChannelOption((o) => o.setName('channel').setDescription(`Leave empty to create #${HONEYPOT_CHANNEL_NAME} at the top.`)
+        .addChannelTypes(...HONEYPOT_CHANNEL_TYPES))
+      .addStringOption((o) => o.setName('action').setDescription('What happens to whoever posts there.').addChoices(...HONEYPOT_CHOICES))
+      .addStringOption((o) => o.setName('timeout').setDescription('Timeout length, e.g. 1h or 1d (default 1d).').setMaxLength(20))
+      .addBooleanOption((o) => o.setName('warning').setDescription('Post a warning in the channel (default: yes).')))
+    .addSubcommand((s) => s.setName('remove').setDescription('Stop a channel being a honeypot (the channel is kept).')
+      .addChannelOption((o) => o.setName('channel').setDescription('The honeypot.').setRequired(true).addChannelTypes(...HONEYPOT_CHANNEL_TYPES))));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -178,11 +202,41 @@ export function collectProblems(guild, settings, config, { only = null } = {}) {
       problems.push(`**${RULES[k].label}** applies to nobody: its channels mode is "only listed" but the list is empty.`);
     }
   }
-  if (only === null && settings?.automodEnabled && keys.length === 0) {
+  if (only === null && settings?.automodEnabled && keys.length === 0 && config.honeypot.channelIds.length === 0) {
     problems.push('No rules are active. Use `/automod rule` to turn one on.');
   }
+  if (only === null) problems.push(...collectHoneypotProblems(guild, config));
   if (only === null && !settings?.modLogChannelId) {
     problems.push('No mod-log channel — set one with `/modconfig logchannel` to see automod actions.');
+  }
+  return problems;
+}
+
+const HONEYPOT_PERMISSIONS = Object.freeze({
+  softban: ['BanMembers', 'Ban Members'], ban: ['BanMembers', 'Ban Members'],
+  kick: ['KickMembers', 'Kick Members'], timeout: ['ModerateMembers', 'Timeout Members'],
+});
+
+/**
+ * What would stop the honeypot from working: the punishment permission, and per channel that it still exists and
+ * that I can see it (and delete in it, for kick and timeout; a ban clears the message itself).
+ * @returns {string[]}
+ */
+export function collectHoneypotProblems(guild, config) {
+  const hp = config.honeypot;
+  if (!hp.channelIds.length) return [];
+  const problems = [];
+  const [perm, permName] = HONEYPOT_PERMISSIONS[hp.action];
+  if (missingBotPermissions(guild, [perm]).length > 0) problems.push(`I need **${permName}** for the honeypot's action.`);
+  const needs = hp.action === 'kick' || hp.action === 'timeout' ? ['ViewChannel', 'ManageMessages'] : ['ViewChannel'];
+  for (const id of hp.channelIds) {
+    const channel = guild.channels?.cache?.get(id);
+    if (!channel) {
+      problems.push(`A honeypot channel (\`${id}\`) was deleted. It is forgotten the next time you use \`/automod honeypot\`.`);
+      continue;
+    }
+    const usable = checkChannelUsable(channel, { needs });
+    if (!usable.ok) problems.push(`Honeypot <#${id}>: ${usable.reason}`);
   }
   return problems;
 }
@@ -239,6 +293,8 @@ async function status(interaction) {
 
   chunkLines(RULE_KEYS.map((k) => describeRuleLine(k, config.rules[k], config)), 1024)
     .forEach((chunk, i) => addField(i === 0 ? 'Rules' : 'Rules (cont.)', chunk));
+
+  addField(`${HONEYPOT.emoji} ${HONEYPOT.label}`, describeHoneypotValue(config));
 
   addField('Lists', `Bad words: ${config.badWords.length} · Patterns: ${config.badWordPatterns.length} · `
     + `Blocked domains: ${config.blockedDomains.length} · Allowed domains: ${config.allowedDomains.length}\n${describeLinksMode(config)}`);
@@ -590,6 +646,150 @@ async function exemptChange(interaction, mode) {
   return interaction.editReply({ embeds: [successEmbed('Exemptions Updated', clampText(lines.join('\n'), 4096))] });
 }
 
+// ── honeypot ─────────────────────────────────────────────────────────────────
+
+const HONEYPOT_OUTCOMES = Object.freeze({
+  softban: 'removed from the server, and their messages from the last day are deleted',
+  ban: 'banned, and their messages from the last day are deleted',
+  kick: 'kicked',
+  timeout: 'timed out',
+});
+
+/** The warning posted in a honeypot channel. */
+export function honeypotWarningEmbed(action) {
+  return warnEmbed(
+    `${HONEYPOT.emoji} Do not post here`,
+    'This channel is a trap for spam bots and hacked accounts.\n\n'
+      + `**Anyone who posts here is automatically ${HONEYPOT_OUTCOMES[action] ?? HONEYPOT_OUTCOMES.softban}.**\n\n`
+      + 'If you are a real person, just ignore this channel.',
+  );
+}
+
+/** Drops honeypot channels that were deleted. */
+const forgetDeleted = (cfg, guild) => {
+  cfg.honeypot.channelIds = cfg.honeypot.channelIds.filter((id) => guild.channels.cache.has(id));
+};
+
+const HONEYPOT_FULL = () => errorEmbed('Too Many Honeypots',
+  `You already have ${HONEYPOT_CAP} honeypot channels. Remove one with \`/automod honeypot remove\` first.`);
+
+async function honeypotAdd(interaction) {
+  const guild = interaction.guild;
+  const action = interaction.options.getString('action');
+  const timeout = interaction.options.getString('timeout');
+  const postWarning = interaction.options.getBoolean('warning') ?? true;
+  const invalid = (msg) => interaction.editReply({ embeds: [errorEmbed('Invalid Option', msg)] });
+
+  if (timeout !== null && action !== 'timeout') {
+    return invalid('The `timeout` option only applies with `action:` **Delete & timeout**.');
+  }
+  let ms = null;
+  if (timeout !== null) {
+    ms = parseDuration(timeout);
+    if (ms === null || ms < MIN_TIMEOUT_SECONDS * 1000 || ms > MAX_TIMEOUT_SECONDS * 1000) {
+      return invalid('Timeout must be between 1 minute and 28 days, e.g. `1h` or `1d`.');
+    }
+  }
+
+  let channel = interaction.options.getChannel('channel');
+  let created = false;
+  if (!channel) {
+    const { config } = getAutomodConfig(await getSettings(guild.id));
+    if (config.honeypot.channelIds.filter((id) => guild.channels.cache.has(id)).length >= HONEYPOT_CAP) {
+      return interaction.editReply({ embeds: [HONEYPOT_FULL()] });
+    }
+    if (missingBotPermissions(guild, ['ManageChannels']).length > 0) {
+      return interaction.editReply({ embeds: [errorEmbed('Missing Permission',
+        'I need **Manage Channels** to create the honeypot channel. Give me the permission, or pick an existing channel.')] });
+    }
+    try {
+      channel = await guild.channels.create({
+        name: HONEYPOT_CHANNEL_NAME,
+        type: ChannelType.GuildText,
+        position: 0,
+        topic: 'Do not post here. This channel is a trap for spam bots and hacked accounts.',
+        reason: clampText(`Honeypot channel created with /automod honeypot add by ${interaction.user.tag}`, 512),
+      });
+      created = true;
+    } catch (err) {
+      logger.warn(`Could not create a honeypot channel in ${guild.id}: ${err?.message ?? err}`);
+      return interaction.editReply({ embeds: [errorEmbed('Could Not Create Channel',
+        'Discord refused to create the channel. Check my **Manage Channels** permission, or pick an existing channel.')] });
+    }
+  }
+
+  const { settings, report } = await writeConfig(guild.id, (cfg, rep) => {
+    forgetDeleted(cfg, guild);
+    const hp = cfg.honeypot;
+    if (!hp.channelIds.includes(channel.id)) {
+      if (hp.channelIds.length >= HONEYPOT_CAP) {
+        rep.full = true;
+        return false;
+      }
+      hp.channelIds.push(channel.id);
+    }
+    if (action) hp.action = action;
+    if (ms !== null) hp.timeoutSeconds = Math.floor(ms / 1000);
+    return true;
+  });
+  if (report.full) {
+    if (created) await channel.delete('Honeypot limit reached').catch(() => {});
+    return interaction.editReply({ embeds: [HONEYPOT_FULL()] });
+  }
+
+  const { config } = getAutomodConfig(settings);
+  const hp = config.honeypot;
+  const problems = [];
+  let warned = false;
+  if (postWarning) {
+    const usable = checkChannelUsable(channel);
+    if (!usable.ok) problems.push(`The warning was not posted: ${usable.reason}`);
+    else {
+      try {
+        await channel.send({ embeds: [honeypotWarningEmbed(hp.action)], allowedMentions: { parse: [] } });
+        warned = true;
+      } catch (err) {
+        problems.push('The warning could not be posted in the channel.');
+        logger.warn(`Could not post the honeypot warning in ${guild.id}: ${err?.message ?? err}`);
+      }
+    }
+  }
+  problems.push(...collectHoneypotProblems(guild, config));
+  if (!settings.automodEnabled) problems.push('Automod is off, so the honeypot does nothing yet. Turn it on with `/automod enable`.');
+
+  const timeoutText = hp.action === 'timeout' ? ` for ${formatDurationLong(hp.timeoutSeconds * 1000)}` : '';
+  const lines = [
+    `<#${channel.id}> is now a honeypot.${created ? ' I created it at the top of the channel list.' : ''}${warned ? ' A warning is posted in it.' : ''}`,
+    `Whoever posts there: **${HONEYPOT_ACTION_LABELS[hp.action]}**${timeoutText}.`,
+    'The owner, staff (moderators, Manage Messages, immune roles) and exempt roles are never caught, so staff can still post there.',
+    'Keep it near the top and visible to everyone: spam bots post in the first channels they can see.',
+    '',
+    describeHoneypot(config),
+  ];
+  const body = problems.length ? `${lines.join('\n')}\n\n${problemLines(problems)}` : lines.join('\n');
+  return interaction.editReply({ embeds: [successEmbed('Honeypot Set', clampText(body, 4096))] });
+}
+
+async function honeypotRemove(interaction) {
+  const guild = interaction.guild;
+  const channel = interaction.options.getChannel('channel', true);
+  const { settings, report } = await writeConfig(guild.id, (cfg, rep) => {
+    const before = cfg.honeypot.channelIds.length;
+    rep.was = cfg.honeypot.channelIds.includes(channel.id);
+    forgetDeleted(cfg, guild);
+    cfg.honeypot.channelIds = cfg.honeypot.channelIds.filter((id) => id !== channel.id);
+    return cfg.honeypot.channelIds.length !== before;
+  });
+  const { config } = getAutomodConfig(settings);
+  if (!report.was) {
+    return interaction.editReply({ embeds: [infoEmbed('Not a Honeypot',
+      `<#${channel.id}> is not a honeypot channel.\n\n${describeHoneypot(config)}`)] });
+  }
+  return interaction.editReply({ embeds: [successEmbed('Honeypot Removed', clampText(
+    `<#${channel.id}> is no longer a honeypot. The channel and its warning are kept; delete them if you no longer need them.\n\n`
+      + describeHoneypot(config), 4096))] });
+}
+
 // ── Dispatch ──────────────────────────────────────────────────────────────────
 
 const HANDLERS = Object.freeze({
@@ -608,6 +808,8 @@ const HANDLERS = Object.freeze({
   'domains list': domainsList,
   'exempt add': (i) => exemptChange(i, 'add'),
   'exempt remove': (i) => exemptChange(i, 'remove'),
+  'honeypot add': honeypotAdd,
+  'honeypot remove': honeypotRemove,
 });
 
 export async function execute(interaction) {

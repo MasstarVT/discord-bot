@@ -13,10 +13,11 @@ Setup pickers that a feature writes to or hands out (destinations, reward and pa
 - **Hooks:** `guildReady:moderation` runs `syncGuildBans` (also guildCreate; Redis `mod:bansync:{guildId}`, 6 h).
 
 ### 🤖 Auto-Moderation — `automod`
-- **Commands:** `/automod` ADMIN; `words`/`patterns` replies ephemeral.
+- **Commands:** `/automod` ADMIN (groups `words` `patterns` `domains` `exempt` `honeypot`); `words`/`patterns` replies ephemeral.
 - **Code:** `src/plugins/automod.js`, `src/services/automodService.js`. Rules: badWords repeatedText invites links caps emojis spoilers mentions zalgo spam. Actions: off delete warn delete_warn timeout kick ban (punishments via `executeModAction`). `automodConfig` v2 top level: `version rules badWords badWordPatterns blockedDomains allowedDomains exemptRoleIds exemptChannelIds`. Staff bypass: `isImmune`, MODERATOR, Manage Messages.
 - **Bad words:** whole-word, but a run of `_` at the edge of a word (`_bad_`, `__bad__`, `bad_`) is Discord italics/underline and counts as a boundary (`textForWords`); `snake_bad_word` and an escaped `\_` stay word characters. A listed word written only in Han/Hiragana/Katakana/Thai/Lao/Khmer/Myanmar (no word spaces; Hangul is spaced) matches as a substring.
-- **Hooks:** `messageCreate:automod` (first), `messageUpdate:automod`; after a delete: `ctx.stop('automod')`, `ctx.state.automodAction = { rule, deleted }`. A failed delete never punishes.
+- **Hooks:** `messageCreate:automod` (first), `messageUpdate:automod`; after a delete: `ctx.stop('automod')`, `ctx.state.automodAction = { rule, deleted }`. A failed delete never punishes (except the honeypot).
+- **Honeypot:** `automodConfig.honeypot = { channelIds (≤ `LIMITS.AUTOMOD_HONEYPOTS`, text/announcement only, a thread counts as its parent, a category never), action softban|ban|kick|timeout (default softban), timeoutSeconds }`. Not a `RULE_KEYS` rule. Checked first in `runAutomod`: works with every rule off, ignores `exemptChannelIds`, skips edits; owner, staff and `exemptRoleIds` bypass. Outcome via `honeypotOutcome`: always deletes, punishes even if the delete failed, ban/softban clear 1 day (`HONEYPOT_DELETE_MESSAGE_SECONDS`), no in-channel notice. `/automod honeypot add [channel] [action] [timeout] [warning]` (no channel: creates `#do-not-post` at position 0, needs Manage Channels) and `remove channel`; both forget deleted channels. Dashboard: virtual field `automodHoneypot`.
 
 ### 📜 Audit Logs — `logging`
 - **Commands:** `/logging` ADMIN.

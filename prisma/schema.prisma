@@ -110,7 +110,8 @@ model GuildSettings {
   //   rules: { [rule]: { action: "off"|"delete"|"warn"|"delete_warn"|"timeout"|"kick"|"ban", threshold?,
   //                      timeoutSeconds, roleMode: "except"|"only", roleIds, channelMode: "except"|"only", channelIds } },
   //   badWords: string[], badWordPatterns: string[], blockedDomains: string[], allowedDomains: string[],
-  //   exemptRoleIds: string[], exemptChannelIds: string[] }
+  //   exemptRoleIds: string[], exemptChannelIds: string[],
+  //   honeypot: { channelIds: string[] (at most 5), action: "softban"|"ban"|"kick"|"timeout", timeoutSeconds } }
   // [rule] is one of badWords, repeatedText, invites, links, caps, emojis, spoilers, mentions, zalgo, spam. `threshold`
   // exists only for the rules that have one (not badWords, invites or links); timeoutSeconds is 60..2419200 (default 600);
   // roleIds / channelIds are at most 50 snowflakes. Words are lower-cased (2-64 characters), domains are punycode hosts,

@@ -38,7 +38,7 @@ const {
   capsStats, countEmojis, countSpoilers, countMentions, maxCombiningRun, duplicateFingerprint,
   scopeChannelIds, ruleApplies, resolveOutcome, buildReason, buildPunishmentLogFields, claimPunishment,
   resolveRuleKey, resetAutomodState, runAutomod, isStaff, evaluateContentRules, describeRuleLine, formatThreshold,
-  buildNoticeText,
+  buildNoticeText, isHoneypotChannel, honeypotOutcome,
 } = svc;
 
 // Silence the Redis reconnect and logger noise.
@@ -472,13 +472,14 @@ const everyOption = (node, fn) => { for (const o of node.options ?? []) { fn(o);
 test('the /automod payload fits Discord limits', () => {
   const json = buildCommandPayload(automod);
   assert.equal(json.name, 'automod');
-  assert.ok(charCount(json) <= 2600, `charCount ${charCount(json)}`);
-  assert.equal(json.options.length, 8);
+  // Discord refuses a command over 4000 characters; 3000 keeps room for growth.
+  assert.ok(charCount(json) <= 3000, `charCount ${charCount(json)}`);
+  assert.equal(json.options.length, 9);
   everyOption(json, (o) => assert.ok(o.description.length >= 1 && o.description.length <= 100, `${o.name} description`));
   assert.equal(automod.module, 'automod');
   assert.equal(automod.gated, false);
   assert.equal(automod.permissionLevel, 2);
-  assert.deepEqual(json.options.map((o) => o.name), ['enable', 'disable', 'status', 'rule', 'words', 'patterns', 'domains', 'exempt']);
+  assert.deepEqual(json.options.map((o) => o.name), ['enable', 'disable', 'status', 'rule', 'words', 'patterns', 'domains', 'exempt', 'honeypot']);
   const rule = json.options.find((o) => o.name === 'rule');
   assert.deepEqual(rule.options.map((o) => o.name), ['rule', 'action', 'threshold', 'timeout', 'roles', 'channels']);
   assert.equal(rule.options[0].autocomplete, true);
@@ -824,6 +825,102 @@ test('pipeline: a warn-only action keeps the message and never stops the chain',
   assert.deepEqual(env.stops, []);
   assert.deepEqual(env.ctx.state.automodAction, { rule: 'invites', deleted: false });
   assert.ok(env.logSent.length <= 1, 'at most one embed: a failure embed, or none when moderation recorded the warning itself');
+});
+
+// ── Honeypot ──────────────────────────────────────────────────────────────────
+
+const HONEY = (extra = {}) => ({ version: 2, rules: {}, honeypot: { channelIds: [CH], ...extra } });
+
+test('honeypot: the config keeps a cleaned honeypot and defaults to softban', () => {
+  assert.deepEqual(defaultConfig().honeypot, { channelIds: [], action: 'softban', timeoutSeconds: 86_400 });
+  assert.deepEqual(upgradeV1({ filterInvites: true }).honeypot, defaultConfig().honeypot, 'a v1 row gets the default');
+  const cfg = normalizeConfig({ version: 2, honeypot: {
+    channelIds: [CH, CH, 'nope', SNOW(7), SNOW(8), SNOW(9), SNOW(10), SNOW(11)], action: 'explode', timeoutSeconds: 5,
+  } });
+  assert.deepEqual(cfg.honeypot.channelIds, [CH, SNOW(7), SNOW(8), SNOW(9), SNOW(10)], 'deduped, valid, capped at 5');
+  assert.equal(cfg.honeypot.action, 'softban');
+  assert.equal(cfg.honeypot.timeoutSeconds, 60);
+  assert.deepEqual(normalizeConfig(cfg), cfg, 'idempotent');
+  assert.equal(normalizeConfig({ version: 2, honeypot: { action: 'kick' } }).honeypot.action, 'kick');
+});
+
+test('honeypot: a channel or a thread in it counts, a category never does', () => {
+  const hp = { channelIds: [CH] };
+  assert.equal(isHoneypotChannel({ id: CH, isThread: () => false }, hp), true);
+  assert.equal(isHoneypotChannel({ id: SNOW(60), parentId: CH, isThread: () => true }, hp), true);
+  assert.equal(isHoneypotChannel({ id: SNOW(61), parentId: CH, isThread: () => false }, hp), false, 'a channel in a category');
+  assert.equal(isHoneypotChannel({ id: CH }, { channelIds: [] }), false);
+  assert.equal(isHoneypotChannel(null, hp), false);
+});
+
+test('honeypot: the outcome punishes without waiting on the delete and sends no notice', () => {
+  const soft = honeypotOutcome({ action: 'softban', timeoutSeconds: 600 });
+  assert.equal(soft.punishment, 'SOFTBAN');
+  assert.equal(soft.punishmentNeedsDelete, false);
+  assert.equal(soft.deleteMessageSeconds, 86_400);
+  assert.equal(soft.notice, false);
+  assert.equal(soft.primary.rule, 'honeypot');
+  const timeout = honeypotOutcome({ action: 'timeout', timeoutSeconds: 600 });
+  assert.equal(timeout.punishment, 'TIMEOUT');
+  assert.equal(timeout.timeoutSeconds, 600);
+  assert.equal(timeout.deleteMessageSeconds, null);
+  assert.equal(honeypotOutcome({ action: 'kick' }).punishment, 'KICK');
+  assert.equal(PUNISHMENT_RANK.SOFTBAN, PUNISHMENT_RANK.BAN);
+  assert.match(buildReason(soft, 'do-not-post'), /^\[Automod\] Honeypot: Posted in a honeypot channel in #do-not-post$/);
+});
+
+test('pipeline: a post in a honeypot is deleted and punished even with every rule off', async () => {
+  // The fake guild has no ban permission, so the softban fails and the failure is logged.
+  const env = makeEnv({ modLog: true, content: 'free nitro', config: HONEY() });
+  await runAutomod(env.ctx);
+  assert.equal(env.deletes.length, 1);
+  assert.deepEqual(env.stops, ['automod']);
+  assert.deepEqual(env.ctx.state.automodAction, { rule: 'honeypot', deleted: true });
+  assert.equal(env.sent.length, 0, 'no in-channel notice');
+  assert.equal(env.logSent.length, 1);
+  const embed = env.logSent[0].embeds[0].toJSON();
+  assert.match(embed.title, /Message Deleted, Softban Not Applied/);
+  assert.ok(embed.fields.some((f) => f.name === 'Rule' && /Honeypot/.test(f.value)));
+});
+
+test('pipeline: the honeypot spares staff, the owner, exempt roles, edits and other channels', async () => {
+  const cases = [
+    makeEnv({ config: HONEY(), memberPerms: true }), // Manage Messages: staff
+    makeEnv({ config: HONEY(), authorId: OWNER }),
+    makeEnv({ config: { ...HONEY(), exemptRoleIds: [SNOW(70)] }, memberRoles: [SNOW(70)] }),
+    makeEnv({ config: HONEY(), isEdit: true, oldContent: 'hi' }),
+    makeEnv({ config: { version: 2, rules: {}, honeypot: { channelIds: [SNOW(80)] } } }),
+    makeEnv({ config: HONEY(), settings: { automodEnabled: false } }),
+  ];
+  for (const [i, env] of cases.entries()) {
+    await runAutomod(env.ctx, { isEdit: env.ctx.oldKnown !== undefined });
+    assert.equal(env.deletes.length, 0, `case ${i}`);
+    assert.deepEqual(env.stops, [], `case ${i}`);
+  }
+  // A category holding the channel is never a honeypot.
+  const inCategory = makeEnv({ config: { version: 2, rules: {}, honeypot: { channelIds: [SNOW(81)] } }, channelOver: { parentId: SNOW(81) } });
+  await runAutomod(inCategory.ctx);
+  assert.equal(inCategory.deletes.length, 0);
+});
+
+test('pipeline: an exempt channel does not shield a honeypot', async () => {
+  const env = makeEnv({ config: { ...HONEY(), exemptChannelIds: [CH] } });
+  await runAutomod(env.ctx);
+  assert.equal(env.deletes.length, 1);
+});
+
+test('collectProblems reports what would stop the honeypot', () => {
+  const guild = (perms, channels = new Map()) => ({ members: { me: { permissions: { has: (p) => perms.includes(p) } } }, channels: { cache: channels } });
+  const config = normalizeConfig(HONEY());
+  const settings = { automodEnabled: true, modLogChannelId: LOGCH };
+  const problems = automod.collectProblems(guild([]), settings, config);
+  assert.ok(!problems.some((p) => /No rules are active/.test(p)), 'a honeypot alone is active');
+  assert.ok(problems.some((p) => /Ban Members/.test(p)));
+  assert.ok(problems.some((p) => /was deleted/.test(p)));
+  const kick = normalizeConfig(HONEY({ action: 'kick' }));
+  assert.ok(automod.collectHoneypotProblems(guild([]), kick).some((p) => /Kick Members/.test(p)));
+  assert.deepEqual(automod.collectHoneypotProblems(guild([]), normalizeConfig(null)), []);
+  assert.match(automod.honeypotWarningEmbed('softban').toJSON().description, /removed from the server/);
 });
 
 test('pipeline: mentions, caps, emojis, spoilers and zalgo rules', async () => {

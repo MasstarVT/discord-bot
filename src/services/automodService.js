@@ -1,6 +1,7 @@
 // ── Auto-moderation (pkg-automod.md) ───────────────────────────────────────────
 // The MEE6 rule set (bad words, repeated text, invites, links, caps, emojis, spoilers, mentions,
-// zalgo, message-rate anti-spam), each with its own action and role/channel scope.
+// zalgo, message-rate anti-spam), each with its own action and role/channel scope, plus honeypot channels
+// (whoever posts in one is punished at once).
 //
 // This file holds the pure config model (v2 shape, v1 upgrade, normalisation), the detectors, the
 // compiled-matcher cache, outcome resolution and the action pipeline `runAutomod(ctx, { isEdit })`.
@@ -103,9 +104,26 @@ export const DELETING_ACTIONS = Object.freeze(new Set(['delete', 'delete_warn', 
 export const PUNISHMENTS = Object.freeze({
   warn: 'WARN', delete_warn: 'WARN', timeout: 'TIMEOUT', kick: 'KICK', ban: 'BAN',
 });
-export const PUNISHMENT_RANK = Object.freeze({ WARN: 1, TIMEOUT: 2, KICK: 3, BAN: 4 });
+export const PUNISHMENT_RANK = Object.freeze({ WARN: 1, TIMEOUT: 2, KICK: 3, BAN: 4, SOFTBAN: 4 });
 
-const PUNISHMENT_WORD = Object.freeze({ WARN: 'Warn', TIMEOUT: 'Timeout', KICK: 'Kick', BAN: 'Ban' });
+const PUNISHMENT_WORD = Object.freeze({ WARN: 'Warn', TIMEOUT: 'Timeout', KICK: 'Kick', BAN: 'Ban', SOFTBAN: 'Softban' });
+
+// Honeypot: channels nobody should type in. Spam bots and hacked accounts post everywhere, so whoever posts there
+// (staff and exempt roles aside) is punished at once. Not a rule: a rule's "every channel except" default would
+// catch the whole server.
+export const HONEYPOT = Object.freeze({ label: 'Honeypot', emoji: '🍯' });
+export const HONEYPOT_ACTIONS = Object.freeze(['softban', 'ban', 'kick', 'timeout']);
+export const HONEYPOT_ACTION_LABELS = Object.freeze({
+  softban: 'Softban (kick and clear their messages)',
+  ban: 'Ban and clear their messages',
+  kick: 'Delete & kick',
+  timeout: 'Delete & timeout',
+});
+export const HONEYPOT_PUNISHMENTS = Object.freeze({ softban: 'SOFTBAN', ban: 'BAN', kick: 'KICK', timeout: 'TIMEOUT' });
+export const HONEYPOT_DEFAULT_TIMEOUT_SECONDS = 86_400;
+// A ban or softban clears the last day of the member's messages in every channel (the scam they spread).
+export const HONEYPOT_DELETE_MESSAGE_SECONDS = 86_400;
+export const HONEYPOT_CAP = LIMITS.AUTOMOD_HONEYPOTS; // 5
 
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -126,6 +144,8 @@ function defaultRule(key) {
   };
 }
 
+const defaultHoneypot = () => ({ channelIds: [], action: 'softban', timeoutSeconds: HONEYPOT_DEFAULT_TIMEOUT_SECONDS });
+
 /** A fresh, fully populated v2 config with every rule off. */
 export function defaultConfig() {
   const rules = {};
@@ -139,6 +159,7 @@ export function defaultConfig() {
     allowedDomains: [...DEFAULT_ALLOWED_DOMAINS],
     exemptRoleIds: [],
     exemptChannelIds: [],
+    honeypot: defaultHoneypot(),
   };
 }
 
@@ -254,6 +275,15 @@ function cleanRule(key, r) {
   return out;
 }
 
+function cleanHoneypot(h) {
+  const out = defaultHoneypot();
+  if (!isPlainObject(h)) return out;
+  out.channelIds = cleanSnowflakes(h.channelIds).slice(0, HONEYPOT_CAP);
+  if (HONEYPOT_ACTIONS.includes(h.action)) out.action = h.action;
+  if (Number.isInteger(h.timeoutSeconds)) out.timeoutSeconds = clampInt(h.timeoutSeconds, MIN_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+  return out;
+}
+
 function mapLegacyAction(value) {
   switch (String(value ?? '').toUpperCase()) {
     case 'NONE': return 'delete';
@@ -327,6 +357,7 @@ export function normalizeConfig(raw) {
     if (Array.isArray(src.allowedDomains)) cfg.allowedDomains = cleanDomains(src.allowedDomains);
     cfg.exemptRoleIds = cleanSnowflakes(src.exemptRoleIds);
     cfg.exemptChannelIds = cleanSnowflakes(src.exemptChannelIds);
+    cfg.honeypot = cleanHoneypot(src.honeypot);
     return cfg;
   } catch (err) {
     logger.warn(`Automod config could not be normalised: ${err?.message ?? err}`);
@@ -576,6 +607,15 @@ export function scopeChannelIds(channel) {
   return ids;
 }
 
+/** Whether a channel is a honeypot or a thread in one. Categories never count: a picked category would catch everyone. */
+export function isHoneypotChannel(channel, honeypot) {
+  const ids = honeypot?.channelIds;
+  if (!channel || !Array.isArray(ids) || ids.length === 0) return false;
+  if (ids.includes(channel.id)) return true;
+  const isThread = typeof channel.isThread === 'function' && channel.isThread();
+  return isThread && Boolean(channel.parentId) && ids.includes(channel.parentId);
+}
+
 /** Whether a rule applies to a member in a channel, by the rule's role and channel modes. */
 export function ruleApplies(ruleCfg, { roleIds = [], channelIds = [] } = {}) {
   const roleHit = ruleCfg.roleIds.some((id) => roleIds.includes(id));
@@ -653,6 +693,17 @@ export function describeRuleLine(key, ruleCfg, config) {
   if (key === 'badWords') line += ` · ${config?.badWords?.length ?? 0} words, ${config?.badWordPatterns?.length ?? 0} patterns`;
   return line;
 }
+
+/** The honeypot channels and action ("#a, #b → action"), or how to set one up. */
+export function describeHoneypotValue(config) {
+  const hp = config?.honeypot;
+  if (!hp?.channelIds?.length) return 'Off. Set one up with `/automod honeypot add`.';
+  const timeout = hp.action === 'timeout' ? ` · ${formatDurationLong(hp.timeoutSeconds * 1000)}` : '';
+  return `${hp.channelIds.map((id) => `<#${id}>`).join(', ')} → ${HONEYPOT_ACTION_LABELS[hp.action] ?? hp.action}${timeout}`;
+}
+
+/** The honeypot line for replies: "🍯 **Honeypot** — …". */
+export const describeHoneypot = (config) => `${HONEYPOT.emoji} **${HONEYPOT.label}** — ${describeHoneypotValue(config)}`;
 
 /** The sentence that explains what the External Links rule does with the current domain lists. */
 export function describeLinksMode(config) {
@@ -816,7 +867,28 @@ export function resolveOutcome(matches) {
   };
 }
 
-const ruleLabel = (key) => RULES[key]?.label ?? String(key);
+/**
+ * The outcome for a post in a honeypot channel. The punishment never waits on the delete (the post itself is the
+ * evidence, and a ban clears it anyway), and no in-channel notice is sent.
+ * @param {{ action: string, timeoutSeconds: number }} honeypot a normalised honeypot config
+ */
+export function honeypotOutcome(honeypot) {
+  const action = HONEYPOT_ACTIONS.includes(honeypot?.action) ? honeypot.action : 'softban';
+  const punishment = HONEYPOT_PUNISHMENTS[action];
+  return {
+    primary: { rule: 'honeypot', action, detail: 'Posted in a honeypot channel' },
+    others: [],
+    deletes: true,
+    punishment,
+    punishmentNeedsDelete: false,
+    timeoutSeconds: punishment === 'TIMEOUT' ? (honeypot.timeoutSeconds ?? HONEYPOT_DEFAULT_TIMEOUT_SECONDS) : null,
+    deleteMessageSeconds: punishment === 'BAN' || punishment === 'SOFTBAN' ? HONEYPOT_DELETE_MESSAGE_SECONDS : null,
+    notice: false,
+  };
+}
+
+const metaOf = (key) => RULES[key] ?? (key === 'honeypot' ? HONEYPOT : null);
+const ruleLabel = (key) => metaOf(key)?.label ?? String(key);
 
 /** The audit-log reason: "[Automod] Label: detail (also: …) in #channel", at most 500 characters. */
 export function buildReason(outcome, channelName) {
@@ -876,7 +948,7 @@ function buildLogEmbed(kind, { title, message, isEdit, outcome, problem, footerE
   const author = message.author;
   const content = String(message.content ?? '');
   const attachments = message.attachments?.size ?? 0;
-  const primary = RULES[outcome.primary.rule];
+  const primary = metaOf(outcome.primary.rule);
   const embed = (kind === 'warn' ? warnEmbed : errorEmbed)(
     title,
     undefined,
@@ -987,10 +1059,11 @@ async function applyOutcome(ctx, { message, guild, member, settings, outcome, is
           action: outcome.punishment,
           reason: buildReason(outcome, channel?.name ?? 'unknown'),
           ...(outcome.punishment === 'TIMEOUT' && { durationMs: outcome.timeoutSeconds * 1000 }),
-          ...(outcome.punishment === 'BAN' && { deleteMessageSeconds: BAN_DELETE_MESSAGE_SECONDS }),
+          ...((outcome.punishment === 'BAN' || outcome.punishment === 'SOFTBAN')
+            && { deleteMessageSeconds: outcome.deleteMessageSeconds ?? BAN_DELETE_MESSAGE_SECONDS }),
           source: 'automod',
           logFields: buildPunishmentLogFields(
-            `${RULES[outcome.primary.rule]?.emoji ?? ''} ${ruleLabel(outcome.primary.rule)}${outcome.others.length ? ` (also: ${outcome.others.map((m) => ruleLabel(m.rule)).join(', ')})` : ''}`.trim(),
+            `${metaOf(outcome.primary.rule)?.emoji ?? ''} ${ruleLabel(outcome.primary.rule)}${outcome.others.length ? ` (also: ${outcome.others.map((m) => ruleLabel(m.rule)).join(', ')})` : ''}`.trim(),
             outcome.primary.detail,
             message.content,
             channel,
@@ -1002,10 +1075,12 @@ async function applyOutcome(ctx, { message, guild, member, settings, outcome, is
       status = result?.ok === true ? 'applied' : 'failed';
     }
   }
+  // A ban that cleared the member's messages removed this one too, even when the delete above could not.
+  if (!deleted && status === 'applied' && outcome.deleteMessageSeconds) ctx.stop?.('automod');
 
   // In-channel notice (a short-lived nicety).
   const label = ruleLabel(outcome.primary.rule);
-  if ((deleted && !gone) || status === 'applied') {
+  if (outcome.notice !== false && ((deleted && !gone) || status === 'applied')) {
     if (noticeThrottle(`${guild.id}:${author.id}`)) {
       await sendNotice(message, buildNoticeText({
         deleted, status, punishment: outcome.punishment, author, label, timeoutSeconds: outcome.timeoutSeconds,
@@ -1072,6 +1147,24 @@ async function resolveMember(ctx, message, guild) {
 }
 
 /**
+ * The author, when automod may act on them: { member, roleIds } (member null when they left), or null for the
+ * owner, staff, an exempt role or a lookup that failed.
+ */
+async function resolveSubject(ctx, message, guild, settings, config) {
+  if (message.author.id === guild.ownerId) return null;
+  const found = await resolveMember(ctx, message, guild);
+  if (found.error) {
+    warnOnce(`member:${guild.id}`, `Automod could not look up a member in ${guild.id}: ${found.error?.message ?? found.error}`);
+    return null;
+  }
+  const member = found.member;
+  if (member && isStaff(member, settings)) return null;
+  const roleIds = member?.roles?.cache ? [...member.roles.cache.keys()] : [];
+  if (roleIds.some((id) => config.exemptRoleIds.includes(id))) return null;
+  return { member, roleIds };
+}
+
+/**
  * Runs every automod rule against a message (messageCreate) or an edit (messageUpdate). Never throws.
  * @param {object} ctx HookContext: guild, message, member, client, getSettings(), stop(), state, oldMessage, oldKnown
  * @param {{ isEdit?: boolean }} [opts]
@@ -1087,24 +1180,24 @@ export async function runAutomod(ctx, { isEdit = false } = {}) {
     const settings = typeof ctx.getSettings === 'function' ? await ctx.getSettings() : null;
     if (!settings?.automodEnabled) return;
     const { config, matchers } = getAutomodConfig(settings);
+
+    // Honeypot first: it works with every rule off, and an exempt channel or category never shields it.
+    if (!isEdit && isHoneypotChannel(message.channel, config.honeypot)) {
+      const subject = await resolveSubject(ctx, message, guild, settings, config);
+      if (subject) {
+        await applyOutcome(ctx, { message, guild, member: subject.member, settings, outcome: honeypotOutcome(config.honeypot), isEdit });
+      }
+      return;
+    }
     if (activeRuleKeys(config).length === 0) return;
 
     // Exempt channel (R135): thread, its parent and the category are all compared.
     const channelIds = scopeChannelIds(message.channel);
     if (channelIds.some((id) => config.exemptChannelIds.includes(id))) return;
 
-    if (message.author.id === guild.ownerId) return;
-
-    const found = await resolveMember(ctx, message, guild);
-    if (found.error) {
-      warnOnce(`member:${guild.id}`, `Automod could not look up a member in ${guild.id}: ${found.error?.message ?? found.error}`);
-      return;
-    }
-    const member = found.member;
-    if (member && isStaff(member, settings)) return;
-
-    const roleIds = member?.roles?.cache ? [...member.roles.cache.keys()] : [];
-    if (roleIds.some((id) => config.exemptRoleIds.includes(id))) return;
+    const subject = await resolveSubject(ctx, message, guild, settings, config);
+    if (!subject) return;
+    const { member, roleIds } = subject;
 
     const env = { roleIds, channelIds };
     const active = RULE_KEYS.filter((k) => config.rules[k].action !== 'off'

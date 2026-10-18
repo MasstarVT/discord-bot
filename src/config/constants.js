@@ -31,6 +31,7 @@ export const LIMITS = Object.freeze({
   IMMUNE_ROLES: 25, MOD_ROLES: 25, AUTOROLES: 10,
   // Added by the architect review (package requests). Packages use them directly, with no `?? n` fallback.
   AUTOMOD_EXEMPTIONS: 50,      // automodConfig global and per-rule role/channel lists
+  AUTOMOD_HONEYPOTS: 5,        // automodConfig.honeypot.channelIds
   LOG_IGNORED_CHANNELS: 100,   // GuildSettings.logIgnoredChannelIds
   NOXP_ROLES: 100, NOXP_CHANNELS: 100,                 // GuildSettings.noXpRoleIds / noXpChannelIds
   TAG_ACCESS_ENTRIES: 25,      // each allow/deny role or channel list of a custom command

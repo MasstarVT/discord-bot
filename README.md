@@ -7,7 +7,7 @@ A self-hosted, MEE6-style multi-purpose Discord bot built on discord.js, with Po
 Each bullet except the web dashboard is a module you can turn on or off with `/module`; the MEE6 plugin it mirrors is in brackets. Modules marked *off by default* are switched on with `/module enable <name>`; their setup commands work while the module is off, so you can configure first.
 
 - 🔨 **Moderation** (MEE6: Moderator) — `/ban` (also temporary), `/kick`, `/softban`, `/timeout` (over 28 days uses a mute role), `/unmute`, `/unban`, `/warn` with automatic escalation, `/history view|clear`, `/case`, `/purge` with filters, `/slowmode`; immune and moderator roles, a case log channel and public or private replies via `/modconfig`. Temporary bans expire through a durable scheduler.
-- 🤖 **Auto-Moderation** (MEE6: Moderator › Auto-moderation) — *off by default.* Ten rules (bad words and regexes, repeated text, invites, links, caps, emojis, spoilers, mentions, zalgo, spam rate), each with its own action (delete, warn, timeout, kick, ban) and role/channel scope; staff are exempt.
+- 🤖 **Auto-Moderation** (MEE6: Moderator › Auto-moderation) — *off by default.* Ten rules (bad words and regexes, repeated text, invites, links, caps, emojis, spoilers, mentions, zalgo, spam rate), each with its own action (delete, warn, timeout, kick, ban) and role/channel scope; staff are exempt. Plus **honeypot channels**: whoever posts in one is softbanned (or banned, kicked or timed out) at once, which catches spam bots and hacked accounts. `/automod honeypot add` can create the channel and post a warning in it.
 - 📜 **Audit Logs** (MEE6: Moderator › Audit logging) — *off by default.* Per-type log channels and individually toggled events for messages, members, voice, channels, threads, roles, emojis, invites and the server, batched to respect rate limits.
 - 👋 **Welcome & Goodbye** (MEE6: Welcome & Goodbye) — *off by default.* Join message, optional welcome card with a custom background, welcome DM, goodbye message, delayed autoroles that respect Rules Screening, built from one shared placeholder set.
 - 🛡️ **Verification** (MEE6: Welcome › Captcha verification) — *off by default.* Image-code or one-button captcha for new members, with a timeout that kicks members who never verify.
@@ -57,7 +57,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/unban` | 🔨 Moderation | Moderators | Lift a ban by user ID (MEE6 /unban). |
 | `/unmute` | 🔨 Moderation | Moderators | Remove a member's timeout or mute role (MEE6 /unmute). |
 | `/warn` | 🔨 Moderation | Moderators | Warn a member; warnings can trigger automatic actions (MEE6 /warn). |
-| `/automod` | 🤖 Auto-Moderation | Admins | Auto-moderation rules, actions and exemptions (MEE6 Moderator › Auto-moderation). |
+| `/automod` | 🤖 Auto-Moderation | Admins | Auto-moderation rules, actions, exemptions and honeypot channels (MEE6 Moderator › Auto-moderation). |
 | `/logging` | 📜 Audit Logs | Admins | Audit logs: turn on/off, pick log channels, toggle events (MEE6 Moderator › Audit logs). |
 | `/goodbye` | 👋 Welcome & Goodbye | Admins | Goodbye message when a member leaves (MEE6 Goodbye message). |
 | `/welcome` | 👋 Welcome & Goodbye | Admins | Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye). |

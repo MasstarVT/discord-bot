@@ -523,7 +523,8 @@ describe('settings registry', () => {
 
   test('toStoredChanges merges JSON parts into the stored row', () => {
     const row = {
-      automodConfig: { version: 2, rules: { caps: { action: 'kick', threshold: 80 } }, badWords: ['old'], allowedDomains: ['tenor.com', 'b.com'] },
+      automodConfig: { version: 2, rules: { caps: { action: 'kick', threshold: 80 } }, badWords: ['old'], allowedDomains: ['tenor.com', 'b.com'],
+        honeypot: { channelIds: [CH.text], action: 'ban', timeoutSeconds: 600 } },
       infractionEscalation: [
         { id: 4, warnCount: 3, withinSeconds: null, action: 'TIMEOUT', durationSeconds: 600, countFrom: '2026-01-01T00:00:00.000Z' },
         { id: 7, warnCount: 9, withinSeconds: null, action: 'BAN', durationSeconds: null, countFrom: null },
@@ -556,6 +557,12 @@ describe('settings registry', () => {
     assert.deepEqual(stored.automodConfig.blockedDomains, ['b.com']);
     assert.deepEqual(stored.automodConfig.allowedDomains, ['tenor.com'], 'moved to the blocked list');
     assert.equal(stored.automodConfig.version, 2);
+    assert.deepEqual(stored.automodConfig.honeypot, { channelIds: [CH.text], action: 'ban', timeoutSeconds: 600 },
+      'saving another automod field keeps the honeypot');
+    const honeypot = { channelIds: [], action: 'timeout', timeoutSeconds: 3600 };
+    const hp = fields.toStoredChanges(valid({ automodHoneypot: honeypot }), row);
+    assert.deepEqual(hp.automodConfig.honeypot, honeypot);
+    assert.deepEqual(hp.automodConfig.badWords, ['old']);
     const together = fields.toStoredChanges(valid({ automodBlockedDomains: ['b.com'], automodAllowedDomains: ['b.com'] }), row);
     assert.notEqual(fields.checkCrossFields({ ...row, ...together }, { automodBlockedDomains: [], automodAllowedDomains: [] }), null);
 
@@ -653,6 +660,10 @@ describe('settings registry agrees with the bot services', () => {
       allowedDomains: [...svc.automod.DEFAULT_ALLOWED_DOMAINS], timeoutSeconds: svc.automod.DEFAULT_TIMEOUT_SECONDS,
       minTimeoutSeconds: svc.automod.MIN_TIMEOUT_SECONDS, maxTimeoutSeconds: svc.automod.MAX_TIMEOUT_SECONDS,
     });
+    assert.deepEqual(fields.AUTOMOD_HONEYPOT.actions.map((a) => a.value), [...svc.automod.HONEYPOT_ACTIONS]);
+    for (const a of fields.AUTOMOD_HONEYPOT.actions) assert.equal(a.label, svc.automod.HONEYPOT_ACTION_LABELS[a.value]);
+    assert.equal(fields.AUTOMOD_HONEYPOT.timeoutSeconds, svc.automod.HONEYPOT_DEFAULT_TIMEOUT_SECONDS);
+    assert.equal(fields.AUTOMOD_HONEYPOT.maxChannels, svc.automod.HONEYPOT_CAP);
     for (const w of ['  Hello  World ', 'ｆｕｌｌ', 'a', '!!', 'x'.repeat(65), 'zero​width', 'ok', 42]) {
       assert.equal(fields.normalizeAutomodWord(w), svc.automod.normalizeWord(w), String(w));
     }
@@ -663,7 +674,8 @@ describe('settings registry agrees with the bot services', () => {
     const samples = [
       null,
       { version: 2, rules: { caps: { action: 'kick', threshold: 80, roleMode: 'only', roleIds: [RL.low] } }, badWords: ['foo', 'bar baz'],
-        badWordPatterns: ['f+o+'], blockedDomains: ['evil.com'], allowedDomains: [], exemptRoleIds: [RL.mid], exemptChannelIds: [CH.text] },
+        badWordPatterns: ['f+o+'], blockedDomains: ['evil.com'], allowedDomains: [], exemptRoleIds: [RL.mid], exemptChannelIds: [CH.text],
+        honeypot: { channelIds: [CH.text], action: 'kick', timeoutSeconds: 120 } },
       { filterInvites: true, automodAction: 'KICK', badWords: ['legacy'] },
     ];
     for (const raw of samples) {

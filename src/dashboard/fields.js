@@ -128,6 +128,18 @@ export const AUTOMOD_DEFAULTS = Object.freeze({
   maxTimeoutSeconds: 2_419_200,
 });
 
+/** HONEYPOT_ACTIONS + HONEYPOT_ACTION_LABELS, HONEYPOT_DEFAULT_TIMEOUT_SECONDS, HONEYPOT_CAP (automodService). */
+export const AUTOMOD_HONEYPOT = Object.freeze({
+  actions: Object.freeze([
+    { value: 'softban', label: 'Softban (kick and clear their messages)' },
+    { value: 'ban', label: 'Ban and clear their messages' },
+    { value: 'kick', label: 'Delete & kick' },
+    { value: 'timeout', label: 'Delete & timeout' },
+  ]),
+  timeoutSeconds: 86_400,
+  maxChannels: LIMITS.AUTOMOD_HONEYPOTS,
+});
+
 /** LOG_EVENTS (src/services/loggingService.js): key -> label, in display order. */
 export const LOG_EVENTS = Object.freeze({
   messageDelete: 'Message deleted', messageEdit: 'Message edited', messageBulkDelete: 'Messages bulk-deleted',
@@ -456,6 +468,7 @@ export function automodConfigOf(row) {
   }
   // A missing allowedDomains key means the defaults; an explicit [] stays empty.
   if (!Array.isArray(src.allowedDomains)) cfg.allowedDomains = [...AUTOMOD_DEFAULTS.allowedDomains];
+  cfg.honeypot = readValue(HONEYPOT_FIELD, src.honeypot);
   return cfg;
 }
 
@@ -509,6 +522,28 @@ for (const key of AUTOMOD_RULE_KEYS) {
     write: (value, draft, row) => { automodDraft(draft, row).rules[key] = value; },
   };
 }
+
+// The honeypot (automodConfig.honeypot): text or announcement channels only, never a category (it would catch everyone).
+const HONEYPOT_FIELD = {
+  field: 'automodHoneypot',
+  type: 'object',
+  label: 'Honeypot channels',
+  description: 'Trap channels nobody should type in. Spam bots and hacked accounts post everywhere, so whoever posts in '
+    + 'one is punished at once. Staff and exempt roles are never caught. /automod honeypot add can create the channel '
+    + 'and post a warning in it.',
+  default: { channelIds: [], action: 'softban', timeoutSeconds: AUTOMOD_HONEYPOT.timeoutSeconds },
+  fields: [
+    { field: 'channelIds', type: 'channels', label: 'Channels', channelTypes: [...POSTABLE],
+      maxItems: AUTOMOD_HONEYPOT.maxChannels, default: [] },
+    { field: 'action', type: 'enum', label: 'Action', options: AUTOMOD_HONEYPOT.actions, default: 'softban',
+      description: 'Softban and ban also delete their messages from the last day in every channel.' },
+    int('timeoutSeconds', AUTOMOD_HONEYPOT.timeoutSeconds, AUTOMOD_DEFAULTS.minTimeoutSeconds, AUTOMOD_DEFAULTS.maxTimeoutSeconds,
+      'Timeout length (seconds)', 'How long "Delete & timeout" times the member out (1 minute to 28 days).',
+      { unit: 'seconds', showWhen: { field: 'action', in: ['timeout'] } }),
+  ],
+  read: (row) => automodConfigOf(row).honeypot,
+  write: (value, draft, row) => { automodDraft(draft, row).honeypot = value; },
+};
 
 const wordsProblem = (list) => {
   const i = list.findIndex((w) => normalizeAutomodWord(w) === null);
@@ -609,6 +644,12 @@ const AUTOMOD_GROUPS = [
     id: 'content',
     title: 'Message content',
     fields: [rule('caps'), rule('emojis'), rule('spoilers'), rule('mentions'), rule('zalgo')],
+  },
+  {
+    id: 'honeypot',
+    title: 'Honeypot',
+    description: 'Works even while every rule is off, and an exempt channel does not shield it.',
+    fields: [HONEYPOT_FIELD],
   },
   {
     id: 'exemptions',
@@ -1188,7 +1229,8 @@ export const SETTINGS_FIELDS = Object.freeze(Object.fromEntries([
 
 /** field -> the GuildSettings column it is stored in (a virtual field names its JSON column). */
 export const SETTINGS_COLUMNS = Object.freeze(Object.fromEntries(Object.keys(SETTINGS_FIELDS).map((field) => [field,
-  Object.hasOwn(AUTOMOD_LIST_KEYS, field) || Object.values(RULE_FIELDS).some((d) => d.field === field) ? 'automodConfig'
+  Object.hasOwn(AUTOMOD_LIST_KEYS, field) || field === HONEYPOT_FIELD.field || Object.values(RULE_FIELDS).some((d) => d.field === field)
+    ? 'automodConfig'
     : field === 'captchaVerifyButton' ? 'captchaTemplate'
       : field])));
 
