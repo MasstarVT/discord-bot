@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 # Read-only by default. Only the publish job (never run for pull requests)
-# gets packages:write.
+# gets packages:write, and only dependabot-merge can write to the repo.
 permissions:
   contents: read
 
@@ -109,6 +109,43 @@ jobs:
           --to-schema-datamodel prisma/schema.prisma
           --shadow-database-url "$SHADOW_DATABASE_URL"
           --exit-code
+
+  # Dependabot's patch and minor updates merge themselves once the tests pass;
+  # major updates still wait for a person. Only Dependabot's own PRs from this
+  # repo qualify: a fork PR never matches (and gets a read-only token anyway),
+  # and a commit pushed by anyone else on a Dependabot branch changes the actor.
+  dependabot-merge:
+    name: Merge a Dependabot patch or minor update
+    needs: test
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.repository == 'MasstarVT/discord-bot' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v3
+
+      # update-type is the biggest change in the PR, so a group that carries one
+      # major update is left alone. --match-head-commit merges only the commit
+      # that was tested. A merge made with GITHUB_TOKEN starts no push run, so
+      # the publish (and Watchtower's deploy) is started by dispatching main.
+      - name: Merge the tested commit and publish main
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh pr merge "$PR_URL" --merge --match-head-commit "$HEAD_SHA"
+          gh workflow run ci-publish.yml --repo "$GITHUB_REPOSITORY" --ref main
 
   publish:
     name: Build, smoke-test and push image
