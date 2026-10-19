@@ -17,6 +17,7 @@ import {
   parseCookies, sealSession, serializeCookie, statesMatch, unsealSession,
 } from './auth.js';
 import { buildCatalog } from './catalog.js';
+import { normalizeIp } from './config.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
 import { FieldError, checkRefs, collectAssignableRoles, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
 import { collectSettingsRefKeys, collectSettingsRefs, readSettingsValues, validateSettingsChanges } from './fields.js';
@@ -61,14 +62,31 @@ const STATIC_FILES = new Map([
   ['/forms.css', ['forms.css', 'text/css; charset=utf-8']],
   ['/collections.css', ['collections.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
+  ['/privacy', ['privacy.html', 'text/html; charset=utf-8']],
+  ['/terms', ['terms.html', 'text/html; charset=utf-8']],
+  ['/legal.css', ['legal.css', 'text/css; charset=utf-8']],
 ]);
+
+/** Pages whose `<!--contact-->` marker is replaced with DASHBOARD_CONTACT when they are loaded. */
+const LEGAL_PAGES = new Set(['privacy.html', 'terms.html']);
+const CONTACT_MARKER = '<!--contact-->';
+const NO_CONTACT = 'the bot owner, through the server where you use the bot';
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+/** The HTML a legal page shows for the configured contact (config.contact), escaped. Exported for tests. */
+export function contactHtml(contact) {
+  if (!contact) return escapeHtml(NO_CONTACT);
+  const href = contact.kind === 'email' ? `mailto:${contact.value}` : contact.value;
+  return `<a href="${escapeHtml(href)}">${escapeHtml(contact.value)}</a>`;
+}
 
 const gzipAsync = promisify(gzip);
 const COMPRESSIBLE_RE = /^(?:text\/|image\/svg\+xml)/;
 
 /** One static file in memory: its bytes, a gzip copy when that is smaller, and a strong ETag per encoding. */
-async function loadStaticEntry(path, type) {
-  const body = await readFile(path);
+async function loadStaticEntry(path, type, transform) {
+  const body = transform ? Buffer.from(transform((await readFile(path)).toString('utf8')), 'utf8') : await readFile(path);
   const hash = createHash('sha256').update(body).digest('base64url').slice(0, 27);
   let zipped = null;
   if (COMPRESSIBLE_RE.test(type)) {
@@ -133,16 +151,17 @@ export function createRateLimiter({ max, windowMs, now }) {
 }
 
 /**
- * The client address the login limit counts. The dashboard has no trusted-proxy setting, so a request is counted under
- * its socket address; only when that is the loopback address (a reverse proxy on the same host) is the last
- * `X-Forwarded-For` entry, the one that proxy appended, used instead. From any other peer the header is ignored, so a
- * client cannot pick its own key.
+ * The client address the login limit counts. A request is counted under its socket address; only when that is the
+ * loopback address (a reverse proxy on the same host) or one of DASHBOARD_TRUSTED_PROXIES (a proxy on another host, such
+ * as a Cloudflare Tunnel connector) is the last `X-Forwarded-For` entry, the one that proxy appended, used instead. From
+ * any other peer the header is ignored, so a client cannot pick its own key.
  * @param {import('node:http').IncomingMessage} req
+ * @param {ReadonlySet<string>} [trusted] normalised addresses of the trusted proxies (config.trustedProxies)
  * @returns {string}
  */
-export function clientAddress(req) {
+export function clientAddress(req, trusted = new Set()) {
   const peer = req.socket?.remoteAddress ?? 'unknown';
-  if (!LOOPBACK_ADDRESSES.has(peer)) return peer;
+  if (!LOOPBACK_ADDRESSES.has(peer) && !trusted.has(normalizeIp(peer))) return peer;
   const header = req.headers?.['x-forwarded-for'];
   const last = typeof header === 'string' ? header.split(',').at(-1).trim() : '';
   return last !== '' && last.length <= 64 ? last : peer;
@@ -258,6 +277,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   const limitSearches = createRateLimiter({ ...SEARCH_RATE_LIMIT, now });
   const limitLoginsByAddress = createRateLimiter({ ...LOGIN_RATE_LIMIT, now });
   const limitLoginsOverall = createRateLimiter({ ...LOGIN_GLOBAL_RATE_LIMIT, now });
+  const trustedProxies = new Set((config.trustedProxies ?? []).map(normalizeIp));
 
   // ── Response helpers ────────────────────────────────────────────────────────
 
@@ -409,7 +429,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
 
     // From here on the request costs a POST to Discord, so it is counted (per address first: a flood from one address
     // must not use up the overall allowance of everyone else).
-    const address = clientAddress(ctx.req);
+    const address = clientAddress(ctx.req, trustedProxies);
     const limited = limitLoginsByAddress(address);
     const limitedOverall = limited.ok ? limitLoginsOverall('all') : limited;
     if (!limitedOverall.ok) {
@@ -1018,7 +1038,8 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   function staticEntry(file, type) {
     let entry = staticEntries.get(file);
     if (!entry) {
-      entry = loadStaticEntry(join(publicDir, file), type);
+      const transform = LEGAL_PAGES.has(file) ? (text) => text.replaceAll(CONTACT_MARKER, contactHtml(config.contact)) : undefined;
+      entry = loadStaticEntry(join(publicDir, file), type, transform);
       staticEntries.set(file, entry);
       entry.catch(() => staticEntries.delete(file)); // missing or unreadable: look again next time
     }

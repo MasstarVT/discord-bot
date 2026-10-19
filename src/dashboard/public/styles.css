@@ -493,6 +493,8 @@ kbd {
   border-top: 1px solid var(--border);
 }
 
+.footer-legal { margin-top: var(--space-2); }
+
 /* Sidebar */
 
 .sidebar {
@@ -747,6 +749,8 @@ kbd {
 .hero-lead { margin: var(--space-3) auto var(--space-6); max-width: 34ch; color: var(--text-2); }
 .hero-cta { width: 100%; }
 .hero-fine { margin-top: var(--space-4); color: var(--text-3); font-size: var(--text-sm); }
+
+.hero-legal { margin-top: var(--space-2); color: var(--text-3); font-size: var(--text-sm); }
 
 .hero-preview {
   display: grid;

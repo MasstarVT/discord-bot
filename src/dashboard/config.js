@@ -1,6 +1,8 @@
 // Web dashboard configuration: every environment variable the dashboard reads is parsed and validated here.
 // Pure: nothing is read at import time; dashboard.js (repo root) calls loadDashboardConfig() once at start.
 
+import { isIP } from 'node:net';
+
 export const DASHBOARD_DEFAULTS = Object.freeze({
   url: 'http://localhost:8080',
   port: 8080,
@@ -14,6 +16,27 @@ export const REQUIRED_KEYS = Object.freeze([
 
 export const MIN_SESSION_SECRET_LENGTH = 32;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
+
+/** An IP address in the form `req.socket.remoteAddress` reports it: lower case, IPv4-mapped IPv6 unwrapped. */
+export function normalizeIp(value) {
+  const ip = String(value ?? '').trim().toLowerCase();
+  return ip.startsWith('::ffff:') && isIP(ip.slice(7)) === 4 ? ip.slice(7) : ip;
+}
+
+/**
+ * Parses DASHBOARD_CONTACT, the contact shown on the privacy and terms pages: an email address or an https URL.
+ * @returns {{ kind: 'email'|'url', value: string }|null} null when it is neither
+ */
+export function parseContact(raw) {
+  if (raw.length > 254) return null;
+  if (EMAIL_RE.test(raw)) return { kind: 'email', value: raw };
+  try {
+    const url = new URL(raw);
+    if (url.protocol === 'https:' && !url.username && !url.password) return { kind: 'url', value: url.href };
+  } catch { /* not a URL */ }
+  return null;
+}
 
 const read = (env, key) => {
   const value = env?.[key];
@@ -55,7 +78,8 @@ export function parseDashboardUrl(raw) {
  *     clientId: string, botToken: string, clientSecret: string, sessionSecret: string,
  *     databaseUrl: string, redisUrl: string, botOwnerId: string|null,
  *     url: string, urlIsDefault: boolean, origin: string, redirectUri: string, secureCookies: boolean,
- *     port: number, host: string,
+ *     port: number, host: string, trustedProxies: readonly string[],
+ *     contact: { kind: 'email'|'url', value: string }|null,
  *   },
  * }}
  */
@@ -96,6 +120,22 @@ export function loadDashboardConfig(env = process.env) {
     botOwnerId = null;
   }
 
+  // Reverse proxies whose X-Forwarded-For is believed (the login rate limit's client address); loopback always is.
+  const trustedProxies = [];
+  const rawProxies = read(env, 'DASHBOARD_TRUSTED_PROXIES');
+  if (rawProxies) {
+    const parts = rawProxies.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.every((p) => isIP(p))) trustedProxies.push(...new Set(parts.map(normalizeIp)));
+    else invalid.push({ key: 'DASHBOARD_TRUSTED_PROXIES', reason: 'must be a comma-separated list of IP addresses' });
+  }
+
+  let contact = null;
+  const rawContact = read(env, 'DASHBOARD_CONTACT');
+  if (rawContact) {
+    contact = parseContact(rawContact);
+    if (!contact) warnings.push('DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact.');
+  }
+
   const config = Object.freeze({
     clientId,
     botToken: read(env, 'DISCORD_TOKEN'),
@@ -111,6 +151,8 @@ export function loadDashboardConfig(env = process.env) {
     secureCookies: url.startsWith('https:'),
     port,
     host,
+    trustedProxies: Object.freeze(trustedProxies),
+    contact: contact && Object.freeze(contact),
   });
 
   return { ok: missing.length === 0 && invalid.length === 0, missing, invalid, warnings, config };

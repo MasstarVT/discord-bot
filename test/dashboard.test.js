@@ -26,7 +26,9 @@ const { MODULES, MODULE_NAMES } = await import('../src/config/modules.js');
 const catalog = await import('../src/dashboard/catalog.js');
 const auth = await import('../src/dashboard/auth.js');
 const { loadDashboardConfig, REQUIRED_KEYS } = await import('../src/dashboard/config.js');
-const { createDashboardServer, createParkedServer, createRateLimiter, BODY_LIMIT_BYTES, RECORD_BODY_LIMIT_BYTES } = await import('../src/dashboard/server.js');
+const {
+  createDashboardServer, createParkedServer, createRateLimiter, clientAddress, contactHtml, BODY_LIMIT_BYTES, RECORD_BODY_LIMIT_BYTES,
+} = await import('../src/dashboard/server.js');
 const discordApi = await import('../src/dashboard/discordApi.js');
 const fields = await import('../src/dashboard/fields.js');
 const schema = await import('../src/dashboard/schema.js');
@@ -770,6 +772,17 @@ describe('front end', () => {
       assert.ok(existsSync(join(PUBLIC, ref.slice(1))), `${ref} is referenced but missing`);
     }
   });
+
+  test('the privacy and terms pages: no script or inline style, a contact marker, links only to served paths', () => {
+    const served = new Set(['/', '/privacy', '/terms', '/styles.css', '/legal.css', '/favicon.svg']);
+    for (const name of ['privacy.html', 'terms.html']) {
+      const html = readFileSync(join(PUBLIC, name), 'utf8');
+      assert.equal(/<script\b/.test(html), false, `${name}: <script>`);
+      assert.equal(/<style\b|\sstyle=/.test(html), false, `${name}: inline style`);
+      assert.ok(html.includes('<!--contact-->'), `${name}: contact marker`);
+      for (const [, ref] of html.matchAll(/(?:src|href)="(\/[^"]*)"/g)) assert.ok(served.has(ref), `${name}: ${ref} is not served`);
+    }
+  });
 });
 
 describe('config', () => {
@@ -822,6 +835,8 @@ describe('config', () => {
       [{ DASHBOARD_PORT: '70000' }, 'DASHBOARD_PORT'],
       [{ DASHBOARD_PORT: 'abc' }, 'DASHBOARD_PORT'],
       [{ CLIENT_ID: 'my-app' }, 'CLIENT_ID'],
+      [{ DASHBOARD_TRUSTED_PROXIES: '10.0.1.30, cloudflared' }, 'DASHBOARD_TRUSTED_PROXIES'],
+      [{ DASHBOARD_TRUSTED_PROXIES: '10.0.1.0/24' }, 'DASHBOARD_TRUSTED_PROXIES'],
     ];
     for (const [extra, key] of cases) {
       const r = loadDashboardConfig(baseEnv(extra));
@@ -834,9 +849,31 @@ describe('config', () => {
     assert.equal(owner.warnings.length, 1);
   });
 
+  test('DASHBOARD_TRUSTED_PROXIES: a list of addresses, normalised and deduplicated; unset is empty', () => {
+    assert.deepEqual(loadDashboardConfig(baseEnv()).config.trustedProxies, []);
+    const r = loadDashboardConfig(baseEnv({ DASHBOARD_TRUSTED_PROXIES: ' 10.0.1.30,10.0.1.31 , ::FFFF:10.0.1.30,,fd7a::1 ' }));
+    assert.equal(r.ok, true, JSON.stringify(r.invalid));
+    assert.deepEqual(r.config.trustedProxies, ['10.0.1.30', '10.0.1.31', 'fd7a::1']);
+  });
+
+  test('DASHBOARD_CONTACT: an email address or an https URL; anything else is a warning and no contact', () => {
+    assert.equal(loadDashboardConfig(baseEnv()).config.contact, null);
+    assert.deepEqual(loadDashboardConfig(baseEnv({ DASHBOARD_CONTACT: 'owner@example.com' })).config.contact,
+      { kind: 'email', value: 'owner@example.com' });
+    assert.deepEqual(loadDashboardConfig(baseEnv({ DASHBOARD_CONTACT: 'https://example.com/contact' })).config.contact,
+      { kind: 'url', value: 'https://example.com/contact' });
+    for (const bad of ['http://example.com', 'javascript:alert(1)', 'owner at example', '<b>@x.y', 'https://u:p@example.com']) {
+      const r = loadDashboardConfig(baseEnv({ DASHBOARD_CONTACT: bad }));
+      assert.equal(r.ok, true, bad);
+      assert.equal(r.config.contact, null, bad);
+      assert.equal(r.warnings.length, 1, bad);
+    }
+  });
+
   test('every key the dashboard reads is documented in .env.example', () => {
     const env = readFileSync(join(ROOT, '.env.example'), 'utf8');
-    for (const key of ['DISCORD_CLIENT_SECRET', 'DASHBOARD_URL', 'DASHBOARD_SESSION_SECRET', 'DASHBOARD_PORT', 'DASHBOARD_HOST']) {
+    for (const key of ['DISCORD_CLIENT_SECRET', 'DASHBOARD_URL', 'DASHBOARD_SESSION_SECRET', 'DASHBOARD_PORT', 'DASHBOARD_HOST',
+      'DASHBOARD_TRUSTED_PROXIES', 'DASHBOARD_CONTACT']) {
       assert.match(env, new RegExp(`^#\\s*${key}=`, 'm'), `${key} must be a commented-out line`);
     }
   });
@@ -1601,6 +1638,7 @@ describe('HTTP server', () => {
     writeFileSync(join(publicDir, 'index.html'), '<!doctype html><title>t</title>');
     writeFileSync(join(publicDir, 'app.js'), 'export {};');
     writeFileSync(join(publicDir, 'styles.css'), 'body { color: red; }\n'.repeat(200));
+    writeFileSync(join(publicDir, 'privacy.html'), '<!doctype html><title>p</title><p>Ask <!--contact-->.</p>');
     server = createDashboardServer({ config, deps: { discord: fakes.discord, settings: fakes.settings }, logger: log, publicDir });
     port = await listen(server);
   });
@@ -2028,6 +2066,35 @@ describe('HTTP server', () => {
       assert.equal(r.status, 404, path);
     }
     assert.equal((await get('/api/nope')).json.error, 'not_found');
+  });
+
+  test('the privacy page needs no login and shows the contact in place of its marker', async () => {
+    const r = await get('/privacy');
+    assert.equal(r.status, 200);
+    assert.match(r.headers['content-type'], /^text\/html/);
+    assert.equal(r.text.includes('<!--contact-->'), false, 'marker replaced');
+    assert.ok(r.text.includes(contactHtml(null)), 'no DASHBOARD_CONTACT: the fallback text');
+    assert.equal((await get('/terms')).status, 404, 'missing file: 404');
+    assert.equal((await get('/privacy.html')).status, 404, 'served by its route only');
+  });
+
+  test('contactHtml links an email or URL and escapes it', () => {
+    assert.equal(contactHtml({ kind: 'email', value: 'a@b.co' }), '<a href="mailto:a@b.co">a@b.co</a>');
+    assert.equal(contactHtml({ kind: 'url', value: 'https://x.co/?a=1&b="2"' }),
+      '<a href="https://x.co/?a=1&amp;b=&quot;2&quot;">https://x.co/?a=1&amp;b=&quot;2&quot;</a>');
+    assert.equal(/[<>]/.test(contactHtml(null)), false);
+  });
+
+  test('clientAddress believes X-Forwarded-For only from loopback or a trusted proxy', () => {
+    const req = (peer, xff) => ({ socket: { remoteAddress: peer }, headers: xff === undefined ? {} : { 'x-forwarded-for': xff } });
+    const trusted = new Set(['10.0.1.30']);
+    assert.equal(clientAddress(req('203.0.113.9', '198.51.100.1')), '203.0.113.9', 'untrusted peer: header ignored');
+    assert.equal(clientAddress(req('10.0.1.30', '198.51.100.1')), '10.0.1.30', 'no trusted list: header ignored');
+    assert.equal(clientAddress(req('10.0.1.30', '6.6.6.6, 198.51.100.1'), trusted), '198.51.100.1', 'trusted: last entry');
+    assert.equal(clientAddress(req('::ffff:10.0.1.30', '198.51.100.1'), trusted), '198.51.100.1', 'IPv4-mapped peer');
+    assert.equal(clientAddress(req('10.0.1.30'), trusted), '10.0.1.30', 'trusted without a header: the peer');
+    assert.equal(clientAddress(req('10.0.1.31', '198.51.100.1'), trusted), '10.0.1.31', 'another LAN host is not trusted');
+    assert.equal(clientAddress(req('127.0.0.1', '198.51.100.1')), '198.51.100.1', 'loopback is always trusted');
   });
 
   test('static files: ETag and 304, gzip when it is smaller and asked for', async () => {

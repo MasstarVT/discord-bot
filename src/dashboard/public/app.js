@@ -349,6 +349,17 @@ function reportSaveError(err) {
 /* Shell: top bar, optional sidebar drawer, footer                      */
 /* ------------------------------------------------------------------ */
 
+/** Links to the privacy policy and terms (static pages the server serves at /privacy and /terms). */
+function legalLinks(cls) {
+  return h(
+    'nav',
+    { class: cls, 'aria-label': 'Legal' },
+    h('a', { href: '/privacy' }, 'Privacy Policy'),
+    ' · ',
+    h('a', { href: '/terms' }, 'Terms of Service'),
+  );
+}
+
 async function logout(btn) {
   // Ask before the session is revoked: if the prompt came from beforeunload after the request, "stay" would leave a
   // page whose next Save answers 401 and loses the edits.
@@ -460,6 +471,7 @@ function buildShell({ sidebar = false } = {}) {
     'footer',
     { class: 'footer' },
     sidebar ? 'Module switches save as you flip them. Other settings save with the Save changes button.' : 'Choose a server to configure the bot.',
+    legalLinks('footer-legal'),
   );
   const root = h(
     'div',
@@ -558,6 +570,7 @@ function renderLoggedOut({ notice = '', error = false } = {}) {
           ),
           h('a', { class: 'btn btn-primary btn-lg hero-cta', href: '/auth/login' }, 'Log in with Discord'),
           h('p', { class: 'hero-fine' }, 'We only read your profile and the list of your servers.'),
+          legalLinks('hero-legal'),
         ),
         h('div', { class: 'hero-preview', 'aria-hidden': 'true' }, previewRow(true), previewRow(true), previewRow(false)),
       ),
