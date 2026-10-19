@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Privacy Policy</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/legal.css">
+</head>
+<body>
+  <main class="legal">
+    <nav class="legal-nav" aria-label="Pages"><a href="/">Dashboard</a> · <a href="/terms">Terms of Service</a></nav>
+    <h1>Privacy Policy</h1>
+    <p class="legal-date">Last updated: 19 October 2026</p>
+
+    <p>This policy covers the Discord bot and its web dashboard. They are run by one person, the bot owner, not by a company. Questions or requests: <!--contact-->.</p>
+
+    <h2>What the bot stores</h2>
+    <p>The bot keeps only what its features need, in a database on the bot owner's own server:</p>
+    <ul>
+      <li><strong>Server settings</strong> that server staff choose: which modules are on, channels, roles, messages, embeds, custom commands, automations, panels and similar.</li>
+      <li><strong>Discord IDs</strong> of servers, channels, roles, messages and members, so the bot knows where and to whom a feature applies.</li>
+      <li><strong>Feature data about members</strong>, only for features a server turns on:
+        <ul>
+          <li>levels and XP, message counts and voice minutes</li>
+          <li>economy balances, items and boosts</li>
+          <li>achievements</li>
+          <li>birthdays (day and month, and the year only if you give it)</li>
+          <li>your time zone, if you set one</li>
+          <li>poll votes and giveaway entries</li>
+          <li>who invited whom, and when members joined or left</li>
+          <li>ticket owners and the reason you give when opening a ticket</li>
+          <li>temporary voice channel owners</li>
+          <li>captcha checks (a hashed answer and attempt count, removed when the check ends)</li>
+        </ul>
+      </li>
+      <li><strong>Moderation records</strong> (warnings, timeouts, kicks and bans) with the moderator, the member and the reason given.</li>
+      <li><strong>Who added the bot</strong> to each server, for the bot owner.</li>
+    </ul>
+    <p>The bot reads messages to run its features: commands, auto-moderation, auto-responders, levels, translation, logging, starboards and counting. It does not save message text in its database. When a server turns logging on, edited and deleted messages are posted to that server's own log channel. Ticket transcripts are posted to the server's channel or sent to you by DM, not kept by the bot.</p>
+
+    <h2>The dashboard</h2>
+    <ul>
+      <li>You log in with Discord. The dashboard asks Discord only for your profile (ID, username, display name and avatar) and your list of servers with your permissions in them.</li>
+      <li>Your Discord login token is stored in an encrypted cookie in your browser for up to 7 days, not in the bot's database. Logging out ends it at Discord too.</li>
+      <li>The only cookies are that login cookie and a short-lived one used while you log in. There are no ads, analytics or tracking cookies.</li>
+      <li>Logins, logouts and settings changes are written to the dashboard's server log with your Discord user ID.</li>
+      <li>The dashboard is reached through Cloudflare, which carries the connection and sees your IP address.</li>
+    </ul>
+
+    <h2>Who else sees data</h2>
+    <ul>
+      <li><strong>Discord</strong>, which hosts everything the bot posts.</li>
+      <li><strong>Translation:</strong> text you translate, or that is posted in an auto-translate channel, goes to a translation server the bot owner runs (LibreTranslate). Results are cached for up to an hour.</li>
+      <li><strong>Lookup commands</strong> send what you type to the site that answers: <code>/anime</code> and <code>/manga</code> to AniList, <code>/pokemon</code> to PokéAPI, and <code>/urban</code> to Urban Dictionary.</li>
+      <li><strong>Social feeds</strong> that staff set up (RSS, YouTube, Reddit, Bluesky, podcasts) are fetched from those sites. No member data is sent to them.</li>
+    </ul>
+    <p>Data is never sold or shared for advertising.</p>
+
+    <h2>How long data is kept</h2>
+    <ul>
+      <li>Data stays while the bot is in the server. If the bot is removed, its data is kept, so the settings come back if the bot is added again, until someone asks for it to be deleted.</li>
+      <li>Some records are removed automatically when they are no longer needed, for example finished captcha checks and a birthday you remove.</li>
+      <li>Backups are kept for up to six months, then deleted.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <ul>
+      <li>You can ask for a copy of the data the bot holds about you, or for it to be deleted, by contacting <!--contact-->. Deleting it resets things like your levels and balances.</li>
+      <li>Server staff can remove most of their server's data from the dashboard, or ask for everything about their server to be deleted.</li>
+      <li>You can log out of the dashboard at any time. You can also remove its access from Discord: User Settings → Authorized Apps.</li>
+    </ul>
+
+    <h2>Age</h2>
+    <p>The bot is for Discord users only, so you must meet Discord's minimum age (13 in most countries).</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes, the new version is posted on this page with a new date.</p>
+  </main>
+</body>
+</html>
