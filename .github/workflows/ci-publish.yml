@@ -41,6 +41,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      # Used only by the live-Redis step. Not on 6379: redis.js falls back to
+      # localhost:6379 when REDIS_URL is unset, and the other passes need Redis down.
+      redis:
+        image: redis:7
+        ports: ['6390:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       DATABASE_URL: postgresql://postgres:ci@localhost:5432/postgres?schema=public
       SHADOW_DATABASE_URL: postgresql://postgres:ci@localhost:5433/postgres?schema=public
@@ -76,11 +86,21 @@ jobs:
 
       # Same suite again with the opt-in database tests enabled (test/db.test.js
       # runs every RAW_SQL statement against the migrated schema). One file at a
-      # time: the database tests share one database.
+      # time: the database tests share one database. Redis stays down here:
+      # several database cases assert the Redis-down behaviour.
       - name: Run the test suite against the migrated database
         run: node --test --test-concurrency=1 "test/*.test.js"
         env:
           TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      # The files with assertions that need a live Redis (they fail when
+      # TEST_REDIS_URL is set but Redis is unreachable). Only these files: the
+      # rest of the suite expects Redis down.
+      - name: Run the Redis-backed tests against the database and a live Redis
+        run: node --test --test-concurrency=1 test/dashboard-automations.test.js
+        env:
+          TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+          TEST_REDIS_URL: redis://127.0.0.1:6390
 
       - name: Fail if schema.prisma changed without a migration
         run: >-
