@@ -1216,6 +1216,16 @@ export const MODULE_GROUPS = {
       channel('countingChannelId', 'Counting channel', 'Members count up here, one number per message.'),
     ],
   }],
+  autotime: [{
+    id: 'autotime',
+    title: 'Ignored channels',
+    description: 'Times are read in the zone of the member who typed them: their own (/timezone set) or their timezone role.',
+    fields: [
+      { field: 'autoTimeIgnoredChannelIds', type: 'channels', label: 'Ignored channels', channelTypes: [...ANY_CHANNEL],
+        maxItems: LIMITS.AUTOTIME_IGNORED_CHANNELS, default: [],
+        description: 'Times typed in these channels are never answered. A category covers its channels and threads.' },
+    ],
+  }],
 };
 for (const key of MODULE_NAMES) MODULE_GROUPS[key] ??= [];
 

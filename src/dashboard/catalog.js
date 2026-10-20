@@ -33,7 +33,7 @@ export const CATEGORIES = Object.freeze([
     id: 'tools',
     label: 'Content & Utilities',
     description: 'Custom commands, automations, scheduled messages, feeds and other handy tools.',
-    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole']),
+    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole', 'autotime']),
   }),
 ]);
 
@@ -66,6 +66,7 @@ export const DESCRIPTIONS = Object.freeze({
   search: 'Look up anime, manga, Pokémon and Urban Dictionary definitions.',
   liverole: 'Gives members a role while they stream. Switching it off here leaves it on current streamers; /liverole disable in Discord removes it too.',
   counting: 'A channel where members count up from 1 in turns; a wrong number starts the count again.',
+  autotime: 'Answers times typed in chat, like "fri 5pm", with a timestamp everyone sees in their own timezone.',
 });
 
 /**
@@ -100,6 +101,7 @@ export const CODES = Object.freeze({
   translation: 'Tr',
   search: 'Sr',
   liverole: 'Lr',
+  autotime: 'Ts',
 });
 
 /** The boolean sub-settings of each module (their descriptors live in fields.js). */

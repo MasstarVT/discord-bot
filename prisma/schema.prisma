@@ -86,6 +86,7 @@ model GuildSettings {
   searchEnabled         Boolean @default(true)
   liveRoleEnabled       Boolean @default(false)
   countingEnabled       Boolean @default(false)
+  autoTimeEnabled       Boolean @default(false)
 
   // ── General (/settings) ────────────────────────────────────────────────────
   // IANA zone name, validated with Intl.DateTimeFormat before saving.
@@ -282,6 +283,10 @@ model GuildSettings {
   // ── Counting ────────────────────────────────────────────────────────────────
   // The channel members count up in (null = not set up). The count itself lives in CountingState.
   countingChannelId String?
+
+  // ── Auto Timestamps ─────────────────────────────────────────────────────────
+  // Channels (or categories) where times in chat are never answered (LIMITS.AUTOTIME_IGNORED_CHANNELS).
+  autoTimeIgnoredChannelIds String[] @default([])
 
   // ── Relations ───────────────────────────────────────────────────────────────
   infractions          Infraction[]

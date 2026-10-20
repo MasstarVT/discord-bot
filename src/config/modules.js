@@ -32,6 +32,7 @@ export const MODULES = Object.freeze({
   search: Object.freeze({ flag: "searchEnabled", label: "Search Anything", emoji: "🔎", mee6: "Search Anything", configCommand: "/settings", default: DEFAULT_MODULE_SETTINGS.search }),
   liverole: Object.freeze({ flag: "liveRoleEnabled", label: "Live Role", emoji: "🔴", mee6: "Twitch Alerts › live-streaming role", configCommand: "/liverole", default: DEFAULT_MODULE_SETTINGS.liverole }),
   counting: Object.freeze({ flag: "countingEnabled", label: "Counting", emoji: "🔢", mee6: "(ours, beyond MEE6)", configCommand: "/counting", default: DEFAULT_MODULE_SETTINGS.counting }),
+  autotime: Object.freeze({ flag: "autoTimeEnabled", label: "Auto Timestamps", emoji: "🕒", mee6: "(ours, beyond MEE6)", configCommand: "/autotime", default: DEFAULT_MODULE_SETTINGS.autotime }),
 });
 
 export const MODULE_NAMES = Object.freeze(Object.keys(MODULES));

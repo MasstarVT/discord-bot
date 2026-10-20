@@ -41,6 +41,8 @@ export const LIMITS = Object.freeze({
   ECONOMY_GAME_CHANNELS: 25,   // GuildSettings.economyGameChannelIds
   ECONOMY_BOOSTS: 10,          // EconomyBoost rows per guild (MEE6 "up to 10")
   TIMEZONE_ROLES: 25,          // GuildSettings.timezoneRoles (/settings timezone-role)
+  AUTOTIME_IGNORED_CHANNELS: 100, // GuildSettings.autoTimeIgnoredChannelIds (/autotime ignore)
+  AUTOTIME_PER_MESSAGE: 3,     // times answered in one message (Auto Timestamps)
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────
@@ -73,6 +75,7 @@ export const DEFAULT_MODULE_SETTINGS = Object.freeze({
   search: true,
   liverole: false,
   counting: false,
+  autotime: false,
 });
 
 export const XP_DEFAULTS = {

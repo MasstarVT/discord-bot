@@ -4,7 +4,7 @@ export const HOOK_ORDER = Object.freeze({
   "ready": Object.freeze([]),
   "guildReady": Object.freeze(["invites","moderation","levels","temp-voice","stat-channels","birthdays","feeds","liverole","reminders","bot-joins"]),
   "guildDelete": Object.freeze([]),
-  "messageCreate": Object.freeze(["automod","counting","logging","custom-commands","levels","achievements","automations","custom-commands:triggers","translation-fixes"]),
+  "messageCreate": Object.freeze(["automod","counting","logging","custom-commands","levels","achievements","automations","custom-commands:triggers","translation-fixes","autotime"]),
   "messageUpdate": Object.freeze(["logging","automod","automations","starboard"]),
   "messageDelete": Object.freeze(["logging","automations","starboard","giveaways","polls","reaction-roles","embeds","counting"]),
   "messageDeleteBulk": Object.freeze(["logging","starboard","polls","giveaways"]),
