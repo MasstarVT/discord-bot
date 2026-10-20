@@ -678,13 +678,18 @@ const LOGGING_GROUPS = [
     id: 'events',
     title: 'Logged events',
     fields: [
+      // Checked = logged, but the column keeps the switched-off list (as /logging writes it), so an event added later
+      // starts logged.
       {
-        field: 'disabledLogEvents', type: 'multiEnum', label: 'Switched-off events', default: [],
-        description: 'Checked events are not logged.',
+        field: 'logEvents', type: 'multiEnum', label: 'Logged events', default: [...LOG_EVENT_KEYS],
+        description: 'Checked events are logged. Unchecked ones are not.',
         options: LOG_EVENT_KEYS.map((value) => ({ value, label: LOG_EVENTS[value] })),
-        read: (row) => (Array.isArray(row?.disabledLogEvents)
-          ? row.disabledLogEvents.filter((k) => Object.hasOwn(LOG_EVENTS, k)) : []),
+        read: (row) => {
+          const off = Array.isArray(row?.disabledLogEvents) ? row.disabledLogEvents : [];
+          return LOG_EVENT_KEYS.filter((k) => !off.includes(k));
+        },
         normalize: (list) => LOG_EVENT_KEYS.filter((k) => list.includes(k)),
+        write: (value, draft) => { draft.disabledLogEvents = LOG_EVENT_KEYS.filter((k) => !value.includes(k)); },
       },
     ],
   },
@@ -1227,12 +1232,13 @@ export const SETTINGS_FIELDS = Object.freeze(Object.fromEntries([
   ...FLAG_FIELDS, ...groupFields(GENERAL_GROUPS), ...MODULE_NAMES.flatMap((key) => groupFields(MODULE_GROUPS[key])),
 ].map((d) => [d.field, d])));
 
-/** field -> the GuildSettings column it is stored in (a virtual field names its JSON column). */
+/** field -> the GuildSettings column it is stored in (a virtual field names its JSON column, logEvents its inverse list). */
 export const SETTINGS_COLUMNS = Object.freeze(Object.fromEntries(Object.keys(SETTINGS_FIELDS).map((field) => [field,
   Object.hasOwn(AUTOMOD_LIST_KEYS, field) || field === HONEYPOT_FIELD.field || Object.values(RULE_FIELDS).some((d) => d.field === field)
     ? 'automodConfig'
     : field === 'captchaVerifyButton' ? 'captchaTemplate'
-      : field])));
+      : field === 'logEvents' ? 'disabledLogEvents'
+        : field])));
 
 /** Columns stored as Json (null clears them with Prisma.DbNull). */
 export const JSON_COLUMNS = Object.freeze(['automodConfig', 'infractionEscalation', 'welcomeEmbed', 'welcomeCardStyle',

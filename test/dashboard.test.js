@@ -253,6 +253,10 @@ describe('settings registry', () => {
       const column = SETTINGS_COLUMNS[field];
       const col = columns.get(column);
       assert.ok(col, `${field} -> ${column} is not a GuildSettings column`);
+      if (field === 'logEvents') {
+        assert.ok(col.list && col.type === 'String' && desc.type === 'multiEnum', 'logEvents: the inverse of a String list');
+        continue;
+      }
       if (column !== field) {
         assert.equal(col.type, 'Json', `${field}: a virtual field must live in a Json column`);
         continue;
@@ -379,7 +383,8 @@ describe('settings registry', () => {
     assert.equal(v.welcomeCardStyle.enabled, false, 'the legacy card flag');
     assert.equal(v.goodbyeMessage, '');
     assert.equal(v.levelUpMessage, fields.DEFAULT_TEXTS.levelUpMessage);
-    assert.deepEqual(v.disabledLogEvents, ['voiceJoin', 'messageDelete']);
+    assert.deepEqual(v.logEvents, Object.keys(fields.LOG_EVENTS).filter((k) => k !== 'voiceJoin' && k !== 'messageDelete'),
+      'every known event except the switched-off ones');
     assert.equal(v.timezone, 'UTC');
     assert.equal(v.currencyEmoji, '🪙');
     assert.equal(v.automodRuleCaps.action, 'kick');
@@ -399,7 +404,7 @@ describe('settings registry', () => {
       changes: {
         timezone: 'america/new_york', customPrefix: 'OFF', embedColor: '#5865f2', xpMultiplier: 1.234,
         automodBadWords: ['  BAD   word ', 'bad word', 'ｆｕｌｌ'], automodBlockedDomains: ['https://www.Example.com/x', 'example.com'],
-        disabledLogEvents: ['voiceJoin', 'messageDelete'], currencyName: 'gold    bars', levelUpMessage: '  ', birthdayMessage: '  Hi {user}  ',
+        logEvents: ['voiceJoin', 'messageDelete'], currencyName: 'gold    bars', levelUpMessage: '  ', birthdayMessage: '  Hi {user}  ',
         welcomeMessage: '  keep spaces  ', welcomeEmbed: { title: '', description: '' },
         welcomeCardStyle: { enabled: true, background: '#AABBCC', backgroundUrl: null, textColor: null, accentColor: null, overlayOpacity: 0.456 },
         xpBoostRoles: [{ roleId: RL.low, multiplier: 1.255 }],
@@ -414,7 +419,9 @@ describe('settings registry', () => {
     assert.equal(c.xpMultiplier, 1.23);
     assert.deepEqual(c.automodBadWords, ['bad word', 'full']);
     assert.deepEqual(c.automodBlockedDomains, ['example.com']);
-    assert.deepEqual(c.disabledLogEvents, ['messageDelete', 'voiceJoin']);
+    assert.deepEqual(c.logEvents, ['messageDelete', 'voiceJoin']);
+    assert.deepEqual(fields.toStoredChanges({ logEvents: c.logEvents }).disabledLogEvents,
+      Object.keys(fields.LOG_EVENTS).filter((k) => k !== 'messageDelete' && k !== 'voiceJoin'), 'stored as the switched-off list');
     assert.equal(c.currencyName, 'gold bars');
     assert.equal(c.levelUpMessage, null, 'blank = the default text');
     assert.equal(c.birthdayMessage, 'Hi {user}');
@@ -460,7 +467,7 @@ describe('settings registry', () => {
       [{ automodRuleInvites: { action: 'kick', threshold: 3 } }, 'automodRuleInvites.threshold'],
       [{ automodRuleSpam: { action: 'explode' } }, 'automodRuleSpam.action'],
       [{ automodRuleSpam: { timeoutSeconds: 59 } }, 'automodRuleSpam.timeoutSeconds'],
-      [{ disabledLogEvents: ['messageDelete', 'nope'] }, 'disabledLogEvents.1'],
+      [{ logEvents: ['messageDelete', 'nope'] }, 'logEvents.1'],
       [{ infractionEscalation: [tier({ action: 'KICK', durationSeconds: 60 })] }, 'infractionEscalation.0.durationSeconds'],
       [{ infractionEscalation: [tier({ durationSeconds: null })] }, 'infractionEscalation.0.durationSeconds'],
       [{ infractionEscalation: [tier({ durationSeconds: 2_419_201 })] }, 'infractionEscalation.0.durationSeconds'],
@@ -2894,7 +2901,7 @@ describe('settingsBridge.writeSettings (database)', { skip: DB ? false : 'TEST_D
       Object.assign(changes, {
         welcomeChannelId: CH.text, goodbyeChannelId: CH.text, levelUpChannelId: CH.news, achievementChannelId: CH.text,
         captchaRoleId: RL.low, liveRoleId: RL.mid, muteRoleId: RL.mid, embedColor: 0x123456, customPrefix: '?',
-        disabledLogEvents: ['voiceJoin'], xpBoostRoles: [{ roleId: RL.mid, multiplier: 2.5 }], automodBadWords: ['nope'],
+        logEvents: ['voiceJoin'], xpBoostRoles: [{ roleId: RL.mid, multiplier: 2.5 }], automodBadWords: ['nope'],
         infractionEscalation: [{ warnCount: 2, withinSeconds: 86_400, action: 'MUTE', durationSeconds: null }],
         economyGameChannelIds: [CH.text], welcomeDmEmbed: { title: 'DM' }, modVisibility: 'ANONYMOUS', xpMultiplier: 1.5,
       });
