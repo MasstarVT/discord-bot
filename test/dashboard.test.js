@@ -70,8 +70,11 @@ function baseEnv(extra = {}) {
   };
 }
 
+// With \n line ends: a Windows checkout (core.autocrlf) has \r\n, which the line parsers below would not match.
+const readSchema = () => readFileSync(join(ROOT, 'prisma/schema.prisma'), 'utf8').replace(/\r\n?/g, '\n');
+
 function schemaBooleans() {
-  const schema = readFileSync(join(ROOT, 'prisma/schema.prisma'), 'utf8');
+  const schema = readSchema();
   const model = /^model GuildSettings \{([\s\S]*?)^\}/m.exec(schema)?.[1] ?? '';
   const out = new Map();
   for (const m of model.matchAll(/^\s*(\w+)\s+Boolean(\?)?(?:\s+@default\((true|false)\))?/gm)) {
@@ -197,7 +200,7 @@ describe('catalog', () => {
 
 /** The GuildSettings columns of prisma/schema.prisma: name -> { type, list, optional, default (raw text) }, and the enums. */
 function schemaModel() {
-  const text = readFileSync(join(ROOT, 'prisma/schema.prisma'), 'utf8');
+  const text = readSchema();
   const enums = new Map();
   for (const m of text.matchAll(/^enum (\w+) \{([\s\S]*?)^\}/gm)) enums.set(m[1], m[2].split(/\s+/).filter((w) => /^\w+$/.test(w)));
   const models = new Set([...text.matchAll(/^model (\w+) \{/gm)].map((m) => m[1]));
