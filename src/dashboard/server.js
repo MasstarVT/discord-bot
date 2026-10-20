@@ -17,6 +17,7 @@ import {
   parseCookies, sealSession, serializeCookie, statesMatch, unsealSession,
 } from './auth.js';
 import { buildCatalog } from './catalog.js';
+import { renderLanding } from './landing.js';
 import { normalizeIp } from './config.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
 import { FieldError, checkRefs, collectAssignableRoles, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
@@ -46,19 +47,25 @@ const SNOWFLAKE_RE = /^\d{17,20}$/;
 const ACTION_ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
 /** Channels tried for a bot-owner invite before giving up. */
 const OWNER_INVITE_ATTEMPTS = 5;
-const LOGIN_FAILED = '/?error=login_failed';
+/** Where the dashboard app lives (the landing page has `/`). */
+const DASHBOARD_PATH = '/dashboard';
+const LOGIN_FAILED = `${DASHBOARD_PATH}?error=login_failed`;
 const STATE_PATH = '/auth';
 
 /** The only files served from PUBLIC_DIR: request path -> [file name, content type]. */
 const STATIC_FILES = new Map([
-  ['/', ['index.html', 'text/html; charset=utf-8']],
+  ['/', ['landing.html', 'text/html; charset=utf-8']],
+  [DASHBOARD_PATH, ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
+  ['/landing.js', ['landing.js', 'text/javascript; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/lib.js', ['lib.js', 'text/javascript; charset=utf-8']],
   ['/forms.js', ['forms.js', 'text/javascript; charset=utf-8']],
   ['/collections.js', ['collections.js', 'text/javascript; charset=utf-8']],
   ['/embed-editor.js', ['embed-editor.js', 'text/javascript; charset=utf-8']],
+  ['/tokens.css', ['tokens.css', 'text/css; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
+  ['/landing.css', ['landing.css', 'text/css; charset=utf-8']],
   ['/forms.css', ['forms.css', 'text/css; charset=utf-8']],
   ['/collections.css', ['collections.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
@@ -115,8 +122,8 @@ export function etagMatches(header, etags) {
 }
 
 export const SECURITY_HEADERS = Object.freeze({
-  'Content-Security-Policy': "default-src 'self'; img-src 'self' https://cdn.discordapp.com data:; style-src 'self'; "
-    + "script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+  'Content-Security-Policy': "default-src 'self'; img-src 'self' https://cdn.discordapp.com data:; style-src 'self' https://fonts.googleapis.com; "
+    + "font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'same-origin',
   'X-Frame-Options': 'DENY',
@@ -454,7 +461,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     }, sessionKey);
     ctx.cookies.push(serializeCookie(SESSION_COOKIE, sealed, { maxAge: (exp - issued) / 1000, secure }));
     logger.info(`Dashboard login: ${forLog(user.username)} (${user.id})`);
-    return redirect(ctx, '/');
+    return redirect(ctx, DASHBOARD_PATH);
   }
 
   function logout(ctx) {
@@ -1038,7 +1045,10 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   function staticEntry(file, type) {
     let entry = staticEntries.get(file);
     if (!entry) {
-      const transform = LEGAL_PAGES.has(file) ? (text) => text.replaceAll(CONTACT_MARKER, contactHtml(config.contact)) : undefined;
+      let transform;
+      if (LEGAL_PAGES.has(file)) transform = (text) => text.replaceAll(CONTACT_MARKER, contactHtml(config.contact));
+      // The landing page's module table, module codes and invite links come from the catalog and the bot's client id.
+      else if (file === 'landing.html') transform = (text) => renderLanding(text, { inviteUrl: discord.inviteUrl(), contact: config.contact });
       entry = loadStaticEntry(join(publicDir, file), type, transform);
       staticEntries.set(file, entry);
       entry.catch(() => staticEntries.delete(file)); // missing or unreadable: look again next time

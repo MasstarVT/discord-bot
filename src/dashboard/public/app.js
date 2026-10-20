@@ -1,9 +1,12 @@
-// Bot Dashboard: a dependency-free single-page UI (vanilla ES module, no build step).
+// Frost.Byte dashboard: a dependency-free single-page UI (vanilla ES module, no build step), served at /dashboard.
 //
 // Layout of this file (shared DOM helpers, the API client, toasts and small components live in lib.js;
 // field controls in forms.js, record lists and the embed editor in collections.js / embed-editor.js):
-//   constants, state, theme, the per-guild save queue, shell, screens (picker, overview, module and general
+//   constants, state, the per-guild save queue, shell, screens (picker, overview, module and general
 //   settings pages with the unsaved-changes bar), router, start().
+//
+// Module names, codes, descriptions and categories all come from /api/catalog (src/dashboard/catalog.js), so a module
+// added there gets its tile, card, switch and sidebar row here without any change to this file.
 //
 // Nothing here touches the DOM, window or storage at import time (the module is
 // import-checked in plain Node); everything runs from start() at the bottom.
@@ -19,8 +22,7 @@ import {
 import { createForm } from './forms.js';
 import { mountCollection } from './collections.js';
 
-const APP_NAME = 'Bot Dashboard';
-const THEME_KEY = 'bot-dashboard-theme';
+const APP_NAME = 'Frost.Byte';
 const SAVE_DEBOUNCE_MS = 120; // lets a double-click on one switch collapse into a no-op
 const SAVED_TOAST_DELAY_MS = 350; // a burst of saves shows one "Saved" toast
 
@@ -110,62 +112,6 @@ function normalizeCatalog(raw) {
   const orphans = pick(Object.keys(modules));
   if (orphans.length) categories.push({ id: 'other', label: 'Other', description: '', modules: orphans });
   return { categories };
-}
-
-/* ------------------------------------------------------------------ */
-/* Theme                                                                */
-/* ------------------------------------------------------------------ */
-
-function readStoredTheme() {
-  try {
-    const value = localStorage.getItem(THEME_KEY);
-    return value === 'light' || value === 'dark' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeTheme(theme) {
-  try { localStorage.setItem(THEME_KEY, theme); } catch { /* private mode: the choice just will not persist */ }
-}
-
-function applyTheme(theme) {
-  if (theme) document.documentElement.setAttribute('data-theme', theme);
-  else document.documentElement.removeAttribute('data-theme');
-}
-
-function currentTheme() {
-  const explicit = document.documentElement.getAttribute('data-theme');
-  if (explicit === 'light' || explicit === 'dark') return explicit;
-  const prefersLight = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: light)').matches;
-  return prefersLight ? 'light' : 'dark';
-}
-
-function paintThemeButton(btn) {
-  const dark = currentTheme() === 'dark';
-  const label = dark ? 'Switch to light theme' : 'Switch to dark theme';
-  btn.setAttribute('aria-label', label);
-  btn.setAttribute('title', label);
-  btn.replaceChildren(icon(dark ? 'sun' : 'moon'));
-}
-
-function syncThemeButtons() {
-  for (const btn of document.querySelectorAll('.theme-toggle')) paintThemeButton(btn);
-}
-
-function themeButton() {
-  const btn = h('button', {
-    type: 'button',
-    class: 'icon-btn theme-toggle',
-    onclick: () => {
-      const next = currentTheme() === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      storeTheme(next);
-      syncThemeButtons();
-    },
-  });
-  paintThemeButton(btn);
-  return btn;
 }
 
 /** True (and the login screen is shown) when the error is a 401. */
@@ -378,44 +324,62 @@ async function logout(btn) {
   location.reload();
 }
 
-function buildTopbar(menuBtn) {
+/** The Frost.Byte wordmark, linking to the landing page. */
+function brand(tag = null) {
+  return h(
+    'a',
+    { class: 'brand', href: '/' },
+    h('img', { class: 'brand-mark', src: '/favicon.svg', alt: '', width: '28', height: '28' }),
+    h('span', { class: 'brand-name' }, 'Frost', h('span', { class: 'brand-dot' }, '.'), 'Byte'),
+    tag ? h('span', { class: 'brand-tag' }, tag) : null,
+  );
+}
+
+/** The app bar's server switcher: the current server, opening the server picker. Hidden until a server is set. */
+function serverSwitcher() {
+  const el = h('a', { class: 'switcher', href: '#/', hidden: true });
+  return {
+    el,
+    set(guild) {
+      el.replaceChildren(
+        avatar(guild.name, guild.iconUrl, { size: 'xs' }),
+        h('span', { class: 'switcher-name' }, guild.name),
+        h('span', { class: 'sr-only' }, ', switch server'),
+        icon('chevron'),
+      );
+      el.hidden = false;
+    },
+  };
+}
+
+function buildTopbar(menuBtn, switcher) {
   const user = state.user;
   const name = user ? user.globalName || user.username || 'Account' : '';
   return h(
     'header',
     { class: 'topbar' },
     menuBtn,
-    h(
-      'a',
-      { class: 'brand', href: '#/' },
-      h('img', { class: 'brand-mark', src: '/favicon.svg', alt: '', width: '28', height: '28' }),
-      h('span', { class: 'brand-name' }, APP_NAME),
-    ),
+    brand(switcher ? null : 'Dashboard'),
+    switcher ? switcher.el : null,
     h('span', { class: 'topbar-spacer' }),
-    themeButton(),
     user
       ? h('div', { class: 'user' }, avatar(name, user.avatarUrl, { size: 'sm', round: true }), h('span', { class: 'user-name' }, name))
       : null,
     user
-      ? h(
-        'button',
-        { type: 'button', class: 'btn btn-ghost btn-sm', onclick: (event) => logout(event.currentTarget) },
-        icon('logout'),
-        'Log out',
-      )
+      ? h('button', { type: 'button', class: 'link-btn', onclick: (event) => logout(event.currentTarget) }, 'Log out')
       : null,
   );
 }
 
 /**
- * Logged-in page frame. With `sidebar` it also builds the server/section sidebar,
+ * Logged-in page frame. With `sidebar` it also builds the server switcher and the module sidebar,
  * which turns into a slide-in drawer under 900px.
  */
 function buildShell({ sidebar = false } = {}) {
   let drawerOpen = false;
   const main = h('main', { class: 'main', id: 'main', tabindex: '-1' });
-  const serversSlot = h('div', { class: 'side-block' });
   const sectionsSlot = h('div', { class: 'side-block' });
+  const switcher = sidebar ? serverSwitcher() : null;
   let menuBtn = null;
   let closeBtn = null;
   let aside = null;
@@ -438,7 +402,7 @@ function buildShell({ sidebar = false } = {}) {
       {
         type: 'button',
         class: 'icon-btn menu-btn',
-        'aria-label': 'Servers and sections',
+        'aria-label': 'Modules',
         'aria-controls': 'sidebar',
         'aria-expanded': 'false',
         onclick: () => setDrawer(!drawerOpen),
@@ -451,7 +415,7 @@ function buildShell({ sidebar = false } = {}) {
       {
         class: 'sidebar',
         id: 'sidebar',
-        'aria-label': 'Servers and sections',
+        'aria-label': 'Modules',
         onkeydown: (event) => {
           if (event.key === 'Escape' && drawerOpen) setDrawer(false);
         },
@@ -460,7 +424,6 @@ function buildShell({ sidebar = false } = {}) {
         },
       },
       h('div', { class: 'sidebar-head' }, h('span', {}, 'Menu'), closeBtn),
-      serversSlot,
       sectionsSlot,
     );
     backdrop = h('div', { class: 'drawer-backdrop', onclick: () => setDrawer(false) });
@@ -470,19 +433,25 @@ function buildShell({ sidebar = false } = {}) {
   const footer = h(
     'footer',
     { class: 'footer' },
-    sidebar ? 'Module switches save as you flip them. Other settings save with the Save changes button.' : 'Choose a server to configure the bot.',
+    h(
+      'span',
+      { class: 'footer-text' },
+      sidebar
+        ? 'Module switches save as you flip them. Other settings save with Save changes.'
+        : "Don't see a server? You need the Manage Server permission there.",
+    ),
     legalLinks('footer-legal'),
   );
   const root = h(
     'div',
     { class: 'app' },
     skip,
-    buildTopbar(menuBtn),
+    buildTopbar(menuBtn, switcher),
     h('div', { class: sidebar ? 'layout has-sidebar' : 'layout' }, aside, h('div', { class: 'content' }, main, footer)),
     backdrop,
   );
 
-  const shell = { root, main, serversSlot, sectionsSlot, setDrawer };
+  const shell = { root, main, sectionsSlot, setDrawer, setGuild: (guild) => switcher && switcher.set(guild) };
   activeShell = shell;
   return shell;
 }
@@ -540,20 +509,11 @@ function renderLoggedOut({ notice = '', error = false } = {}) {
   if (error) banners.push(banner('error', 'Login failed, please try again.'));
   if (notice) banners.push(banner('info', notice));
 
-  const previewRow = (on) =>
-    h(
-      'div',
-      { class: 'preview-row' },
-      skeletonBlock('preview-emoji'),
-      h('div', { class: 'preview-lines' }, skeletonBlock('skeleton-line w-50'), skeletonBlock('skeleton-line w-90')),
-      h('span', { class: on ? 'mini-switch is-on' : 'mini-switch' }),
-    );
-
   mount(
     h(
       'div',
       { class: 'hero-screen' },
-      h('div', { class: 'hero-theme' }, themeButton()),
+      h('header', { class: 'hero-bar' }, brand('Dashboard')),
       h(
         'main',
         { class: 'hero', id: 'main', tabindex: '-1' },
@@ -561,18 +521,17 @@ function renderLoggedOut({ notice = '', error = false } = {}) {
         h(
           'div',
           { class: 'hero-card' },
-          h('img', { class: 'hero-logo', src: '/favicon.svg', alt: '', width: '64', height: '64' }),
-          h('h1', { class: 'hero-title' }, 'Manage your server'),
+          h('p', { class: 'eyebrow' }, 'FROST.BYTE DASHBOARD'),
+          h('h1', { class: 'hero-title' }, 'Log in to manage your server'),
           h(
             'p',
             { class: 'hero-lead' },
-            'Log in with Discord to configure every module, channel, role and message of the bot for any server you manage.',
+            "Log in with Discord to change every module's channels, roles, messages and limits on the servers you manage.",
           ),
           h('a', { class: 'btn btn-primary btn-lg hero-cta', href: '/auth/login' }, 'Log in with Discord'),
           h('p', { class: 'hero-fine' }, 'We only read your profile and the list of your servers.'),
           legalLinks('hero-legal'),
         ),
-        h('div', { class: 'hero-preview', 'aria-hidden': 'true' }, previewRow(true), previewRow(true), previewRow(false)),
       ),
     ),
   );
@@ -584,7 +543,7 @@ function renderBootError(err) {
     h(
       'div',
       { class: 'hero-screen' },
-      h('div', { class: 'hero-theme' }, themeButton()),
+      h('header', { class: 'hero-bar' }, brand('Dashboard')),
       h(
         'main',
         { class: 'hero', id: 'main' },
@@ -615,13 +574,13 @@ function pickerSkeleton() {
 
 function serverIdentity(guild, meta) {
   return h(
-    'span',
+    'div',
     { class: 'server-identity' },
-    avatar(guild.name, guild.iconUrl, { size: 'md' }),
+    avatar(guild.name, guild.iconUrl, { size: 'lg' }),
     h(
-      'span',
+      'div',
       { class: 'server-text' },
-      h('span', { class: 'server-name' }, guild.name),
+      h('h3', { class: 'server-name' }, guild.name),
       h('span', { class: 'server-meta' }, meta),
       addedByLine(guild),
     ),
@@ -691,56 +650,51 @@ function serverCard(guild) {
   if (guild.ownerAccess && guild.member === false) return ownerJoinCard(guild);
   if (guild.botPresent) {
     return h(
-      'a',
-      { class: 'card server-card', href: `#/guild/${encodeURIComponent(guild.id)}` },
-      serverIdentity(guild, guild.ownerAccess ? 'Bot owner access' : 'Bot is in this server'),
-      h('span', { class: 'server-action' }, 'Manage', icon('forward')),
+      'div',
+      { class: 'card server-card' },
+      serverIdentity(guild, guild.ownerAccess ? 'Bot owner access' : 'Manage Server'),
+      h(
+        'a',
+        { class: 'btn btn-primary server-manage', href: `#/guild/${encodeURIComponent(guild.id)}` },
+        'Manage',
+        h('span', { class: 'sr-only' }, ` ${guild.name}`),
+        icon('forward'),
+      ),
     );
   }
   const invite = safeHref(guild.inviteUrl);
   return h(
     'div',
     { class: 'card server-card is-dim' },
-    serverIdentity(guild, 'Bot not added yet'),
+    serverIdentity(guild, 'Manage Server'),
     invite
       ? h(
         'a',
-        { class: 'btn btn-primary btn-sm', href: invite, target: '_blank', rel: 'noopener' },
+        { class: 'btn btn-secondary server-manage', href: invite, target: '_blank', rel: 'noopener' },
         icon('plus'),
-        'Add bot',
+        'Add Frost.Byte',
         h('span', { class: 'sr-only' }, ` to ${guild.name}`),
       )
       : null,
   );
 }
 
-/** The bot owner's part of the picker: the servers the bot is in that are not in their own list. */
-function ownerPickerSection(ownerGuilds) {
-  if (!ownerGuilds || !ownerGuilds.length) return null;
-  return h(
-    'section',
-    { class: 'owner-servers', 'aria-label': 'All servers the bot is in' },
-    h(
-      'div',
-      { class: 'page-head' },
-      h('h2', { class: 'page-title' }, 'All servers the bot is in'),
-      h('p', { class: 'page-sub' }, 'Bot owner access: you can manage these even where you are not an admin or a member.'),
-    ),
-    h('div', { class: 'server-grid' }, ownerGuilds.map(serverCard)),
-  );
-}
-
-function renderPickerBody(body, guilds) {
-  const head = h(
-    'div',
-    { class: 'page-head' },
-    h('h1', { class: 'page-title' }, 'Your servers'),
-    h('p', { class: 'page-sub' }, 'Choose a server to manage its bot settings.'),
-  );
-  const owned = ownerPickerSection(state.ownerGuilds);
-  if (!guilds.length && !owned) {
+/**
+ * The picker's lists: servers the bot is in, servers it is not in yet and (bot owner only) every other server the bot
+ * is in. Returns the filter for the search box, or null when there is nothing to list.
+ */
+function renderPickerBody(body, guilds, query = '') {
+  const groups = [
+    { label: 'FROST.BYTE IS HERE', guilds: guilds.filter((g) => g.botPresent) },
+    { label: 'NOT ADDED YET', guilds: guilds.filter((g) => !g.botPresent) },
+    {
+      label: 'BOT OWNER ACCESS',
+      note: 'Every other server the bot is in. You can manage these even where you are not an admin or a member.',
+      guilds: state.ownerGuilds || [],
+    },
+  ].filter((g) => g.guilds.length > 0);
+  if (!groups.length) {
     body.replaceChildren(
-      head,
       statusCard({
         tone: 'accent',
         iconName: 'server',
@@ -750,12 +704,41 @@ function renderPickerBody(body, guilds) {
         actions: [retryButton(() => showPicker())],
       }),
     );
-    return;
+    return null;
   }
-  const mine = guilds.length
-    ? h('div', { class: 'server-grid' }, guilds.map(serverCard))
-    : h('p', { class: 'page-sub' }, 'You do not manage any servers yourself.');
-  body.replaceChildren(head, mine, ...(owned ? [owned] : []));
+  const sections = groups.map((group) => {
+    const count = h('span', { class: 'num' });
+    const cards = group.guilds.map((guild) => ({ name: String(guild.name || '').toLowerCase(), el: serverCard(guild) }));
+    const el = h(
+      'section',
+      { class: 'picker-section', 'aria-label': group.label },
+      h('h2', { class: 'section-label' }, `${group.label} · `, count),
+      group.note ? h('p', { class: 'page-sub' }, group.note) : null,
+      h('div', { class: 'server-grid' }, cards.map((c) => c.el)),
+    );
+    return { el, count, cards };
+  });
+  const noMatch = h('div', { class: 'empty-state', role: 'status', hidden: true });
+  function filter(text) {
+    const q = String(text || '').trim().toLowerCase();
+    let shown = 0;
+    for (const section of sections) {
+      let n = 0;
+      for (const card of section.cards) {
+        const hit = !q || card.name.includes(q);
+        card.el.hidden = !hit;
+        if (hit) n++;
+      }
+      section.count.textContent = String(n);
+      section.el.hidden = n === 0;
+      shown += n;
+    }
+    noMatch.hidden = shown > 0;
+    noMatch.textContent = shown > 0 ? '' : `No servers match “${String(text).trim()}”. Check the spelling, or make sure you have Manage Server there.`;
+  }
+  body.replaceChildren(...sections.map((s) => s.el), noMatch);
+  filter(query);
+  return filter;
 }
 
 function renderPickerError(body, err) {
@@ -780,20 +763,54 @@ async function showPicker() {
   mount(shell.root);
   window.scrollTo({ top: 0, behavior: 'instant' });
 
-  const body = h('div', { class: 'picker' });
+  let filter = null;
+  const search = h('input', {
+    type: 'search',
+    id: 'server-search',
+    class: 'search-input',
+    placeholder: 'Server name',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    oninput: () => {
+      if (filter) filter(search.value);
+    },
+  });
+  const lists = h('div', { class: 'picker-lists' });
+  const body = h(
+    'div',
+    { class: 'picker' },
+    h(
+      'div',
+      { class: 'page-head picker-head' },
+      h(
+        'div',
+        { class: 'page-head-text' },
+        h('h1', { class: 'page-title page-title-xl' }, 'Pick a server'),
+        h('p', { class: 'page-sub' }, 'These are the servers where you have Manage Server. Add Frost.Byte to a server before you change its settings.'),
+      ),
+      h(
+        'div',
+        { class: 'picker-search' },
+        h('label', { class: 'field-label', for: 'server-search' }, 'Search servers'),
+        h('div', { class: 'search' }, icon('search'), search),
+      ),
+    ),
+    lists,
+  );
   shell.main.append(body);
-  if (state.guilds) renderPickerBody(body, state.guilds);
-  else body.append(h('div', { class: 'page-head' }, skeletonBlock('boot-heading')), pickerSkeleton());
+  activeSearch = search;
+  if (state.guilds) filter = renderPickerBody(lists, state.guilds, search.value);
+  else lists.append(pickerSkeleton());
   shell.main.focus({ preventScroll: true });
 
   try {
     const guilds = await loadGuilds({ force: true });
     if (token !== routeToken) return;
-    renderPickerBody(body, guilds);
+    filter = renderPickerBody(lists, guilds, search.value);
   } catch (err) {
     if (token !== routeToken || handleAuthError(err)) return;
     if (state.guilds) toast(describeError(err).message, { kind: 'error', ms: TOAST_ERROR_MS });
-    else renderPickerError(body, err);
+    else renderPickerError(lists, err);
   }
 }
 
@@ -882,13 +899,8 @@ async function showGuild(guildId, section) {
   mount(shell.root);
   window.scrollTo({ top: 0, behavior: 'instant' });
   shell.main.append(guildSkeleton());
-  shell.serversSlot.append(h('h2', { class: 'side-title' }, 'Servers'), sidebarSkeleton());
-  shell.sectionsSlot.append(h('h2', { class: 'side-title' }, 'Sections'), sidebarSkeleton());
+  shell.sectionsSlot.append(sidebarSkeleton());
 
-  const guildsLoaded = loadGuilds().then(
-    (guilds) => ({ guilds }),
-    () => ({ guilds: null }),
-  );
   const since = getStore(guildId).mark();
   const [settingsRes, catalogRes] = await Promise.allSettled([
     api(`/api/guilds/${encodeURIComponent(guildId)}/settings`),
@@ -909,10 +921,6 @@ async function showGuild(guildId, section) {
   document.title = `${view.guildName} · ${APP_NAME}`;
   shell.main.focus({ preventScroll: true });
   if (section) requestAnimationFrame(() => view.goTo(section));
-
-  guildsLoaded.then(({ guilds }) => {
-    if (token === routeToken) view.renderServers(guilds);
-  });
 }
 
 /** Labels of a module's editable fields (not the quick toggles, which the card lists itself), for the overview search. */
@@ -926,121 +934,58 @@ function fieldLabels(mod) {
   return labels.filter(Boolean).join(' ');
 }
 
-/* ---- sidebar pieces shared by the overview and the settings pages ---- */
+/* ---- the sidebar shared by the overview and the settings pages ---- */
 
 const guildHref = (guildId) => `#/guild/${encodeURIComponent(guildId)}`;
 const modulePageHref = (guildId, key) => `${guildHref(guildId)}/module/${encodeURIComponent(key)}`;
+/** The overview, scrolled to its "Server settings" card. */
+const generalHref = (guildId) => `${guildHref(guildId)}/${GENERAL_KEY}`;
 
-function serverListItem(g, guildId) {
-  if (g.botPresent) {
-    const active = g.id === guildId;
-    return h(
-      'li',
-      {},
-      h(
-        'a',
-        {
-          class: active ? 'side-item is-active' : 'side-item',
-          href: guildHref(g.id),
-          'aria-current': active ? 'page' : null,
-        },
-        avatar(g.name, g.iconUrl, { size: 'xs' }),
-        h('span', { class: 'side-name' }, g.name),
-      ),
-    );
-  }
-  const invite = safeHref(g.inviteUrl);
-  const inner = [
-    avatar(g.name, g.iconUrl, { size: 'xs' }),
-    h('span', { class: 'side-name' }, g.name),
-    invite ? h('span', { class: 'side-plus' }, icon('plus')) : null,
-    h('span', { class: 'sr-only' }, invite ? ' (add bot)' : ' (bot not added)'),
-  ];
-  return h(
-    'li',
-    {},
-    invite
-      ? h('a', { class: 'side-item is-dim', href: invite, target: '_blank', rel: 'noopener', title: 'Add the bot to this server' }, inner)
-      : h('span', { class: 'side-item is-dim' }, inner),
-  );
-}
-
-function renderServerList(slot, guilds, guildId) {
-  slot.replaceChildren(
-    h('h2', { class: 'side-title' }, 'Servers'),
-    guilds
-      ? h('nav', { 'aria-label': 'Servers' }, h('ul', { class: 'side-list server-list' }, guilds.map((g) => serverListItem(g, guildId))))
-      : h('p', { class: 'side-note' }, 'Could not load your servers.'),
-    ...(guilds && state.ownerGuilds?.length
-      ? [
-        h('h2', { class: 'side-title side-title-gap' }, 'Bot owner'),
-        h('nav', { 'aria-label': 'All servers the bot is in' },
-          h('ul', { class: 'side-list server-list' }, state.ownerGuilds.map((g) => serverListItem(g, guildId)))),
-      ]
-      : []),
-    h('ul', { class: 'side-list' }, h('li', {}, h('a', { class: 'side-item', href: '#/' }, icon('back'), h('span', { class: 'side-name' }, 'All servers')))),
-  );
-}
-
-/** "This server": the overview and the general settings page. `active` is 'overview' or 'general'. */
-function serverNav(guildId, active) {
-  const item = (id, href, iconName, label) =>
+/**
+ * The sidebar: Overview and Server settings, then every module grouped by category (from the catalog) with a dot
+ * showing whether it is on; the current page is highlighted. `active` is 'overview', 'general' or null.
+ * Returns { el, paint } (paint re-reads the on/off state from the store).
+ */
+function buildSideNav({ guildId, model, store, currentKey = null, active = null }) {
+  const page = (id, href, iconName, label) =>
     h(
       'li',
       {},
       h(
         'a',
-        {
-          class: active === id ? (id === 'overview' ? 'side-item is-current' : 'side-item is-active') : 'side-item',
-          href,
-          'aria-current': active === id ? 'page' : null,
-        },
+        { class: active === id ? 'side-item is-active' : 'side-item', href, 'aria-current': active === id ? 'page' : null },
         icon(iconName),
         h('span', { class: 'side-name' }, label),
       ),
     );
-  return [
-    h('h2', { class: 'side-title' }, 'This server'),
-    h(
-      'nav',
-      { 'aria-label': 'Server pages' },
-      h('ul', { class: 'side-list' }, item('overview', guildHref(guildId), 'home', 'Overview'), item('general', modulePageHref(guildId, 'general'), 'settings', 'General settings')),
-    ),
-  ];
-}
-
-/**
- * The module list for the settings pages: every module grouped by category, the current one highlighted, a dot
- * showing whether it is on. Returns { el, paint } (paint re-reads the on/off state from the store).
- */
-function buildModuleNav({ guildId, model, store, currentKey }) {
   const links = [];
   const groups = model.categories.map((cat) =>
     h(
       'div',
       { class: 'side-group' },
-      h('h3', { class: 'side-group-title' }, h('a', { href: `${guildHref(guildId)}/${encodeURIComponent(cat.id)}` }, cat.label)),
+      h('h2', { class: 'side-cat' }, cat.label),
       h(
         'ul',
         { class: 'side-list' },
         cat.modules.map((mod) => {
-          const dot = h('span', { class: 'status-dot' });
-          const state = h('span', { class: 'sr-only' });
-          const active = mod.key === currentKey;
-          const link = h(
-            'a',
-            {
-              class: active ? 'side-item side-module is-active' : 'side-item side-module',
-              href: modulePageHref(guildId, mod.key),
-              'aria-current': active ? 'page' : null,
-            },
-            h('span', { class: 'side-emoji', 'aria-hidden': 'true' }, mod.emoji || '\u{1F9E9}'),
-            h('span', { class: 'side-name' }, mod.label),
-            dot,
-            state,
+          const dot = h('span', { class: 'status-dot', 'aria-hidden': 'true' });
+          const status = h('span', { class: 'sr-only' });
+          const here = mod.key === currentKey;
+          links.push({ mod, dot, status });
+          return h(
+            'li',
+            {},
+            h(
+              'a',
+              {
+                class: here ? 'side-item side-module is-active' : 'side-item side-module',
+                href: modulePageHref(guildId, mod.key),
+                'aria-current': here ? 'page' : null,
+              },
+              dot,
+              h('span', { class: 'side-name' }, mod.label, status),
+            ),
           );
-          links.push({ mod, dot, state });
-          return h('li', {}, link);
         }),
       ),
     ),
@@ -1049,31 +994,45 @@ function buildModuleNav({ guildId, model, store, currentKey }) {
     for (const l of links) {
       const on = store.get(l.mod.flag, l.mod.default);
       l.dot.classList.toggle('is-on', on);
-      l.state.textContent = on ? ' (on)' : ' (off)';
+      l.status.textContent = on ? ', on' : ', off';
     }
   };
-  return { el: h('nav', { 'aria-label': 'Modules' }, groups), paint };
+  const el = h(
+    'nav',
+    { class: 'side-nav', 'aria-label': 'Server' },
+    h('ul', { class: 'side-list side-pages' }, page('overview', guildHref(guildId), 'grid', 'Overview'), page('general', generalHref(guildId), 'settings', 'Server settings')),
+    groups,
+  );
+  return { el, paint };
+}
+
+/** A module's two-letter tile code: the catalog's, or the first two letters of its name. */
+function moduleCode(mod) {
+  if (typeof mod.code === 'string' && mod.code) return mod.code;
+  const letters = Array.from(String(mod.label || mod.key || '?').replace(/[^\p{L}\p{N}]/gu, ''));
+  return `${(letters[0] || '?').toUpperCase()}${(letters[1] || '').toLowerCase()}`;
 }
 
 /**
- * Builds the whole settings page for one guild and returns handles for the router.
- * Switches are painted from the GuildStore, so toggles never re-render the page.
+ * Builds the overview page for one guild and returns handles for the router: the header, the server settings card
+ * (saved with its own Save button) and a card per module. Switches are painted from the GuildStore, so toggles never
+ * re-render the page.
  */
 function buildGuildView({ guildId, data, catalog, shell, since = null }) {
   const store = getStore(guildId);
-  store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
+  const values = store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
   const model = normalizeCatalog(catalog);
   const guild = (data && data.guild) || { id: guildId, name: 'Server', iconUrl: null };
-  const general = (data && data.general) || {};
-  const propagation = Number(data && data.propagationSeconds) > 0 ? Number(data.propagationSeconds) : 30;
+  const propagation = Number(data && data.propagationSeconds) > 0 ? Number(data.propagationSeconds) : DEFAULT_PROPAGATION_S;
   const totalModules = model.categories.reduce((n, cat) => n + cat.modules.length, 0);
+  const settingsUrl = `/api/guilds/${encodeURIComponent(guildId)}/settings`;
+  shell.setGuild(guild);
 
   const switches = []; // { el, field, fallback }
-  const entries = new Map(); // module key -> entry
   const sections = [];
-  const expanded = new Set();
   let query = '';
   let mode = 'all';
+  let destroyed = false;
 
   const moduleOn = (mod) => store.get(mod.flag, mod.default);
 
@@ -1085,66 +1044,16 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
 
   /* ---- module cards ---- */
 
-  function isOpen(entry) {
-    return expanded.has(entry.mod.key) || entry.forced;
-  }
-
-  function paintOpen(entry) {
-    if (!entry.collapse) return;
-    const open = isOpen(entry);
-    entry.collapse.classList.toggle('is-open', open);
-    if (open) entry.collapse.removeAttribute('inert');
-    else entry.collapse.setAttribute('inert', '');
-    entry.disclosure.setAttribute('aria-expanded', String(open));
-  }
-
-  function paintExpandButton() {
-    const expandable = [...entries.values()].filter((e) => e.collapse);
-    expandAllBtn.hidden = expandable.length === 0;
-    expandAllBtn.textContent = expandable.length > 0 && expandable.every(isOpen) ? 'Collapse all' : 'Expand all';
-  }
-
-  function toggleOpen(entry) {
-    if (isOpen(entry)) {
-      expanded.delete(entry.mod.key);
-      entry.forced = false;
-    } else {
-      expanded.add(entry.mod.key);
-    }
-    paintOpen(entry);
-    paintExpandButton();
-  }
-
-  function toggleAll() {
-    const expandable = [...entries.values()].filter((e) => e.collapse);
-    const collapse = expandable.every(isOpen);
-    for (const entry of expandable) {
-      if (collapse) {
-        expanded.delete(entry.mod.key);
-        entry.forced = false;
-      } else {
-        expanded.add(entry.mod.key);
-      }
-      paintOpen(entry);
-    }
-    paintExpandButton();
-  }
-
   function buildEntry(mod) {
     const id = slug(mod.key);
     const labelId = `m-${id}-label`;
     const descId = `m-${id}-desc`;
-    const subsId = `m-${id}-subs`;
+    const subText = mod.subToggles.map((sub) => [sub.label, sub.description].filter(Boolean).join(' ')).join(' ');
     const entry = {
       mod,
-      subs: [],
-      forced: false,
-      collapse: null,
-      disclosure: null,
-      note: null,
-      ownText: [mod.label, mod.key, mod.description, mod.configCommand, fieldLabels(mod)].filter(Boolean).join(' ').toLowerCase(),
+      status: h('span', { class: 'module-status', 'aria-hidden': 'true' }),
+      ownText: [mod.label, mod.key, mod.code, mod.description, mod.configCommand, fieldLabels(mod), subText].filter(Boolean).join(' ').toLowerCase(),
     };
-
     const toggle = makeSwitch(mod.flag, mod.default, labelId, mod.description ? descId : null);
     entry.card = h(
       'article',
@@ -1152,68 +1061,24 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
       h(
         'div',
         { class: 'module-top' },
-        h('span', { class: 'module-emoji', 'aria-hidden': 'true' }, mod.emoji || '\u{1F9E9}'),
-        h(
-          'div',
-          { class: 'module-text' },
-          h('h3', { class: 'module-title', id: labelId }, mod.label),
-          mod.description ? h('p', { class: 'module-desc', id: descId }, mod.description) : null,
-        ),
+        h('span', { class: 'module-code', 'aria-hidden': 'true' }, moduleCode(mod)),
+        h('h4', { class: 'module-title', id: labelId }, mod.label),
         toggle,
       ),
+      mod.description ? h('p', { class: 'module-desc', id: descId }, mod.description) : null,
       h(
         'div',
-        { class: 'module-links' },
+        { class: 'module-foot' },
+        entry.status,
         h(
           'a',
-          { class: 'btn btn-secondary btn-sm module-settings', href: modulePageHref(guildId, mod.key) },
-          icon('settings'),
+          { class: 'module-link', href: modulePageHref(guildId, mod.key) },
           'Settings',
           h('span', { class: 'sr-only' }, ` for ${mod.label}`),
+          icon('forward'),
         ),
-        mod.configCommand
-          ? h('p', { class: 'module-hint', title: `Also available in Discord with ${mod.configCommand}` }, 'Discord: ', h('code', {}, mod.configCommand))
-          : null,
       ),
     );
-
-    if (mod.subToggles.length) {
-      const list = h('ul', { class: 'sub-list' });
-      for (const sub of mod.subToggles) {
-        const sid = slug(sub.field);
-        const subLabelId = `s-${sid}-label`;
-        const subDescId = `s-${sid}-desc`;
-        const subToggle = makeSwitch(sub.field, sub.default === true, subLabelId, sub.description ? subDescId : null);
-        const row = h(
-          'li',
-          { class: 'sub' },
-          h(
-            'div',
-            { class: 'sub-text' },
-            h('span', { class: 'sub-label', id: subLabelId }, sub.label || sub.field),
-            sub.description ? h('span', { class: 'sub-desc', id: subDescId }, sub.description) : null,
-          ),
-          subToggle,
-        );
-        list.append(row);
-        entry.subs.push({ row, text: [sub.label, sub.description].filter(Boolean).join(' ').toLowerCase() });
-      }
-      entry.note = h('p', { class: 'sub-note' }, icon('info'), 'Applies when the module is on');
-      entry.collapse = h('div', { class: 'collapse', id: subsId, inert: true }, h('div', { class: 'collapse-inner' }, entry.note, list));
-      entry.disclosure = h(
-        'button',
-        {
-          type: 'button',
-          class: 'disclosure',
-          'aria-expanded': 'false',
-          'aria-controls': subsId,
-          onclick: () => toggleOpen(entry),
-        },
-        h('span', {}, pluralize(mod.subToggles.length, 'option')),
-        icon('chevron'),
-      );
-      entry.card.append(entry.disclosure, entry.collapse);
-    }
     return entry;
   }
 
@@ -1221,97 +1086,208 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
     const sectionId = `cat-${slug(cat.id)}`;
     const titleId = `${sectionId}-title`;
     const grid = h('div', { class: 'module-grid' });
-    const section = {
-      cat,
-      id: cat.id,
-      entries: [],
-      countEl: h('span', { class: 'category-count num' }),
-      badge: h('span', { class: 'badge' }),
-    };
+    const section = { cat, id: cat.id, entries: [], countEl: h('span', { class: 'category-count' }) };
     for (const mod of cat.modules) {
       const entry = buildEntry(mod);
       section.entries.push(entry);
-      entries.set(mod.key, entry);
       grid.append(entry.card);
     }
     section.el = h(
       'section',
       { class: 'category', id: sectionId, 'aria-labelledby': titleId },
-      h('div', { class: 'category-head' }, h('h2', { class: 'category-title', id: titleId }, cat.label), section.countEl),
-      cat.description ? h('p', { class: 'category-desc' }, cat.description) : null,
+      h(
+        'div',
+        { class: 'category-head' },
+        h('h3', { class: 'category-title', id: titleId }, cat.label),
+        section.countEl,
+        cat.description ? h('p', { class: 'category-desc' }, cat.description) : null,
+      ),
       grid,
-    );
-    const href = `#/guild/${encodeURIComponent(guildId)}/${encodeURIComponent(cat.id)}`;
-    section.navLink = h(
-      'a',
-      {
-        class: 'side-item',
-        href,
-        onclick: (event) => {
-          // Same hash twice fires no hashchange, so scroll here.
-          if (location.hash === href) {
-            event.preventDefault();
-            goTo(cat.id);
-          }
-        },
-      },
-      h('span', { class: 'side-name' }, cat.label),
-      section.badge,
     );
     sections.push(section);
   }
 
   /* ---- header ---- */
 
-  const summaryNum = h('strong', { class: 'num' }, '0');
-  const progress = h('div', { class: 'progress', 'aria-hidden': 'true' }, h('div', { class: 'progress-bar' }));
+  const onCount = h('span', { class: 'on-count-num num' }, '0');
   const saveStatus = h('span', { class: 'save-status', 'data-active': 'false', 'aria-hidden': 'true' }, h('span', { class: 'spinner' }), 'Saving…');
-
-  function generalStrip() {
-    const timezone = typeof general.timezone === 'string' && general.timezone ? general.timezone : 'UTC';
-    const prefix =
-      general.customPrefix === ''
-        ? 'Off'
-        : typeof general.customPrefix === 'string'
-          ? h('code', {}, general.customPrefix)
-          : '—';
-    const colour = typeof general.embedColor === 'string' && /^#[0-9a-f]{6}$/i.test(general.embedColor) ? general.embedColor : null;
-    const swatch = h('span', { class: 'swatch', 'aria-hidden': 'true' });
-    if (colour) swatch.style.setProperty('--swatch', colour);
-    const chip = (key, ...value) => h('span', { class: 'chip' }, h('span', { class: 'chip-k' }, key), h('span', { class: 'chip-v' }, ...value));
-    return h(
-      'div',
-      { class: 'general', role: 'group', 'aria-label': 'General settings' },
-      h('span', { class: 'general-title' }, 'General'),
-      chip('Timezone', timezone),
-      chip('Command prefix', prefix),
-      chip('Embed colour', colour ? [swatch, colour.toUpperCase()] : 'Default'),
-      h('a', { class: 'btn btn-secondary btn-sm general-edit', href: modulePageHref(guildId, 'general') }, icon('settings'), 'Edit general settings'),
-    );
-  }
-
   const header = h(
-    'section',
-    { class: 'card guild-header', 'aria-label': 'Server overview' },
-    avatar(guild.name, guild.iconUrl, { size: 'lg' }),
+    'div',
+    { class: 'page-head overview-head' },
     h(
       'div',
-      { class: 'gh-text' },
-      h('h1', { class: 'gh-name', title: guild.name }, guild.name),
-      h('p', { class: 'gh-summary' }, summaryNum, ` of ${totalModules} modules on`),
-      progress,
+      { class: 'page-head-text' },
+      h('p', { class: 'eyebrow' }, 'OVERVIEW'),
+      h('h1', { class: 'page-title', title: guild.name }, guild.name),
     ),
     saveStatus,
-    h('p', { class: 'gh-note' }, icon('info'), `Changes reach the bot within ~${propagation} seconds.`),
-    generalStrip(),
+    h(
+      'p',
+      { class: 'on-count', title: `Switches save as you flip them and reach the bot within ~${propagation} seconds.` },
+      onCount,
+      h('span', { class: 'on-count-text' }, ` of ${totalModules} modules on`),
+    ),
   );
 
-  /* ---- toolbar ---- */
+  /* ---- the server settings card: the general settings every module uses, saved with its own button ---- */
+
+  const generalGroups = Array.isArray(catalog && catalog.general && catalog.general.groups) ? catalog.general.groups : [];
+  const generalGroup = generalGroups.find((g) => g && g.id === GENERAL_KEY) || null;
+  const gFields = generalGroup && Array.isArray(generalGroup.fields) ? generalGroup.fields.filter((f) => f && f.field && f.type) : [];
+  const gBaseline = new Map(); // field -> canonical JSON of the saved value
+  const gBaselineValue = new Map(); // field -> a copy of the saved value (for Reset)
+  const gDirty = new Set();
+  let gForm = null;
+  let gReady = false;
+  let gSaving = false;
+
+  const gMsg = h('span', { class: 'panel-foot-msg' });
+  const gLive = h('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const gReset = h('button', { type: 'button', class: 'btn btn-secondary', onclick: () => resetGeneral() }, 'Reset');
+  const gSaveLabel = h('span', {}, 'Save changes');
+  const gSave = h('button', { type: 'button', class: 'btn btn-primary', title: 'Save changes (Ctrl+S)', onclick: () => saveGeneral() }, gSaveLabel);
+  const gFoot = h('div', { class: 'panel-foot', hidden: true }, gMsg, gReset, gSave);
+  const gBody = h('div', { class: 'panel-body panel-grid' });
+
+  function gSnapshot(field, value) {
+    gBaseline.set(field, canonical(value));
+    gBaselineValue.set(field, cloneValue(value));
+    gDirty.delete(field);
+  }
+
+  function paintGeneral() {
+    if (destroyed) return;
+    const n = gDirty.size;
+    if (n > 0 && gFoot.hidden) gLive.textContent = 'You have unsaved changes';
+    gFoot.hidden = n === 0;
+    gMsg.textContent = n === 1 ? '1 unsaved change' : `${n} unsaved changes`;
+    gReset.setAttribute('aria-disabled', String(gSaving));
+    gSave.setAttribute('aria-disabled', String(gSaving));
+    gSave.setAttribute('aria-busy', String(gSaving));
+    gSaveLabel.textContent = gSaving ? 'Saving…' : 'Save changes';
+  }
+
+  function onGeneralChange(field, value) {
+    if (!gReady) return;
+    if (canonical(value) === gBaseline.get(field)) gDirty.delete(field);
+    else gDirty.add(field);
+    paintGeneral();
+  }
+
+  if (gFields.length) {
+    try {
+      const initial = {};
+      for (const f of gFields) initial[f.field] = values[f.field] !== undefined ? values[f.field] : f.default;
+      gForm = createForm({
+        fields: gFields,
+        values: initial,
+        ctx: {
+          guildId,
+          guild: { id: guild.id || guildId, name: guild.name, iconUrl: guild.iconUrl || null },
+          user: state.user,
+          resources: null,
+          placeholders: Array.isArray(catalog.placeholders) ? catalog.placeholders : [],
+          defaultEmbedColor: Number.isInteger(values.embedColor) ? values.embedColor : null,
+        },
+        idPrefix: 'f-overview-general',
+        onChange: onGeneralChange,
+      });
+      gBody.append(gForm.el);
+      const now = gForm.getValues();
+      for (const f of gFields) gSnapshot(f.field, now[f.field]);
+    } catch {
+      gForm = null;
+      gBody.append(banner('error', 'These settings could not be displayed. Reload the page to try again.'));
+    }
+  }
+  gReady = true;
+
+  function resetGeneral() {
+    if (gSaving || !gForm) return;
+    const restore = {};
+    for (const f of gFields) restore[f.field] = cloneValue(gBaselineValue.get(f.field));
+    try {
+      gForm.setValues({ ...gForm.getValues(), ...restore });
+      gForm.setErrors([]);
+    } catch { /* a control that cannot reset keeps its value */ }
+    const now = gForm.getValues();
+    for (const f of gFields) onGeneralChange(f.field, now[f.field]);
+    gLive.textContent = 'Changes discarded';
+  }
+
+  async function saveGeneral() {
+    if (gSaving || destroyed || !gForm || gDirty.size === 0) return;
+    let problems = [];
+    try { problems = gForm.validate([...gDirty]); } catch { /* saved as it is */ }
+    if (problems.length) {
+      try { gForm.focusPath(problems[0].path); } catch { generalCard.scrollIntoView({ block: 'center' }); }
+      toast(problems[0].message, { kind: 'error', key: 'save-error', ms: TOAST_ERROR_MS });
+      return;
+    }
+    gSaving = true;
+    paintGeneral();
+    const changes = {};
+    for (const field of gDirty) changes[field] = gForm.getValue(field);
+    try {
+      const res = await api(settingsUrl, { method: 'PATCH', body: { changes } });
+      if (destroyed) return;
+      const saved = res && typeof res.values === 'object' && res.values ? res.values : {};
+      const patch = {};
+      for (const [field, sent] of Object.entries(changes)) {
+        if (saved[field] !== undefined && canonical(gForm.getValue(field)) === canonical(sent)) patch[field] = saved[field];
+      }
+      try { gForm.setValues({ ...gForm.getValues(), ...patch }); } catch { /* keep what the user sees */ }
+      gForm.setErrors([]);
+      for (const field of Object.keys(changes)) {
+        const value = gForm.getValue(field);
+        if (canonical(value) === canonical(patch[field] ?? changes[field])) gSnapshot(field, value);
+      }
+      toast('Saved', { kind: 'success', key: 'saved' });
+      showNotices(res);
+      gLive.textContent = 'Changes saved';
+    } catch (err) {
+      if (!destroyed && err && err.status === 400) {
+        const path = err.body && typeof err.body.path === 'string' ? err.body.path : '';
+        const message = err.serverMessage || 'One of the values is not valid.';
+        try {
+          gForm.setErrors([{ path, message }]);
+          gForm.focusPath(path);
+        } catch { /* the toast below still tells the user */ }
+        toast(message, { kind: 'error', key: 'save-error', ms: TOAST_ERROR_MS });
+      } else {
+        reportSaveError(err);
+      }
+    } finally {
+      gSaving = false;
+      paintGeneral();
+    }
+  }
+
+  const generalCard = gFields.length
+    ? h(
+      'section',
+      { class: 'card panel general-card', id: 'overview-general', 'aria-labelledby': 'overview-general-title' },
+      h(
+        'div',
+        { class: 'panel-head' },
+        h('h2', { class: 'panel-title', id: 'overview-general-title' }, generalGroup.title || 'Server settings'),
+        h('p', { class: 'panel-desc' }, 'Settings every module uses.'),
+        generalGroups.length > 1
+          ? h('a', { class: 'panel-link', href: modulePageHref(guildId, GENERAL_KEY) }, 'More server settings', icon('forward'))
+          : null,
+      ),
+      gBody,
+      gFoot,
+      gLive,
+    )
+    : null;
+
+  /* ---- modules toolbar ---- */
 
   const search = h('input', {
     type: 'search',
     class: 'search-input',
-    placeholder: 'Search modules and options',
+    placeholder: 'Search modules',
     'aria-label': 'Search modules and options',
     autocomplete: 'off',
     spellcheck: 'false',
@@ -1329,13 +1305,11 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
     },
   });
 
-  const segCounts = {};
   const segButtons = {};
   const segmented = h(
     'div',
-    { class: 'segmented', role: 'group', 'aria-label': 'Filter by status' },
+    { class: 'segmented', role: 'group', 'aria-label': 'Show modules' },
     [['all', 'All'], ['on', 'On'], ['off', 'Off']].map(([id, label]) => {
-      segCounts[id] = h('span', { class: 'num' }, '0');
       segButtons[id] = h(
         'button',
         {
@@ -1349,24 +1323,9 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
           },
         },
         label,
-        segCounts[id],
       );
       return segButtons[id];
     }),
-  );
-
-  const expandAllBtn = h('button', { type: 'button', class: 'btn btn-ghost btn-sm', onclick: toggleAll }, 'Expand all');
-
-  const toolbar = h(
-    'div',
-    { class: 'toolbar-wrap' },
-    h(
-      'div',
-      { class: 'toolbar', role: 'search' },
-      h('div', { class: 'search' }, icon('search'), search, h('kbd', { class: 'kbd', 'aria-hidden': 'true' }, '/')),
-      segmented,
-      expandAllBtn,
-    ),
   );
 
   const resultNote = h('p', { class: 'result-note', role: 'status', 'aria-live': 'polite' });
@@ -1382,8 +1341,31 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
   const emptyState = h(
     'div',
     { class: 'empty-state', hidden: true },
-    h('p', {}, 'No modules match your search or filter.'),
-    h('button', { type: 'button', class: 'btn btn-secondary', onclick: clearFilters }, 'Clear filters'),
+    h('p', {}, 'No modules match. Try another name or show all modules.'),
+    h('button', { type: 'button', class: 'btn btn-secondary', onclick: clearFilters }, 'Show all modules'),
+  );
+
+  const modulesSection = h(
+    'section',
+    { class: 'modules', 'aria-labelledby': 'modules-title' },
+    h(
+      'div',
+      { class: 'modules-head' },
+      h(
+        'div',
+        { class: 'page-head-text' },
+        h('h2', { class: 'section-title', id: 'modules-title' }, 'Modules'),
+        h(
+          'p',
+          { class: 'page-sub' },
+          "Turn a module on here or with /module in Discord. Its settings stay saved while it's off.",
+        ),
+      ),
+      h('div', { class: 'modules-tools', role: 'search' }, segmented, h('div', { class: 'search' }, icon('search'), search)),
+    ),
+    resultNote,
+    emptyState,
+    sections.map((s) => s.el),
   );
 
   /* ---- filtering ---- */
@@ -1394,122 +1376,74 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
     for (const section of sections) {
       let sectionShown = 0;
       for (const entry of section.entries) {
-        const everything = `${entry.ownText} ${entry.subs.map((s) => s.text).join(' ')}`;
-        let visible = tokens.every((t) => everything.includes(t));
+        let visible = tokens.every((t) => entry.ownText.includes(t));
         if (visible && mode !== 'all') visible = moduleOn(entry.mod) === (mode === 'on');
         entry.card.hidden = !visible;
-
-        // A hit that only exists in an option label opens the card and marks the row.
-        const viaSub = visible && tokens.length > 0 && !tokens.every((t) => entry.ownText.includes(t));
-        entry.forced = viaSub;
-        for (const sub of entry.subs) sub.row.classList.toggle('is-match', viaSub && tokens.some((t) => sub.text.includes(t)));
-        paintOpen(entry);
         if (visible) sectionShown++;
       }
       section.el.hidden = sectionShown === 0;
-      section.navLink.classList.toggle('is-empty', sectionShown === 0);
+      section.countEl.textContent = pluralize(sectionShown, 'module');
       shown += sectionShown;
     }
     emptyState.hidden = shown !== 0;
     const filtering = tokens.length > 0 || mode !== 'all';
     resultNote.textContent = filtering ? `Showing ${shown} of ${totalModules} modules` : '';
-    paintExpandButton();
   }
 
-  /* ---- painting from the store ---- */
+  /* ---- painting from the store, sidebar ---- */
+
+  const sideNav = buildSideNav({ guildId, model, store, active: 'overview' });
+  shell.sectionsSlot.replaceChildren(sideNav.el);
 
   function paint() {
     for (const s of switches) paintSwitch(s.el, store.get(s.field, s.fallback), store.isPending(s.field));
-
     let onTotal = 0;
     for (const section of sections) {
-      let on = 0;
       for (const entry of section.entries) {
         const isOn = moduleOn(entry.mod);
-        if (isOn) on++;
+        if (isOn) onTotal++;
         entry.card.classList.toggle('is-on', isOn);
         entry.card.classList.toggle('is-off', !isOn);
-        if (entry.note) entry.note.hidden = isOn;
+        entry.status.textContent = isOn ? 'ON' : 'OFF';
       }
-      onTotal += on;
-      const count = section.entries.length;
-      section.countEl.textContent = `${on} of ${count} on`;
-      section.badge.textContent = `${on}/${count}`;
-      section.badge.classList.toggle('has-on', on > 0);
     }
-    summaryNum.textContent = String(onTotal);
-    progress.style.setProperty('--pct', totalModules ? String(Math.round((onTotal / totalModules) * 100)) : '0');
-    segCounts.all.textContent = String(totalModules);
-    segCounts.on.textContent = String(onTotal);
-    segCounts.off.textContent = String(totalModules - onTotal);
+    onCount.textContent = String(onTotal);
     saveStatus.setAttribute('data-active', String(store.busy));
-  }
-
-  /* ---- sidebar ---- */
-
-  function setActive(active) {
-    for (const section of sections) {
-      const is = section === active;
-      section.navLink.classList.toggle('is-active', is);
-      if (is) section.navLink.setAttribute('aria-current', 'location');
-      else section.navLink.removeAttribute('aria-current');
-    }
+    sideNav.paint();
   }
 
   function goTo(sectionId) {
+    if (sectionId === GENERAL_KEY && generalCard) {
+      generalCard.scrollIntoView({ block: 'start' });
+      return;
+    }
     const section = sections.find((s) => s.id === sectionId);
     if (!sectionId || !section) {
       window.scrollTo({ top: 0 });
       return;
     }
-    if (section.el.hidden) return;
-    section.el.scrollIntoView({ block: 'start' });
-    setActive(section);
+    if (!section.el.hidden) section.el.scrollIntoView({ block: 'start' });
   }
 
-  shell.sectionsSlot.replaceChildren(
-    ...serverNav(guildId, 'overview'),
-    h('h2', { class: 'side-title side-title-gap' }, 'Sections'),
-    h('nav', { 'aria-label': 'Sections' }, h('ul', { class: 'side-list' }, sections.map((s) => h('li', {}, s.navLink)))),
-  );
-
-  const renderServers = (guilds) => renderServerList(shell.serversSlot, guilds, guildId);
-
-  // Scroll-spy for the section list.
-  let observer = null;
-  if (typeof IntersectionObserver === 'function') {
-    const visibleSections = new Set();
-    observer = new IntersectionObserver(
-      (records) => {
-        for (const record of records) {
-          if (record.isIntersecting) visibleSections.add(record.target);
-          else visibleSections.delete(record.target);
-        }
-        const first = sections.find((s) => visibleSections.has(s.el));
-        if (first) setActive(first);
-      },
-      { rootMargin: '-150px 0px -55% 0px' },
-    );
-    for (const section of sections) observer.observe(section.el);
-  }
-
-  const main = h('div', { class: 'guild-view' }, header, toolbar, resultNote, emptyState, sections.map((s) => s.el));
+  const main = h('div', { class: 'guild-view' }, header, generalCard, modulesSection);
   const unsubscribe = store.subscribe(paint);
   paint();
   applyFilters();
+  paintGeneral();
   activeSearch = search;
-  if (state.guilds) renderServers(state.guilds);
 
   return {
     kind: 'overview',
     main,
     guildName: guild.name,
     goTo,
-    renderServers,
+    isDirty: () => gDirty.size > 0,
+    save: saveGeneral,
     destroy() {
+      destroyed = true;
       unsubscribe();
-      if (observer) observer.disconnect();
       if (activeSearch === search) activeSearch = null;
+      try { if (gForm) gForm.destroy(); } catch { /* already gone */ }
     },
   };
 }
@@ -1553,17 +1487,31 @@ function resolvePage(catalog, model, key) {
     return {
       key,
       mod: null,
-      label: general.title ? `${general.title} settings` : 'General settings',
-      emoji: '⚙️',
+      label: 'Server settings',
+      code: null,
+      num: null,
+      category: null,
       description: general.description || 'Time zone, embed colour and command prefix for this server.',
       groups: usable(general.groups),
       collections: [],
     };
   }
-  const mod = model.categories.flatMap((cat) => cat.modules).find((m) => m.key === key);
-  if (!mod) return null;
+  const all = model.categories.flatMap((cat) => cat.modules.map((m) => ({ mod: m, category: cat })));
+  const index = all.findIndex((x) => x.mod.key === key);
+  if (index < 0) return null;
+  const { mod, category } = all[index];
   const collections = (Array.isArray(mod.collections) ? mod.collections : []).filter((k) => catalog.collections && catalog.collections[k]);
-  return { key, mod, label: mod.label, emoji: mod.emoji || '\u{1F9E9}', description: mod.description || '', groups: usable(mod.groups, [mod.flag]), collections };
+  return {
+    key,
+    mod,
+    label: mod.label,
+    code: moduleCode(mod),
+    num: String(index + 1).padStart(2, '0'),
+    category: category.label,
+    description: mod.description || '',
+    groups: usable(mod.groups, [mod.flag]),
+    collections,
+  };
 }
 
 const cloneValue = (value) => {
@@ -1578,14 +1526,9 @@ async function showModule(guildId, moduleKey) {
   mount(shell.root);
   window.scrollTo({ top: 0, behavior: 'instant' });
   shell.main.append(settingsSkeleton());
-  shell.serversSlot.append(h('h2', { class: 'side-title' }, 'Servers'), sidebarSkeleton());
-  shell.sectionsSlot.append(h('h2', { class: 'side-title' }, 'Modules'), sidebarSkeleton());
+  shell.sectionsSlot.append(sidebarSkeleton());
 
   const base = `/api/guilds/${encodeURIComponent(guildId)}`;
-  const guildsLoaded = loadGuilds().then(
-    (guilds) => ({ guilds }),
-    () => ({ guilds: null }),
-  );
   const since = getStore(guildId).mark();
   const [settingsRes, catalogRes, resourcesRes] = await Promise.allSettled([api(`${base}/settings`), loadCatalog(), api(`${base}/resources`)]);
   if (token !== routeToken) return;
@@ -1613,10 +1556,10 @@ async function showModule(guildId, moduleKey) {
       }),
     );
     shell.main.focus({ preventScroll: true });
-    shell.sectionsSlot.replaceChildren(...serverNav(guildId, null));
-    guildsLoaded.then(({ guilds }) => {
-      if (token === routeToken) renderServerList(shell.serversSlot, guilds, guildId);
-    });
+    shell.setGuild((settingsRes.value && settingsRes.value.guild) || { id: guildId, name: 'Server', iconUrl: null });
+    const nav = buildSideNav({ guildId, model, store: getStore(guildId) });
+    shell.sectionsSlot.replaceChildren(nav.el);
+    nav.paint();
     return;
   }
 
@@ -1627,10 +1570,6 @@ async function showModule(guildId, moduleKey) {
   document.title = `${page.label} · ${view.guildName} · ${APP_NAME}`;
   shell.main.focus({ preventScroll: true });
   view.revealNav();
-
-  guildsLoaded.then(({ guilds }) => {
-    if (token === routeToken) view.renderServers(guilds);
-  });
 }
 
 /**
@@ -1742,18 +1681,21 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
   const titleId = `${idBase}-title`;
   const descId = `${idBase}-desc`;
   const saveStatus = h('span', { class: 'save-status', 'data-active': 'false', 'aria-hidden': 'true' }, h('span', { class: 'spinner' }), 'Saving…');
-  const statePrefix = h('span', { class: 'mh-state-prefix' }, 'Module is ');
-  const stateValue = h('span', {});
-  const stateText = h('span', { class: 'mh-state' }, statePrefix, stateValue);
+  const stateText = h('span', { class: 'mh-state', 'aria-hidden': 'true' });
   const toggle = mod ? createSwitch({ labelId: titleId, describedBy: mod.description ? descId : null, onToggle: () => store.toggle(mod.flag, mod.default) }) : null;
   const offNotice = mod
-    ? h('p', { class: 'mh-notice', hidden: true }, icon('info'), 'This module is off. Your settings are kept, but the bot ignores them until you switch it on.')
+    ? h('p', { class: 'notice-warn', role: 'status', hidden: true }, `${page.label} is off. The bot ignores these settings until you turn it on; they stay saved.`)
     : null;
 
   const header = h(
     'section',
-    { class: 'card module-header', 'aria-labelledby': titleId },
-    h('span', { class: 'mh-emoji', 'aria-hidden': 'true' }, page.emoji),
+    { class: 'module-header', 'aria-labelledby': titleId },
+    h(
+      'div',
+      { class: 'mh-tile', 'aria-hidden': 'true' },
+      page.code ? h('span', { class: 'mh-code' }, page.code) : icon('settings'),
+      page.num ? h('span', { class: 'mh-num' }, page.num) : null,
+    ),
     h(
       'div',
       { class: 'mh-text' },
@@ -1764,19 +1706,24 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     h(
       'div',
       { class: 'mh-meta' },
-      h('p', { class: 'mh-note' }, icon('info'), `Changes reach the bot within ~${propagation} seconds.`),
+      h('p', { class: 'mh-note' }, `Changes reach the bot within ~${propagation} seconds.`),
       mod && mod.configCommand ? h('p', { class: 'mh-note' }, 'Also in Discord: ', h('code', {}, mod.configCommand)) : null,
       saveStatus,
     ),
-    offNotice,
   );
 
   const crumbs = h(
     'nav',
     { class: 'crumbs', 'aria-label': 'Breadcrumb' },
-    h('a', { class: 'crumb-link', href: guildHref(guildId) }, icon('back'), 'Overview'),
-    h('span', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/'),
-    h('span', { class: 'crumb-here', 'aria-current': 'page' }, page.label),
+    h(
+      'ol',
+      { class: 'crumb-list' },
+      h('li', {}, h('a', { class: 'crumb-link', href: guildHref(guildId) }, 'Overview')),
+      page.category ? h('li', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/') : null,
+      page.category ? h('li', {}, page.category) : null,
+      h('li', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/'),
+      h('li', { class: 'crumb-here', 'aria-current': 'page' }, page.label),
+    ),
   );
 
   /* ---- forms: one card per group ---- */
@@ -1870,8 +1817,8 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
   /* ---- unsaved-changes bar ---- */
 
   const live = h('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
-  const countText = h('span', { class: 'save-bar-count num' });
-  const resetBtn = h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => reset() }, icon('undo'), 'Reset');
+  const countText = h('span', { class: 'save-bar-msg' });
+  const resetBtn = h('button', { type: 'button', class: 'btn btn-secondary', onclick: () => reset() }, 'Reset');
   const saveLabel = h('span', {}, 'Save changes');
   const saveSpinner = h('span', { class: 'spinner on-accent', hidden: true });
   const saveBtn = h(
@@ -1883,12 +1830,8 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
   const bar = h(
     'div',
     { class: 'save-bar', role: 'region', 'aria-label': 'Unsaved changes', hidden: true },
-    h(
-      'div',
-      { class: 'save-bar-inner' },
-      h('p', { class: 'save-bar-msg' }, h('span', { class: 'save-bar-dot', 'aria-hidden': 'true' }), h('span', {}, 'You have unsaved changes'), countText),
-      h('div', { class: 'save-bar-actions' }, resetBtn, saveBtn),
-    ),
+    countText,
+    h('div', { class: 'save-bar-actions' }, resetBtn, saveBtn),
   );
 
   const main = h(
@@ -1896,6 +1839,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     { class: 'module-page' },
     crumbs,
     header,
+    offNotice,
     resourcesWarning,
     jump,
     groupCards,
@@ -1916,7 +1860,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     bar.hidden = !any;
     main.classList.toggle('has-bar', any);
     document.body.classList.toggle('has-savebar', any);
-    countText.textContent = any ? `· ${pluralize(dirty.size, 'setting')}` : '';
+    countText.textContent = any ? (dirty.size === 1 ? '1 unsaved change' : `${dirty.size} unsaved changes`) : '';
     // aria-disabled (not disabled) so the focused button keeps focus while the request runs.
     resetBtn.setAttribute('aria-disabled', String(saving));
     saveBtn.setAttribute('aria-disabled', String(saving));
@@ -2057,13 +2001,13 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
 
   /* ---- painting from the store, sidebar ---- */
 
-  const moduleNav = buildModuleNav({ guildId, model, store, currentKey: mod ? mod.key : null });
+  const moduleNav = buildSideNav({ guildId, model, store, currentKey: mod ? mod.key : null, active: mod ? null : GENERAL_KEY });
 
   function paint() {
     if (mod) {
       const on = store.get(mod.flag, mod.default);
       paintSwitch(toggle, on, store.isPending(mod.flag));
-      stateValue.textContent = on ? 'on' : 'off';
+      stateText.textContent = on ? 'Module on' : 'Module off';
       header.classList.toggle('is-on', on);
       offNotice.hidden = on;
     }
@@ -2071,16 +2015,12 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     moduleNav.paint();
   }
 
-  shell.sectionsSlot.replaceChildren(
-    ...serverNav(guildId, mod ? null : GENERAL_KEY),
-    h('h2', { class: 'side-title side-title-gap' }, 'Modules'),
-    moduleNav.el,
-  );
+  shell.setGuild(guild);
+  shell.sectionsSlot.replaceChildren(moduleNav.el);
 
   const unsubscribe = store.subscribe(paint);
   paint();
   paintBar();
-  if (state.guilds) renderServerList(shell.serversSlot, state.guilds, guildId);
 
   return {
     kind: 'settings',
@@ -2094,7 +2034,6 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     saveDialog() {
       for (const handle of handles) if (typeof handle.saveEditor === 'function' && handle.saveEditor()) return;
     },
-    renderServers: (guilds) => renderServerList(shell.serversSlot, guilds, guildId),
     /** Scrolls the sidebar so the current module is visible. */
     revealNav() {
       requestAnimationFrame(() => {
@@ -2167,7 +2106,10 @@ function route() {
 
 function onHashChange() {
   if (location.hash === acceptedHash) return; // the echo of a cancelled navigation
-  if (hasUnsavedChanges() && !window.confirm(LEAVE_PROMPT)) {
+  // Moving between sections of the overview on screen keeps its edits, so it needs no question.
+  const next = parseRoute(location.hash);
+  const sameOverview = next.name === 'guild' && currentRoute && currentRoute.name === 'guild' && currentRoute.id === next.id;
+  if (!sameOverview && hasUnsavedChanges() && !window.confirm(LEAVE_PROMPT)) {
     // Put the old address back without a history entry or another hashchange.
     history.replaceState(null, '', location.pathname + location.search + acceptedHash);
     return;
@@ -2217,9 +2159,6 @@ function handleSaveShortcut(event, view) {
 }
 
 function start() {
-  const stored = readStoredTheme();
-  if (stored) applyTheme(stored);
-
   state.loginError = new URLSearchParams(location.search).get('error') === 'login_failed';
   if (location.search) history.replaceState(null, '', location.pathname + location.hash);
 
@@ -2246,7 +2185,6 @@ function start() {
   });
 
   if (typeof matchMedia === 'function') {
-    matchMedia('(prefers-color-scheme: light)').addEventListener('change', syncThemeButtons);
     matchMedia('(min-width: 901px)').addEventListener('change', (event) => {
       if (event.matches && activeShell) activeShell.setDrawer(false);
     });

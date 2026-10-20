@@ -1,0 +1,40 @@
+/* Frost.Byte "Polar Night" design tokens, shared by the dashboard (styles.css, forms.css, collections.css), the landing
+   page (landing.css) and the legal pages (legal.css). Flat deep-ink grounds, one ice-cyan accent, no gradients.
+   Fonts come from Google Fonts (the <link> in each page): Space Grotesk for display, IBM Plex Sans for body text,
+   IBM Plex Mono for commands and numbers. */
+
+:root {
+  color-scheme: dark;
+
+  /* type */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* the palette (names as in the Field kit) */
+  --ground: #0A1020;
+  --raised: #0C1324;
+  --surface: #101A2E;
+  --control: #0C1526;
+  --line: #22314D;
+  --text: #EAF2FA;
+  --muted: #A3B5C9;
+  --faint: #8094AD;
+  --accent: #7FD8F5;
+  --warning: #FFB077;
+
+  /* derived shades used by the designs */
+  --line-soft: #1B2842;     /* bar and footer rules, chips */
+  --line-strong: #2A3B5C;   /* control borders, secondary buttons */
+  --elevated: #15213A;      /* save bar, token chips, off tiles */
+  --pressed: #1E2D4A;       /* the picked segment */
+  --nav-current: #17223A;   /* the current sidebar row */
+  --nav-text: #C9D6E3;
+  --accent-hover: #B9ECFB;
+  --on-accent: #06121F;
+  --accent-tile: #0E2436;   /* an "on" module tile */
+  --disabled-fill: #3A4A66;
+  --warning-bg: #1E1912;
+  --warning-line: #5A4630;
+  --warning-text: #FFD3A8;
+}

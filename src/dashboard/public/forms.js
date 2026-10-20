@@ -903,7 +903,13 @@ function placeholderGroups(desc, st) {
   return [...out.values()].filter((g) => g.items.length);
 }
 
-/** The "Placeholders" disclosure under a text field: chips that insert a token at the caret. */
+/** How many placeholder chips a text field shows inline; the rest are behind "All placeholders". */
+const QUICK_PLACEHOLDERS = 4;
+
+/**
+ * The placeholder chips under a text field: an "Insert" row with the field's own tokens first, and the full grouped
+ * list behind a disclosure. Every chip inserts its token at the caret.
+ */
 function placeholderPanel(desc, st, input) {
   const groups = placeholderGroups(desc, st);
   if (!groups.length) return null;
@@ -914,30 +920,80 @@ function placeholderPanel(desc, st, input) {
   };
   input.addEventListener('blur', remember);
 
+  const chip = (item) => h('button', {
+    type: 'button',
+    class: 'fc-ph',
+    title: item.description || item.token,
+    'aria-label': `Insert ${item.token}`,
+    onmousedown: (event) => event.preventDefault(),
+    onclick: () => insertAtCaret(input, item.token, document.activeElement === input ? null : selection),
+  }, item.token);
+
+  const all = groups.flatMap((group) => group.items);
   const panel = h('div', { class: 'fc-ph-panel', id: panelId, hidden: true });
   for (const group of groups) {
     panel.append(h('div', { class: 'fc-ph-group' },
       h('span', { class: 'fc-ph-title' }, group.label),
-      h('span', { class: 'fc-ph-chips' }, group.items.map((item) => h('button', {
-        type: 'button',
-        class: 'fc-ph',
-        title: item.description || item.token,
-        onmousedown: (event) => event.preventDefault(),
-        onclick: () => insertAtCaret(input, item.token, document.activeElement === input ? null : selection),
-      }, item.token)))));
+      h('span', { class: 'fc-ph-chips' }, group.items.map(chip))));
   }
-  const toggle = h('button', {
-    type: 'button',
-    class: 'fc-link',
-    'aria-expanded': 'false',
-    'aria-controls': panelId,
-    onclick: () => {
-      const open = panel.hidden;
-      panel.hidden = !open;
-      toggle.setAttribute('aria-expanded', String(open));
-    },
-  }, '{ } Placeholders');
-  return { toggle, panel };
+  const toggle = all.length > QUICK_PLACEHOLDERS
+    ? h('button', {
+      type: 'button',
+      class: 'fc-link',
+      'aria-expanded': 'false',
+      'aria-controls': panelId,
+      onclick: () => {
+        const open = panel.hidden;
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+      },
+    }, `All placeholders (${all.length})`)
+    : null;
+  const row = h('div', { class: 'fc-insert' },
+    h('span', { class: 'fc-insert-label' }, 'Insert'),
+    all.slice(0, QUICK_PLACEHOLDERS).map(chip),
+    toggle);
+  return { row, panel: toggle ? panel : null };
+}
+
+/** Sample values the message preview puts in for the common placeholders (others are shown as they are). */
+function previewSamples(st) {
+  const user = st.ctx?.user;
+  const name = (user && (user.globalName || user.username)) || 'nova';
+  const server = st.ctx?.guild?.name || 'your server';
+  return {
+    '{user}': `@${name}`, '{user.mention}': `@${name}`, '{mention}': `@${name}`, '{player}': `@${name}`,
+    '{user.name}': name, '{user.username}': name, '{user.tag}': name, '{user.idname}': name, '{player.name}': name,
+    '{server}': server, '{server.name}': server, '{server.member_count}': '128', '{server.member_count.ordinal}': '128th',
+    '{channel}': '#general', '{channel.mention}': '#general', '{channel.name}': 'general',
+    '{level}': '13', '{rank}': '4', '{xp}': '1,240', '{age}': '25', '{achievement}': 'Chatterbox',
+  };
+}
+
+/** Fills `target` with `text` as the bot would send it: sample values for placeholders and **bold** in bold. */
+function paintPreview(target, text, samples) {
+  const nodes = [];
+  for (const part of String(text).split(/(\*\*[^*\n]+\*\*)/)) {
+    const bold = /^\*\*([^*\n]+)\*\*$/.exec(part);
+    const pieces = (bold ? bold[1] : part).split(/(\{[\w.]+\})/).filter(Boolean).map((piece) => {
+      if (!/^\{[\w.]+\}$/.test(piece)) return document.createTextNode(piece);
+      return Object.hasOwn(samples, piece) ? document.createTextNode(samples[piece]) : h('code', { class: 'fc-preview-token' }, piece);
+    });
+    if (bold) nodes.push(h('strong', {}, pieces));
+    else nodes.push(...pieces);
+  }
+  target.replaceChildren(...nodes);
+}
+
+/** The preview under a message field; empty text previews the default message (the field's placeholder). */
+function messagePreview(desc, st, input) {
+  const text = h('div', { class: 'fc-preview-text' });
+  const el = h('div', { class: 'fc-preview' }, h('span', { class: 'fc-preview-label' }, 'Preview'), text);
+  const samples = previewSamples(st);
+  const paint = () => paintPreview(text, input.value || (typeof desc.placeholder === 'string' ? desc.placeholder : ''), samples);
+  input.addEventListener('input', paint);
+  paint();
+  return { el, paint };
 }
 
 function buildText(desc, st) {
@@ -1035,16 +1091,21 @@ function buildText(desc, st) {
   // Message-like fields (multi-line, or listing extra tokens) offer the placeholder chips.
   const wantsPlaceholders = Array.isArray(desc.placeholders) || desc.placeholders === true || multiline;
   const ph = !isUrl && desc.placeholders !== false && wantsPlaceholders ? placeholderPanel(desc, st, input) : null;
-  const meta = ph || counter ? h('div', { class: 'fc-meta' }, ph?.toggle, h('span', { class: 'fc-grow' }), counter) : null;
+  const meta = ph || counter ? h('div', { class: 'fc-meta' }, ph?.row, h('span', { class: 'fc-grow' }), counter) : null;
+  // A message (multi-line, with placeholders) shows how it will read in Discord.
+  const preview = multiline && ph ? messagePreview(desc, st, input) : null;
 
   return {
-    body: h('div', { class: 'fc-text' }, input, meta, ph?.panel),
+    body: h('div', { class: 'fc-text' }, input, meta, ph?.panel, preview?.el),
     inputs: [input],
     labelFor: input.id,
     describedBy: counter ? [counter.id] : [],
     // An untouched null stays null; everything else goes out as typed (the server turns '' into null where allowed).
     getValue: () => (origNull && !touched && input.value === '' ? null : (isUrl ? input.value.trim() : textOf())),
-    setValue: set,
+    setValue(v) {
+      set(v);
+      preview?.paint();
+    },
     destroy: () => observer?.disconnect(),
   };
 }
@@ -1250,7 +1311,7 @@ function buildColor(desc, st) {
     placeholder: desc.nullable ? 'Default' : '#5865F2',
   });
   const reset = desc.nullable
-    ? h('button', { type: 'button', class: 'btn btn-secondary btn-sm', onclick: () => commit(null, true) }, 'Default')
+    ? h('button', { type: 'button', class: 'fc-text-btn', onclick: () => commit(null, true) }, 'Use default')
     : null;
   const presets = h('div', { class: 'fc-presets', role: 'group', 'aria-label': 'Preset colours' }, COLOR_PRESETS.map((c) => {
     const b = h('button', {

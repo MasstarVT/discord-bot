@@ -119,7 +119,7 @@ describe('GET /auth/callback rate limit', () => {
     for (let i = 0; i < LOGIN_RATE_LIMIT.max; i += 1) {
       const r = await callback('198.51.100.1');
       assert.equal(r.status, 302, `attempt ${i + 1}`);
-      assert.equal(r.headers.location, '/?error=login_failed');
+      assert.equal(r.headers.location, '/dashboard?error=login_failed');
     }
     assert.equal(exchanges.length - before, LOGIN_RATE_LIMIT.max);
 

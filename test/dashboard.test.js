@@ -38,7 +38,7 @@ const { LIMITS } = await import('../src/config/constants.js');
 const { PLACEHOLDERS } = await import('../src/utils/placeholderParser.js');
 const { PermissionFlagsBits } = await import('discord.js');
 
-const { SUB_TOGGLES, CATEGORIES, DESCRIPTIONS, buildCatalog } = catalog;
+const { SUB_TOGGLES, CATEGORIES, DESCRIPTIONS, CODES, buildCatalog } = catalog;
 const { DiscordApiError } = discordApi;
 
 // ── Shared fixtures ──────────────────────────────────────────────────────────
@@ -103,6 +103,12 @@ describe('catalog', () => {
     assert.deepEqual(Object.keys(DESCRIPTIONS).sort(), [...MODULE_NAMES].sort());
   });
 
+  test('every module has a unique two-letter code', () => {
+    assert.deepEqual(Object.keys(CODES).sort(), [...MODULE_NAMES].sort());
+    for (const key of MODULE_NAMES) assert.match(CODES[key], /^[A-Z][a-z]$/, `${key}: code ${CODES[key]}`);
+    assert.equal(new Set(Object.values(CODES)).size, MODULE_NAMES.length, 'two modules share a code');
+  });
+
   test('the Live Role description warns that switching it off keeps the role on current streamers', () => {
     assert.match(DESCRIPTIONS.liverole, /off here leaves it on current streamers/);
     assert.match(DESCRIPTIONS.liverole, /\/liverole disable in Discord removes it too/);
@@ -120,6 +126,7 @@ describe('catalog', () => {
       assert.equal(m.configCommand, MODULES[key].configCommand);
       assert.equal(m.default, MODULES[key].default);
       assert.equal(m.description, DESCRIPTIONS[key]);
+      assert.equal(m.code, CODES[key]);
       assert.ok(Array.isArray(m.subToggles));
       for (const t of m.subToggles) assert.deepEqual(Object.keys(t).sort(), ['default', 'description', 'field', 'label']);
     }
@@ -773,8 +780,33 @@ describe('front end', () => {
     }
   });
 
+  test('the landing page: no inline script or style, links only to served paths, filled from the catalog', async () => {
+    const { renderLanding } = await import('../src/dashboard/landing.js');
+    const template = readFileSync(join(PUBLIC, 'landing.html'), 'utf8');
+    assert.equal(/<script(?![^>]*\bsrc=)[^>]*>/.test(template), false, 'inline <script>');
+    assert.equal(/<style\b|\sstyle=/.test(template), false, 'inline style');
+    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/tokens.css', '/landing.css', '/landing.js', '/favicon.svg']);
+    for (const [, ref] of template.matchAll(/(?:src|href)="(\/[^"]*)"/g)) assert.ok(served.has(ref), `landing.html: ${ref} is not served`);
+    assert.equal(/href="#"/.test(template), false, 'no dead links');
+
+    const invite = 'https://discord.com/oauth2/authorize?client_id=123456789012345678&scope=bot+applications.commands';
+    const html = renderLanding(template, { inviteUrl: invite, contact: { kind: 'email', value: 'owner@example.com' } });
+    assert.equal(/<!--(?:module-|code:|contact)|@@INVITE_URL@@/.test(html), false, 'every marker is filled');
+    assert.ok(html.includes('href="https://discord.com/oauth2/authorize?client_id=123456789012345678&amp;scope=bot+applications.commands"'));
+    assert.ok(html.includes('<a href="mailto:owner@example.com">Contact</a>'));
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    for (const key of MODULE_NAMES) {
+      assert.ok(html.includes(`>${CODES[key]}<`), `${key}: code on the page`);
+      assert.ok(html.includes(esc(MODULES[key].label)), `${key}: label on the page`);
+      assert.ok(html.includes(esc(DESCRIPTIONS[key])), `${key}: description on the page`);
+    }
+    for (const c of CATEGORIES) assert.ok(html.includes(esc(c.label)), `${c.id}: category on the page`);
+    assert.equal(renderLanding(template, {}).includes('<!--contact-->'), false, 'no contact: the marker is dropped');
+    assert.throws(() => renderLanding('<!--code:nope-->'), /unknown module "nope"/);
+  });
+
   test('the privacy and terms pages: no script or inline style, a contact marker, links only to served paths', () => {
-    const served = new Set(['/', '/privacy', '/terms', '/styles.css', '/legal.css', '/favicon.svg']);
+    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/tokens.css', '/styles.css', '/legal.css', '/favicon.svg']);
     for (const name of ['privacy.html', 'terms.html']) {
       const html = readFileSync(join(PUBLIC, name), 'utf8');
       assert.equal(/<script\b/.test(html), false, `${name}: <script>`);
@@ -1636,6 +1668,7 @@ describe('HTTP server', () => {
   before(async () => {
     publicDir = mkdtempSync(join(tmpdir(), 'dashboard-public-'));
     writeFileSync(join(publicDir, 'index.html'), '<!doctype html><title>t</title>');
+    writeFileSync(join(publicDir, 'landing.html'), '<!doctype html><title>l</title><p><!--module-count--> <!--code:leveling--> <a href="@@INVITE_URL@@">Add</a></p>');
     writeFileSync(join(publicDir, 'app.js'), 'export {};');
     writeFileSync(join(publicDir, 'styles.css'), 'body { color: red; }\n'.repeat(200));
     writeFileSync(join(publicDir, 'privacy.html'), '<!doctype html><title>p</title><p>Ask <!--contact-->.</p>');
@@ -2050,12 +2083,19 @@ describe('HTTP server', () => {
   });
 
   test('static files: whitelist only, no traversal', async () => {
-    const index = await get('/');
+    const landing = await get('/');
+    assert.equal(landing.status, 200);
+    assert.match(landing.headers['content-type'], /^text\/html/);
+    assert.match(landing.headers['content-security-policy'], /script-src 'self'/);
+    assert.ok(landing.text.includes(`<p>${MODULE_NAMES.length} ${CODES.leveling} <a href="${fakes.discord.inviteUrl().replaceAll('&', '&amp;')}">Add</a></p>`),
+      'the landing page is filled from the catalog and the invite link');
+    const index = await get('/dashboard');
     assert.equal(index.status, 200);
     assert.match(index.headers['content-type'], /^text\/html/);
     assert.match(index.headers['content-security-policy'], /script-src 'self'/);
-    assert.equal((await get('/?error=login_failed')).status, 200);
+    assert.equal((await get('/dashboard?error=login_failed')).status, 200);
     assert.equal((await get('/index.html')).text, index.text);
+    assert.equal((await get('/dashboard/')).status, 404);
     const app = await get('/app.js');
     assert.equal(app.status, 200);
     assert.match(app.headers['content-type'], /^text\/javascript/);
@@ -2120,7 +2160,7 @@ describe('HTTP server', () => {
     }
     assert.equal((await get('/styles.css', { 'if-none-match': '"stale"' })).status, 200);
     // A tiny file gains nothing from gzip: always identity, no Vary.
-    const index = await get('/', { 'accept-encoding': 'gzip' });
+    const index = await get('/dashboard', { 'accept-encoding': 'gzip' });
     assert.equal(index.headers['content-encoding'], undefined);
     assert.equal(index.headers.vary, undefined);
     assert.equal((await call(port, 'HEAD', '/styles.css')).raw.length, 0);
@@ -2151,19 +2191,19 @@ describe('HTTP server', () => {
     for (const [path, cookie] of cases) {
       const r = await get(path, cookie ? { cookie } : {});
       assert.equal(r.status, 302, path);
-      assert.equal(r.headers.location, '/?error=login_failed');
+      assert.equal(r.headers.location, '/dashboard?error=login_failed');
       assert.ok(r.headers['set-cookie'].some((c) => /^dash_oauth_state=; Path=\/auth; .*Max-Age=0/.test(c)), 'state cookie cleared');
       assert.equal(r.headers['set-cookie'].some((c) => c.startsWith('dash_session=v1.')), false);
     }
     assert.equal(fakes.calls.exchangeCode.length, before, 'no code exchange without a matching state');
     const bad = await get('/auth/callback?code=bad-code&state=abc', { cookie: `${auth.STATE_COOKIE}=abc` });
-    assert.equal(bad.headers.location, '/?error=login_failed');
+    assert.equal(bad.headers.location, '/dashboard?error=login_failed');
   });
 
   test('GET /auth/callback logs in with a sealed session', async () => {
     const r = await get('/auth/callback?code=good-code&state=s1', { cookie: `${auth.STATE_COOKIE}=s1` });
     assert.equal(r.status, 302);
-    assert.equal(r.headers.location, '/');
+    assert.equal(r.headers.location, '/dashboard');
     const session = r.headers['set-cookie'].find((c) => c.startsWith('dash_session='));
     assert.match(session, /; Path=\/; HttpOnly; SameSite=Lax; Max-Age=604800$/);
     const value = decodeURIComponent(session.split(';')[0].slice('dash_session='.length));

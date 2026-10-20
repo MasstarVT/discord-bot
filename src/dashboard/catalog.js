@@ -68,6 +68,40 @@ export const DESCRIPTIONS = Object.freeze({
   counting: 'A channel where members count up from 1 in turns; a wrong number starts the count again.',
 });
 
+/**
+ * A two-letter code per module (a capital and a small letter, unique), shown on its tile in the dashboard and on the
+ * landing page's module table.
+ */
+export const CODES = Object.freeze({
+  moderation: 'Md',
+  automod: 'Am',
+  logging: 'Lg',
+  captcha: 'Cp',
+  welcome: 'Wl',
+  reactionroles: 'Rr',
+  invites: 'Iv',
+  tickets: 'Tk',
+  tempvoice: 'Tv',
+  stats: 'St',
+  birthdays: 'Bd',
+  polls: 'Pl',
+  giveaways: 'Gw',
+  starboard: 'Sb',
+  leveling: 'Lv',
+  achievements: 'Ac',
+  economy: 'Ec',
+  games: 'Gm',
+  counting: 'Ct',
+  customcommands: 'Cc',
+  automations: 'Au',
+  embeds: 'Em',
+  reminders: 'Rm',
+  feeds: 'Fd',
+  translation: 'Tr',
+  search: 'Sr',
+  liverole: 'Lr',
+});
+
 /** The boolean sub-settings of each module (their descriptors live in fields.js). */
 const SUB_TOGGLE_FIELDS = Object.freeze({
   moderation: ['modDmTargets'],
@@ -122,6 +156,7 @@ export function buildCatalog() {
       const mod = MODULES[key];
       modules[key] = {
         key,
+        code: CODES[key],
         label: mod.label,
         emoji: mod.emoji,
         flag: mod.flag,

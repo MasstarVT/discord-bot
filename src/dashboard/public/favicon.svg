@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bot Dashboard">
-  <rect width="64" height="64" rx="16" fill="#5865F2"/>
-  <rect x="11" y="14" width="42" height="17" rx="8.5" fill="#fff"/>
-  <circle cx="44.5" cy="22.5" r="6" fill="#5865F2"/>
-  <rect x="11" y="35" width="42" height="17" rx="8.5" fill="#fff" fill-opacity=".38"/>
-  <circle cx="19.5" cy="43.5" r="6" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Frost.Byte">
+  <rect width="24" height="24" rx="6" fill="#0E2436"/>
+  <g fill="none" stroke="#7FD8F5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(12 12) scale(0.8) translate(-12 -12)">
+    <g><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
+    <g transform="rotate(60 12 12)"><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
+    <g transform="rotate(120 12 12)"><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
+  </g>
 </svg>
