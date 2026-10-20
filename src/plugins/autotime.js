@@ -1,12 +1,14 @@
 // Plugin `autotime`: answers times typed in chat ("fri 5pm", "tomorrow at 18:30", "7pm EST") with Discord timestamps,
 // which every reader sees in their own timezone. A time is read in the author's zone: their own (/timezone set), else
-// their timezone role (/settings timezone-role). Members with neither are answered only when the text names the zone;
-// the server timezone is never assumed. Which text counts as a time: src/utils/timeMentions.js.
+// their timezone role (/settings timezone-role). Members with neither are answered only when the text names the zone,
+// and are told (at most hourly) to pick a timezone role or use /timezone set; the server timezone is never assumed.
+// Which text counts as a time: src/utils/timeMentions.js.
 import { LIMITS } from '../config/constants.js';
 import { missingBotPermissions } from '../utils/interactionHelpers.js';
 import { createThrottle } from '../utils/async.js';
 import { clampText } from '../utils/text.js';
 import { discordTimestamp } from '../utils/time.js';
+import { normalizeTimezoneRoles } from '../utils/timezones.js';
 import { extractTimeSpans, mayMentionTime, readTimeSpans } from '../utils/timeMentions.js';
 import logger from '../utils/logger.js';
 import { peekSettings } from '../services/settingsService.js';
@@ -20,10 +22,13 @@ export const AUTOTIME = Object.freeze({
   REPEAT_COOLDOWN_MS: 10 * 60_000,
   // A time that passed less than this long ago is still answered ("the raid started at 8pm").
   PAST_GRACE_MS: 60 * 60_000,
+  // A member with no timezone is told how to set one once per server this often.
+  ZONE_HINT_COOLDOWN_MS: 60 * 60_000,
 });
 
 const memberCooldown = createThrottle(AUTOTIME.MEMBER_COOLDOWN_MS);
 const repeatCooldown = createThrottle(AUTOTIME.REPEAT_COOLDOWN_MS);
+const zoneHintCooldown = createThrottle(AUTOTIME.ZONE_HINT_COOLDOWN_MS);
 
 // Unknown channel or message, missing access or permission: the target is gone, nothing to retry.
 const GONE_CODES = new Set([10003, 10008, 50001, 50013]);
@@ -69,16 +74,58 @@ export function answerText(times) {
 }
 
 /**
- * The author's own zone, when they have one: a saved zone or a timezone role. Null for the server timezone or UTC.
+ * The note for a member with no timezone: how to set one. Timezone roles are offered only when the server has some.
+ * @param {string} text the typed time that could not be read
+ * @param {boolean} hasRoles whether the server has timezone roles linked
+ * @returns {string}
+ */
+export function zoneHintText(text, hasRoles) {
+  const how = hasRoles ? 'Pick a timezone role, or save yours with `/timezone set`.' : 'Save yours with `/timezone set`.';
+  return `⚠️ I can't convert \`${shown(text)}\` without your timezone. ${how}`;
+}
+
+/**
+ * The author's own zone, when they have one: a saved zone or a timezone role. Null for the server timezone or UTC;
+ * undefined when they have no timezone role and their saved zone could not be looked up.
  * @param {object} ctx HookContext with `message`
  * @param {object} settings
- * @returns {Promise<string|null>}
+ * @returns {Promise<string|null|undefined>}
  */
 export async function authorZone(ctx, settings) {
   const { message } = ctx;
   const personal = await getUserTimezone(message.author.id); // undefined when the lookup failed: the role still counts
   const resolved = resolveMemberTimezone({ member: message.member, guild: message.guild ?? ctx.guild, settings, personal: personal ?? null });
-  return resolved.source === 'personal' || resolved.source === 'role' ? resolved.zone : null;
+  if (resolved.source === 'personal' || resolved.source === 'role') return resolved.zone;
+  return personal === undefined ? undefined : null;
+}
+
+const NOTHING = Object.freeze({ times: [], zoneHint: null });
+
+/**
+ * What to answer in a message, after the channel, zone and cooldown checks: the times, and the note on setting a
+ * timezone when a time needed the author's zone and they have none.
+ * @param {object} ctx HookContext with `message`
+ * @param {Date} now
+ * @returns {Promise<{ times: { text: string, date: Date, zone: string, zoneFromInput: boolean }[], zoneHint: string|null }>}
+ */
+async function readMessage(ctx, now) {
+  const { message } = ctx;
+  const settings = await ctx.getSettings();
+  if (!settings || isIgnoredChannel(settings, message.channel)) return NOTHING;
+  const spans = extractTimeSpans(message.content);
+  if (!spans.length) return NOTHING;
+  // The zone lookup only happens once the text holds a time, and not at all when every time names its zone.
+  const unzoned = spans.find((s) => !s.zone);
+  const zone = unzoned ? await authorZone(ctx, settings) : null;
+  const times = readTimeSpans(spans, zone, { now, pastGraceMs: AUTOTIME.PAST_GRACE_MS, max: LIMITS.AUTOTIME_PER_MESSAGE });
+  const noZone = Boolean(unzoned) && zone === null; // undefined: the lookup failed, so they may well have one
+  if ((!times.length && !noZone) || !memberCooldown(`${message.channelId}:${message.author.id}`)) return NOTHING;
+  const guild = message.guild ?? ctx.guild;
+  const hasRoles = normalizeTimezoneRoles(settings.timezoneRoles).some((l) => guild?.roles?.cache?.has(l.roleId));
+  return {
+    times: times.filter((t) => repeatCooldown(`${message.channelId}:${t.date.getTime()}`)),
+    zoneHint: noZone && zoneHintCooldown(`${message.guildId}:${message.author.id}`) ? zoneHintText(unzoned.text, hasRoles) : null,
+  };
 }
 
 /**
@@ -88,16 +135,7 @@ export async function authorZone(ctx, settings) {
  * @returns {Promise<{ text: string, date: Date, zone: string, zoneFromInput: boolean }[]>}
  */
 export async function timesToAnswer(ctx, { now = new Date() } = {}) {
-  const { message } = ctx;
-  const settings = await ctx.getSettings();
-  if (!settings || isIgnoredChannel(settings, message.channel)) return [];
-  const spans = extractTimeSpans(message.content);
-  if (!spans.length) return [];
-  // The zone lookup only happens once the text holds a time, and not at all when every time names its zone.
-  const zone = spans.some((s) => !s.zone) ? await authorZone(ctx, settings) : null;
-  const times = readTimeSpans(spans, zone, { now, pastGraceMs: AUTOTIME.PAST_GRACE_MS, max: LIMITS.AUTOTIME_PER_MESSAGE });
-  if (!times.length || !memberCooldown(`${message.channelId}:${message.author.id}`)) return [];
-  return times.filter((t) => repeatCooldown(`${message.channelId}:${t.date.getTime()}`));
+  return (await readMessage(ctx, now)).times;
 }
 
 /** Replies to the message without pinging anyone; never throws. */
@@ -112,10 +150,11 @@ async function reply(message, content) {
   }
 }
 
-/** Answers the times in one message, if any. */
+/** Answers the times in one message, if any, and tells a member with no timezone how to set one. */
 export async function handleMessage(ctx) {
-  const times = await timesToAnswer(ctx);
-  if (times.length) await reply(ctx.message, answerText(times));
+  const { times, zoneHint } = await readMessage(ctx, new Date());
+  const content = [times.length ? answerText(times) : null, zoneHint].filter(Boolean).join('\n');
+  if (content) await reply(ctx.message, content);
 }
 
 export const plugin = {

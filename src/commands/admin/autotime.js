@@ -35,7 +35,7 @@ export const data = new SlashCommandBuilder()
 export const HOW_IT_WORKS = 'When a member types a time such as `fri 5pm`, `tomorrow at 18:30` or `7pm EST`, I reply with a '
   + 'Discord timestamp that everyone sees in their own timezone. Times are read in the timezone of the member who typed '
   + 'them: their own (`/timezone set`) or their timezone role. Members with neither are only answered when they name '
-  + 'the zone (`7pm EST`).';
+  + 'the zone (`7pm EST`); otherwise I tell them to pick a timezone role or use `/timezone set`.';
 
 const MSG = {
   SETTINGS_UNAVAILABLE: () => errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.'),

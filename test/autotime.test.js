@@ -24,16 +24,19 @@ const { LIMITS, PERMISSION_LEVELS } = await import('../src/config/constants.js')
 const { updateSettings } = await import('../src/services/settingsService.js');
 
 const { extractTimeSpans, readTimeSpans, mayMentionTime } = tm;
-const { plugin, AUTOTIME, answerText, authorZone, timesToAnswer, handleMessage, isIgnoredChannel, mayAnswer } = autotime;
+const { plugin, AUTOTIME, answerText, zoneHintText, authorZone, timesToAnswer, handleMessage, isIgnoredChannel, mayAnswer } = autotime;
 
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
 console.error = console.warn = console.log = console.debug = console.info = () => {};
 
-// In-memory UserTimezone table.
+// In-memory UserTimezone table. Users whose id starts with U-fail make the lookup fail.
 const zones = new Map();
 const realUserTimezone = prisma.userTimezone;
 prisma.userTimezone = {
-  findUnique: async ({ where }) => (zones.has(where.userId) ? { userId: where.userId, zone: zones.get(where.userId) } : null),
+  findUnique: async ({ where }) => {
+    if (where.userId.startsWith('U-fail')) throw new Error('database down');
+    return zones.has(where.userId) ? { userId: where.userId, zone: zones.get(where.userId) } : null;
+  },
 };
 
 after(async () => {
@@ -152,6 +155,8 @@ test('authorZone: their own zone, else their timezone role, never the server tim
   assert.equal(await authorZone(ctxFor(fakeMessage(ch, 'U-own', 'x', [ROLE_CST])), SETTINGS), 'Asia/Tokyo', 'own zone beats the role');
   assert.equal(await authorZone(ctxFor(fakeMessage(ch, 'U-role', 'x', [ROLE_CST])), SETTINGS), CHI);
   assert.equal(await authorZone(ctxFor(fakeMessage(ch, 'U-none', 'x')), SETTINGS), null, 'the server timezone is not used');
+  assert.equal(await authorZone(ctxFor(fakeMessage(ch, 'U-fail-zone', 'x', [ROLE_CST])), SETTINGS), CHI, 'a failed lookup: the role still counts');
+  assert.equal(await authorZone(ctxFor(fakeMessage(ch, 'U-fail-zone2', 'x')), SETTINGS), undefined, 'a failed lookup and no role: unknown');
 });
 
 // ── The message handler ───────────────────────────────────────────────────────
@@ -168,14 +173,54 @@ test('a member with a timezone role gets a reply with timestamps and no pings', 
   assert.doesNotMatch(content, /Chicago/, "the author's zone is not shown");
 });
 
-test('members without a zone are only answered for times that name one', async () => {
-  const ch = fakeChannel('C-nozone');
-  const plain = fakeMessage(ch, 'U-nozone', 'see you tomorrow 5pm');
+test('members without a zone are answered for times that name one, and told how to set one for the rest', async () => {
+  const plain = fakeMessage(fakeChannel('C-nozone'), 'U-nozone', 'see you tomorrow 5pm');
   await handleMessage(ctxFor(plain));
-  assert.deepEqual(plain.replies, []);
+  assert.equal(plain.replies.length, 1);
+  assert.deepEqual(plain.replies[0].allowedMentions, { parse: [], repliedUser: false });
+  assert.equal(plain.replies[0].content, zoneHintText('tomorrow 5pm', true));
+  assert.equal(plain.replies[0].content,
+    "⚠️ I can't convert `tomorrow 5pm` without your timezone. Pick a timezone role, or save yours with `/timezone set`.");
+
   const named = fakeMessage(fakeChannel('C-nozone2'), 'U-nozone', 'see you tomorrow 5pm EST');
   await handleMessage(ctxFor(named));
   assert.equal(named.replies.length, 1);
+  assert.doesNotMatch(named.replies[0].content, /timezone set/, 'every time named its zone: no note');
+
+  const again = fakeMessage(fakeChannel('C-nozone3'), 'U-nozone', 'or fri 6pm');
+  await handleMessage(ctxFor(again));
+  assert.deepEqual(again.replies, [], `the note is sent once per member per server every ${AUTOTIME.ZONE_HINT_COOLDOWN_MS} ms`);
+  const elsewhere = fakeMessage(fakeChannel('C-nozone4'), 'U-nozone', 'or fri 6pm');
+  elsewhere.guildId = 'G2';
+  await handleMessage({ ...ctxFor(elsewhere), guildId: 'G2' });
+  assert.equal(elsewhere.replies.length, 1, 'another server gets its own note');
+});
+
+test('the timezone note: roles offered only when linked, added to a reply with times, never on a failed lookup', async () => {
+  const noRoles = fakeMessage(fakeChannel('C-hint1'), 'U-hint1', 'fri 5pm');
+  await handleMessage(ctxFor(noRoles, { ...SETTINGS, timezoneRoles: [] }));
+  assert.equal(noRoles.replies[0].content, "⚠️ I can't convert `fri 5pm` without your timezone. Save yours with `/timezone set`.");
+  const goneRole = fakeMessage(fakeChannel('C-hint2'), 'U-hint2', 'fri 5pm');
+  await handleMessage(ctxFor(goneRole, { ...SETTINGS, timezoneRoles: [{ roleId: '222222222222222222', zone: CHI }] }));
+  assert.doesNotMatch(goneRole.replies[0].content, /timezone role/, 'a linked role that was deleted does not count');
+
+  const mixed = fakeMessage(fakeChannel('C-hint3'), 'U-hint3', 'fri 5pm or sat 6pm EST');
+  await handleMessage(ctxFor(mixed));
+  const lines = mixed.replies[0].content.split('\n');
+  assert.equal(lines.length, 3);
+  assert.match(lines[0], /^🕒 `sat 6pm EST` → <t:\d+:F>/);
+  assert.equal(lines[2], zoneHintText('fri 5pm', true));
+
+  const failed = fakeMessage(fakeChannel('C-hint4'), 'U-fail-hint', 'fri 5pm');
+  await handleMessage(ctxFor(failed));
+  assert.deepEqual(failed.replies, [], 'they may have a zone saved: no note');
+
+  const ignored = fakeMessage(fakeChannel('C-hint-ign'), 'U-hint5', 'fri 5pm');
+  await handleMessage(ctxFor(ignored, { ...SETTINGS, autoTimeIgnoredChannelIds: ['C-hint-ign'] }));
+  assert.deepEqual(ignored.replies, [], 'an ignored channel');
+  const noPerm = fakeMessage(fakeChannel('C-hint-perm', { allowed: false }), 'U-hint6', 'fri 5pm');
+  await handleMessage(ctxFor(noPerm));
+  assert.deepEqual(noPerm.replies, [], 'no permission');
 });
 
 test('ignored channels, categories and thread parents; missing permissions; no settings', async () => {
