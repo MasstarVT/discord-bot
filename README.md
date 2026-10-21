@@ -31,7 +31,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 🎮 **Games** (MEE6: Economy › games (+ ours)) — Rock-Paper-Scissors, number guess, Tic-Tac-Toe and a full two-player Scrabble (beyond MEE6).
 - 📰 **Social Feeds** (MEE6: RSS / YouTube / Reddit / Bluesky / Podcast alerts) — post new RSS, YouTube channel, Reddit, Bluesky and podcast items to a channel, keyless.
 - 🔎 **Search Anything** (MEE6: Search Anything) — `/anime`, `/manga` (AniList), `/pokemon`, `/urban`, keyless.
-- 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API).
+- 🔴 **Live Role** (MEE6: Twitch Alerts › live-streaming role) — *off by default.* A role for members while they stream, from Discord presence (no Twitch API). Optionally posts the stream link in a channel when someone goes live, with an optional role ping (`/liverole announce`).
 - 🔢 **Counting** (beyond MEE6) — *off by default.* A channel where members count up from 1 in turns: the bot reacts ✅ to each right number, and a wrong number or counting twice in a row starts the count again from 1. `/counting set` picks the channel.
 - 🕒 **Auto Timestamps** (beyond MEE6) — *off by default.* When a member with their own timezone (`/timezone set`) or a timezone role types a time such as "friday 5pm", "tomorrow at 18:30" or "7pm EST", the bot replies with a Discord timestamp that everyone sees in their own timezone. Members with neither are told to pick a timezone role or use `/timezone set`. `/autotime enable` turns it on; `/autotime ignore` skips channels.
 - 💡 **Suggestions** (beyond MEE6) — *off by default.* Members post ideas with `/suggestion submit` (or a form), everyone votes 👍/👎 on the post, and moderators approve, deny, consider or implement them with an optional note; the author is DMed. Optional discussion threads, anonymous posts and a per-member cooldown. `/suggestion setup` picks the channel.
@@ -121,7 +121,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/manga` | 🔎 Search Anything | Everyone | Search AniList for a manga: score, chapters, status, genres. |
 | `/pokemon` | 🔎 Search Anything | Everyone | Look up a Pokémon on PokeAPI: types, abilities, stats. |
 | `/urban` | 🔎 Search Anything | Everyone | Look up a word or phrase on Urban Dictionary. |
-| `/liverole` | 🔴 Live Role | Admins | Give a role while members stream (MEE6 Twitch Alerts live-streaming role). |
+| `/liverole` | 🔴 Live Role | Admins | Give a role while members stream (MEE6 Twitch Alerts live-streaming role); `announce` posts their stream link when they go live. |
 | `/counting` | 🔢 Counting | Admins | A channel where members count up from 1, one number each. |
 | `/autotime` | 🕒 Auto Timestamps | Admins | Answer times typed in chat ("fri 5pm") with a timestamp everyone sees in their own timezone; ignore channels. |
 | `/suggestion` | 💡 Suggestions | Everyone | Post a suggestion for the server to vote on (moderators review, admins run `setup`). |

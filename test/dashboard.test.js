@@ -331,7 +331,7 @@ describe('settings registry', () => {
     for (const field of ['autoroleIds', 'muteRoleId', 'captchaRoleId', 'birthdayRoleId', 'liveRoleId']) {
       assert.equal(SETTINGS_FIELDS[field].assignable, true, field);
     }
-    for (const field of ['modRoleIds', 'immuneRoleIds', 'noXpRoleIds', 'liveRoleRequiredRoleId']) {
+    for (const field of ['modRoleIds', 'immuneRoleIds', 'noXpRoleIds', 'liveRoleRequiredRoleId', 'liveRoleAnnouncePingRoleId']) {
       assert.notEqual(SETTINGS_FIELDS[field].assignable, true, field);
     }
   });
@@ -617,6 +617,7 @@ describe('settings registry agrees with the bot services', () => {
       xp: await load('services/xpService.js'),
       birthday: await load('services/birthdayService.js'),
       achievement: await load('services/achievementService.js'),
+      liverole: await load('plugins/liverole.js'),
       automod: await load('services/automodService.js'),
       logging: await load('services/loggingService.js'),
       moderation: await load('services/moderationService.js'),
@@ -638,6 +639,7 @@ describe('settings registry agrees with the bot services', () => {
     assert.equal(DEFAULT_TEXTS.birthdayMessage, svc.birthday.DEFAULT_BIRTHDAY_MESSAGE);
     assert.equal(DEFAULT_TEXTS.birthdayMessageAge, svc.birthday.DEFAULT_BIRTHDAY_MESSAGE_AGE);
     assert.equal(DEFAULT_TEXTS.achievementMessage, svc.achievement.DEFAULT_ACHIEVEMENT_MESSAGE);
+    assert.equal(DEFAULT_TEXTS.liveRoleAnnounceMessage, svc.liverole.DEFAULT_LIVE_ANNOUNCE_MESSAGE);
     assert.deepEqual(DEFAULT_EMBEDS.welcomeEmbed, { ...svc.welcome.DEFAULT_WELCOME_EMBED });
     assert.deepEqual(DEFAULT_EMBEDS.goodbyeEmbed, { ...svc.welcome.DEFAULT_GOODBYE_EMBED });
     assert.deepEqual(JSON.parse(JSON.stringify(fields.DEFAULT_CAPTCHA_PANEL)), svc.captcha.defaultPanelTemplate());

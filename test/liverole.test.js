@@ -13,7 +13,7 @@ process.env.CLIENT_ID ??= '000000000000000000';
 process.env.REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://127.0.0.1:1';
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? 'postgresql://test:test@127.0.0.1:1/test';
 
-const { ActivityType } = await import('discord.js');
+const { ActivityType, PermissionFlagsBits } = await import('discord.js');
 const lr = await import('../src/plugins/liverole.js');
 const cmd = await import('../src/commands/admin/liverole.js');
 const { default: redis } = await import('../src/services/redis.js');
@@ -434,7 +434,7 @@ test('/liverole payload', () => {
   assert.equal(json.name, 'liverole');
   assert.equal(json.default_member_permissions, '32');
   assert.deepEqual(json.contexts, [0]);
-  assert.deepEqual(json.options.map((o) => [o.name, o.type]), [['set', 1], ['require', 1], ['enable', 1], ['disable', 1], ['status', 1]]);
+  assert.deepEqual(json.options.map((o) => [o.name, o.type]), [['set', 1], ['require', 1], ['enable', 1], ['disable', 1], ['announce', 1], ['status', 1]]);
   const sub = Object.fromEntries(json.options.map((o) => [o.name, o]));
   // `role` is optional because `new_role` can create the role instead (newTargets); runSet refuses when both are empty.
   assert.deepEqual(sub.set.options.map((o) => [o.name, o.type, !!o.required]), [['role', 8, false], ['new_role', 3, false]]);
@@ -443,10 +443,13 @@ test('/liverole payload', () => {
   assert.deepEqual([sub.disable.options[0].name, sub.disable.options[0].type], ['remove_roles', 5]);
   assert.ok(!sub.disable.options[0].required);
   assert.deepEqual(sub.enable.options ?? [], []);
+  assert.deepEqual(sub.announce.options.map((o) => [o.name, o.type, !!o.required]),
+    [['channel', 7, false], ['message', 3, false], ['ping_role', 8, false], ['clear_ping_role', 5, false]]);
+  assert.equal(sub.announce.options[1].max_length, LIVEROLE.ANNOUNCE_MAX_CHARS);
   assert.deepEqual(sub.status.options ?? [], []);
   for (const o of json.options) assert.ok(o.description.length >= 1 && o.description.length <= 100);
   assert.ok(json.description.length <= 100);
-  assert.ok(charCount(json) <= 550, `payload is ${charCount(json)} chars`);
+  assert.ok(charCount(json) <= 800, `payload is ${charCount(json)} chars`);
   assert.equal(cmd.module, 'liverole');
   assert.equal(cmd.gated, false);
   assert.equal(cmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -505,6 +508,133 @@ test('the presence hook reconciles the member from the settings the runner loade
   assert.deepEqual(w.calls, [['remove', 'L', REASONS.presenceRemove]]);
 });
 
+// ── Go-live posts ─────────────────────────────────────────────────────────────
+
+test('safeStreamUrl keeps only http(s) Twitch and YouTube links', () => {
+  for (const ok of ['https://www.twitch.tv/someone', 'https://twitch.tv/some_one', 'https://m.twitch.tv/x', 'https://www.youtube.com/watch?v=abc',
+    'https://youtube.com/@handle/live', 'https://youtu.be/abc', 'http://twitch.tv/x']) {
+    assert.equal(lr.safeStreamUrl(ok), new URL(ok).href, ok);
+  }
+  for (const bad of [null, undefined, 42, '', 'twitch.tv/x', 'https://evil.com/twitch.tv', 'https://twitch.tv.evil.com/x', 'https://nottwitch.tv/x',
+    'javascript:alert(1)', 'ftp://twitch.tv/x', 'https://user:pass@twitch.tv/x', `https://twitch.tv/${'a'.repeat(600)}`]) {
+    assert.equal(lr.safeStreamUrl(bad), null, String(bad));
+  }
+});
+
+test('streamVars reads the Streaming activity, escapes text and drops a bad link', () => {
+  const p = (a) => ({ activities: [{ type: 0, name: 'Game' }, { type: 1, name: 'Twitch', ...a }] });
+  assert.deepEqual(lr.streamVars(p({ url: 'https://www.twitch.tv/x', details: ' *Ranked* ', state: 'Valorant' })),
+    { url: 'https://www.twitch.tv/x', platform: 'Twitch', title: '\\*Ranked\\*', game: 'Valorant' });
+  assert.deepEqual(lr.streamVars(p({ url: 'https://evil.com/x' })), { url: '', platform: 'Twitch', title: '', game: '' });
+  assert.ok(lr.streamVars(p({ details: 'x'.repeat(500) })).title.length <= 140);
+  assert.equal(lr.streamVars(P), null);
+  assert.equal(lr.streamVars(null), null);
+});
+
+let announceGuild = 0;
+/** world() plus a postable channel 'C' and go-live settings; each call gets its own guild id (the cooldown is per process). */
+function announceWorld({ streaming = true, url = 'https://www.twitch.tv/streamer', denied = [], channelId = 'C', message = null, pingRoleId = null } = {}) {
+  const w = world({ streaming });
+  w.guild.id = `G-announce-${++announceGuild}`;
+  if (streaming) w.guild.presences.cache.set('U', { activities: [{ type: 1, name: 'Twitch', url, details: 'Ranked' }] });
+  w.member.user = { id: 'U', bot: false, username: 'streamer' };
+  w.sent = [];
+  const deniedBits = new Set(denied.map((k) => PermissionFlagsBits[k]));
+  const channel = {
+    id: 'C',
+    guild: w.guild,
+    isTextBased: () => true,
+    isThread: () => false,
+    permissionsFor: () => ({ has: (bit) => !deniedBits.has(bit) }),
+    send: async (payload) => { w.sent.push(payload); return {}; },
+  };
+  w.guild.channels = { cache: new Map([['C', channel]]) };
+  w.guild.roles.cache.set('PING', { id: 'PING', mentionable: true });
+  w.guild.roles.cache.set('QUIET', { id: 'QUIET', mentionable: false });
+  w.settings = { ...w.settings, liveRoleAnnounceChannelId: channelId, liveRoleAnnounceMessage: message, liveRoleAnnouncePingRoleId: pingRoleId };
+  return w;
+}
+
+const presenceHook = (w) => plugin.hooks[0].run({ guild: w.guild, newPresence: { userId: 'U' }, member: w.member, getSettings: async () => w.settings });
+
+test('announceLive posts the stream link without pinging anyone, once per cooldown', async () => {
+  const w = announceWorld();
+  assert.equal(await lr.announceLive(w.guild, 'U', w.settings), 'sent');
+  assert.equal(w.sent.length, 1);
+  assert.equal(w.sent[0].content, '🔴 <@U> is now live on Twitch!\nhttps://www.twitch.tv/streamer');
+  assert.deepEqual(w.sent[0].allowedMentions, { parse: [], roles: [] });
+  assert.equal(await lr.announceLive(w.guild, 'U', w.settings), 'cooldown');
+  assert.equal(w.sent.length, 1);
+});
+
+test('announceLive uses the custom message and its stream variables', async () => {
+  const w = announceWorld({ message: '{user} · {platform} · {title} · {url}' });
+  assert.equal(await lr.announceLive(w.guild, 'U', w.settings), 'sent');
+  assert.equal(w.sent[0].content, '<@U> · Twitch · Ranked · https://www.twitch.tv/streamer');
+});
+
+test('announceLive pings only the ping role, and only when the bot may mention it', async () => {
+  const ping = announceWorld({ pingRoleId: 'PING' });
+  assert.equal(await lr.announceLive(ping.guild, 'U', ping.settings), 'sent');
+  assert.equal(ping.sent[0].content, '<@&PING> 🔴 <@U> is now live on Twitch!\nhttps://www.twitch.tv/streamer');
+  assert.deepEqual(ping.sent[0].allowedMentions, { parse: [], roles: ['PING'] });
+
+  const quiet = announceWorld({ pingRoleId: 'QUIET', denied: ['MentionEveryone'] });
+  await lr.announceLive(quiet.guild, 'U', quiet.settings);
+  assert.match(quiet.sent[0].content, /^<@&QUIET> /, 'the mention is still shown');
+  assert.deepEqual(quiet.sent[0].allowedMentions, { parse: [], roles: [] }, 'but it notifies nobody');
+
+  const allowed = announceWorld({ pingRoleId: 'QUIET' }); // not mentionable, but the bot has Mention Everyone
+  await lr.announceLive(allowed.guild, 'U', allowed.settings);
+  assert.deepEqual(allowed.sent[0].allowedMentions.roles, ['QUIET']);
+
+  for (const pingRoleId of ['DELETED', null]) {
+    const w = announceWorld({ pingRoleId });
+    await lr.announceLive(w.guild, 'U', w.settings);
+    assert.match(w.sent[0].content, /^🔴 /, String(pingRoleId));
+    assert.deepEqual(w.sent[0].allowedMentions, { parse: [], roles: [] });
+  }
+  const everyone = announceWorld();
+  everyone.guild.roles.cache.set(everyone.guild.id, { id: everyone.guild.id, mentionable: true });
+  await lr.announceLive(everyone.guild, 'U', { ...everyone.settings, liveRoleAnnouncePingRoleId: everyone.guild.id });
+  assert.match(everyone.sent[0].content, /^🔴 /, '@everyone is never used as the ping role');
+  assert.deepEqual(everyone.sent[0].allowedMentions, { parse: [], roles: [] });
+});
+
+test('announceLive does nothing without a usable channel or a live stream', async () => {
+  const off = announceWorld({ channelId: null });
+  assert.equal(await lr.announceLive(off.guild, 'U', off.settings), 'off');
+  const gone = announceWorld({ channelId: 'DELETED' });
+  assert.equal(await lr.announceLive(gone.guild, 'U', gone.settings), 'unusable');
+  const noSend = announceWorld({ denied: ['SendMessages'] });
+  assert.equal(await lr.announceLive(noSend.guild, 'U', noSend.settings), 'unusable');
+  const stopped = announceWorld({ streaming: false });
+  assert.equal(await lr.announceLive(stopped.guild, 'U', stopped.settings), 'not-streaming');
+  for (const w of [off, gone, noSend, stopped]) assert.equal(w.sent.length, 0);
+  // A missing stream preview permission still posts.
+  const noEmbeds = announceWorld({ denied: ['EmbedLinks'] });
+  assert.equal(await lr.announceLive(noEmbeds.guild, 'U', noEmbeds.settings), 'sent');
+});
+
+test('announceLive never throws when the send fails', async () => {
+  const w = announceWorld();
+  w.guild.channels.cache.get('C').send = async () => { throw Object.assign(new Error('Missing Permissions'), { code: 50013 }); };
+  assert.equal(await lr.announceLive(w.guild, 'U', w.settings), 'failed');
+});
+
+test('the presence hook posts after it adds the role; role syncs never post', async () => {
+  const w = announceWorld();
+  await presenceHook(w);
+  assert.deepEqual(w.calls, [['add', 'L', REASONS.presenceAdd]]);
+  assert.equal(w.sent.length, 1);
+  await presenceHook(w); // already holds the role: no add, no post
+  assert.equal(w.sent.length, 1);
+
+  const s = announceWorld();
+  assert.equal(await rec(s, { source: 'sync' }), 'added');
+  assert.equal(s.sent.length, 0, 'a sync add (set, enable, startup, required role) does not post');
+});
+
 // ── 13. Static source checks ──────────────────────────────────────────────────
 
 test('static source checks on both files', () => {
@@ -532,14 +662,14 @@ function fakeInteraction(sub) {
     user: { id: 'u1' },
     deferred: false,
     replied: false,
-    options: { getSubcommand: () => sub, getRole: () => null, getBoolean: () => null },
+    options: { getSubcommand: () => sub, getRole: () => null, getBoolean: () => null, getChannel: () => null, getString: () => null },
     deferReply: async () => { calls.defer++; },
     editReply: async (p) => { calls.edits.push(p); return {}; },
   };
 }
 
 test('every subcommand defers, then answers "Settings Unavailable" publicly without pinging when settings cannot load', { skip: process.env.TEST_DATABASE_URL ? 'runs offline only (settings must fail to load)' : false }, async () => {
-  const subs = ['set', 'require', 'enable', 'disable', 'status'];
+  const subs = ['set', 'require', 'enable', 'disable', 'announce', 'status'];
   const interactions = subs.map((sub) => ({ sub, i: fakeInteraction(sub) }));
   await Promise.all(interactions.map(({ i }) => cmd.execute(i))); // concurrent: one shared settings load
   for (const { sub, i } of interactions) {
@@ -666,7 +796,7 @@ function mkWorld(guildId) {
 }
 
 /** A fake slash interaction. answer: 'yes' | 'no' | null (timeout) for an awaitConfirm dialog. */
-function mkInteraction(w, sub, { role = null, bool = null, answer = null } = {}) {
+function mkInteraction(w, sub, { role = null, bool = null, answer = null, channel = null, strings = {} } = {}) {
   const edits = [];
   let yesId = null;
   let noId = null;
@@ -690,7 +820,10 @@ function mkInteraction(w, sub, { role = null, bool = null, answer = null } = {})
     member: { id: 'admin', roles: { highest: { position: 20 } } },
     deferred: false,
     replied: false,
-    options: { getSubcommand: () => sub, getSubcommandGroup: () => null, get: () => (role ? { id: role } : null), getString: () => null, getRole: () => (role ? { id: role } : null), getBoolean: () => bool },
+    options: {
+      getSubcommand: () => sub, getSubcommandGroup: () => null, get: () => (role ? { id: role } : null), getString: (name) => strings[name] ?? null,
+      getRole: () => (role ? { id: role } : null), getBoolean: () => bool, getChannel: () => (channel ? { id: channel } : null),
+    },
     deferReply: async () => { interaction.deferred = true; interaction.ephemeral = false; },
     editReply: async (p) => {
       edits.push(p);
@@ -916,6 +1049,95 @@ test('/liverole disable removes the role from every holder (streaming ones too) 
   assert.ok(w.members.get('bot').roles.cache.has('L'), 'bots are never touched');
   assert.match(clear.text(), /Removed the live role from \*\*2\*\* member\(s\)\./);
   assert.equal((await row(w.guild.id)).liveRoleId, 'L', 'the role and requirement stay saved');
+});
+
+test('/liverole announce: sets the channel, keeps it for message-only changes, resets the text, turns posts off', { skip: skipDb }, async () => {
+  const w = mkWorld(dbGuildId());
+  w.addRole('L');
+  const channel = (id, denied = []) => ({
+    id, guild: w.guild, isTextBased: () => true, isThread: () => false,
+    permissionsFor: () => ({ has: (bit) => !denied.some((k) => PermissionFlagsBits[k] === bit) }),
+  });
+  w.guild.channels = { cache: new Collection([
+    ['C', channel('C')], ['MUTE', channel('MUTE', ['SendMessages'])], ['NOEMB', channel('NOEMB', ['EmbedLinks'])],
+    ['NOMENTION', channel('NOMENTION', ['MentionEveryone'])],
+  ]) };
+  w.addRole('ALERTS').mentionable = true;
+  w.addRole('QUIET');
+  w.addRole(w.guild.id); // @everyone
+  await updateSettings(w.guild.id, { liveRoleId: 'L', liveRoleEnabled: true });
+
+  const already = mkInteraction(w, 'announce');
+  await cmd.execute(already);
+  assert.match(already.title(), /No Change/);
+
+  const pingFirst = mkInteraction(w, 'announce', { role: 'ALERTS' });
+  await cmd.execute(pingFirst);
+  assert.match(pingFirst.title(), /No Channel Set/);
+
+  const refused = mkInteraction(w, 'announce', { channel: 'MUTE' });
+  await cmd.execute(refused);
+  assert.match(refused.title(), /Cannot Post There/);
+  assert.equal((await row(w.guild.id)).liveRoleAnnounceChannelId, null, 'an unusable channel writes nothing');
+
+  const set = mkInteraction(w, 'announce', { channel: 'C' });
+  await cmd.execute(set);
+  assert.equal(set.title(), '✅  Go-Live Posts Updated');
+  assert.match(set.text(), /I post in <#C>/);
+  assert.match(set.text(), /https:\/\/twitch\.tv\/example/, 'the preview shows the sample stream link');
+  assert.deepEqual(set.last().allowedMentions, { parse: [] });
+  assert.equal((await row(w.guild.id)).liveRoleAnnounceChannelId, 'C');
+
+  const msg = mkInteraction(w, 'announce', { strings: { message: '{user} is live: {title}' } });
+  await cmd.execute(msg);
+  let r = await row(w.guild.id);
+  assert.equal(r.liveRoleAnnounceChannelId, 'C', 'a message-only change keeps the channel');
+  assert.equal(r.liveRoleAnnounceMessage, '{user} is live: {title}');
+  assert.match(msg.text(), /add `\{url\}`/);
+
+  const reset = mkInteraction(w, 'announce', { strings: { message: 'Default' } });
+  await cmd.execute(reset);
+  assert.equal((await row(w.guild.id)).liveRoleAnnounceMessage, null);
+
+  const ping = mkInteraction(w, 'announce', { role: 'ALERTS' });
+  await cmd.execute(ping);
+  assert.equal((await row(w.guild.id)).liveRoleAnnouncePingRoleId, 'ALERTS');
+  assert.match(ping.text(), /and ping <@&ALERTS>/);
+  assert.match(ping.text(), /\*\*Preview\*\*\n<@&ALERTS> /);
+  assert.deepEqual(ping.last().allowedMentions, { parse: [] }, 'the reply itself pings nobody');
+
+  const everyone = mkInteraction(w, 'announce', { role: w.guild.id });
+  await cmd.execute(everyone);
+  assert.match(everyone.title(), /Invalid Role/);
+
+  const notPingable = mkInteraction(w, 'announce', { channel: 'NOMENTION', role: 'QUIET' });
+  await cmd.execute(notPingable);
+  assert.match(notPingable.title(), /Role Not Pingable/);
+  r = await row(w.guild.id);
+  assert.equal(r.liveRoleAnnouncePingRoleId, 'ALERTS', 'a refused ping role writes nothing');
+  assert.equal(r.liveRoleAnnounceChannelId, 'C');
+
+  const botCannot = mkInteraction(w, 'announce', { channel: 'NOMENTION' });
+  await cmd.execute(botCannot);
+  assert.doesNotMatch(botCannot.text(), /won't actually ping/, 'a mentionable role pings anywhere');
+
+  const cleared = mkInteraction(w, 'announce', { bool: true });
+  await cmd.execute(cleared);
+  r = await row(w.guild.id);
+  assert.equal(r.liveRoleAnnouncePingRoleId, null);
+  assert.equal(r.liveRoleAnnounceChannelId, 'NOMENTION', 'clear_ping_role alone keeps the channel');
+
+  const noEmbeds = mkInteraction(w, 'announce', { channel: 'NOEMB' });
+  await cmd.execute(noEmbeds);
+  assert.match(noEmbeds.text(), /Embed Links/);
+  assert.equal((await row(w.guild.id)).liveRoleAnnounceChannelId, 'NOEMB', 'missing Embed Links only warns');
+
+  const off = mkInteraction(w, 'announce');
+  await cmd.execute(off);
+  assert.match(off.title(), /Go-Live Posts Off/);
+  r = await row(w.guild.id);
+  assert.equal(r.liveRoleAnnounceChannelId, null);
+  assert.equal(r.liveRoleEnabled, true, 'the live role itself stays on');
 });
 
 test('/liverole status is cache-only and flags problems', { skip: skipDb }, async () => {

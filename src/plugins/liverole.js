@@ -4,10 +4,11 @@
 // the only module-scope state is three keyed mutexes, two throttles, two waiting-sets and frozen constants.
 import { ActivityType, escapeMarkdown } from 'discord.js';
 import { getSettingsSafe, peekSettings } from '../services/settingsService.js';
-import { checkAssignableRole } from '../utils/interactionHelpers.js';
+import { checkAssignableRole, checkChannelUsable, pingableRoleIds } from '../utils/interactionHelpers.js';
 import { createKeyedMutex, createThrottle } from '../utils/async.js';
 import { fetchAllMembers } from '../utils/guildMembers.js';
 import { presencesEnabled } from '../utils/gatewayFeatures.js';
+import { renderPlaceholders } from '../utils/placeholderParser.js';
 import { clampText, formatNumber } from '../utils/text.js';
 import logger from '../utils/logger.js';
 
@@ -22,7 +23,14 @@ export const LIVEROLE = Object.freeze({
   COMMAND_SYNC_WAIT_MS: 25_000,    // how long a command waits for its sync before answering "still syncing"
   WARN_INTERVAL_MS: 60 * 60_000,
   STATUS_LIST_MAX: 15,             // holders listed by /liverole status
+  ANNOUNCE_COOLDOWN_MS: 60 * 60_000, // one go-live post per member per hour (a dropped stream re-adds the role)
+  ANNOUNCE_MAX_CHARS: 1000,        // liveRoleAnnounceMessage cap (/liverole announce and the dashboard)
 });
+
+export const DEFAULT_LIVE_ANNOUNCE_MESSAGE = '🔴 {user} is now live on {platform}!\n{url}';
+
+/** Hosts a Streaming activity may link to in a go-live post (and their subdomains). */
+const STREAM_HOSTS = Object.freeze(['twitch.tv', 'youtube.com', 'youtu.be']);
 
 export const REASONS = Object.freeze({   // audit-log reasons (each ≤ 512 chars)
   presenceAdd: 'Live role: started streaming',
@@ -54,6 +62,11 @@ const waiting = new Set();
  */
 const startupQueue = createKeyedMutex();
 const startupQueued = new Set();
+/**
+ * Go-live post cooldown per `${guildId}:${userId}`. In-process is enough: a guild lives on one shard, and after a restart a member
+ * who is still live keeps the role, so no new add (and no post) happens.
+ */
+const announceThrottle = createThrottle(LIVEROLE.ANNOUNCE_COOLDOWN_MS);
 
 const warn = (guildId, kind, text) => {
   if (warnThrottle(`${guildId}:${kind}`)) logger.warn(`[liverole] ${guildId}: ${text}`);
@@ -86,6 +99,37 @@ export function shouldHandlePresence(oldPresence, newPresence, peeked) {
 export function streamLabel(presence) {
   const a = Array.isArray(presence?.activities) ? presence.activities.find((x) => x?.type === ActivityType.Streaming) : null;
   return a ? clampText(escapeMarkdown(String(a.name || 'Streaming')), 32) : null;
+}
+
+/** The stream link of an activity: an http(s) Twitch or YouTube URL (≤ 512 chars), otherwise null. Never throws. */
+export function safeStreamUrl(raw) {
+  if (typeof raw !== 'string' || raw.length > 512) return null;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    if (u.username || u.password) return null;
+    const host = u.hostname.toLowerCase();
+    return STREAM_HOSTS.some((d) => host === d || host.endsWith(`.${d}`)) ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Template variables for a go-live post, from the member's Streaming activity. Text from the presence is markdown-escaped;
+ * the link is only ever a Twitch or YouTube URL (empty otherwise). null when the presence is not streaming.
+ * @returns {{ url: string, platform: string, title: string, game: string } | null}
+ */
+export function streamVars(presence) {
+  const a = Array.isArray(presence?.activities) ? presence.activities.find((x) => x?.type === ActivityType.Streaming) : null;
+  if (!a) return null;
+  const text = (v, max) => (typeof v === 'string' && v.trim() ? clampText(escapeMarkdown(v.trim()), max) : '');
+  return {
+    url: safeStreamUrl(a.url) ?? '',
+    platform: streamLabel(presence),
+    title: text(a.details, 140),
+    game: text(a.state, 100),
+  };
 }
 
 /**
@@ -421,6 +465,49 @@ export async function syncGuild(guild, { mode = 'sync', reason = 'startup' } = {
   }
 }
 
+/**
+ * Posts "{user} is now live" in liveRoleAnnounceChannelId. Called only after a presence-sourced add, so the bulk adds of a sync
+ * (/liverole set|enable, startup) never post. Only liveRoleAnnouncePingRoleId can be pinged (prefixed like a feed post), and only
+ * when the bot may mention it; a deleted role gets no prefix. Never throws.
+ * @returns {Promise<'sent'|'off'|'unusable'|'cooldown'|'not-streaming'|'empty'|'failed'>}
+ */
+export async function announceLive(guild, userId, settings) {
+  try {
+    const channelId = settings?.liveRoleAnnounceChannelId;
+    if (!channelId) return 'off';
+    const channel = guild.channels?.cache?.get(channelId) ?? null;
+    const usable = checkChannelUsable(channel, { needs: ['ViewChannel', 'SendMessages'] });
+    if (!usable.ok) {
+      warn(guild.id, 'announce-channel', `go-live post skipped: channel ${channelId} unusable (${usable.reason})`);
+      return 'unusable';
+    }
+    const vars = streamVars(guild.presences.cache.get(userId));
+    if (!vars) return 'not-streaming'; // stopped again before the post
+    if (!announceThrottle(`${guild.id}:${userId}`)) return 'cooldown';
+
+    const member = guild.members.cache.get(userId) ?? null;
+    const template = settings.liveRoleAnnounceMessage?.trim() || DEFAULT_LIVE_ANNOUNCE_MESSAGE;
+    let content = renderPlaceholders(template, { member, user: member?.user, guild, channel, vars }, { maxLength: 2000 });
+    if (!content?.trim()) return 'empty';
+    if (vars.url && !checkChannelUsable(channel, { needs: ['EmbedLinks'] }).ok) {
+      warn(guild.id, 'announce-embeds', `go-live posts in ${channelId} show no stream preview: I lack Embed Links there`);
+    }
+    const pingId = settings.liveRoleAnnouncePingRoleId;
+    let roles = [];
+    if (pingId && pingId !== guild.id && guild.roles.cache.has(pingId)) {
+      content = clampText(`<@&${pingId}> ${content}`, 2000);
+      roles = pingableRoleIds(channel, guild.members.me ?? null, [pingId]).allowed;
+      if (!roles.length) warn(guild.id, 'announce-ping', `go-live posts cannot ping role ${pingId}: it is not mentionable and I lack Mention Everyone in ${channelId}`);
+    }
+    await channel.send({ content, allowedMentions: { parse: [], roles } });
+    return 'sent';
+  } catch (err) {
+    if (err?.code === 50013 || err?.code === 50001) warn(guild.id, 'announce-perms', `go-live post failed: missing permission (code ${err.code})`);
+    else if (err?.code !== 10003) logger.warn(`[liverole] ${guild.id}: go-live post failed: ${err?.code ?? ''} ${err?.message ?? err}`);
+    return 'failed';
+  }
+}
+
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 async function onPresenceUpdate(ctx) {
@@ -428,7 +515,8 @@ async function onPresenceUpdate(ctx) {
   if (!settings?.liveRoleEnabled || !settings.liveRoleId) return;
   const userId = ctx.newPresence?.userId ?? ctx.member?.id;
   if (!userId) return;
-  await reconcileMember(ctx.guild, userId, { mode: 'sync', settings, source: 'presence' });
+  const out = await reconcileMember(ctx.guild, userId, { mode: 'sync', settings, source: 'presence' });
+  if (out === 'added') await announceLive(ctx.guild, userId, settings); // outside the member lock
 }
 
 /** Gaining or losing the required role changes who qualifies without any presence update: re-check that member. */

@@ -1,20 +1,21 @@
-// /liverole set | require | enable | disable | status (pkg-liverole.md §4). Admin config command: replies are public (CLAUDE.md admin
+// /liverole set | require | enable | disable | announce | status (pkg-liverole.md §4). Admin config command: replies are public (CLAUDE.md admin
 // convention) and it keeps working while the Live Role module is off (gated = false). The engine lives in src/plugins/liverole.js.
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, ChannelType } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import { MODULES } from '../../config/modules.js';
 import { getSettingsSafe, updateSettings } from '../../services/settingsService.js';
 import { successEmbed, errorEmbed, infoEmbed, guildEmbed } from '../../utils/embedBuilder.js';
 import {
-  safeDefer, safeReply, checkAssignableRole, awaitConfirm, isInteractionGone, permissionNames,
+  safeDefer, safeReply, checkAssignableRole, checkChannelUsable, pingableRoleIds, awaitConfirm, isInteractionGone, permissionNames,
 } from '../../utils/interactionHelpers.js';
-import { joinWithLimit, formatNumber } from '../../utils/text.js';
+import { renderPlaceholdersDetailed } from '../../utils/placeholderParser.js';
+import { joinWithLimit, formatNumber, clampText } from '../../utils/text.js';
 import { withTimeout } from '../../utils/async.js';
 import { newRoleOption, resolveNewOptions } from '../../utils/newTargets.js';
 import { presencesEnabled } from '../../utils/gatewayFeatures.js';
 import logger from '../../utils/logger.js';
 import {
-  LIVEROLE, isStreaming, streamLabel, countLosingHolders,
+  LIVEROLE, DEFAULT_LIVE_ANNOUNCE_MESSAGE, isStreaming, streamLabel, countLosingHolders,
   loadMembers, syncGuild, formatSyncResult, liveRoleProblems,
 } from '../../plugins/liverole.js';
 
@@ -34,6 +35,13 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('enable').setDescription('Turn the live role on and re-sync it.'))
   .addSubcommand((s) => s.setName('disable').setDescription('Turn the live role off.')
     .addBooleanOption((o) => o.setName('remove_roles').setDescription('Remove it from members who have it now (default: yes).')))
+  .addSubcommand((s) => s.setName('announce').setDescription('Post a stream link when a member goes live.')
+    .addChannelOption((o) => o.setName('channel').setDescription('Where to post. Leave every option empty to stop.')
+      .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+    .addStringOption((o) => o.setName('message').setDescription('Text with {url}, {platform}, {title}; "default" resets.')
+      .setMaxLength(LIVEROLE.ANNOUNCE_MAX_CHARS))
+    .addRoleOption((o) => o.setName('ping_role').setDescription('Role to ping in each post.'))
+    .addBooleanOption((o) => o.setName('clear_ping_role').setDescription('Stop pinging a role.')))
   .addSubcommand((s) => s.setName('status').setDescription('Show the setup and who is live now.'));
 
 // ── Shared pieces ─────────────────────────────────────────────────────────────
@@ -51,6 +59,14 @@ const MSG = {
   ),
   SETTINGS_UNAVAILABLE: () => errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.'),
   COULD_NOT_SAVE: () => errorEmbed('Could Not Save', 'The setting could not be saved. Please try again in a moment.'),
+  CANNOT_POST: (reason) => errorEmbed('Cannot Post There', `${reason.replace(/\.?$/, '.')} Pick another channel or fix my permissions there.`),
+  EMPTY_MESSAGE: () => errorEmbed('Empty Message', 'That text renders as an empty message.'),
+  PING_EVERYONE: () => errorEmbed('Invalid Role', "@everyone can't be the ping role. Use a role members can opt into, such as @Stream Alerts."),
+  PING_NO_CHANNEL: () => errorEmbed('No Channel Set', 'Pick the channel in the same command: `/liverole announce channel:#live-now ping_role:@Role`.'),
+  PING_NOT_ALLOWED: (roleId, channelId) => errorEmbed(
+    'Role Not Pingable',
+    `<@&${roleId}> is not mentionable and you lack **Mention @everyone, @here and All Roles** in <#${channelId}>.`,
+  ),
   NO_PRESENCES: () => errorEmbed(
     'Live Role Unavailable',
     'This bot runs without presence data (`DISABLE_PRESENCES=1`), so it cannot see who is streaming. '
@@ -78,12 +94,13 @@ async function loadSettingsOrFinish(interaction) {
   return settings;
 }
 
-/** Writes settings through settingsService; answers "Could Not Save" and returns null on failure. */
+/** Writes settings through settingsService; answers "Could Not Save" and returns null on failure. Without `field` the whole change is logged. */
 async function save(interaction, sub, data, field, oldValue) {
   const guildId = interaction.guildId;
   try {
     const row = await updateSettings(guildId, data);
-    logger.info(`[liverole] ${guildId}: ${field} ${JSON.stringify(oldValue ?? null)} → ${JSON.stringify(data[field] ?? null)} by ${interaction.user.id}`);
+    const change = field ? `${field} ${JSON.stringify(oldValue ?? null)} → ${JSON.stringify(data[field] ?? null)}` : JSON.stringify(data);
+    logger.info(`[liverole] ${guildId}: ${change} by ${interaction.user.id}`);
     return row;
   } catch (err) {
     logger.error(`[liverole] ${sub} save failed`, err);
@@ -268,7 +285,115 @@ async function runDisable(interaction) {
   });
 }
 
+// ── /liverole announce ────────────────────────────────────────────────────────
+
+/** Stand-in stream for the preview. */
+const SAMPLE_STREAM = Object.freeze({ url: 'https://twitch.tv/example', platform: 'Twitch', title: 'Ranked grind', game: 'Valorant' });
+
+async function runAnnounce(interaction) {
+  if (!(await safeDefer(interaction))) return;
+  const settings = await loadSettingsOrFinish(interaction);
+  if (!settings) return;
+  const { guild } = interaction;
+  const channelOpt = interaction.options.getChannel('channel');
+  const text = interaction.options.getString('message')?.trim() || null;
+  const pingOpt = interaction.options.getRole('ping_role');
+  const clearPing = interaction.options.getBoolean('clear_ping_role') === true;
+
+  // Every option empty: stop posting. The message and ping role stay saved for next time.
+  if (!channelOpt && !text && !pingOpt && !clearPing) {
+    if (!settings.liveRoleAnnounceChannelId) {
+      return finish(interaction, {
+        embeds: [infoEmbed('No Change', 'Go-live posts are already off. Turn them on with `/liverole announce channel:#live-now`.')],
+      });
+    }
+    const row = await save(interaction, 'announce', { liveRoleAnnounceChannelId: null }, 'liveRoleAnnounceChannelId', settings.liveRoleAnnounceChannelId);
+    if (!row) return;
+    return finish(interaction, {
+      embeds: [successEmbed('Go-Live Posts Off', 'Nothing is posted when members go live. The live role itself keeps working.')],
+    });
+  }
+
+  const data = {};
+  const notes = [];
+  let channel = settings.liveRoleAnnounceChannelId ? (guild.channels.cache.get(settings.liveRoleAnnounceChannelId) ?? null) : null;
+  if (channelOpt) {
+    channel = guild.channels.cache.get(channelOpt.id) ?? null;
+    const check = checkChannelUsable(channel, { needs: ['ViewChannel', 'SendMessages'] });
+    if (!check.ok) return finish(interaction, { embeds: [MSG.CANNOT_POST(check.reason)] });
+    data.liveRoleAnnounceChannelId = channel.id;
+  }
+  // A channel is still saved when it lacks Embed Links: the post works, only Discord's stream preview is missing.
+  if (channel && !checkChannelUsable(channel, { needs: ['EmbedLinks'] }).ok) {
+    notes.push(`⚠️ I lack **Embed Links** in <#${channel.id}>, so posts show no stream preview.`);
+  }
+
+  let pingId = settings.liveRoleAnnouncePingRoleId ?? null;
+  if (pingOpt) {
+    if (!channel) return finish(interaction, { embeds: [MSG.PING_NO_CHANNEL()] });
+    const role = guild.roles.cache.get(pingOpt.id) ?? null;
+    if (!role) return finish(interaction, { embeds: [MSG.CANNOT_USE('Role not found.')] });
+    if (role.id === guild.id) return finish(interaction, { embeds: [MSG.PING_EVERYONE()] });
+    // The admin may only set up pings they could send themselves.
+    if (pingableRoleIds(channel, interaction.member, [role.id]).refused.length) {
+      return finish(interaction, { embeds: [MSG.PING_NOT_ALLOWED(role.id, channel.id)] });
+    }
+    pingId = role.id;
+    data.liveRoleAnnouncePingRoleId = role.id;
+  } else if (clearPing) {
+    pingId = null;
+    data.liveRoleAnnouncePingRoleId = null;
+  }
+  const pingRole = pingId ? (guild.roles.cache.get(pingId) ?? null) : null;
+  if (pingId && !pingRole) notes.push('⚠️ The ping role was deleted, so nobody is pinged. Pick a new one with `ping_role:`.');
+  if (pingRole && channel && !pingableRoleIds(channel, guild.members.me ?? null, [pingRole.id]).allowed.length) {
+    notes.push(`⚠️ <@&${pingRole.id}> is not mentionable and I lack **Mention @everyone, @here and All Roles** in <#${channel.id}>, so it won't actually ping.`);
+  }
+
+  let template = settings.liveRoleAnnounceMessage?.trim() || null;
+  if (text) {
+    template = text.toLowerCase() === 'default' ? null : text;
+    data.liveRoleAnnounceMessage = template;
+  }
+  const d = renderPlaceholdersDetailed(template ?? DEFAULT_LIVE_ANNOUNCE_MESSAGE, {
+    member: interaction.member, user: interaction.user, guild, channel: channel ?? interaction.channel, vars: SAMPLE_STREAM,
+  }, { maxLength: 2000 });
+  if (!d.text.trim()) return finish(interaction, { embeds: [MSG.EMPTY_MESSAGE()] });
+  if (d.unknownTokens.length) {
+    notes.push(`⚠️ Unknown variables (sent as typed): ${d.unknownTokens.slice(0, 10).map((t) => `\`${t}\``).join(', ')}`);
+  }
+  if (template && !/\{url\}/i.test(template)) notes.push('Tip: add `{url}` to link the stream.');
+
+  const row = await save(interaction, 'announce', data);
+  if (!row) return;
+
+  const roleText = row.liveRoleId ? `<@&${row.liveRoleId}>` : 'the live role';
+  let head;
+  if (channel) {
+    head = `When a member goes live and gets ${roleText}, I post in <#${channel.id}>${pingRole ? ` and ping <@&${pingRole.id}>` : ''}`
+      + ' (at most once an hour per member).';
+  }
+  else if (row.liveRoleAnnounceChannelId) head = '⚠️ The go-live channel was deleted. Pick a new one with `/liverole announce channel:`.';
+  else head = 'ℹ️ No channel is set, so nothing is posted yet. Add one with `/liverole announce channel:#live-now`.';
+  const lines = [head];
+  if (row.liveRoleEnabled !== true) lines.push(OFF_NOTE);
+  lines.push(...notes, '', '**Preview**', pingRole ? `<@&${pingRole.id}> ${d.text}` : d.text);
+  return finish(interaction, {
+    embeds: [successEmbed('Go-Live Posts Updated', clampText(lines.join('\n'), 4096))],
+  });
+}
+
 // ── /liverole status ──────────────────────────────────────────────────────────
+
+function announceValue(guild, settings) {
+  const id = settings.liveRoleAnnounceChannelId;
+  if (!id) return 'Off — `/liverole announce`';
+  if (!guild.channels.cache.has(id)) return `⚠️ Channel deleted (\`${id}\`) — \`/liverole announce\``;
+  const pingId = settings.liveRoleAnnouncePingRoleId;
+  let ping = 'no ping';
+  if (pingId) ping = guild.roles.cache.has(pingId) ? `pings <@&${pingId}>` : `⚠️ ping role deleted (\`${pingId}\`)`;
+  return `<#${id}> · ${settings.liveRoleAnnounceMessage?.trim() ? 'custom message' : 'default message'} · ${ping}`;
+}
 
 async function runStatus(interaction) {
   if (!(await safeDefer(interaction))) return;
@@ -314,6 +439,7 @@ async function runStatus(interaction) {
       value: !reqId ? 'None — everyone who streams' : (reqExists ? `<@&${reqId}>` : `⚠️ Deleted (\`${reqId}\`)`),
       inline: true,
     },
+    { name: 'Go-live posts', value: announceValue(guild, settings) },
     { name: 'Live now', value: liveNow },
   );
 
@@ -347,5 +473,6 @@ export async function execute(interaction) {
   if (sub === 'require') return runRequire(interaction);
   if (sub === 'enable') return runEnable(interaction);
   if (sub === 'disable') return runDisable(interaction);
+  if (sub === 'announce') return runAnnounce(interaction);
   if (sub === 'status') return runStatus(interaction);
 }

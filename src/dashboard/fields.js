@@ -26,7 +26,7 @@ export const MAX_SETTINGS_CHANGES = 200;
 
 // ── Restated constants (originals named; test/dashboard.test.js compares them) ──────────────────────────────
 
-/** Default texts used while a message column is null (welcomeService, xpService, birthdayService, achievementService). */
+/** Default texts used while a message column is null (welcomeService, xpService, birthdayService, achievementService, plugins/liverole). */
 export const DEFAULT_TEXTS = Object.freeze({
   welcomeMessage: 'Hey {user}, welcome to **{server}**!',
   welcomeDmMessage: 'Have a great time here in **{server}**!',
@@ -35,6 +35,7 @@ export const DEFAULT_TEXTS = Object.freeze({
   birthdayMessage: 'Happy birthday {user}! 🎂',
   birthdayMessageAge: 'Happy birthday {user}! They are now {age}! 🎂',
   achievementMessage: '🏆 {player} unlocked **{achievement}**!',
+  liveRoleAnnounceMessage: '🔴 {user} is now live on {platform}!\n{url}',
   modmailGreeting: 'Thanks for your message! The staff of **{server}** will answer you here soon.',
 });
 
@@ -1207,6 +1208,18 @@ export const MODULE_GROUPS = {
         description: 'Given while a member streams. Use a role only the bot hands out: members without a stream lose it.' },
       { field: 'liveRoleRequiredRoleId', type: 'role', label: 'Only for members with', nullable: true, default: null,
         description: 'Only members with this role get the live role. Empty = everyone who streams.' },
+    ],
+  }, {
+    id: 'announce',
+    title: 'Go-live posts',
+    description: 'Posted when a member goes live and gets the live role, at most once an hour per member. Only the ping role '
+      + 'is notified.',
+    fields: [
+      channel('liveRoleAnnounceChannelId', 'Post channel', 'Where go-live posts go. Empty turns them off.'),
+      messageField('liveRoleAnnounceMessage', 'Message', '{url} is the stream link. Empty uses the default.',
+        { maxLength: 1000, placeholders: ['{url}', '{platform}', '{title}', '{game}'] }),
+      { field: 'liveRoleAnnouncePingRoleId', type: 'role', label: 'Role to ping', nullable: true, default: null,
+        description: 'Mentioned at the start of each post. It only pings if the role is mentionable or the bot has Mention Everyone.' },
     ],
   }],
   counting: [{

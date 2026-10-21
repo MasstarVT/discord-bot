@@ -1136,6 +1136,10 @@
         "description": "Turn the live role off."
       },
       {
+        "name": "announce",
+        "description": "Post a stream link when a member goes live."
+      },
+      {
         "name": "status",
         "description": "Show the setup and who is live now."
       }

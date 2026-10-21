@@ -287,6 +287,12 @@ model GuildSettings {
   liveRoleId             String?
   // Only members with this role get the live role (null = everyone).
   liveRoleRequiredRoleId String?
+  // Where a go-live post goes when a member gets the live role (null = no posts).
+  liveRoleAnnounceChannelId String?
+  // Default "🔴 {user} is now live on {platform}!\n{url}"
+  liveRoleAnnounceMessage   String? @db.Text
+  // Role mentioned (and pinged when the bot may) at the start of each go-live post (null = no ping).
+  liveRoleAnnouncePingRoleId String?
 
   // ── Counting ────────────────────────────────────────────────────────────────
   // The channel members count up in (null = not set up). The count itself lives in CountingState.
