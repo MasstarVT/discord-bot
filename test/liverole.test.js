@@ -1159,7 +1159,8 @@ test('/liverole status is cache-only and flags problems', { skip: skipDb }, asyn
   assert.match(field('Live now'), /<@idle> · not streaming/);
   assert.match(field('Problems'), /required role was deleted/);
   assert.match(field('Problems'), /still have the live role/);
-  assert.ok(embed.fields.length <= 5);
+  assert.equal(field('Go-live posts'), 'Off — `/liverole announce`');
+  assert.ok(embed.fields.length <= 6);
   for (const f of embed.fields) assert.ok(f.value.length <= 1024);
   assert.equal(w.calls.length, 0);
 });
