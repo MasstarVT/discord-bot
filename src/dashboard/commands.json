@@ -75,11 +75,103 @@
     "subcommands": []
   },
   {
+    "name": "afk",
+    "description": "Go AFK: others who mention you are told, and it ends when you write.",
+    "module": "afk",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Mark yourself AFK."
+      },
+      {
+        "name": "clear",
+        "description": "End your AFK."
+      },
+      {
+        "name": "remove",
+        "description": "Moderators: end a member's AFK."
+      },
+      {
+        "name": "list",
+        "description": "Moderators: list the AFK members."
+      }
+    ]
+  },
+  {
     "name": "anime",
     "description": "Search AniList for an anime: score, episodes, status, genres.",
     "module": "search",
     "who": "everyone",
     "subcommands": []
+  },
+  {
+    "name": "antiraid",
+    "description": "Raid protection: join floods, lockdowns and brand-new accounts.",
+    "module": "antiraid",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "status",
+        "description": "Show the lockdown, settings and problems."
+      },
+      {
+        "name": "lockdown start",
+        "description": "Start a lockdown now."
+      },
+      {
+        "name": "lockdown end",
+        "description": "End it and undo what it changed."
+      },
+      {
+        "name": "config",
+        "description": "Change the settings (no options: show them)."
+      }
+    ]
+  },
+  {
+    "name": "application",
+    "description": "Apply for something here, or build application forms.",
+    "module": "applications",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "apply",
+        "description": "Fill in an application form."
+      },
+      {
+        "name": "form create",
+        "description": "Create a form."
+      },
+      {
+        "name": "form edit",
+        "description": "Change a form. Text options take \"none\" to clear."
+      },
+      {
+        "name": "form delete",
+        "description": "Delete a form and its submissions."
+      },
+      {
+        "name": "form list",
+        "description": "List the forms."
+      },
+      {
+        "name": "form role",
+        "description": "Roles given on accept, or needed to apply."
+      },
+      {
+        "name": "question add",
+        "description": "Add a question."
+      },
+      {
+        "name": "question remove",
+        "description": "Remove a question."
+      },
+      {
+        "name": "panel",
+        "description": "Post a message with an Apply button."
+      }
+    ]
   },
   {
     "name": "automation",
@@ -664,6 +756,38 @@
     ]
   },
   {
+    "name": "event",
+    "description": "Run events with RSVP buttons, an optional Discord event and a reminder",
+    "module": "events",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Post an event with RSVP buttons"
+      },
+      {
+        "name": "edit",
+        "description": "Edit an event in a form"
+      },
+      {
+        "name": "cancel",
+        "description": "Cancel an event"
+      },
+      {
+        "name": "list",
+        "description": "List the open events"
+      },
+      {
+        "name": "info",
+        "description": "Show an event"
+      },
+      {
+        "name": "attendees",
+        "description": "List who is going"
+      }
+    ]
+  },
+  {
     "name": "feed",
     "description": "RSS, YouTube, Reddit, Bluesky and podcast alerts (MEE6 social alerts)",
     "module": "feeds",
@@ -1129,6 +1253,38 @@
     ]
   },
   {
+    "name": "modmail",
+    "description": "Members DM the bot to reach staff privately; each conversation is a thread.",
+    "module": "modmail",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "setup",
+        "description": "Pick the staff channel for conversations and turn modmail on."
+      },
+      {
+        "name": "reply",
+        "description": "Reply to the member (use inside a modmail thread)."
+      },
+      {
+        "name": "close",
+        "description": "Close this conversation (use inside a modmail thread)."
+      },
+      {
+        "name": "block",
+        "description": "Stop a member from opening conversations."
+      },
+      {
+        "name": "unblock",
+        "description": "Let a blocked member open conversations again."
+      },
+      {
+        "name": "blocked",
+        "description": "List the blocked members."
+      }
+    ]
+  },
+  {
     "name": "module",
     "description": "Turn bot modules on or off for this server.",
     "module": null,
@@ -1307,6 +1463,34 @@
     "module": "economy",
     "who": "everyone",
     "subcommands": []
+  },
+  {
+    "name": "rolepersist",
+    "description": "Give members their roles back when they leave and rejoin.",
+    "module": "rolepersist",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "status",
+        "description": "Show the setup and how many members are saved."
+      },
+      {
+        "name": "ignore add",
+        "description": "Never give this role back."
+      },
+      {
+        "name": "ignore remove",
+        "description": "Give this role back again."
+      },
+      {
+        "name": "view",
+        "description": "Show what is saved for a member."
+      },
+      {
+        "name": "clear",
+        "description": "Forget what is saved for a member."
+      }
+    ]
   },
   {
     "name": "roulette",
@@ -1494,6 +1678,70 @@
       {
         "name": "category",
         "description": "Set the default category for new counters."
+      }
+    ]
+  },
+  {
+    "name": "sticky",
+    "description": "Keep a message at the bottom of a channel.",
+    "module": "sticky",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Set or replace the sticky message in a channel."
+      },
+      {
+        "name": "remove",
+        "description": "Remove a channel's sticky message."
+      },
+      {
+        "name": "list",
+        "description": "Show every sticky message."
+      },
+      {
+        "name": "pause",
+        "description": "Stop re-posting a sticky message (the current one is deleted)."
+      },
+      {
+        "name": "resume",
+        "description": "Start re-posting a paused sticky message."
+      }
+    ]
+  },
+  {
+    "name": "suggestion",
+    "description": "Post a suggestion for the server to vote on, or review suggestions.",
+    "module": "suggestions",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "submit",
+        "description": "Post a suggestion. Leave the text empty to write it in a form."
+      },
+      {
+        "name": "approve",
+        "description": "Approve a suggestion (closes voting)."
+      },
+      {
+        "name": "deny",
+        "description": "Deny a suggestion (closes voting)."
+      },
+      {
+        "name": "consider",
+        "description": "Mark a suggestion as under consideration (voting stays open)."
+      },
+      {
+        "name": "implement",
+        "description": "Mark a suggestion as implemented (closes voting)."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a suggestion and its post."
+      },
+      {
+        "name": "setup",
+        "description": "Set the suggestion channel and options (no options: show them)."
       }
     ]
   },

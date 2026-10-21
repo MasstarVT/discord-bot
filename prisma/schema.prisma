@@ -87,18 +87,26 @@ model GuildSettings {
   liveRoleEnabled       Boolean @default(false)
   countingEnabled       Boolean @default(false)
   autoTimeEnabled       Boolean @default(false)
+  suggestionsEnabled    Boolean @default(false)
+  modmailEnabled        Boolean @default(false)
+  applicationsEnabled   Boolean @default(false)
+  stickyEnabled         Boolean @default(false)
+  afkEnabled            Boolean @default(false)
+  antiRaidEnabled       Boolean @default(false)
+  eventsEnabled         Boolean @default(false)
+  rolePersistEnabled    Boolean @default(false)
 
   // ── General (/settings) ────────────────────────────────────────────────────
   // IANA zone name, validated with Intl.DateTimeFormat before saving.
-  timezone     String @default("UTC")
+  timezone      String @default("UTC")
   // [{ roleId: string, zone: string (IANA) }] — /settings timezone-role. A member's timezone role is
   // used by /timestamp when they have no personal zone (UserTimezone); the highest-positioned role wins.
   timezoneRoles Json?
   // 0xRRGGBB applied to info/neutral embeds by applyGuildColor(); null = default.
-  embedColor   Int?
+  embedColor    Int?
   // Prefix for message-invoked custom commands (MEE6 "!name args").
   // Empty string = prefix invocation is off (/settings prefix off).
-  customPrefix String @default("!")
+  customPrefix  String @default("!")
 
   // ── Moderation ──────────────────────────────────────────────────────────────
   modLogChannelId      String?
@@ -288,40 +296,113 @@ model GuildSettings {
   // Channels (or categories) where times in chat are never answered (LIMITS.AUTOTIME_IGNORED_CHANNELS).
   autoTimeIgnoredChannelIds String[] @default([])
 
+  // ── Suggestions ─────────────────────────────────────────────────────────────
+  // Where /suggestion submit posts (null = not set up).
+  suggestionChannelId       String?
+  // Open a discussion thread on each new suggestion (needs Create Public Threads).
+  suggestionThreads         Boolean @default(true)
+  // Members may hide their name on a suggestion (the author is still stored for staff).
+  suggestionAllowAnonymous  Boolean @default(false)
+  // DM the author when staff change a suggestion's status.
+  suggestionDmOnUpdate      Boolean @default(true)
+  // Seconds between two suggestions from one member (0 = no cooldown).
+  suggestionCooldownSeconds Int     @default(300)
+
+  // ── Modmail ─────────────────────────────────────────────────────────────────
+  // Staff-only text channel; each conversation is a thread in it (null = not set up).
+  modmailChannelId        String?
+  // Roles pinged when a conversation opens (LIMITS.MODMAIL_PING_ROLES).
+  modmailPingRoleIds      String[] @default([])
+  // Sent to the member when a conversation opens (placeholders allowed; null = the default text).
+  modmailGreeting         String?  @db.Text
+  // Staff replies show as "Staff" instead of the staff member's name.
+  modmailAnonymousReplies Boolean  @default(false)
+  // Members who may not open conversations (LIMITS.MODMAIL_BLOCKED_USERS).
+  modmailBlockedUserIds   String[] @default([])
+
+  // ── AFK ─────────────────────────────────────────────────────────────────────
+  // Put "[AFK] " in front of the nickname of members who go AFK (needs Manage Nicknames).
+  afkNicknamePrefix    Boolean  @default(true)
+  // Channels (or categories) where AFK is neither cleared nor announced (LIMITS.AFK_IGNORED_CHANNELS).
+  afkIgnoredChannelIds String[] @default([])
+
+  // ── Anti-Raid ───────────────────────────────────────────────────────────────
+  // A raid is antiRaidJoinThreshold joins within antiRaidJoinSeconds.
+  antiRaidJoinThreshold     Int            @default(10)
+  antiRaidJoinSeconds       Int            @default(10)
+  // What happens to the members who join while a raid lasts.
+  antiRaidAction            AntiRaidAction @default(ALERT)
+  // Pause invites while a raid lasts (Discord incident actions; needs Manage Server).
+  antiRaidPauseInvites      Boolean        @default(true)
+  // Also take the send permissions from @everyone while a raid lasts (restored afterwards; AntiRaidState).
+  antiRaidLockChat          Boolean        @default(false)
+  // How long a raid lockdown lasts before it lifts itself.
+  antiRaidLockdownMinutes   Int            @default(30)
+  // Accounts younger than this many days get antiRaidYoungAction (0 = off).
+  antiRaidMinAccountAgeDays Int            @default(0)
+  antiRaidYoungAction       AntiRaidAction @default(KICK)
+  // Where raid alerts go (null = the moderation log channel, if any).
+  antiRaidAlertChannelId    String?
+
+  // ── Events ──────────────────────────────────────────────────────────────────
+  // Default channel for /event create announcements (null = the channel the command runs in).
+  eventChannelId          String?
+  // Also create a Discord Scheduled Event for each event (needs Manage Events).
+  eventCreateDiscordEvent Boolean @default(true)
+  // Default minutes before the start to ping members who are going (0 = no reminder).
+  eventReminderMinutes    Int     @default(15)
+
+  // ── Role Persistence ────────────────────────────────────────────────────────
+  // Also give back the nickname.
+  rolePersistNicknames      Boolean  @default(true)
+  // Roles never given back (LIMITS.ROLEPERSIST_IGNORED_ROLES).
+  rolePersistIgnoredRoleIds String[] @default([])
+  // Saved roles of members who left more than this many days ago are dropped.
+  rolePersistDays           Int      @default(90)
+
   // ── Relations ───────────────────────────────────────────────────────────────
-  infractions          Infraction[]
-  reactionRoleGroups   ReactionRoleGroup[]
-  customTags           CustomTag[]
-  userLevels           UserLevel[]
-  memberCache          GuildMemberCache[]
-  levelRoles           LevelRole[]
-  autoTriggers         AutoTrigger[]
-  translateChannels    TranslateChannel[]
-  translateStats       TranslateStat[]
-  countingState        CountingState?
-  botJoin              BotJoin?
-  scheduledJobs        ScheduledJob[]
-  personalInvites      PersonalInvite[]
-  savedEmbeds          SavedEmbed[]
-  reminders            Reminder[]
-  giveaways            Giveaway[]
-  polls                Poll[]
-  starboards           Starboard[]
-  ticketPanels         TicketPanel[]
-  tickets              Ticket[]
-  tempVoiceHubs        TempVoiceHub[]
-  tempVoiceChannels    TempVoiceChannel[]
-  statChannels         StatChannel[]
-  birthdays            Birthday[]
-  achievements         Achievement[]
-  achievementProgress  AchievementProgress[]
-  automations          Automation[]
-  economyAccounts      EconomyAccount[]
-  economyBoosts        EconomyBoost[]
-  shopItems            ShopItem[]
-  inventoryItems       InventoryItem[]
-  feeds                Feed[]
-  captchaVerifications CaptchaVerification[]
+  infractions            Infraction[]
+  reactionRoleGroups     ReactionRoleGroup[]
+  customTags             CustomTag[]
+  userLevels             UserLevel[]
+  memberCache            GuildMemberCache[]
+  levelRoles             LevelRole[]
+  autoTriggers           AutoTrigger[]
+  translateChannels      TranslateChannel[]
+  translateStats         TranslateStat[]
+  countingState          CountingState?
+  botJoin                BotJoin?
+  scheduledJobs          ScheduledJob[]
+  personalInvites        PersonalInvite[]
+  savedEmbeds            SavedEmbed[]
+  reminders              Reminder[]
+  giveaways              Giveaway[]
+  polls                  Poll[]
+  starboards             Starboard[]
+  ticketPanels           TicketPanel[]
+  tickets                Ticket[]
+  tempVoiceHubs          TempVoiceHub[]
+  tempVoiceChannels      TempVoiceChannel[]
+  statChannels           StatChannel[]
+  birthdays              Birthday[]
+  achievements           Achievement[]
+  achievementProgress    AchievementProgress[]
+  automations            Automation[]
+  economyAccounts        EconomyAccount[]
+  economyBoosts          EconomyBoost[]
+  shopItems              ShopItem[]
+  inventoryItems         InventoryItem[]
+  feeds                  Feed[]
+  captchaVerifications   CaptchaVerification[]
+  suggestions            Suggestion[]
+  modmailThreads         ModmailThread[]
+  applicationForms       ApplicationForm[]
+  applicationSubmissions ApplicationSubmission[]
+  stickyMessages         StickyMessage[]
+  afkStatuses            AfkStatus[]
+  antiRaidState          AntiRaidState?
+  guildEvents            GuildEvent[]
+  persistedMembers       PersistedMember[]
 }
 
 // New enums (CREATE TYPE in the migration — safe to use as defaults).
@@ -1499,4 +1580,309 @@ model UserTimezone {
   zone      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUGGESTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum SuggestionStatus {
+  OPEN
+  CONSIDERED
+  APPROVED
+  DENIED
+  IMPLEMENTED
+}
+
+model Suggestion {
+  id         String           @id @default(cuid())
+  guildId    String
+  // Per-guild sequential number (allocated under pg_advisory_xact_lock).
+  number     Int
+  authorId   String
+  // Posted without the author's name (suggestionAllowAnonymous).
+  anonymous  Boolean          @default(false)
+  content    String           @db.Text
+  status     SuggestionStatus @default(OPEN)
+  channelId  String
+  messageId  String?          @unique
+  threadId   String?
+  // Vote totals, kept in step with SuggestionVote.
+  upvotes    Int              @default(0)
+  downvotes  Int              @default(0)
+  reviewerId String?
+  reviewNote String?          @db.Text
+  reviewedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  guild GuildSettings    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  votes SuggestionVote[]
+
+  @@unique([guildId, number])
+  @@index([guildId, status])
+  @@index([guildId, authorId, createdAt])
+}
+
+model SuggestionVote {
+  suggestionId String
+  userId       String
+  // 1 = up, -1 = down.
+  value        Int
+  createdAt    DateTime @default(now())
+
+  suggestion Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+
+  @@id([suggestionId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODMAIL
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ModmailStatus {
+  OPEN
+  CLOSED
+}
+
+// One conversation between a member (in DMs) and staff (in a thread of GuildSettings.modmailChannelId).
+// At most one OPEN row per (guildId, userId), enforced under an advisory lock.
+model ModmailThread {
+  id             String        @id @default(cuid())
+  guildId        String
+  userId         String
+  threadId       String        @unique
+  status         ModmailStatus @default(OPEN)
+  closedById     String?
+  closedAt       DateTime?
+  closeReason    String?       @db.Text
+  lastActivityAt DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([guildId, userId, status])
+  @@index([userId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ApplicationStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  DENIED
+}
+
+model ApplicationForm {
+  id              String   @id @default(cuid())
+  guildId         String
+  // Unique per guild; what /application apply autocompletes.
+  name            String
+  description     String?  @db.Text
+  // [{ label, style: 'SHORT'|'PARAGRAPH', required, placeholder? }] (LIMITS.APPLICATION_QUESTIONS; 5 per modal page).
+  questions       Json     @default("[]")
+  // Where submissions are posted for review (null = not set up; the form cannot be opened).
+  reviewChannelId String?
+  // Roles given when a submission is accepted (LIMITS.APPLICATION_ROLES).
+  acceptRoleIds   String[] @default([])
+  // Roles a member needs to apply (empty = anyone; LIMITS.APPLICATION_ROLES).
+  requiredRoleIds String[] @default([])
+  // Hours before a denied member may apply to this form again (0 = right away).
+  cooldownHours   Int      @default(24)
+  // DMed to the member on accept / deny (placeholders allowed; null = the default text).
+  acceptMessage   String?  @db.Text
+  denyMessage     String?  @db.Text
+  // The posted "Apply" panel, if any.
+  panelChannelId  String?
+  panelMessageId  String?  @unique
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  guild       GuildSettings           @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  submissions ApplicationSubmission[]
+
+  @@unique([guildId, name])
+}
+
+model ApplicationSubmission {
+  id              String            @id @default(cuid())
+  guildId         String
+  formId          String
+  userId          String
+  // [{ question, answer }], filled page by page while DRAFT.
+  answers         Json              @default("[]")
+  status          ApplicationStatus @default(DRAFT)
+  reviewerId      String?
+  reviewNote      String?           @db.Text
+  // The review message in the form's review channel.
+  reviewMessageId String?           @unique
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  guild GuildSettings   @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  form  ApplicationForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId, userId, status])
+  @@index([guildId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STICKY MESSAGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model StickyMessage {
+  id            String   @id @default(cuid())
+  guildId       String
+  channelId     String   @unique
+  // Plain text (placeholderParser) and/or an embed (MessageTemplate embed, customEmbed); at least one is set.
+  content       String?  @db.Text
+  embed         Json?
+  // The sticky's current message, deleted and sent again as chat moves on.
+  lastMessageId String?
+  enabled       Boolean  @default(true)
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AFK
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AfkStatus {
+  guildId      String
+  userId       String
+  reason       String?
+  // Whether the bot added the "[AFK] " nickname prefix (and must take it off again).
+  nickChanged  Boolean  @default(false)
+  // The nickname before the prefix (null = none), given back on return when nickChanged.
+  previousNick String?
+  // The last LIMITS.AFK_PINGS_KEPT mentions while AFK: [{ channelId, messageId, authorId, at }].
+  pings        Json     @default("[]")
+  pingCount    Int      @default(0)
+  since        DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANTI-RAID
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AntiRaidAction {
+  ALERT
+  KICK
+  BAN
+}
+
+// The current raid lockdown of a guild (no row, or lockedAt null = none).
+model AntiRaidState {
+  guildId            String    @id
+  lockedAt           DateTime?
+  lockedUntil        DateTime?
+  // null = started automatically by a detected raid.
+  lockedById         String?
+  reason             String?
+  // Bitfield (decimal string) of the send permissions @everyone had before antiRaidLockChat took them;
+  // null = chat was not locked. Only those bits are restored, never View Channels (captcha's lock).
+  priorEveryoneSend  String?
+  // When the invite pause the bot set ends (null = the bot did not pause invites).
+  invitesPausedUntil DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum GuildEventStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum RsvpStatus {
+  GOING
+  MAYBE
+  DECLINED
+}
+
+model GuildEvent {
+  id              String           @id @default(cuid())
+  guildId         String
+  title           String
+  description     String?          @db.Text
+  location        String?
+  startsAt        DateTime
+  endsAt          DateTime?
+  hostId          String
+  // The announcement message with the RSVP buttons.
+  channelId       String
+  messageId       String?          @unique
+  // Given to members going, taken back when the event ends (null = none).
+  roleId          String?
+  // Most members going (null = no cap).
+  capacity        Int?
+  // Minutes before the start to ping members going (0 = none).
+  reminderMinutes Int              @default(15)
+  reminderSentAt  DateTime?
+  // The linked Discord Scheduled Event (eventCreateDiscordEvent), if one was created.
+  discordEventId  String?
+  status          GuildEventStatus @default(SCHEDULED)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+  rsvps EventRsvp[]
+
+  @@index([guildId, status, startsAt])
+}
+
+model EventRsvp {
+  eventId     String
+  userId      String
+  status      RsvpStatus
+  // The bot gave this member the event role (only these members get it taken back).
+  roleGranted Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  event GuildEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([eventId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROLE PERSISTENCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+// The roles (and nickname) of a member who left, given back when they rejoin; dropped after rolePersistDays.
+model PersistedMember {
+  guildId  String
+  userId   String
+  roleIds  String[] @default([])
+  nickname String?
+  leftAt   DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, userId])
+  @@index([guildId, leftAt])
 }

@@ -35,6 +35,7 @@ export const DEFAULT_TEXTS = Object.freeze({
   birthdayMessage: 'Happy birthday {user}! 🎂',
   birthdayMessageAge: 'Happy birthday {user}! They are now {age}! 🎂',
   achievementMessage: '🏆 {player} unlocked **{achievement}**!',
+  modmailGreeting: 'Thanks for your message! The staff of **{server}** will answer you here soon.',
 });
 
 /** DEFAULT_WELCOME_EMBED / DEFAULT_GOODBYE_EMBED (src/services/welcomeService.js): sent while the column is null. */
@@ -1226,6 +1227,117 @@ export const MODULE_GROUPS = {
         description: 'Times typed in these channels are never answered. A category covers its channels and threads.' },
     ],
   }],
+  suggestions: [{
+    id: 'suggestions',
+    title: 'Suggestions',
+    description: '/suggestion submit posts here; members vote with the buttons and staff review with /suggestion.',
+    fields: [
+      channel('suggestionChannelId', 'Suggestion channel', 'New suggestions are posted here with voting buttons.'),
+      bool('suggestionThreads', true, 'Open a thread on each suggestion',
+        'Starts a discussion thread on every new suggestion (the bot needs Create Public Threads).'),
+      bool('suggestionAllowAnonymous', false, 'Allow anonymous suggestions',
+        'Members may hide their name on a suggestion. Staff can still look up who wrote it.'),
+      bool('suggestionDmOnUpdate', true, 'DM the author on review',
+        'The author gets a direct message when staff approve, deny or otherwise update their suggestion.'),
+      int('suggestionCooldownSeconds', 300, 0, 86400, 'Cooldown between suggestions',
+        'Seconds a member waits between two suggestions. 0 = no cooldown.', { unit: 'seconds' }),
+    ],
+  }],
+  modmail: [{
+    id: 'modmail',
+    title: 'Modmail',
+    description: 'Members DM the bot; each conversation opens a thread in the staff channel. Block members with /modmail block.',
+    fields: [
+      channel('modmailChannelId', 'Staff channel',
+        'Conversations open as threads here. Keep it hidden from members; the bot needs Create Private Threads.'),
+      { field: 'modmailPingRoleIds', type: 'roles', label: 'Roles to ping', maxItems: LIMITS.MODMAIL_PING_ROLES, default: [],
+        description: 'Pinged in the new thread when a conversation opens.' },
+      messageField('modmailGreeting', 'Greeting', 'Sent to the member when their conversation opens.', { maxLength: 1000 }),
+      bool('modmailAnonymousReplies', false, 'Anonymous staff replies',
+        'Replies reach the member as "Staff" instead of the name of the staff member.'),
+    ],
+  }],
+  afk: [{
+    id: 'afk',
+    title: 'AFK',
+    description: 'Members go AFK with /afk set; it clears on their next message.',
+    fields: [
+      bool('afkNicknamePrefix', true, 'Add [AFK] to nicknames',
+        'Puts "[AFK] " in front of the nickname while a member is AFK (the bot needs Manage Nicknames).'),
+      { field: 'afkIgnoredChannelIds', type: 'channels', label: 'Ignored channels', channelTypes: [...ANY_CHANNEL],
+        maxItems: LIMITS.AFK_IGNORED_CHANNELS, default: [],
+        description: 'Messages here neither end an AFK nor answer mentions of AFK members. A category covers its channels.' },
+    ],
+  }],
+  antiraid: [{
+    id: 'detection',
+    title: 'Raid detection',
+    description: 'A raid is this many joins within this many seconds.',
+    fields: [
+      int('antiRaidJoinThreshold', 10, 3, 100, 'Joins', 'How many joins in the window count as a raid.'),
+      int('antiRaidJoinSeconds', 10, 3, 300, 'Window', 'The window the joins are counted in.', { unit: 'seconds' }),
+      {
+        field: 'antiRaidAction', type: 'enum', label: 'Members who join during a raid', default: 'ALERT',
+        description: 'What happens to members who join while a raid lockdown lasts.',
+        options: [
+          { value: 'ALERT', label: 'Only alert the moderators' },
+          { value: 'KICK', label: 'Kick them' },
+          { value: 'BAN', label: 'Ban them' },
+        ],
+      },
+      channel('antiRaidAlertChannelId', 'Alert channel', 'Raid alerts go here. Empty uses the moderation log channel.'),
+    ],
+  }, {
+    id: 'lockdown',
+    title: 'Lockdown',
+    description: 'What the bot does while a raid lasts. /antiraid lockdown starts or ends one by hand.',
+    fields: [
+      bool('antiRaidPauseInvites', true, 'Pause invites',
+        'Pauses every invite while the lockdown lasts (the bot needs Manage Server).'),
+      bool('antiRaidLockChat', false, 'Lock chat',
+        'Takes Send Messages from @everyone while the lockdown lasts and gives it back afterwards (the bot needs Manage Roles).'),
+      int('antiRaidLockdownMinutes', 30, 5, 1440, 'Lockdown length', 'The lockdown lifts itself after this long.', { unit: 'minutes' }),
+    ],
+  }, {
+    id: 'account-age',
+    title: 'New accounts',
+    fields: [
+      int('antiRaidMinAccountAgeDays', 0, 0, 365, 'Minimum account age',
+        'Accounts younger than this get the action below. 0 = off.', { unit: 'days' }),
+      {
+        field: 'antiRaidYoungAction', type: 'enum', label: 'Action for new accounts', default: 'KICK',
+        description: 'What happens to accounts younger than the minimum age when they join.',
+        options: [
+          { value: 'ALERT', label: 'Only alert the moderators' },
+          { value: 'KICK', label: 'Kick them' },
+          { value: 'BAN', label: 'Ban them' },
+        ],
+      },
+    ],
+  }],
+  events: [{
+    id: 'events',
+    title: 'Events',
+    fields: [
+      channel('eventChannelId', 'Announcement channel', 'Where /event create posts. Empty posts in the channel the command runs in.'),
+      bool('eventCreateDiscordEvent', true, 'Also create a Discord event',
+        'Adds each event to the Events list of the server too (the bot needs Manage Events).'),
+      int('eventReminderMinutes', 15, 0, 1440, 'Reminder',
+        'Minutes before the start to ping members who are going. 0 = no reminder.', { unit: 'minutes' }),
+    ],
+  }],
+  rolepersist: [{
+    id: 'rolepersist',
+    title: 'Role persistence',
+    description: 'Roles with powerful permissions, managed roles and roles above the bot are never given back.',
+    fields: [
+      bool('rolePersistNicknames', true, 'Give back nicknames', 'Also restores the nickname a member had when they left.'),
+      { field: 'rolePersistIgnoredRoleIds', type: 'roles', label: 'Never give back', maxItems: LIMITS.ROLEPERSIST_IGNORED_ROLES,
+        default: [], description: 'These roles are not saved when a member leaves.' },
+      int('rolePersistDays', 90, 1, 365, 'Keep for', 'Saved roles of members who left longer ago than this are dropped.',
+        { unit: 'days' }),
+    ],
+  }],
 };
 for (const key of MODULE_NAMES) MODULE_GROUPS[key] ??= [];
 
@@ -1268,6 +1380,7 @@ export const NOT_EXPOSED = Object.freeze({
   captchaChannelId: 'changes only together with the posted panel: /captcha setup or /captcha channel posts it',
   captchaMessageId: 'bot-managed: the id of the posted verification panel',
   captchaLockdownPrior: 'bot-managed: what /captcha lock off restores',
+  modmailBlockedUserIds: 'a list of members: /modmail block and unblock manage it',
 });
 
 for (const desc of Object.values(SETTINGS_FIELDS)) deepFreeze(desc);

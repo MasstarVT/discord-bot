@@ -33,6 +33,14 @@ export const MODULES = Object.freeze({
   liverole: Object.freeze({ flag: "liveRoleEnabled", label: "Live Role", emoji: "🔴", mee6: "Twitch Alerts › live-streaming role", configCommand: "/liverole", default: DEFAULT_MODULE_SETTINGS.liverole }),
   counting: Object.freeze({ flag: "countingEnabled", label: "Counting", emoji: "🔢", mee6: "(ours, beyond MEE6)", configCommand: "/counting", default: DEFAULT_MODULE_SETTINGS.counting }),
   autotime: Object.freeze({ flag: "autoTimeEnabled", label: "Auto Timestamps", emoji: "🕒", mee6: "(ours, beyond MEE6)", configCommand: "/autotime", default: DEFAULT_MODULE_SETTINGS.autotime }),
+  suggestions: Object.freeze({ flag: "suggestionsEnabled", label: "Suggestions", emoji: "💡", mee6: "(ours, beyond MEE6)", configCommand: "/suggestion", default: DEFAULT_MODULE_SETTINGS.suggestions }),
+  modmail: Object.freeze({ flag: "modmailEnabled", label: "Modmail", emoji: "📬", mee6: "(ours, beyond MEE6)", configCommand: "/modmail", default: DEFAULT_MODULE_SETTINGS.modmail }),
+  applications: Object.freeze({ flag: "applicationsEnabled", label: "Applications", emoji: "📝", mee6: "(ours, beyond MEE6)", configCommand: "/application", default: DEFAULT_MODULE_SETTINGS.applications }),
+  sticky: Object.freeze({ flag: "stickyEnabled", label: "Sticky Messages", emoji: "📌", mee6: "(ours, beyond MEE6)", configCommand: "/sticky", default: DEFAULT_MODULE_SETTINGS.sticky }),
+  afk: Object.freeze({ flag: "afkEnabled", label: "AFK", emoji: "💤", mee6: "(ours, beyond MEE6)", configCommand: "/afk", default: DEFAULT_MODULE_SETTINGS.afk }),
+  antiraid: Object.freeze({ flag: "antiRaidEnabled", label: "Anti-Raid", emoji: "🚨", mee6: "(ours, beyond MEE6)", configCommand: "/antiraid", default: DEFAULT_MODULE_SETTINGS.antiraid }),
+  events: Object.freeze({ flag: "eventsEnabled", label: "Events", emoji: "📅", mee6: "(ours, beyond MEE6)", configCommand: "/event", default: DEFAULT_MODULE_SETTINGS.events }),
+  rolepersist: Object.freeze({ flag: "rolePersistEnabled", label: "Role Persistence", emoji: "🔁", mee6: "(ours, beyond MEE6)", configCommand: "/rolepersist", default: DEFAULT_MODULE_SETTINGS.rolepersist }),
 });
 
 export const MODULE_NAMES = Object.freeze(Object.keys(MODULES));

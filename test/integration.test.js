@@ -84,7 +84,8 @@ const PACKAGE_IDS = Object.freeze([
   'automod', 'logging', 'welcome', 'levels', 'invites', 'settings', 'translation-fixes', 'games-fixes',
   'embeds', 'reminders', 'giveaways', 'polls', 'starboard', 'reaction-roles', 'tickets', 'temp-voice',
   'stat-channels', 'birthdays', 'custom-commands', 'economy', 'economy-casino', 'achievements', 'automations',
-  'captcha', 'feeds', 'search', 'liverole', 'counting', 'autotime', 'emojis', 'dashboard-tasks', 'bot-joins', 'integration',
+  'captcha', 'feeds', 'search', 'liverole', 'counting', 'autotime', 'suggestions', 'modmail', 'applications', 'sticky', 'afk', 'antiraid',
+  'events', 'role-persist', 'emojis', 'dashboard-tasks', 'bot-joins', 'integration',
 ]);
 // Owners that are not plugins. They may own collector/field prefixes, and only the
 // persistent prefixes that registerCoreComponents() registers (today: 'noop').
@@ -97,7 +98,9 @@ const EXPECTED_PLUGIN_MODULE = Object.freeze({
   starboard: 'starboard', 'reaction-roles': 'reactionroles', tickets: 'tickets',
   'temp-voice': 'tempvoice', 'stat-channels': 'stats', birthdays: 'birthdays',
   'custom-commands': 'customcommands', economy: 'economy', achievements: 'achievements',
-  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole', counting: 'counting', autotime: 'autotime', 'dashboard-tasks': null, 'bot-joins': null,
+  automations: 'automations', captcha: 'captcha', feeds: 'feeds', liverole: 'liverole', counting: 'counting', autotime: 'autotime',
+  suggestions: 'suggestions', modmail: 'modmail', applications: 'applications', sticky: 'sticky', afk: 'afk',
+  antiraid: 'antiraid', events: 'events', 'role-persist': 'rolepersist', 'dashboard-tasks': null, 'bot-joins': null,
 });
 // Only these files may call ctx.stop() (automod and custom-commands).
 const STOP_ALLOWED_FILES = Object.freeze([
@@ -123,6 +126,14 @@ const EXPECTED_COMMANDS = Object.freeze({
   'autotranslate':      { file: 'src/commands/admin/autotranslate.js',      module: 'translation',    gated: false, level: 'ADMIN',     budget:  450 },
   'counting':           { file: 'src/commands/admin/counting.js',           module: 'counting',       gated: false, level: 'ADMIN',     budget:  700 },
   'autotime':           { file: 'src/commands/admin/autotime.js',           module: 'autotime',       gated: false, level: 'ADMIN',     budget:  900 },
+  'suggestion':        { file: 'src/commands/community/suggestion.js',     module: 'suggestions',  gated: false, level: 'MEMBER',   budget: 2000 },
+  'modmail':           { file: 'src/commands/admin/modmail.js',            module: 'modmail',      gated: false, level: 'MODERATOR', budget: 1500 },
+  'application':       { file: 'src/commands/community/application.js',    module: 'applications', gated: false, level: 'MEMBER',   budget: 3000 },
+  'sticky':            { file: 'src/commands/admin/sticky.js',             module: 'sticky',       gated: false, level: 'ADMIN',    budget: 1000 },
+  'afk':               { file: 'src/commands/community/afk.js',            module: 'afk',          gated: true,  level: 'MEMBER',   budget:  800 },
+  'antiraid':          { file: 'src/commands/admin/antiraid.js',           module: 'antiraid',     gated: false, level: 'ADMIN',    budget: 1500 },
+  'event':             { file: 'src/commands/community/event.js',          module: 'events',       gated: true,  level: 'MODERATOR', budget: 2000 },
+  'rolepersist':       { file: 'src/commands/admin/rolepersist.js',        module: 'rolepersist',  gated: false, level: 'ADMIN',    budget: 1000 },
   'birthday-config':    { file: 'src/commands/admin/birthday-config.js',    module: 'birthdays',      gated: false, level: 'ADMIN',     budget: 1200 },
   'captcha':            { file: 'src/commands/admin/captcha.js',            module: 'captcha',        gated: false, level: 'ADMIN',     budget: 1200 },
   'economy-admin':      { file: 'src/commands/admin/economy-admin.js',      module: 'economy',        gated: false, level: 'ADMIN',     budget: 3400 },
@@ -363,7 +374,7 @@ describe('A commands', () => {
       ['commands missing from EXPECTED_COMMANDS', diff(actual, expected).map((n) => `/${n}`)],
       ['duplicate command names', sortedUnique(names.filter((n, i) => names.indexOf(n) !== i))],
     ]);
-    assert.equal(COMMANDS.length, 81, `${COMMANDS.length} command files (expected 81)`);
+    assert.equal(COMMANDS.length, 89, `${COMMANDS.length} command files (expected 89)`);
     assert.ok(COMMANDS.length <= 100, `${COMMANDS.length} commands exceed Discord's limit of 100`);
   });
 
@@ -875,14 +886,15 @@ describe('H docs', () => {
     expectNone(MODULE_NAMES.filter((k) => !readme.includes(MODULES[k].label)).map((k) => `${k}: "${MODULES[k].label}"`), 'module labels missing from README.md');
   });
 
-  test('H3 CLAUDE.md names every module, flag, job type and plugin file', () => {
-    const doc = readRepo('CLAUDE.md');
+  // The registry lives in docs/claude/architecture.md (CLAUDE.md points there and must stay under its byte budget).
+  test('H3 the architecture registry names every module, flag, job type and plugin file', () => {
+    const doc = readRepo('docs/claude/architecture.md');
     const inTicks = (s) => doc.includes(`\`${s}\``);
     expectNoneOf([
-      ['module keys missing from CLAUDE.md', MODULE_NAMES.filter((k) => !inTicks(k)).map((k) => `\`${k}\``)],
-      ['module flags missing from CLAUDE.md', MODULE_NAMES.filter((k) => !inTicks(MODULES[k].flag)).map((k) => `\`${MODULES[k].flag}\` (${k})`)],
-      ['job types missing from CLAUDE.md', Object.keys(JOB_TYPES).filter((t) => !inTicks(t)).map((t) => `\`${t}\``)],
-      ['plugin files missing from CLAUDE.md', [...PLUGIN_IDS].filter((id) => !inTicks(`src/plugins/${id}.js`)).map((id) => `\`src/plugins/${id}.js\``)],
+      ['module keys missing from the registry', MODULE_NAMES.filter((k) => !inTicks(k)).map((k) => `\`${k}\``)],
+      ['module flags missing from the registry', MODULE_NAMES.filter((k) => !inTicks(MODULES[k].flag)).map((k) => `\`${MODULES[k].flag}\` (${k})`)],
+      ['job types missing from the registry', Object.keys(JOB_TYPES).filter((t) => !inTicks(t)).map((t) => `\`${t}\``)],
+      ['plugin files missing from the registry', [...PLUGIN_IDS].filter((id) => !inTicks(`src/plugins/${id}.js`)).map((id) => `\`src/plugins/${id}.js\``)],
     ]);
   });
 
@@ -940,7 +952,7 @@ describe('K contracts', () => {
   test('K1 moderationService exports the shared moderation API', async () => {
     const m = await import('../src/services/moderationService.js');
     expectNone(['executeModAction', 'isImmune', 'createInfraction'].filter((n) => !isFn(m[n])), 'moderationService exports that are not functions');
-    assert.deepEqual(m.MOD_SOURCES, ['command', 'automod', 'escalation', 'captcha', 'dashboard']);
+    assert.deepEqual(m.MOD_SOURCES, ['command', 'automod', 'escalation', 'captcha', 'dashboard', 'antiraid']);
   });
 
   test('K2 loggingService exports sendLog, extractMentions, channelTypeLabel, LOG_TYPES and LOG_EVENTS', async () => {

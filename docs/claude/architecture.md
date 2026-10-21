@@ -49,7 +49,7 @@ Three directories are auto-discovered; **never edit `commandLoader.js`, `eventLo
 - `permissionLevel` (default MEMBER) and `subcommandPermissions` `{ 'sub': level, 'group sub': level }` (a key that is not a real subcommand is a bug; tests check).
 - `allowInDMs`: `true` only for DM-safe commands; all others fail closed outside a cached guild. `autocomplete`: gated exactly like `execute`; a refusal answers an empty list.
 
-ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (81 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
+ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (89 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
 
 **Events** (`src/events/*.js`, `{ name, once, execute }`; the client is injected last) are thin dispatchers: pre-filter, then `await runHooks('<event>', { client, guild, ...fields })`. **Never put feature logic in `src/events/`.** They may import only `discord.js`, `hookRegistry`, `settingsService`, `scheduler`, `redis`, `config/jobTypes`, `utils/async`, `utils/logger` (tested). Besides gateway events there are the synthetic `guildReady` and the internal `levelUp` and `economyPurchase` points. `messageCreate` passes only real user messages (no bots, webhooks or system messages).
 
@@ -104,40 +104,52 @@ XP and coins are granted through providers, so giveaways, achievements and autom
 
 `MODULES` in `src/config/modules.js` is the single registry (`MODULE_FLAGS` is the legacy alias). The router, hook runner, `/module` and `/help` read it. `isModuleEnabled(settings, key)`: `null` key → on; unknown key or no settings → off; else the flag must be exactly `true`. `/module list|enable|disable` (ADMIN, core) toggles flags.
 
-| Key | `GuildSettings` flag | Default | Label | Config command |
-|---|---|---|---|---|
-| `moderation` | `modEnabled` | on | 🔨 Moderation | `/modconfig` |
-| `automod` | `automodEnabled` | off | 🤖 Auto-Moderation | `/automod` |
-| `logging` | `loggingEnabled` | off | 📜 Audit Logs | `/logging` |
-| `welcome` | `welcomeEnabled` | off | 👋 Welcome & Goodbye | `/welcome` |
-| `captcha` | `captchaEnabled` | off | 🛡️ Verification | `/captcha` |
-| `reactionroles` | `reactionRolesEnabled` | on | 🎭 Reaction Roles | `/reactionrole` |
-| `leveling` | `xpEnabled` | off | ⭐ Levels | `/levelconfig` |
-| `customcommands` | `customCommandsEnabled` | off | 🏷️ Custom Commands | `/tag` |
-| `automations` | `automationsEnabled` | off | ⚙️ Automations | `/automation` |
-| `translation` | `translationEnabled` | off | 🌐 Auto-Translate | `/autotranslate` |
-| `invites` | `invitesEnabled` | on | 📨 Invite Tracker | `/invites` |
-| `embeds` | `embedsEnabled` | on | 🧱 Embed Messages | `/embed` |
-| `reminders` | `remindersEnabled` | on | ⏰ Reminders | `/reminder` |
-| `giveaways` | `giveawaysEnabled` | on | 🎉 Giveaways | `/giveaway` |
-| `polls` | `pollsEnabled` | on | 📊 Polls | `/poll` |
-| `starboard` | `starboardEnabled` | on | 🌟 Starboards | `/starboard` |
-| `tickets` | `ticketsEnabled` | on | 🎫 Ticketing | `/ticket-panel` |
-| `tempvoice` | `tempVoiceEnabled` | on | 🔊 Temporary Channels | `/voice-hub` |
-| `stats` | `statsEnabled` | on | 📈 Statistics Channels | `/stats` |
-| `birthdays` | `birthdaysEnabled` | on | 🎂 Birthdays | `/birthday-config` |
-| `achievements` | `achievementsEnabled` | off | 🏆 Achievements | `/achievement-config` |
-| `economy` | `economyEnabled` | on | 🪙 Economy | `/economy-admin` |
-| `games` | `gamesEnabled` | on | 🎮 Games | `/games` |
-| `feeds` | `feedsEnabled` | on | 📰 Social Feeds | `/feed` |
-| `search` | `searchEnabled` | on | 🔎 Search Anything | `/settings` |
-| `liverole` | `liveRoleEnabled` | off | 🔴 Live Role | `/liverole` |
-| `counting` | `countingEnabled` | off | 🔢 Counting | `/counting` |
-| `autotime` | `autoTimeEnabled` | off | 🕒 Auto Timestamps | `/autotime` |
+The module registry (test-checked: every module key, flag and plugin file must be listed here):
+
+| Key | `GuildSettings` flag | Default | Label | Config command | Plugin |
+|---|---|---|---|---|---|
+| `moderation` | `modEnabled` | on | 🔨 Moderation | `/modconfig` | `src/plugins/moderation.js` |
+| `automod` | `automodEnabled` | off | 🤖 Auto-Moderation | `/automod` | `src/plugins/automod.js` |
+| `logging` | `loggingEnabled` | off | 📜 Audit Logs | `/logging` | `src/plugins/logging.js` |
+| `welcome` | `welcomeEnabled` | off | 👋 Welcome & Goodbye | `/welcome` | `src/plugins/welcome.js` |
+| `captcha` | `captchaEnabled` | off | 🛡️ Verification | `/captcha` | `src/plugins/captcha.js` |
+| `reactionroles` | `reactionRolesEnabled` | on | 🎭 Reaction Roles | `/reactionrole` | `src/plugins/reaction-roles.js` |
+| `leveling` | `xpEnabled` | off | ⭐ Levels | `/levelconfig` | `src/plugins/levels.js` |
+| `customcommands` | `customCommandsEnabled` | off | 🏷️ Custom Commands | `/tag` | `src/plugins/custom-commands.js` |
+| `automations` | `automationsEnabled` | off | ⚙️ Automations | `/automation` | `src/plugins/automations.js` |
+| `translation` | `translationEnabled` | off | 🌐 Auto-Translate | `/autotranslate` | `src/plugins/translation-fixes.js` |
+| `invites` | `invitesEnabled` | on | 📨 Invite Tracker | `/invites` | `src/plugins/invites.js` |
+| `embeds` | `embedsEnabled` | on | 🧱 Embed Messages | `/embed` | `src/plugins/embeds.js` |
+| `reminders` | `remindersEnabled` | on | ⏰ Reminders | `/reminder` | `src/plugins/reminders.js` |
+| `giveaways` | `giveawaysEnabled` | on | 🎉 Giveaways | `/giveaway` | `src/plugins/giveaways.js` |
+| `polls` | `pollsEnabled` | on | 📊 Polls | `/poll` | `src/plugins/polls.js` |
+| `starboard` | `starboardEnabled` | on | 🌟 Starboards | `/starboard` | `src/plugins/starboard.js` |
+| `tickets` | `ticketsEnabled` | on | 🎫 Ticketing | `/ticket-panel` | `src/plugins/tickets.js` |
+| `tempvoice` | `tempVoiceEnabled` | on | 🔊 Temporary Channels | `/voice-hub` | `src/plugins/temp-voice.js` |
+| `stats` | `statsEnabled` | on | 📈 Statistics Channels | `/stats` | `src/plugins/stat-channels.js` |
+| `birthdays` | `birthdaysEnabled` | on | 🎂 Birthdays | `/birthday-config` | `src/plugins/birthdays.js` |
+| `achievements` | `achievementsEnabled` | off | 🏆 Achievements | `/achievement-config` | `src/plugins/achievements.js` |
+| `economy` | `economyEnabled` | on | 🪙 Economy | `/economy-admin` | `src/plugins/economy.js` |
+| `games` | `gamesEnabled` | on | 🎮 Games | `/games` | `src/plugins/games-fixes.js` |
+| `feeds` | `feedsEnabled` | on | 📰 Social Feeds | `/feed` | `src/plugins/feeds.js` |
+| `search` | `searchEnabled` | on | 🔎 Search Anything | `/settings` | (no plugin) |
+| `liverole` | `liveRoleEnabled` | off | 🔴 Live Role | `/liverole` | `src/plugins/liverole.js` |
+| `counting` | `countingEnabled` | off | 🔢 Counting | `/counting` | `src/plugins/counting.js` |
+| `autotime` | `autoTimeEnabled` | off | 🕒 Auto Timestamps | `/autotime` | `src/plugins/autotime.js` |
+| `suggestions` | `suggestionsEnabled` | off | 💡 Suggestions | `/suggestion` | `src/plugins/suggestions.js` |
+| `modmail` | `modmailEnabled` | off | 📬 Modmail | `/modmail` | `src/plugins/modmail.js` |
+| `applications` | `applicationsEnabled` | off | 📝 Applications | `/application` | `src/plugins/applications.js` |
+| `sticky` | `stickyEnabled` | off | 📌 Sticky Messages | `/sticky` | `src/plugins/sticky.js` |
+| `afk` | `afkEnabled` | off | 💤 AFK | `/afk` | `src/plugins/afk.js` |
+| `antiraid` | `antiRaidEnabled` | off | 🚨 Anti-Raid | `/antiraid` | `src/plugins/antiraid.js` |
+| `events` | `eventsEnabled` | off | 📅 Events | `/event` | `src/plugins/events.js` |
+| `rolepersist` | `rolePersistEnabled` | off | 🔁 Role Persistence | `/rolepersist` | `src/plugins/role-persist.js` |
+
+Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task` `antiraid.unlock` `event.remind` `event.end`. Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`.
 
 `levelingEnabled` is deprecated and never read (`xpEnabled` is used).
 
-**Adding a module:** (1) boolean flag on `GuildSettings` + migration; (2) `DEFAULT_MODULE_SETTINGS` entry in `src/config/constants.js`; (3) `MODULES` entry; (4) commands with an explicit `module`; (5) `src/plugins/<id>.js`, its hook ids in `HOOK_ORDER`, prefixes in `customIds.js`, job types in `jobTypes.js`; (6) README command-table rows, a section in `modules.md`, `.env.example` keys, and in `src/dashboard/catalog.js` a `CATEGORIES` entry, a `DESCRIPTIONS` sentence (20 to 140 characters, ending with a full stop) and a unique two-letter `CODES` entry (a capital and a small letter: the module's dashboard tile and landing-page code); the dashboard tests fail without them. Settings groups in `src/dashboard/fields.js` and record collections are optional. `npm test` fails until all agree.
+**Adding a module:** (1) boolean flag on `GuildSettings` + migration; (2) `DEFAULT_MODULE_SETTINGS` entry in `src/config/constants.js`; (3) `MODULES` entry; (4) commands with an explicit `module`; (5) `src/plugins/<id>.js`, its hook ids in `HOOK_ORDER`, prefixes in `customIds.js`, job types in `jobTypes.js`; (6) a row in the registry table above, README command-table rows, a section in `modules.md`, `.env.example` keys, and in `src/dashboard/catalog.js` a `CATEGORIES` entry, a `DESCRIPTIONS` sentence (20 to 140 characters, ending with a full stop) and a unique two-letter `CODES` entry (a capital and a small letter: the module's dashboard tile and landing-page code); the dashboard tests fail without them. Settings groups in `src/dashboard/fields.js` and record collections are optional. `npm test` fails until all agree.
 
 ### Permission levels
 `PERMISSION_LEVELS` (`src/config/constants.js`): `MEMBER=0`, `MODERATOR=1`, `ADMIN=2`, `OWNER=3`. `resolvePermissionLevel(member, settings)` (`src/utils/permissionChecker.js`): `BOT_OWNER_ID` → OWNER; guild owner, Administrator or Manage Server → ADMIN; a `modRoleIds` role or Kick/Ban/Moderate Members → MODERATOR.

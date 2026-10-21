@@ -13,7 +13,7 @@ export const CATEGORIES = Object.freeze([
     id: 'safety',
     label: 'Moderation & Safety',
     description: 'Keep the server safe with moderation tools, automatic filters, audit logs and member verification.',
-    modules: Object.freeze(['moderation', 'automod', 'logging', 'captcha']),
+    modules: Object.freeze(['moderation', 'automod', 'logging', 'captcha', 'antiraid', 'rolepersist']),
   }),
   Object.freeze({
     id: 'community',
@@ -21,6 +21,7 @@ export const CATEGORIES = Object.freeze([
     description: 'Greet members, hand out roles and run the features your community uses every day.',
     modules: Object.freeze([
       'welcome', 'reactionroles', 'invites', 'tickets', 'tempvoice', 'stats', 'birthdays', 'polls', 'giveaways', 'starboard',
+      'suggestions', 'modmail', 'applications', 'events', 'afk',
     ]),
   }),
   Object.freeze({
@@ -33,7 +34,7 @@ export const CATEGORIES = Object.freeze([
     id: 'tools',
     label: 'Content & Utilities',
     description: 'Custom commands, automations, scheduled messages, feeds and other handy tools.',
-    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole', 'autotime']),
+    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole', 'autotime', 'sticky']),
   }),
 ]);
 
@@ -67,6 +68,14 @@ export const DESCRIPTIONS = Object.freeze({
   liverole: 'Gives members a role while they stream. Switching it off here leaves it on current streamers; /liverole disable in Discord removes it too.',
   counting: 'A channel where members count up from 1 in turns; a wrong number starts the count again.',
   autotime: 'Answers times typed in chat, like "fri 5pm", with a timestamp everyone sees in their own timezone.',
+  suggestions: 'Members post ideas everyone can vote on; staff approve, deny or mark them implemented.',
+  modmail: 'Members DM the bot to reach staff privately; each conversation becomes a staff thread.',
+  applications: 'Forms for staff or role applications, reviewed with Accept and Deny buttons.',
+  sticky: 'Keeps a message at the bottom of a channel, posting it again as chat moves on.',
+  afk: 'Members set an AFK note; whoever mentions them sees it, and it clears when they are back.',
+  antiraid: 'Spots join floods and brand-new accounts, pauses invites and alerts your moderators.',
+  events: 'Schedule server events with Going and Maybe buttons, reminders and an attendee role.',
+  rolepersist: 'Gives members their roles and nickname back when they leave and rejoin.',
 });
 
 /**
@@ -102,6 +111,14 @@ export const CODES = Object.freeze({
   search: 'Sr',
   liverole: 'Lr',
   autotime: 'Ts',
+  suggestions: 'Sg',
+  modmail: 'Mm',
+  applications: 'Ap',
+  sticky: 'Sk',
+  afk: 'Af',
+  antiraid: 'Ar',
+  events: 'Ev',
+  rolepersist: 'Rp',
 });
 
 /** The boolean sub-settings of each module (their descriptors live in fields.js). */
@@ -114,6 +131,12 @@ const SUB_TOGGLE_FIELDS = Object.freeze({
   achievements: ['achievementUseEmbed'],
   economy: ['economyImportGlobal'],
   search: ['urbanNsfwOnly'],
+  suggestions: ['suggestionThreads', 'suggestionAllowAnonymous', 'suggestionDmOnUpdate'],
+  modmail: ['modmailAnonymousReplies'],
+  afk: ['afkNicknamePrefix'],
+  antiraid: ['antiRaidPauseInvites', 'antiRaidLockChat'],
+  events: ['eventCreateDiscordEvent'],
+  rolepersist: ['rolePersistNicknames'],
 });
 
 const sub = (field) => {

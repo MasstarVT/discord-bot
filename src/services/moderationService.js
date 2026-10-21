@@ -34,7 +34,7 @@ import { isHttpUrl } from '../utils/customEmbed.js';
 // ── Constants (§4.1) ──────────────────────────────────────────────────────────
 
 export const MOD_ACTIONS = Object.freeze(['WARN', 'TIMEOUT', 'MUTE', 'KICK', 'BAN', 'TEMPBAN', 'SOFTBAN']);
-export const MOD_SOURCES = Object.freeze(['command', 'automod', 'escalation', 'captcha', 'dashboard']);
+export const MOD_SOURCES = Object.freeze(['command', 'automod', 'escalation', 'captcha', 'dashboard', 'antiraid']);
 /** Sources where a person picked the action (a slash command, or the web dashboard acting for its user): the moderator's
  * own roles, immunity rank and self-moderation are checked, and the DM may name them. */
 const PERSON_SOURCES = new Set(['command', 'dashboard']);
@@ -58,7 +58,7 @@ export const ACTION_PERMISSION = Object.freeze({
 });
 export const SOURCE_LABEL = Object.freeze({
   command: 'Command', automod: 'Automod', escalation: 'Escalation',
-  automation: 'Automation', captcha: 'Captcha', expiry: 'Expiry', external: 'External', dashboard: 'Dashboard',
+  automation: 'Automation', captcha: 'Captcha', antiraid: 'Anti-Raid', expiry: 'Expiry', external: 'External', dashboard: 'Dashboard',
 });
 export const ACTION_META = Object.freeze({
   WARN: { emoji: '⚠️', color: 0xfee75c, label: 'Warn', past: 'warned', active: true },
@@ -918,7 +918,7 @@ async function getMemberOrNull(guild, id) {
  * @param {number} [input.durationMs]
  * @param {number} [input.deleteMessageSeconds] 0..604800
  * @param {string} [input.proofUrl]
- * @param {'command'|'automod'|'escalation'|'captcha'|'dashboard'} [input.source] 'dashboard': the web dashboard acting for
+ * @param {'command'|'automod'|'escalation'|'captcha'|'dashboard'|'antiraid'} [input.source] 'dashboard': the web dashboard acting for
  *   its user (`moderator`), checked like a command
  * @param {boolean} [input.silent] no DMs
  * @param {boolean} [input.skipEscalation]

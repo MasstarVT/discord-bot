@@ -884,7 +884,7 @@ test('/module is a core admin command and its autocomplete lists at most 25 modu
   const mod = await load(join(SRC, 'commands', 'admin', 'module.js'));
   assert.equal(mod.module, null);
   assert.equal(mod.permissionLevel, PERMISSION_LEVELS.ADMIN);
-  assert.equal(MODULE_NAMES.length, 28);
+  assert.equal(MODULE_NAMES.length, 36);
 
   const all = fakeAutocomplete('enable', '');
   await mod.autocomplete(all); // settings cannot load offline: plain MODULE_NAMES order, no state suffix

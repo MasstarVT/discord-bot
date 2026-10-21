@@ -43,6 +43,18 @@ export const LIMITS = Object.freeze({
   TIMEZONE_ROLES: 25,          // GuildSettings.timezoneRoles (/settings timezone-role)
   AUTOTIME_IGNORED_CHANNELS: 100, // GuildSettings.autoTimeIgnoredChannelIds (/autotime ignore)
   AUTOTIME_PER_MESSAGE: 3,     // times answered in one message (Auto Timestamps)
+  SUGGESTION_LENGTH: 2000,     // Suggestion.content (/suggestion submit)
+  MODMAIL_PING_ROLES: 10,      // GuildSettings.modmailPingRoleIds
+  MODMAIL_BLOCKED_USERS: 500,  // GuildSettings.modmailBlockedUserIds
+  APPLICATION_FORMS: 10,       // ApplicationForm rows per guild
+  APPLICATION_QUESTIONS: 15,   // ApplicationForm.questions (3 modal pages of 5)
+  APPLICATION_ROLES: 10,       // ApplicationForm.acceptRoleIds and requiredRoleIds, each
+  STICKY_MESSAGES: 25,         // StickyMessage rows per guild
+  AFK_REASON_LENGTH: 200,      // AfkStatus.reason
+  AFK_PINGS_KEPT: 10,          // AfkStatus.pings
+  AFK_IGNORED_CHANNELS: 100,   // GuildSettings.afkIgnoredChannelIds
+  EVENTS_ACTIVE: 25,           // SCHEDULED or ACTIVE GuildEvent rows per guild
+  ROLEPERSIST_IGNORED_ROLES: 50, // GuildSettings.rolePersistIgnoredRoleIds
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────
@@ -76,6 +88,14 @@ export const DEFAULT_MODULE_SETTINGS = Object.freeze({
   liverole: false,
   counting: false,
   autotime: false,
+  suggestions: false,
+  modmail: false,
+  applications: false,
+  sticky: false,
+  afk: false,
+  antiraid: false,
+  events: false,
+  rolepersist: false,
 });
 
 export const XP_DEFAULTS = {

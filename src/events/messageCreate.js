@@ -9,8 +9,13 @@ export const once = false;
 const USER_MESSAGE_TYPES = new Set([MessageType.Default, MessageType.Reply]);
 
 export async function execute(message, client) {
-  if (!message.inGuild() || message.author.bot || message.webhookId) return;
+  if (message.author.bot || message.webhookId) return;
   if (!USER_MESSAGE_TYPES.has(message.type)) return;
+  if (!message.inGuild()) {
+    // A DM to the bot (modmail). There is no guild: its hooks are ungated and find the server themselves.
+    if (!message.guildId) await runHooks('directMessage', { client, guild: null, message, channel: message.channel, user: message.author });
+    return;
+  }
 
   // The hook runner isolates every step and stops after ctx.stop(), so a message automod deleted
   // never reaches XP, triggers or translation (R113-R117, R264, R265).
