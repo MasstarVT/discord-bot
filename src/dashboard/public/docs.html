@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frost.Byte docs: every module and command</title>
+<meta name="description" content="How to use Frost.Byte: all <!--module-count--> modules with their settings and defaults, and all <!--command-count--> slash commands with who can run them.">
+<meta name="theme-color" content="#1B4FCF">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&amp;family=Spline+Sans+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/leaflet.css">
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs><clipPath id="fb-bite"><path d="M32 2L34.7 3.55A6.5 6.5 0 0 1 35.62 14.63A6.5 6.5 0 0 1 45.25 20.19A6.5 6.5 0 0 1 55.3 15.45L58 17V47L32 62L6 47V17Z"></path></clipPath></defs>
+  <symbol id="fb-mark" viewBox="0 0 64 64">
+    <g clip-path="url(#fb-bite)">
+      <path fill="currentColor" d="M0 0H64V64H0Z"></path>
+      <g fill="none" stroke-linecap="round">
+        <g id="fb-arm"><path d="M32 32V16" stroke-width="5"></path><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"></path></g>
+        <use href="#fb-arm" transform="rotate(60 32 32)"></use><use href="#fb-arm" transform="rotate(120 32 32)"></use><use href="#fb-arm" transform="rotate(180 32 32)"></use><use href="#fb-arm" transform="rotate(240 32 32)"></use><use href="#fb-arm" transform="rotate(300 32 32)"></use>
+      </g>
+      <circle cx="32" cy="32" r="4.4" stroke="none"></circle>
+    </g>
+  </symbol>
+</svg>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="flap">
+  <nav class="wrap flap-bar" aria-label="Main">
+    <a class="brand" href="/"><svg class="mark" width="36" height="36" aria-hidden="true"><use href="#fb-mark"></use></svg><span class="brand-name">Frost<span class="dot">.</span>Byte</span></a>
+    <div class="flap-links">
+      <a class="flap-wide" href="/#inside">What's inside</a>
+      <a href="/docs" aria-current="page">Docs</a>
+      <a href="/changelog">Changelog</a>
+      <a href="https://github.com/MasstarVT/discord-bot">GitHub</a>
+      <a class="flap-narrow" href="/dashboard">Log in</a>
+    </div>
+    <div class="flap-actions">
+      <a class="tab tab-line" href="/dashboard">Log in</a>
+      <a class="tab tab-lemon" href="@@INVITE_URL@@">Add to Discord</a>
+    </div>
+  </nav>
+  <hr class="score">
+</header>
+
+<main id="main" class="leaf">
+  <div class="wrap leaf-top">
+    <h1 class="leaf-title">Instructions for use</h1>
+    <p class="leaf-lead">Every module, its settings with the defaults they ship with, and all <!--command-count--> slash commands with who can run them. It's built from the bot's own module list and command files, so it matches what's in your server.</p>
+  </div>
+
+  <div class="wrap leaf-grid">
+    <nav class="leaf-toc" aria-label="Contents">
+      <p class="stamp leaf-toc-title">Contents</p>
+      <ol class="leaf-toc-list">
+<!--docs-toc-->
+      </ol>
+    </nav>
+
+    <div class="leaf-body">
+      <section class="leaf-sec" id="start" aria-labelledby="start-h">
+        <h2 class="leaf-h2" id="start-h">Getting started</h2>
+        <ol class="leaf-steps">
+          <li><strong>Add Frost.Byte</strong> to a server where you have Manage Server: <a href="@@INVITE_URL@@">invite the bot</a>. Its slash commands appear on their own.</li>
+          <li><strong>Switch on the modules you want.</strong> Run <code>/module list</code> to see them all and <code>/module enable &lt;name&gt;</code> to turn one on, or flip its switch on the dashboard. A module's setup command works while the module is still off, so you can configure it first.</li>
+          <li><strong>Fine-tune on the web.</strong> <a href="/dashboard">Log in to the dashboard</a> with Discord, pick the server, and set channels, roles, messages and limits for each module.</li>
+          <li><strong>Check what members see.</strong> <code>/help</code> lists only the commands that member can run and that are switched on.</li>
+        </ol>
+      </section>
+
+      <section class="leaf-sec" id="who" aria-labelledby="who-h">
+        <h2 class="leaf-h2" id="who-h">Who can run what</h2>
+        <dl class="leaf-who-list">
+          <div><dt><span class="leaf-who">Everyone</span></dt><dd>Any member, in a server where the command's module is on.</dd></div>
+          <div><dt><span class="leaf-who">Moderators</span></dt><dd>Members with the moderator permissions the command asks for, or a moderator role set with <code>/modconfig</code>.</dd></div>
+          <div><dt><span class="leaf-who">Admins</span></dt><dd>Members with Manage Server. Discord hides these commands from everyone else, and the bot checks again.</dd></div>
+        </dl>
+      </section>
+
+<!--docs-modules-->
+
+      <section class="leaf-sec" id="core" aria-labelledby="core-h">
+        <h2 class="leaf-h2" id="core-h">Core commands</h2>
+        <p class="leaf-p">These belong to no module and are always on.</p>
+<!--docs-core-->
+      </section>
+
+      <section class="leaf-sec" id="help" aria-labelledby="help-h">
+        <h2 class="leaf-h2" id="help-h">Help and support</h2>
+        <ul class="leaf-help">
+          <li>Found a bug or want a feature? <a href="https://github.com/MasstarVT/discord-bot/issues">Open an issue on GitHub</a>.</li>
+          <li>See what changed lately in the <a href="/changelog">changelog</a>.</li>
+          <li>Want to run your own copy? The <a href="https://github.com/MasstarVT/discord-bot">source and setup guide</a> are on GitHub.</li>
+        </ul>
+        <p class="leaf-p leaf-links"><!--support--> <!--contact--></p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="bottom-flap">
+  <div class="wrap">
+    <div class="bottom-grid">
+      <div class="barcode">
+        <svg viewBox="0 0 67 40" aria-hidden="true"><path d="M0 0h2v40h-2zM3 0h1v40h-1zM7 0h1v40h-1zM10 0h2v40h-2zM13 0h1v40h-1zM15 0h3v40h-3zM20 0h1v40h-1zM22 0h2v40h-2zM27 0h1v40h-1zM29 0h2v40h-2zM32 0h1v40h-1zM35 0h3v40h-3zM39 0h2v40h-2zM42 0h1v40h-1zM44 0h2v40h-2zM48 0h1v40h-1zM52 0h1v40h-1zM54 0h2v40h-2zM57 0h2v40h-2zM60 0h1v40h-1zM64 0h1v40h-1z"></path></svg>
+        <span class="barcode-digits"><!--module-count--> · <!--command-count--> · 0</span>
+        <span class="brand-name">Frost<span class="dot">.</span>Byte</span>
+      </div>
+      <nav class="bottom-col" aria-label="The bot">
+        <span class="stamp">The bot</span>
+        <a href="@@INVITE_URL@@">Add to Discord</a>
+        <a href="/dashboard">Log in to the dashboard</a>
+        <a href="/docs">Docs: modules and commands</a>
+        <a href="/changelog">Changelog</a>
+      </nav>
+      <nav class="bottom-col" aria-label="Help">
+        <span class="stamp">Help</span>
+        <!--support-->
+        <a href="https://github.com/MasstarVT/discord-bot/issues">Report a bug</a>
+        <a href="https://github.com/MasstarVT/discord-bot">Source on GitHub</a>
+        <!--contact-->
+      </nav>
+      <nav class="bottom-col" aria-label="Legal">
+        <span class="stamp">Legal</span>
+        <a href="/privacy">Privacy policy</a>
+        <a href="/terms">Terms of service</a>
+      </nav>
+    </div>
+    <div class="fine">
+      <span>&copy; 2026 MasstarVT. MIT licensed.</span>
+      <span>Frost.Byte is not made by or affiliated with Discord.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -5,6 +5,7 @@
 // or Postgres connections itself.
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +18,7 @@ import {
   parseCookies, sealSession, serializeCookie, statesMatch, unsealSession,
 } from './auth.js';
 import { buildCatalog } from './catalog.js';
-import { renderLanding } from './landing.js';
+import { renderChangelog, renderDocs, renderLanding, renderLegal } from './landing.js';
 import { normalizeIp } from './config.js';
 import { DiscordApiError, guildIconUrl, userAvatarUrl } from './discordApi.js';
 import { FieldError, checkRefs, collectAssignableRoles, collectStoredRefs, refKey, storedRefKeys } from './schema.js';
@@ -66,18 +67,40 @@ const STATIC_FILES = new Map([
   ['/tokens.css', ['tokens.css', 'text/css; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
   ['/landing.css', ['landing.css', 'text/css; charset=utf-8']],
+  ['/site.css', ['site.css', 'text/css; charset=utf-8']],
+  ['/leaflet.css', ['leaflet.css', 'text/css; charset=utf-8']],
+  ['/docs', ['docs.html', 'text/html; charset=utf-8']],
+  ['/changelog', ['changelog.html', 'text/html; charset=utf-8']],
+  ['/demo/rank-card.png', ['demo/rank-card.png', 'image/png']],
+  ['/demo/welcome-card.png', ['demo/welcome-card.png', 'image/png']],
   ['/forms.css', ['forms.css', 'text/css; charset=utf-8']],
   ['/collections.css', ['collections.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
   ['/privacy', ['privacy.html', 'text/html; charset=utf-8']],
   ['/terms', ['terms.html', 'text/html; charset=utf-8']],
-  ['/legal.css', ['legal.css', 'text/css; charset=utf-8']],
 ]);
 
-/** Pages whose `<!--contact-->` marker is replaced with DASHBOARD_CONTACT when they are loaded. */
+/**
+ * Pages whose `<!--contact-->` marker is replaced with DASHBOARD_CONTACT when they are loaded. They wear the public
+ * pages' header and footer (renderLegal).
+ */
 const LEGAL_PAGES = new Set(['privacy.html', 'terms.html']);
 const CONTACT_MARKER = '<!--contact-->';
+/** The public pages and their renderers (src/dashboard/landing.js). */
+const PUBLIC_PAGES = new Map([['landing.html', renderLanding], ['docs.html', renderDocs], ['changelog.html', renderChangelog]]);
 const NO_CONTACT = 'the bot owner, through the server where you use the bot';
+
+/** CHANGELOG.md at the repo root: the /changelog page and the landing page's newest entries. */
+const CHANGELOG_PATH = fileURLToPath(new URL('../../CHANGELOG.md', import.meta.url));
+
+/** The changelog's text, or '' when the file is missing (the pages then list no entries). */
+function readChangelog() {
+  try {
+    return readFileSync(CHANGELOG_PATH, 'utf8');
+  } catch {
+    return '';
+  }
+}
 
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -1046,9 +1069,15 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     let entry = staticEntries.get(file);
     if (!entry) {
       let transform;
-      if (LEGAL_PAGES.has(file)) transform = (text) => text.replaceAll(CONTACT_MARKER, contactHtml(config.contact));
-      // The landing page's module table, module codes and invite links come from the catalog and the bot's client id.
-      else if (file === 'landing.html') transform = (text) => renderLanding(text, { inviteUrl: discord.inviteUrl(), contact: config.contact });
+      if (LEGAL_PAGES.has(file)) {
+        // The legal text names the contact itself (contactHtml), so the footer leaves out its "Contact" link.
+        const options = { inviteUrl: discord.inviteUrl(), supportUrl: config.supportUrl };
+        transform = (text) => renderLegal(text.replaceAll(CONTACT_MARKER, contactHtml(config.contact)), options);
+      } else if (PUBLIC_PAGES.has(file)) {
+        // The public pages are filled from the catalog, the command list, CHANGELOG.md and the bot's client id.
+        const options = { inviteUrl: discord.inviteUrl(), contact: config.contact, supportUrl: config.supportUrl, changelog: readChangelog() };
+        transform = (text) => PUBLIC_PAGES.get(file)(text, options);
+      }
       entry = loadStaticEntry(join(publicDir, file), type, transform);
       staticEntries.set(file, entry);
       entry.catch(() => staticEntries.delete(file)); // missing or unreadable: look again next time

@@ -1,0 +1,2010 @@
+[
+  {
+    "name": "achievement-config",
+    "description": "Set up achievements (MEE6 Achievements, /achievements-reset)",
+    "module": "achievements",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create an achievement; rewards apply at every tier"
+      },
+      {
+        "name": "edit",
+        "description": "Change name, description, badge or deadline"
+      },
+      {
+        "name": "delete",
+        "description": "Delete an achievement and its progress"
+      },
+      {
+        "name": "enable",
+        "description": "Turn an achievement on"
+      },
+      {
+        "name": "disable",
+        "description": "Turn an achievement off (progress is kept)"
+      },
+      {
+        "name": "list",
+        "description": "List achievements"
+      },
+      {
+        "name": "info",
+        "description": "Show tiers, rewards and unlock counts"
+      },
+      {
+        "name": "reset",
+        "description": "Reset a member's progress (MEE6 /achievements-reset)"
+      },
+      {
+        "name": "preset",
+        "description": "Add a pre-made achievement"
+      },
+      {
+        "name": "tier add",
+        "description": "Add a tier above the current top tier"
+      },
+      {
+        "name": "tier edit",
+        "description": "Change a tier's goal or rewards"
+      },
+      {
+        "name": "tier remove",
+        "description": "Remove a tier"
+      },
+      {
+        "name": "announce mode",
+        "description": "Off, current channel, DM or a set channel"
+      },
+      {
+        "name": "announce channel",
+        "description": "Set the announcement channel"
+      },
+      {
+        "name": "announce message",
+        "description": "Set the announcement text (blank = default)"
+      }
+    ]
+  },
+  {
+    "name": "achievements",
+    "description": "Show a member's achievements, badges and progress (MEE6 /achievements)",
+    "module": "achievements",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "anime",
+    "description": "Search AniList for an anime: score, episodes, status, genres.",
+    "module": "search",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "automation",
+    "description": "Automations: When → If → Do rules (MEE6 Automations)",
+    "module": "automations",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create from a preset"
+      },
+      {
+        "name": "create-blank",
+        "description": "Create an empty automation"
+      },
+      {
+        "name": "edit",
+        "description": "Rename or change the cooldown"
+      },
+      {
+        "name": "condition add",
+        "description": "Add a condition"
+      },
+      {
+        "name": "condition remove",
+        "description": "Remove a condition"
+      },
+      {
+        "name": "action add",
+        "description": "Add an action"
+      },
+      {
+        "name": "action remove",
+        "description": "Remove an action"
+      },
+      {
+        "name": "list",
+        "description": "List automations"
+      },
+      {
+        "name": "info",
+        "description": "Show an automation"
+      },
+      {
+        "name": "enable",
+        "description": "Turn an automation on"
+      },
+      {
+        "name": "disable",
+        "description": "Turn an automation off"
+      },
+      {
+        "name": "delete",
+        "description": "Delete an automation"
+      },
+      {
+        "name": "export",
+        "description": "Download as JSON"
+      },
+      {
+        "name": "import",
+        "description": "Create or replace from JSON"
+      }
+    ]
+  },
+  {
+    "name": "automod",
+    "description": "Auto-moderation rules, actions and exemptions (MEE6 Moderator › Auto-moderation).",
+    "module": "automod",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn automod on. Your rules and lists stay as they are."
+      },
+      {
+        "name": "disable",
+        "description": "Turn automod off. Rules and lists are kept."
+      },
+      {
+        "name": "status",
+        "description": "Show every rule with its action and scope, the lists and the exemptions."
+      },
+      {
+        "name": "rule",
+        "description": "Set a rule's action, threshold and scope (Bad Words, Caps, Anti-Spam, …)."
+      },
+      {
+        "name": "words add",
+        "description": "Add words or phrases (comma-separated)."
+      },
+      {
+        "name": "words remove",
+        "description": "Remove a word or phrase."
+      },
+      {
+        "name": "words list",
+        "description": "List the filtered words (only you can see the list)."
+      },
+      {
+        "name": "patterns add",
+        "description": "Add a case-insensitive regex pattern."
+      },
+      {
+        "name": "patterns remove",
+        "description": "Remove a regex pattern."
+      },
+      {
+        "name": "patterns list",
+        "description": "List the regex patterns (only you can see the list)."
+      },
+      {
+        "name": "domains add",
+        "description": "Add a domain to the blocked or allowed list."
+      },
+      {
+        "name": "domains remove",
+        "description": "Remove a domain from the blocked and allowed lists."
+      },
+      {
+        "name": "domains list",
+        "description": "Show the blocked and allowed domains."
+      },
+      {
+        "name": "exempt add",
+        "description": "Add a role and/or channel to the exemptions or to a rule's list."
+      },
+      {
+        "name": "exempt remove",
+        "description": "Remove a role and/or channel from the exemptions or a rule's list."
+      },
+      {
+        "name": "honeypot add",
+        "description": "Make a channel a honeypot, or create one."
+      },
+      {
+        "name": "honeypot remove",
+        "description": "Stop a channel being a honeypot (the channel is kept)."
+      }
+    ]
+  },
+  {
+    "name": "autotime",
+    "description": "Answer times typed in chat (\"fri 5pm\") with a timestamp everyone sees in their own timezone.",
+    "module": "autotime",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn Auto Timestamps on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn Auto Timestamps off."
+      },
+      {
+        "name": "status",
+        "description": "Show who is answered and the ignored channels."
+      },
+      {
+        "name": "ignore add",
+        "description": "Never answer times in a channel (a category covers its channels)."
+      },
+      {
+        "name": "ignore remove",
+        "description": "Answer times in a channel again."
+      }
+    ]
+  },
+  {
+    "name": "autotranslate",
+    "description": "Set up auto-translation for a channel (up to 5 target languages).",
+    "module": "translation",
+    "who": "admins",
+    "subcommands": []
+  },
+  {
+    "name": "balance",
+    "description": "Show your or a member's coins on this server (MEE6 /coins).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "ban",
+    "description": "Ban a user, optionally for a set time (MEE6 /ban, /tempban).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "birthday",
+    "description": "Share and see birthdays (MEE6 /remember-birthdays, /birthday, /next-birthdays).",
+    "module": "birthdays",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Remember your birthday on this server (MEE6 /remember-birthdays)."
+      },
+      {
+        "name": "forget",
+        "description": "Forget your birthday on this server (MEE6 /forget-birthday)."
+      },
+      {
+        "name": "show",
+        "description": "Show your or a member's birthday (MEE6 /birthday)."
+      },
+      {
+        "name": "next",
+        "description": "List the next 10 birthdays on this server (MEE6 /next-birthdays)."
+      }
+    ]
+  },
+  {
+    "name": "birthday-config",
+    "description": "Configure birthday announcements and the birthday role (MEE6 Birthdays).",
+    "module": "birthdays",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "channel",
+        "description": "Set the birthday announcement channel; leave empty to turn announcements off."
+      },
+      {
+        "name": "role",
+        "description": "Set the role members get on their birthday; leave empty to turn it off."
+      },
+      {
+        "name": "hour",
+        "description": "Set the hour (server timezone) when birthdays are announced."
+      },
+      {
+        "name": "message",
+        "description": "Set the message used when the age is unknown; leave empty for the default."
+      },
+      {
+        "name": "message-age",
+        "description": "Set the message used when the age is known; leave empty for the default."
+      },
+      {
+        "name": "require-year",
+        "description": "Require members to include their birth year."
+      },
+      {
+        "name": "set-user",
+        "description": "Set a member's birthday (MEE6 /set-user-birthday)."
+      },
+      {
+        "name": "unset-user",
+        "description": "Remove a member's birthday (MEE6 /unset-user-birthday)."
+      },
+      {
+        "name": "show",
+        "description": "Show the birthday settings and any problems."
+      },
+      {
+        "name": "test",
+        "description": "Preview both birthday messages with you as the birthday member."
+      }
+    ]
+  },
+  {
+    "name": "blackjack",
+    "description": "Play blackjack against the dealer for coins.",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "captcha",
+    "description": "Captcha verification for new members (MEE6 Welcome › Captcha verification).",
+    "module": "captcha",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "setup",
+        "description": "Create or reuse #verification and the role, then post the panel."
+      },
+      {
+        "name": "enable",
+        "description": "Turn verification on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn verification off (settings are kept)."
+      },
+      {
+        "name": "status",
+        "description": "Show the settings and any problems."
+      },
+      {
+        "name": "mode",
+        "description": "Image code or one-click button."
+      },
+      {
+        "name": "role",
+        "description": "Set the verified role."
+      },
+      {
+        "name": "channel",
+        "description": "Move the panel to another channel."
+      },
+      {
+        "name": "timeout",
+        "description": "Kick members who do not verify in time."
+      },
+      {
+        "name": "message",
+        "description": "Edit the panel (no options opens a form)."
+      },
+      {
+        "name": "lock",
+        "description": "Hide channels until members verify (MEE6 deny View Channels)."
+      },
+      {
+        "name": "verify-existing",
+        "description": "Give the verified role to current members."
+      }
+    ]
+  },
+  {
+    "name": "case",
+    "description": "View or edit a moderation case.",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "view",
+        "description": "View a case."
+      },
+      {
+        "name": "reason",
+        "description": "Change a case's reason."
+      },
+      {
+        "name": "proof",
+        "description": "Set a case's proof link."
+      }
+    ]
+  },
+  {
+    "name": "counting",
+    "description": "A channel where members count up from 1, one number each.",
+    "module": "counting",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Pick the counting channel and turn counting on."
+      },
+      {
+        "name": "reset",
+        "description": "Set the count back to 0, or to the last number to carry on from."
+      },
+      {
+        "name": "status",
+        "description": "Show the counting channel, the next number and the best run."
+      }
+    ]
+  },
+  {
+    "name": "daily",
+    "description": "Claim your daily coins; claim on consecutive days for a streak bonus (MEE6 /daily).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "detectlanguage",
+    "description": "Detect the language of a piece of text.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "economy-admin",
+    "description": "Manage the economy: coins, shop items, settings and reset (MEE6 economy admin).",
+    "module": "economy",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "coins give",
+        "description": "Add coins to a member"
+      },
+      {
+        "name": "coins remove",
+        "description": "Remove coins from a member (never below 0)"
+      },
+      {
+        "name": "coins set",
+        "description": "Set a member's balance"
+      },
+      {
+        "name": "item create",
+        "description": "Create a shop item"
+      },
+      {
+        "name": "item edit",
+        "description": "Edit a shop item"
+      },
+      {
+        "name": "item delete",
+        "description": "Delete an item and every copy members own"
+      },
+      {
+        "name": "item give",
+        "description": "Give a member copies of an item (MEE6 /spawn-item)"
+      },
+      {
+        "name": "item remove",
+        "description": "Take copies of an item from a member's inventory"
+      },
+      {
+        "name": "item list",
+        "description": "List every item, including disabled ones"
+      },
+      {
+        "name": "config currency",
+        "description": "Set the currency name and emoji"
+      },
+      {
+        "name": "config daily",
+        "description": "Set the /daily base reward range (default 50-120)"
+      },
+      {
+        "name": "config work",
+        "description": "Set the /work reward range and cooldown"
+      },
+      {
+        "name": "config limits",
+        "description": "Set the starting balance, maximum balance, maximum bet and payout"
+      },
+      {
+        "name": "config channels",
+        "description": "Choose where casino games can be played (empty list = everywhere)"
+      },
+      {
+        "name": "config show",
+        "description": "Show the current economy settings"
+      },
+      {
+        "name": "reset",
+        "description": "Reset coins and/or items for everyone or one member"
+      }
+    ]
+  },
+  {
+    "name": "economy-boost",
+    "description": "Manage coin boosts for /daily and /work (MEE6 boosts, up to 10).",
+    "module": "economy",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "add",
+        "description": "Create a coin boost"
+      },
+      {
+        "name": "remove",
+        "description": "Delete a boost"
+      },
+      {
+        "name": "toggle",
+        "description": "Turn a boost on or off"
+      },
+      {
+        "name": "list",
+        "description": "List the boosts"
+      }
+    ]
+  },
+  {
+    "name": "embed",
+    "description": "Embed Messages: build, publish and edit saved embeds (fields, link buttons)",
+    "module": "embeds",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a saved embed and open the editor form"
+      },
+      {
+        "name": "edit",
+        "description": "Edit the message text, title, description, colour and footer in a form"
+      },
+      {
+        "name": "field add",
+        "description": "Add a field"
+      },
+      {
+        "name": "field edit",
+        "description": "Change a field"
+      },
+      {
+        "name": "field remove",
+        "description": "Remove a field"
+      },
+      {
+        "name": "field list",
+        "description": "List the fields of an embed"
+      },
+      {
+        "name": "button add",
+        "description": "Add a link button"
+      },
+      {
+        "name": "button remove",
+        "description": "Remove a link button"
+      },
+      {
+        "name": "image",
+        "description": "Set the large image and/or thumbnail (none = remove)"
+      },
+      {
+        "name": "author",
+        "description": "Set the author line (text: none = remove)"
+      },
+      {
+        "name": "footer",
+        "description": "Set the footer and timestamp (text: none = remove)"
+      },
+      {
+        "name": "color",
+        "description": "Set the side colour (none = server default)"
+      },
+      {
+        "name": "title-url",
+        "description": "Make the title a link (none = remove)"
+      },
+      {
+        "name": "preview",
+        "description": "Preview a saved embed (only you can see it)"
+      },
+      {
+        "name": "publish",
+        "description": "Post a saved embed in a channel"
+      },
+      {
+        "name": "update",
+        "description": "Apply your changes to the published message"
+      },
+      {
+        "name": "list",
+        "description": "List the saved embeds of this server"
+      },
+      {
+        "name": "delete",
+        "description": "Delete a saved embed"
+      },
+      {
+        "name": "export",
+        "description": "Download a saved embed as a JSON file"
+      },
+      {
+        "name": "import",
+        "description": "Create or replace a saved embed from JSON"
+      },
+      {
+        "name": "welcome-channel",
+        "description": "MEE6 Welcome Channel: post greeting, rules, links and staff embeds"
+      }
+    ]
+  },
+  {
+    "name": "emoji",
+    "description": "Add, list or delete emojis (MEE6 /add_emoji)",
+    "module": null,
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "add",
+        "description": "Copy an emoji or upload an image URL"
+      },
+      {
+        "name": "list",
+        "description": "List emojis and free slots"
+      },
+      {
+        "name": "delete",
+        "description": "Delete an emoji (with confirm)"
+      }
+    ]
+  },
+  {
+    "name": "feed",
+    "description": "RSS, YouTube, Reddit, Bluesky and podcast alerts (MEE6 social alerts)",
+    "module": "feeds",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "add rss",
+        "description": "An RSS or Atom feed (MEE6 RSS Feeds)"
+      },
+      {
+        "name": "add youtube",
+        "description": "New uploads from a YouTube channel (MEE6 YouTube Alerts)"
+      },
+      {
+        "name": "add reddit",
+        "description": "New posts in a subreddit (MEE6 Reddit Alerts, best-effort)"
+      },
+      {
+        "name": "add bluesky",
+        "description": "New posts from a Bluesky account (MEE6 Bluesky Alerts)"
+      },
+      {
+        "name": "add podcast",
+        "description": "New episodes of a podcast (MEE6 Podcast Alerts)"
+      },
+      {
+        "name": "list",
+        "description": "List this server's feeds and their status"
+      },
+      {
+        "name": "remove",
+        "description": "Stop following a feed"
+      },
+      {
+        "name": "test",
+        "description": "Fetch a feed now and preview its newest item (changes nothing)"
+      },
+      {
+        "name": "edit",
+        "description": "Change a feed: channel, ping role, message, reposts"
+      },
+      {
+        "name": "enable",
+        "description": "Turn a feed back on and reset its failures"
+      },
+      {
+        "name": "disable",
+        "description": "Pause a feed (its settings are kept)"
+      }
+    ]
+  },
+  {
+    "name": "games",
+    "description": "Browse all games available to play.",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "giveaway",
+    "description": "Run giveaways with a Participate button (MEE6 Giveaways, /reroll)",
+    "module": "giveaways",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "start",
+        "description": "Start a giveaway"
+      },
+      {
+        "name": "end",
+        "description": "End a giveaway now and draw its winners"
+      },
+      {
+        "name": "reroll",
+        "description": "Draw new winners for an ended giveaway (MEE6 /reroll)"
+      },
+      {
+        "name": "cancel",
+        "description": "Cancel a giveaway without drawing winners"
+      },
+      {
+        "name": "restart",
+        "description": "Republish a draft giveaway (its message was deleted)"
+      },
+      {
+        "name": "list",
+        "description": "List this server's giveaways"
+      },
+      {
+        "name": "entrants",
+        "description": "Show who entered a giveaway"
+      },
+      {
+        "name": "odds add",
+        "description": "Give a role better odds in a giveaway"
+      },
+      {
+        "name": "odds remove",
+        "description": "Remove a role's bonus odds from a giveaway"
+      }
+    ]
+  },
+  {
+    "name": "goodbye",
+    "description": "Goodbye message when a member leaves (MEE6 Goodbye message).",
+    "module": "welcome",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Post a goodbye message when members leave."
+      },
+      {
+        "name": "disable",
+        "description": "Stop goodbye messages."
+      },
+      {
+        "name": "channel",
+        "description": "Set the goodbye channel."
+      },
+      {
+        "name": "message",
+        "description": "Set the goodbye text (mentions do not ping)."
+      },
+      {
+        "name": "embed",
+        "description": "Send the goodbye as text or as an embed."
+      },
+      {
+        "name": "setup",
+        "description": "Edit the goodbye text and embed in a form."
+      },
+      {
+        "name": "test",
+        "description": "Preview the goodbye message here."
+      }
+    ]
+  },
+  {
+    "name": "help",
+    "description": "Show the commands you can use here.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "history",
+    "description": "View or clear a member's infractions (MEE6 /infractions, /clear-all-infractions).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "view",
+        "description": "List a member's moderation cases (MEE6 /infractions)."
+      },
+      {
+        "name": "clear",
+        "description": "Pardon all of a member's active warnings (MEE6 /clear-all-infractions)."
+      }
+    ]
+  },
+  {
+    "name": "info",
+    "description": "User, server and role info (MEE6 /user-info /server-info /role-info)",
+    "module": null,
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "user",
+        "description": "Show info about a member (MEE6 /user-info)"
+      },
+      {
+        "name": "server",
+        "description": "Show info about this server (MEE6 /server-info)"
+      },
+      {
+        "name": "role",
+        "description": "Show info about a role (MEE6 /role-info)"
+      }
+    ]
+  },
+  {
+    "name": "inventory",
+    "description": "Show your or a member's items (MEE6 /items).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "invites",
+    "description": "Invite Tracker: /invites, /inviter, /invites-leaderboard and personal links",
+    "module": "invites",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "show",
+        "description": "Invite stats (valid, left, fake) and who invited a member — /invites"
+      },
+      {
+        "name": "inviter",
+        "description": "Who invited a member — /inviter"
+      },
+      {
+        "name": "leaderboard",
+        "description": "Top inviters by valid invites — /invites-leaderboard"
+      },
+      {
+        "name": "link",
+        "description": "Get your personal, never-expiring invite link"
+      }
+    ]
+  },
+  {
+    "name": "kick",
+    "description": "Kick a member from the server (MEE6 /kick).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "languages",
+    "description": "List all supported translation language codes.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "leaderboard",
+    "description": "Show the server XP leaderboard (MEE6 /levels).",
+    "module": "leveling",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "levelconfig",
+    "description": "Levels settings: XP, level-up messages, role rewards, rank card (MEE6 Levels).",
+    "module": "leveling",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn the Levels module on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn the Levels module off. XP data is kept."
+      },
+      {
+        "name": "status",
+        "description": "Show the current Levels configuration."
+      },
+      {
+        "name": "range",
+        "description": "Set the random XP per message (MEE6 default 15–25)."
+      },
+      {
+        "name": "cooldown",
+        "description": "Set the seconds between XP-earning messages (MEE6: 60)."
+      },
+      {
+        "name": "multiplier",
+        "description": "Set the server-wide XP multiplier."
+      },
+      {
+        "name": "announce",
+        "description": "Choose where level-up messages are sent."
+      },
+      {
+        "name": "message",
+        "description": "Set the level-up message. Leave text empty to restore the default."
+      },
+      {
+        "name": "voicexp",
+        "description": "Turn voice XP on or off and set the XP per minute."
+      },
+      {
+        "name": "card",
+        "description": "Customise the /rank card colours and background."
+      },
+      {
+        "name": "demotion-sync",
+        "description": "Remove reward roles when a member drops below their level."
+      },
+      {
+        "name": "noxp role",
+        "description": "Add or remove a no-XP role."
+      },
+      {
+        "name": "noxp channel",
+        "description": "Add or remove a no-XP channel or category."
+      },
+      {
+        "name": "role add",
+        "description": "Give a role when members reach a level."
+      },
+      {
+        "name": "role remove",
+        "description": "Remove the reward for a level."
+      },
+      {
+        "name": "role list",
+        "description": "List the role rewards."
+      },
+      {
+        "name": "role stack",
+        "description": "Keep lower rewards (stack) or only the highest (replace)."
+      },
+      {
+        "name": "role sync",
+        "description": "Re-sync reward roles for one member or everyone ranked."
+      },
+      {
+        "name": "boost add",
+        "description": "Add or update an XP boost role."
+      },
+      {
+        "name": "boost remove",
+        "description": "Remove an XP boost role."
+      },
+      {
+        "name": "boost list",
+        "description": "List the XP boost roles."
+      }
+    ]
+  },
+  {
+    "name": "liverole",
+    "description": "Give a role while members stream (MEE6 Twitch Alerts live-streaming role).",
+    "module": "liverole",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Set the role members get while they are live."
+      },
+      {
+        "name": "require",
+        "description": "Only give the live role to members with a role."
+      },
+      {
+        "name": "enable",
+        "description": "Turn the live role on and re-sync it."
+      },
+      {
+        "name": "disable",
+        "description": "Turn the live role off."
+      },
+      {
+        "name": "status",
+        "description": "Show the setup and who is live now."
+      }
+    ]
+  },
+  {
+    "name": "logging",
+    "description": "Audit logs: turn on/off, pick log channels, toggle events (MEE6 Moderator › Audit logs).",
+    "module": "logging",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn audit logging on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn audit logging off (settings are kept)."
+      },
+      {
+        "name": "status",
+        "description": "Show log channels, disabled events and ignored channels."
+      },
+      {
+        "name": "channel",
+        "description": "Set or clear the channel for a log type."
+      },
+      {
+        "name": "event",
+        "description": "Turn one log event (or all) on or off."
+      },
+      {
+        "name": "ignore add",
+        "description": "Stop logging message events in a channel or category."
+      },
+      {
+        "name": "ignore remove",
+        "description": "Log message events in a channel again."
+      },
+      {
+        "name": "ignore list",
+        "description": "List ignored channels."
+      }
+    ]
+  },
+  {
+    "name": "manga",
+    "description": "Search AniList for a manga: score, chapters, status, genres.",
+    "module": "search",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "modconfig",
+    "description": "Moderator settings: escalation, immune and mod roles, mute role, case log, visibility.",
+    "module": "moderation",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "escalation add",
+        "description": "Add or update a tier: N warnings within a period, then an action."
+      },
+      {
+        "name": "escalation remove",
+        "description": "Remove an escalation tier."
+      },
+      {
+        "name": "escalation list",
+        "description": "List the escalation tiers."
+      },
+      {
+        "name": "immune add",
+        "description": "Make a role immune."
+      },
+      {
+        "name": "immune remove",
+        "description": "Remove a role from the immune list."
+      },
+      {
+        "name": "immune list",
+        "description": "List the immune roles."
+      },
+      {
+        "name": "modroles add",
+        "description": "Give a role moderator access."
+      },
+      {
+        "name": "modroles remove",
+        "description": "Remove a moderator role."
+      },
+      {
+        "name": "modroles list",
+        "description": "List the moderator roles."
+      },
+      {
+        "name": "muterole",
+        "description": "Set, create or clear the mute role (used for mutes over 28 days)."
+      },
+      {
+        "name": "logchannel",
+        "description": "Set or clear the channel for moderation case logs."
+      },
+      {
+        "name": "visibility",
+        "description": "Who sees moderation command replies (MEE6 command visibility)."
+      },
+      {
+        "name": "dm",
+        "description": "Turn DMs to punished members on or off."
+      },
+      {
+        "name": "show",
+        "description": "Show the current moderation settings."
+      }
+    ]
+  },
+  {
+    "name": "module",
+    "description": "Turn bot modules on or off for this server.",
+    "module": null,
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "list",
+        "description": "Show every module and whether it is on."
+      },
+      {
+        "name": "enable",
+        "description": "Turn a module on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn a module off. Its data is kept."
+      }
+    ]
+  },
+  {
+    "name": "numguess",
+    "description": "Guess the bot's number (1–100) in 7 tries!",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "owner",
+    "description": "Show who owns this bot.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "pay",
+    "description": "Give some of your coins to another member (MEE6 /give-coins).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "pity",
+    "description": "Get 500 coins when your balance is below 100 (12-hour cooldown).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "pokemon",
+    "description": "Look up a Pokémon on PokeAPI: types, abilities, stats.",
+    "module": "search",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "poll",
+    "description": "Create and manage polls (MEE6 /poll, /poll-end).",
+    "module": "polls",
+    "who": "moderators",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a poll with 2–20 options; a form opens for the question and options."
+      },
+      {
+        "name": "end",
+        "description": "End a poll in this channel and post the results (MEE6 /poll-end)."
+      },
+      {
+        "name": "results",
+        "description": "Show a poll's results privately, even while hidden."
+      },
+      {
+        "name": "list",
+        "description": "List the active polls on this server."
+      }
+    ]
+  },
+  {
+    "name": "purge",
+    "description": "Bulk-delete recent messages in this channel (MEE6 /clear)",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "rank",
+    "description": "Show your rank card or a member's (MEE6 /rank).",
+    "module": "leveling",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "reactionrole",
+    "description": "Role panels with buttons, a dropdown or emoji reactions (MEE6 Reaction Roles)",
+    "module": "reactionroles",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Post a new role panel"
+      },
+      {
+        "name": "attach",
+        "description": "Turn an existing message into an emoji-reaction panel"
+      },
+      {
+        "name": "add",
+        "description": "Add a role to a panel"
+      },
+      {
+        "name": "remove",
+        "description": "Remove a role from a panel (also deleted roles)"
+      },
+      {
+        "name": "edit",
+        "description": "Edit a panel"
+      },
+      {
+        "name": "repost",
+        "description": "Post a panel again (deleted message) or move it"
+      },
+      {
+        "name": "delete",
+        "description": "Delete a panel"
+      },
+      {
+        "name": "list",
+        "description": "List role panels"
+      }
+    ]
+  },
+  {
+    "name": "reminder",
+    "description": "Scheduled channel messages (MEE6 Reminders/Timers)",
+    "module": "reminders",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a reminder, then write its message"
+      },
+      {
+        "name": "edit",
+        "description": "Change a reminder; name only = open the message editor"
+      },
+      {
+        "name": "list",
+        "description": "List this server's reminders"
+      },
+      {
+        "name": "pause",
+        "description": "Pause a reminder"
+      },
+      {
+        "name": "resume",
+        "description": "Resume a paused reminder"
+      },
+      {
+        "name": "delete",
+        "description": "Delete a reminder"
+      },
+      {
+        "name": "test",
+        "description": "Post a reminder here now as a preview (no pings)"
+      },
+      {
+        "name": "next",
+        "description": "Show when a reminder fires next"
+      }
+    ]
+  },
+  {
+    "name": "richest",
+    "description": "Show the richest members of this server (MEE6 /richest).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "roulette",
+    "description": "Bet coins on the European roulette wheel (MEE6 /roulette).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "rps",
+    "description": "Play Rock, Paper, Scissors against the bot!",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "scrabble",
+    "description": "Challenge another player to a game of Scrabble!",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "scrabble-help",
+    "description": "Learn how to play Scrabble and use its commands.",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "scrabble-play",
+    "description": "Scrabble move: word, pass, exchange or resign",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "word",
+        "description": "Place a word"
+      },
+      {
+        "name": "pass",
+        "description": "Skip your turn"
+      },
+      {
+        "name": "exchange",
+        "description": "Swap tiles with the bag"
+      },
+      {
+        "name": "resign",
+        "description": "Forfeit the game"
+      }
+    ]
+  },
+  {
+    "name": "settings",
+    "description": "Server settings: timezone, timezone roles, embed colour, custom-command prefix, /urban.",
+    "module": null,
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "show",
+        "description": "Show the general settings, enabled modules and moderator roles."
+      },
+      {
+        "name": "timezone",
+        "description": "Set the server timezone used by reminders, birthdays and other schedules."
+      },
+      {
+        "name": "color",
+        "description": "Set the colour of info embeds, or reset it to the default."
+      },
+      {
+        "name": "prefix",
+        "description": "Set the prefix for custom commands (MEE6 !command). Default: !"
+      },
+      {
+        "name": "urban",
+        "description": "Choose where /urban (Urban Dictionary) may be used."
+      },
+      {
+        "name": "timezone-role add",
+        "description": "Link a role to a timezone. Members with the role get it in /timestamp."
+      },
+      {
+        "name": "timezone-role remove",
+        "description": "Unlink a timezone role. The role itself is kept."
+      },
+      {
+        "name": "timezone-role list",
+        "description": "Show the timezone roles and the time in each."
+      }
+    ]
+  },
+  {
+    "name": "shop",
+    "description": "Browse and buy items from this server's shop (MEE6 /shop /buy).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "view",
+        "description": "List the items for sale"
+      },
+      {
+        "name": "buy",
+        "description": "Buy an item (MEE6 /buy)"
+      },
+      {
+        "name": "info",
+        "description": "Show details about an item"
+      }
+    ]
+  },
+  {
+    "name": "slots",
+    "description": "Spin the 3×3 slot machine for coins.",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "slowmode",
+    "description": "Set or remove a channel's slowmode (MEE6 /slowmode)",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "softban",
+    "description": "Ban and instantly unban a user to delete their recent messages.",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "starboard",
+    "description": "Starboards: repost popular messages to a channel (MEE6 Starboards).",
+    "module": "starboard",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a starboard (up to 10)."
+      },
+      {
+        "name": "edit",
+        "description": "Change a starboard, including its repost channel."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a starboard (existing reposts stay)."
+      },
+      {
+        "name": "list",
+        "description": "List starboards and their settings."
+      }
+    ]
+  },
+  {
+    "name": "stats",
+    "description": "Counter channels with live server stats (MEE6 Statistics Channels).",
+    "module": "stats",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a counter channel."
+      },
+      {
+        "name": "edit",
+        "description": "Change a counter's name template."
+      },
+      {
+        "name": "delete",
+        "description": "Remove a counter and its channel."
+      },
+      {
+        "name": "list",
+        "description": "List counters."
+      },
+      {
+        "name": "refresh",
+        "description": "Update all counters now."
+      },
+      {
+        "name": "category",
+        "description": "Set the default category for new counters."
+      }
+    ]
+  },
+  {
+    "name": "tag",
+    "description": "Custom commands (MEE6 !name): run, create and manage this server's commands.",
+    "module": "customcommands",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "use",
+        "description": "Run a custom command."
+      },
+      {
+        "name": "create",
+        "description": "Create a custom command (admin)."
+      },
+      {
+        "name": "edit",
+        "description": "Edit a custom command (admin)."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a custom command (admin)."
+      },
+      {
+        "name": "toggle",
+        "description": "Enable or disable a custom command (admin)."
+      },
+      {
+        "name": "info",
+        "description": "Show a custom command's settings and usage."
+      },
+      {
+        "name": "raw",
+        "description": "Get the exact text of a custom command."
+      },
+      {
+        "name": "list",
+        "description": "List this server's custom commands."
+      },
+      {
+        "name": "placeholders",
+        "description": "Show the variables and {1} arguments you can use."
+      },
+      {
+        "name": "cooldown",
+        "description": "Set a cooldown: none, server-wide or per user (admin)."
+      },
+      {
+        "name": "permissions",
+        "description": "Allow or deny roles and channels (admin)."
+      },
+      {
+        "name": "action add",
+        "description": "Add an action (admin)."
+      },
+      {
+        "name": "action remove",
+        "description": "Remove an action (admin)."
+      },
+      {
+        "name": "action list",
+        "description": "List a command's actions."
+      },
+      {
+        "name": "response add",
+        "description": "Add a random reply to a message action (admin)."
+      },
+      {
+        "name": "response remove",
+        "description": "Remove a random reply (admin)."
+      }
+    ]
+  },
+  {
+    "name": "ticket",
+    "description": "Manage the ticket in this channel (MEE6 /ticket-claim, -close, -reopen, -delete).",
+    "module": "tickets",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "claim",
+        "description": "Claim this ticket so the team knows you handle it (MEE6 /ticket-claim)."
+      },
+      {
+        "name": "close",
+        "description": "Close this ticket; the opener can still read it (MEE6 /ticket-close)."
+      },
+      {
+        "name": "reopen",
+        "description": "Reopen this closed ticket (MEE6 /ticket-reopen)."
+      },
+      {
+        "name": "delete",
+        "description": "Save the transcript and delete this ticket channel (MEE6 /ticket-delete)."
+      },
+      {
+        "name": "add",
+        "description": "Give a member access to this ticket."
+      },
+      {
+        "name": "remove",
+        "description": "Remove a member you added from this ticket."
+      },
+      {
+        "name": "transcript",
+        "description": "Get a transcript file of this ticket (only you see it)."
+      },
+      {
+        "name": "rename",
+        "description": "Rename this ticket channel (Discord allows 2 renames per 10 minutes)."
+      }
+    ]
+  },
+  {
+    "name": "ticket-panel",
+    "description": "Set up ticket panels: options, managers, categories, transcripts (MEE6 Ticketing).",
+    "module": "tickets",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a panel with a default \"Open Ticket\" button."
+      },
+      {
+        "name": "edit",
+        "description": "Change panel settings; with no options, show them."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a panel and its message (open tickets stay)."
+      },
+      {
+        "name": "list",
+        "description": "List the ticket panels on this server."
+      },
+      {
+        "name": "publish",
+        "description": "Post or update the panel message in a channel."
+      },
+      {
+        "name": "message",
+        "description": "Edit the panel message or the ticket intro message in a form."
+      },
+      {
+        "name": "categories",
+        "description": "Set the open/claimed/closed categories; with no options, show them."
+      },
+      {
+        "name": "transcripts",
+        "description": "Where transcripts go when a ticket is deleted; no options = show."
+      },
+      {
+        "name": "option add",
+        "description": "Add a button or dropdown option (max 25)."
+      },
+      {
+        "name": "option edit",
+        "description": "Change an option."
+      },
+      {
+        "name": "option remove",
+        "description": "Remove an option (a panel keeps at least one)."
+      },
+      {
+        "name": "option list",
+        "description": "List the options of a panel."
+      },
+      {
+        "name": "managers add",
+        "description": "Let a role see and handle this panel's tickets."
+      },
+      {
+        "name": "managers remove",
+        "description": "Remove a Ticket Manager role."
+      }
+    ]
+  },
+  {
+    "name": "tictactoe",
+    "description": "Challenge another player to Tic-Tac-Toe!",
+    "module": "games",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "timeout",
+    "description": "Time out a member; over 28 days uses the mute role (MEE6 /mute, /tempmute).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "timestamp",
+    "description": "Turn a time into a timestamp that everyone sees in their own timezone.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "timezone",
+    "description": "Save your timezone so /timestamp reads your times right in every server.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "set",
+        "description": "Save your timezone. It beats timezone roles and the server timezone."
+      },
+      {
+        "name": "show",
+        "description": "Show which timezone /timestamp uses for you, and why."
+      },
+      {
+        "name": "clear",
+        "description": "Forget your saved timezone; your timezone role or the server timezone is used again."
+      }
+    ]
+  },
+  {
+    "name": "translate",
+    "description": "Translate text into another language.",
+    "module": null,
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "trigger",
+    "description": "Auto-responders for matching messages (custom commands).",
+    "module": "customcommands",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn on custom commands and triggers."
+      },
+      {
+        "name": "disable",
+        "description": "Turn off triggers; /tag keeps working."
+      },
+      {
+        "name": "add",
+        "description": "Add a trigger."
+      },
+      {
+        "name": "edit",
+        "description": "Change a trigger."
+      },
+      {
+        "name": "remove",
+        "description": "Delete a trigger."
+      },
+      {
+        "name": "toggle",
+        "description": "Pause or resume a trigger."
+      },
+      {
+        "name": "info",
+        "description": "Show a trigger's details."
+      },
+      {
+        "name": "list",
+        "description": "List triggers with their numbers and IDs."
+      }
+    ]
+  },
+  {
+    "name": "unban",
+    "description": "Lift a ban by user ID (MEE6 /unban).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "unmute",
+    "description": "Remove a member's timeout or mute role (MEE6 /unmute).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "urban",
+    "description": "Look up a word or phrase on Urban Dictionary.",
+    "module": "search",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "use",
+    "description": "Use an item from your inventory (MEE6 /use).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "voice",
+    "description": "Control your temporary voice channel (MEE6 /voice-* commands).",
+    "module": "tempvoice",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "ban",
+        "description": "Ban a member from your temporary voice channel (MEE6 /voice-ban)."
+      },
+      {
+        "name": "claim",
+        "description": "Claim this temporary voice channel after its owner left (MEE6 /voice-claim)."
+      },
+      {
+        "name": "clean",
+        "description": "Moderators: delete every empty temporary voice channel (MEE6 /voice-clean)."
+      },
+      {
+        "name": "hide",
+        "description": "Hide your temporary voice channel (MEE6 /voice-hide)."
+      },
+      {
+        "name": "kick",
+        "description": "Disconnect a member from your temporary voice channel (MEE6 /voice-kick)."
+      },
+      {
+        "name": "limit",
+        "description": "Change the member limit of your temporary voice channel (MEE6 /voice-limit)."
+      },
+      {
+        "name": "lock",
+        "description": "Lock your temporary voice channel (MEE6 /voice-lock)."
+      },
+      {
+        "name": "rename",
+        "description": "Rename your temporary voice channel (MEE6 /voice-rename)."
+      },
+      {
+        "name": "reveal",
+        "description": "Unhide your temporary voice channel (MEE6 /voice-reveal)."
+      },
+      {
+        "name": "transfer",
+        "description": "Give ownership to a member in the channel (MEE6 /voice-transfer)."
+      },
+      {
+        "name": "unban",
+        "description": "Unban a member from your temporary voice channel (MEE6 /voice-unban)."
+      },
+      {
+        "name": "unlock",
+        "description": "Unlock your temporary voice channel (MEE6 /voice-unlock)."
+      }
+    ]
+  },
+  {
+    "name": "voice-hub",
+    "description": "Join-to-create voice hubs (MEE6 Temporary Channels).",
+    "module": "tempvoice",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Create a join-to-create hub (up to 10)."
+      },
+      {
+        "name": "edit",
+        "description": "Change a hub's settings."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a hub and its temporary channels."
+      },
+      {
+        "name": "list",
+        "description": "List hubs and their settings."
+      },
+      {
+        "name": "ignore-role add",
+        "description": "Protect a role from /voice commands"
+      },
+      {
+        "name": "ignore-role remove",
+        "description": "Stop protecting a role"
+      },
+      {
+        "name": "mod-role add",
+        "description": "Add a temp-voice moderator role"
+      },
+      {
+        "name": "mod-role remove",
+        "description": "Remove a temp-voice moderator role"
+      }
+    ]
+  },
+  {
+    "name": "warn",
+    "description": "Warn a member; warnings can trigger automatic actions (MEE6 /warn).",
+    "module": "moderation",
+    "who": "moderators",
+    "subcommands": []
+  },
+  {
+    "name": "welcome",
+    "description": "Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye).",
+    "module": "welcome",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "enable",
+        "description": "Turn the Welcome & Goodbye module on."
+      },
+      {
+        "name": "disable",
+        "description": "Turn the Welcome & Goodbye module off (settings are kept)."
+      },
+      {
+        "name": "status",
+        "description": "Show all welcome, DM, goodbye and autorole settings."
+      },
+      {
+        "name": "channel",
+        "description": "Set the channel for welcome messages."
+      },
+      {
+        "name": "message",
+        "description": "Set the welcome text; {user} pings the new member."
+      },
+      {
+        "name": "embed",
+        "description": "Send text only or text + embed; set embed images."
+      },
+      {
+        "name": "setup",
+        "description": "Edit the welcome text and embed in a form."
+      },
+      {
+        "name": "card",
+        "description": "Welcome card image: on/off and style."
+      },
+      {
+        "name": "test",
+        "description": "Preview the welcome as if you just joined."
+      },
+      {
+        "name": "dm enable",
+        "description": "DM new members when they join."
+      },
+      {
+        "name": "dm disable",
+        "description": "Stop the welcome DM."
+      },
+      {
+        "name": "dm message",
+        "description": "Set the DM text."
+      },
+      {
+        "name": "dm setup",
+        "description": "Edit the DM text and embed in a form."
+      },
+      {
+        "name": "dm card",
+        "description": "Attach the welcome card to the DM."
+      },
+      {
+        "name": "autorole add",
+        "description": "Add a role given to new members."
+      },
+      {
+        "name": "autorole remove",
+        "description": "Remove an autorole, including deleted roles."
+      },
+      {
+        "name": "autorole delay",
+        "description": "Set the delay before autoroles are given."
+      },
+      {
+        "name": "autorole list",
+        "description": "List the autoroles and the delay."
+      }
+    ]
+  },
+  {
+    "name": "work",
+    "description": "Work a shift to earn coins (MEE6 /work).",
+    "module": "economy",
+    "who": "everyone",
+    "subcommands": []
+  },
+  {
+    "name": "xp",
+    "description": "Manage member XP (MEE6 /give-xp, /remove-xp).",
+    "module": "leveling",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "give",
+        "description": "Give XP to a member, or to every member of a role."
+      },
+      {
+        "name": "remove",
+        "description": "Remove XP from a member."
+      },
+      {
+        "name": "set",
+        "description": "Set a member's total XP."
+      },
+      {
+        "name": "reset",
+        "description": "Reset a member's XP and level to zero."
+      },
+      {
+        "name": "view",
+        "description": "View a member's XP data."
+      }
+    ]
+  }
+]

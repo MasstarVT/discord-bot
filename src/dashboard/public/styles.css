@@ -39,7 +39,7 @@
   --anchor-offset: calc(var(--topbar-h) + 24px);
   --savebar-h: 72px;
 
-  /* The names forms.css, collections.css and legal.css use, on the Polar Night palette. */
+  /* The names forms.css and collections.css use, on the Polar Night palette. */
   --bg: var(--ground);
   --bg-topbar: var(--raised);
   --sidebar: var(--raised);

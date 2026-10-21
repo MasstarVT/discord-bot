@@ -1,49 +1,133 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark light">
-  <title>Terms of Service</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/tokens.css">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/legal.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frost.Byte terms of service</title>
+<meta name="description" content="The terms for adding the Frost.Byte bot to a server, using it, and logging in to its dashboard.">
+<meta name="theme-color" content="#1B4FCF">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&amp;family=Spline+Sans+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/leaflet.css">
 </head>
 <body>
-  <main class="legal">
-    <nav class="legal-nav" aria-label="Pages"><a href="/">Frost.Byte</a> · <a href="/dashboard">Dashboard</a> · <a href="/privacy">Privacy Policy</a></nav>
-    <h1>Terms of Service</h1>
-    <p class="legal-date">Last updated: 19 October 2026</p>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs><clipPath id="fb-bite"><path d="M32 2L34.7 3.55A6.5 6.5 0 0 1 35.62 14.63A6.5 6.5 0 0 1 45.25 20.19A6.5 6.5 0 0 1 55.3 15.45L58 17V47L32 62L6 47V17Z"></path></clipPath></defs>
+  <symbol id="fb-mark" viewBox="0 0 64 64">
+    <g clip-path="url(#fb-bite)">
+      <path fill="currentColor" d="M0 0H64V64H0Z"></path>
+      <g fill="none" stroke-linecap="round">
+        <g id="fb-arm"><path d="M32 32V16" stroke-width="5"></path><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"></path></g>
+        <use href="#fb-arm" transform="rotate(60 32 32)"></use><use href="#fb-arm" transform="rotate(120 32 32)"></use><use href="#fb-arm" transform="rotate(180 32 32)"></use><use href="#fb-arm" transform="rotate(240 32 32)"></use><use href="#fb-arm" transform="rotate(300 32 32)"></use>
+      </g>
+      <circle cx="32" cy="32" r="4.4" stroke="none"></circle>
+    </g>
+  </symbol>
+</svg>
+<a class="skip" href="#main">Skip to content</a>
 
-    <p>These terms cover the Discord bot and its web dashboard, run by one person, the bot owner. By adding the bot to a server, using it, or logging in to the dashboard, you agree to them. Contact: <!--contact-->.</p>
+<header class="flap">
+  <nav class="wrap flap-bar" aria-label="Main">
+    <a class="brand" href="/"><svg class="mark" width="36" height="36" aria-hidden="true"><use href="#fb-mark"></use></svg><span class="brand-name">Frost<span class="dot">.</span>Byte</span></a>
+    <div class="flap-links">
+      <a class="flap-wide" href="/#inside">What's inside</a>
+      <a href="/docs">Docs</a>
+      <a href="/changelog">Changelog</a>
+      <a href="https://github.com/MasstarVT/discord-bot">GitHub</a>
+      <a class="flap-narrow" href="/dashboard">Log in</a>
+    </div>
+    <div class="flap-actions">
+      <a class="tab tab-line" href="/dashboard">Log in</a>
+      <a class="tab tab-lemon" href="@@INVITE_URL@@">Add to Discord</a>
+    </div>
+  </nav>
+  <hr class="score">
+</header>
 
-    <h2>The service</h2>
-    <ul>
-      <li>The bot is free and comes as it is, with no warranty. It runs on the bot owner's own hardware, so it can be down at times, and features can change or end without notice.</li>
-      <li>Coins, items, XP and other rewards in the bot have no real-world value. They cannot be bought, sold or exchanged for money, and they may be reset.</li>
-    </ul>
+<main id="main" class="leaf">
+  <div class="wrap leaf-top">
+    <h1 class="leaf-title">Terms of Service</h1>
+    <p class="leaf-date">Last updated: 19 October 2026</p>
+    <p class="leaf-lead">These terms cover the Discord bot and its web dashboard, run by one person, the bot owner. By adding the bot to a server, using it, or logging in to the dashboard, you agree to them. Contact: <!--contact-->.</p>
+  </div>
 
-    <h2>Your part</h2>
-    <ul>
-      <li>Follow Discord's Terms of Service and Community Guidelines when you use the bot.</li>
-      <li>Do not use the bot to spam, harass, scam or share illegal content.</li>
-      <li>Do not try to break, overload or get around the bot or the dashboard, and do not access servers or data you are not allowed to manage. That includes automated logins, scraping and probing for weaknesses.</li>
-      <li>Server staff are responsible for how they set the bot up in their server: the messages it sends, the roles it gives and the moderation actions it takes.</li>
-    </ul>
-    <p>Found a security problem? Please report it privately to <!--contact--> instead of using it.</p>
+  <div class="wrap leaf-narrow leaf-legal">
+    <section class="leaf-sec" id="service" aria-labelledby="service-h">
+      <h2 class="leaf-h2" id="service-h">The service</h2>
+      <ul>
+        <li>The bot is free and comes as it is, with no warranty. It runs on the bot owner's own hardware, so it can be down at times, and features can change or end without notice.</li>
+        <li>Coins, items, XP and other rewards in the bot have no real-world value. They cannot be bought, sold or exchanged for money, and they may be reset.</li>
+      </ul>
+    </section>
 
-    <h2>Ending use</h2>
-    <p>You can remove the bot from your server or log out of the dashboard at any time. The bot owner may remove the bot from a server, or block a user or server, that breaks these terms.</p>
+    <section class="leaf-sec" id="your-part" aria-labelledby="your-part-h">
+      <h2 class="leaf-h2" id="your-part-h">Your part</h2>
+      <ul>
+        <li>Follow Discord's Terms of Service and Community Guidelines when you use the bot.</li>
+        <li>Do not use the bot to spam, harass, scam or share illegal content.</li>
+        <li>Do not try to break, overload or get around the bot or the dashboard, and do not access servers or data you are not allowed to manage. That includes automated logins, scraping and probing for weaknesses.</li>
+        <li>Server staff are responsible for how they set the bot up in their server: the messages it sends, the roles it gives and the moderation actions it takes.</li>
+      </ul>
+      <p>Found a security problem? Please report it privately to <!--contact--> instead of using it.</p>
+    </section>
 
-    <h2>Liability</h2>
-    <p>To the extent the law allows, the bot owner is not liable for any loss or damage from using the bot or the dashboard, or from not being able to use them, including lost data or settings.</p>
+    <section class="leaf-sec" id="ending" aria-labelledby="ending-h">
+      <h2 class="leaf-h2" id="ending-h">Ending use</h2>
+      <p>You can remove the bot from your server or log out of the dashboard at any time. The bot owner may remove the bot from a server, or block a user or server, that breaks these terms.</p>
+    </section>
 
-    <h2>Privacy</h2>
-    <p>What the bot stores and why is explained in the <a href="/privacy">Privacy Policy</a>.</p>
+    <section class="leaf-sec" id="liability" aria-labelledby="liability-h">
+      <h2 class="leaf-h2" id="liability-h">Liability</h2>
+      <p>To the extent the law allows, the bot owner is not liable for any loss or damage from using the bot or the dashboard, or from not being able to use them, including lost data or settings.</p>
+    </section>
 
-    <h2>Changes</h2>
-    <p>If these terms change, the new version is posted on this page with a new date. Using the bot after a change means you accept it.</p>
-  </main>
+    <section class="leaf-sec" id="privacy" aria-labelledby="privacy-h">
+      <h2 class="leaf-h2" id="privacy-h">Privacy</h2>
+      <p>What the bot stores and why is explained in the <a href="/privacy">Privacy Policy</a>.</p>
+    </section>
+
+    <section class="leaf-sec" id="changes" aria-labelledby="changes-h">
+      <h2 class="leaf-h2" id="changes-h">Changes</h2>
+      <p>If these terms change, the new version is posted on this page with a new date. Using the bot after a change means you accept it.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="bottom-flap">
+  <div class="wrap">
+    <div class="bottom-grid">
+      <div class="barcode">
+        <svg viewBox="0 0 67 40" aria-hidden="true"><path d="M0 0h2v40h-2zM3 0h1v40h-1zM7 0h1v40h-1zM10 0h2v40h-2zM13 0h1v40h-1zM15 0h3v40h-3zM20 0h1v40h-1zM22 0h2v40h-2zM27 0h1v40h-1zM29 0h2v40h-2zM32 0h1v40h-1zM35 0h3v40h-3zM39 0h2v40h-2zM42 0h1v40h-1zM44 0h2v40h-2zM48 0h1v40h-1zM52 0h1v40h-1zM54 0h2v40h-2zM57 0h2v40h-2zM60 0h1v40h-1zM64 0h1v40h-1z"></path></svg>
+        <span class="barcode-digits"><!--module-count--> · <!--command-count--> · 0</span>
+        <span class="brand-name">Frost<span class="dot">.</span>Byte</span>
+      </div>
+      <nav class="bottom-col" aria-label="The bot">
+        <span class="stamp">The bot</span>
+        <a href="@@INVITE_URL@@">Add to Discord</a>
+        <a href="/dashboard">Log in to the dashboard</a>
+        <a href="/docs">Docs: modules and commands</a>
+        <a href="/changelog">Changelog</a>
+      </nav>
+      <nav class="bottom-col" aria-label="Help">
+        <span class="stamp">Help</span>
+        <!--support-->
+        <a href="https://github.com/MasstarVT/discord-bot/issues">Report a bug</a>
+        <a href="https://github.com/MasstarVT/discord-bot">Source on GitHub</a>
+      </nav>
+      <nav class="bottom-col" aria-label="Legal">
+        <span class="stamp">Legal</span>
+        <a href="/privacy">Privacy policy</a>
+        <a href="/terms" aria-current="page">Terms of service</a>
+      </nav>
+    </div>
+    <div class="fine">
+      <span>&copy; 2026 MasstarVT. MIT licensed.</span>
+      <span>Frost.Byte is not made by or affiliated with Discord.</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

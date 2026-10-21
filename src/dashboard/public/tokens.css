@@ -1,5 +1,5 @@
-/* Frost.Byte "Polar Night" design tokens, shared by the dashboard (styles.css, forms.css, collections.css), the landing
-   page (landing.css) and the legal pages (legal.css). Flat deep-ink grounds, one ice-cyan accent, no gradients.
+/* Frost.Byte "Polar Night" design tokens, shared by the dashboard app (styles.css, forms.css, collections.css); the
+   public pages use site.css instead. Flat deep-ink grounds, one ice-cyan accent, no gradients.
    Fonts come from Google Fonts (the <link> in each page): Space Grotesk for display, IBM Plex Sans for body text,
    IBM Plex Mono for commands and numbers. */
 

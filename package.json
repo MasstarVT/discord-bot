@@ -13,6 +13,8 @@
     "deploy": "node index.js --deploy",
     "dashboard": "node dashboard.js",
     "dashboard:dev": "nodemon dashboard.js",
+    "docs:commands": "node scripts/build-command-list.js",
+    "docs:cards": "node scripts/render-demo-cards.js",
     "test": "node --test \"test/*.test.js\"",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

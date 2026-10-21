@@ -1,8 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Frost.Byte">
-  <rect width="24" height="24" rx="6" fill="#0E2436"/>
-  <g fill="none" stroke="#7FD8F5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(12 12) scale(0.8) translate(-12 -12)">
-    <g><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
-    <g transform="rotate(60 12 12)"><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
-    <g transform="rotate(120 12 12)"><path d="M12 2v20"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- Frost.Byte: a hexagonal ice crystal with a bite out of one edge. -->
+<defs><clipPath id="b"><path d="M32 2L34.7 3.55A6.5 6.5 0 0 1 35.62 14.63A6.5 6.5 0 0 1 45.25 20.19A6.5 6.5 0 0 1 55.3 15.45L58 17V47L32 62L6 47V17Z"/></clipPath></defs>
+<g clip-path="url(#b)"><path fill="#1B4FCF" d="M0 0H64V64H0Z"/><g fill="none" stroke="#FFFFFF" stroke-linecap="round"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/><g transform="rotate(60 32 32)"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/></g><g transform="rotate(120 32 32)"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/></g><g transform="rotate(180 32 32)"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/></g><g transform="rotate(240 32 32)"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/></g><g transform="rotate(300 32 32)"><path d="M32 32V16" stroke-width="5"/><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"/></g></g><circle cx="32" cy="32" r="4.4" fill="#FFFFFF"/></g>
 </svg>

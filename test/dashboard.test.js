@@ -6,7 +6,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -795,13 +795,22 @@ describe('front end', () => {
     const template = readFileSync(join(PUBLIC, 'landing.html'), 'utf8');
     assert.equal(/<script(?![^>]*\bsrc=)[^>]*>/.test(template), false, 'inline <script>');
     assert.equal(/<style\b|\sstyle=/.test(template), false, 'inline style');
-    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/tokens.css', '/landing.css', '/landing.js', '/favicon.svg']);
-    for (const [, ref] of template.matchAll(/(?:src|href)="(\/[^"]*)"/g)) assert.ok(served.has(ref), `landing.html: ${ref} is not served`);
+    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/docs', '/changelog', '/site.css', '/landing.css', '/landing.js',
+      '/favicon.svg', '/demo/rank-card.png', '/demo/welcome-card.png']);
+    for (const [, ref] of template.matchAll(/(?:src|href)="(\/[^"#]*)(?:#[^"]*)?"/g)) assert.ok(served.has(ref), `landing.html: ${ref} is not served`);
     assert.equal(/href="#"/.test(template), false, 'no dead links');
+    for (const id of template.matchAll(/href="#([^"]+)"/g)) assert.ok(template.includes(`id="${id[1]}"`), `landing.html: #${id[1]} has no target`);
 
     const invite = 'https://discord.com/oauth2/authorize?client_id=123456789012345678&scope=bot+applications.commands';
-    const html = renderLanding(template, { inviteUrl: invite, contact: { kind: 'email', value: 'owner@example.com' } });
-    assert.equal(/<!--(?:module-|code:|contact)|@@INVITE_URL@@/.test(html), false, 'every marker is filled');
+    const changelog = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8');
+    const html = renderLanding(template, { inviteUrl: invite, contact: { kind: 'email', value: 'owner@example.com' }, supportUrl: 'https://discord.gg/abc', changelog });
+    assert.equal(/<!--[a-z]|@@INVITE_URL@@/.test(html), false, 'every marker is filled');
+    assert.ok(html.includes('<a href="https://discord.gg/abc">Support server</a>'), 'the support server link');
+    assert.equal(renderLanding(template, {}).includes('Support server'), false, 'no support URL: no support link');
+    assert.match(html, /<a class="lot-title" href="\/changelog#lot-\d{4}-\d{2}-\d{2}">/, 'the newest changelog entries');
+    const commands = JSON.parse(readFileSync(join(ROOT, 'src', 'dashboard', 'commands.json'), 'utf8'));
+    for (const c of commands) assert.ok(html.includes(`<code>/${c.name}</code>`), `/${c.name}: in the ingredients`);
+    for (const [, src] of html.matchAll(/src="(\/demo\/[^"]+)"/g)) assert.ok(existsSync(join(PUBLIC, src.slice(1))), `${src} exists`);
     assert.ok(html.includes('href="https://discord.com/oauth2/authorize?client_id=123456789012345678&amp;scope=bot+applications.commands"'));
     assert.ok(html.includes('<a href="mailto:owner@example.com">Contact</a>'));
     const esc = (s) => s.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -813,16 +822,59 @@ describe('front end', () => {
     for (const c of CATEGORIES) assert.ok(html.includes(esc(c.label)), `${c.id}: category on the page`);
     assert.equal(renderLanding(template, {}).includes('<!--contact-->'), false, 'no contact: the marker is dropped');
     assert.throws(() => renderLanding('<!--code:nope-->'), /unknown module "nope"/);
+    assert.throws(() => renderLanding('<!--no-such-marker-->'), /unknown marker/);
   });
 
-  test('the privacy and terms pages: no script or inline style, a contact marker, links only to served paths', () => {
-    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/tokens.css', '/styles.css', '/legal.css', '/favicon.svg']);
+  test('the docs and changelog pages: no inline script or style, served links, every module, command and entry', async () => {
+    const { renderDocs, renderChangelog } = await import('../src/dashboard/landing.js');
+    const { parseChangelog } = await import('../src/dashboard/changelog.js');
+    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/docs', '/changelog', '/site.css', '/leaflet.css', '/favicon.svg']);
+    const changelog = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8');
+    const commands = JSON.parse(readFileSync(join(ROOT, 'src', 'dashboard', 'commands.json'), 'utf8'));
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    for (const [name, render] of [['docs.html', renderDocs], ['changelog.html', renderChangelog]]) {
+      const template = readFileSync(join(PUBLIC, name), 'utf8');
+      assert.equal(/<script\b/.test(template), false, `${name}: <script>`);
+      assert.equal(/<style\b|\sstyle=/.test(template), false, `${name}: inline style`);
+      for (const [, ref] of template.matchAll(/(?:src|href)="(\/[^"#]*)(?:#[^"]*)?"/g)) assert.ok(served.has(ref), `${name}: ${ref} is not served`);
+      const html = render(template, { inviteUrl: 'https://discord.com/oauth2/authorize?client_id=1', changelog });
+      assert.equal(/<!--[a-z]|@@INVITE_URL@@/.test(html), false, `${name}: every marker is filled`);
+    }
+    const docs = renderDocs(readFileSync(join(PUBLIC, 'docs.html'), 'utf8'), {});
+    for (const key of MODULE_NAMES) {
+      assert.ok(docs.includes(`id="mod-${key}"`), `${key}: a section on /docs`);
+      assert.ok(docs.includes(esc(DESCRIPTIONS[key])), `${key}: description on /docs`);
+    }
+    for (const c of commands) assert.ok(docs.includes(`id="cmd-${c.name}"`), `/${c.name}: an entry on /docs`);
+
+    const { entries, intro } = parseChangelog(changelog);
+    assert.ok(intro.length > 0 && entries.length > 0, 'CHANGELOG.md has an intro and dated entries');
+    for (const e of entries) {
+      assert.match(e.date, /^\d{4}-\d{2}-\d{2}$/);
+      assert.ok(e.items.length > 0, `${e.date}: has items`);
+    }
+    assert.deepEqual([...entries].map((e) => e.date), [...entries].map((e) => e.date).sort().reverse(), 'newest first');
+    const page = renderChangelog(readFileSync(join(PUBLIC, 'changelog.html'), 'utf8'), { changelog });
+    for (const e of entries) assert.ok(page.includes(`id="lot-${e.date}"`), `${e.date}: on /changelog`);
+    assert.equal(renderChangelog('<!--changelog-->', { changelog: '- <b>x</b> `y` [z](javascript:alert(1))' }).includes('<b>'), false, 'escaped');
+    const md = parseChangelog('## 2026-01-02 · T\n- `a` **b** [c](https://example.com) <i>');
+    assert.deepEqual(md.entries[0], { date: '2026-01-02', title: 'T', items: ['`a` **b** [c](https://example.com) <i>'] });
+  });
+
+  test('the privacy and terms pages: no script or inline style, a contact marker, served links, header and footer filled', async () => {
+    const { renderLegal } = await import('../src/dashboard/landing.js');
+    const served = new Set(['/', '/dashboard', '/privacy', '/terms', '/docs', '/changelog', '/site.css', '/leaflet.css', '/favicon.svg']);
     for (const name of ['privacy.html', 'terms.html']) {
       const html = readFileSync(join(PUBLIC, name), 'utf8');
       assert.equal(/<script\b/.test(html), false, `${name}: <script>`);
       assert.equal(/<style\b|\sstyle=/.test(html), false, `${name}: inline style`);
       assert.ok(html.includes('<!--contact-->'), `${name}: contact marker`);
-      for (const [, ref] of html.matchAll(/(?:src|href)="(\/[^"]*)"/g)) assert.ok(served.has(ref), `${name}: ${ref} is not served`);
+      assert.ok(html.includes('<footer'), `${name}: the shared footer`);
+      assert.equal(html.slice(html.indexOf('<footer')).includes('<!--contact-->'), false, `${name}: the footer leaves the contact to the text`);
+      for (const [, ref] of html.matchAll(/(?:src|href)="(\/[^"#]*)(?:#[^"]*)?"/g)) assert.ok(served.has(ref), `${name}: ${ref} is not served`);
+      // as server.js serves it
+      const page = renderLegal(html.replaceAll('<!--contact-->', contactHtml(null)), { inviteUrl: 'https://discord.com/oauth2/authorize?client_id=1' });
+      assert.equal(/<!--[a-z]|@@INVITE_URL@@/.test(page), false, `${name}: every marker is filled`);
     }
   });
 });
@@ -912,10 +964,22 @@ describe('config', () => {
     }
   });
 
+  test('DASHBOARD_SUPPORT_URL: an https URL; anything else is a warning and no support link', () => {
+    assert.equal(loadDashboardConfig(baseEnv()).config.supportUrl, null);
+    assert.equal(loadDashboardConfig(baseEnv({ DASHBOARD_SUPPORT_URL: 'https://discord.gg/abc123' })).config.supportUrl,
+      'https://discord.gg/abc123');
+    for (const bad of ['http://discord.gg/abc123', 'owner@example.com', 'javascript:alert(1)', 'https://u:p@discord.gg/x']) {
+      const r = loadDashboardConfig(baseEnv({ DASHBOARD_SUPPORT_URL: bad }));
+      assert.equal(r.ok, true, bad);
+      assert.equal(r.config.supportUrl, null, bad);
+      assert.equal(r.warnings.length, 1, bad);
+    }
+  });
+
   test('every key the dashboard reads is documented in .env.example', () => {
     const env = readFileSync(join(ROOT, '.env.example'), 'utf8');
     for (const key of ['DISCORD_CLIENT_SECRET', 'DASHBOARD_URL', 'DASHBOARD_SESSION_SECRET', 'DASHBOARD_PORT', 'DASHBOARD_HOST',
-      'DASHBOARD_TRUSTED_PROXIES', 'DASHBOARD_CONTACT']) {
+      'DASHBOARD_TRUSTED_PROXIES', 'DASHBOARD_CONTACT', 'DASHBOARD_SUPPORT_URL']) {
       assert.match(env, new RegExp(`^#\\s*${key}=`, 'm'), `${key} must be a commented-out line`);
     }
   });
@@ -1681,7 +1745,11 @@ describe('HTTP server', () => {
     writeFileSync(join(publicDir, 'landing.html'), '<!doctype html><title>l</title><p><!--module-count--> <!--code:leveling--> <a href="@@INVITE_URL@@">Add</a></p>');
     writeFileSync(join(publicDir, 'app.js'), 'export {};');
     writeFileSync(join(publicDir, 'styles.css'), 'body { color: red; }\n'.repeat(200));
-    writeFileSync(join(publicDir, 'privacy.html'), '<!doctype html><title>p</title><p>Ask <!--contact-->.</p>');
+    writeFileSync(join(publicDir, 'privacy.html'), '<!doctype html><title>p</title><p>Ask <!--contact-->.</p><p><!--module-count--> <a href="@@INVITE_URL@@">Add</a></p>');
+    writeFileSync(join(publicDir, 'docs.html'), '<!doctype html><title>d</title><!--docs-modules--><!--docs-core-->');
+    writeFileSync(join(publicDir, 'changelog.html'), '<!doctype html><title>c</title><!--changelog-->');
+    mkdirSync(join(publicDir, 'demo'));
+    writeFileSync(join(publicDir, 'demo', 'rank-card.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
     server = createDashboardServer({ config, deps: { discord: fakes.discord, settings: fakes.settings }, logger: log, publicDir });
     port = await listen(server);
   });
@@ -2099,6 +2167,16 @@ describe('HTTP server', () => {
     assert.match(landing.headers['content-security-policy'], /script-src 'self'/);
     assert.ok(landing.text.includes(`<p>${MODULE_NAMES.length} ${CODES.leveling} <a href="${fakes.discord.inviteUrl().replaceAll('&', '&amp;')}">Add</a></p>`),
       'the landing page is filled from the catalog and the invite link');
+    const docs = await get('/docs');
+    assert.equal(docs.status, 200);
+    assert.match(docs.headers['content-type'], /^text\/html/);
+    assert.ok(docs.text.includes('id="cmd-rank"') && docs.text.includes('id="mod-leveling"'), '/docs is filled from the catalog and commands.json');
+    const changelog = await get('/changelog');
+    assert.equal(changelog.status, 200);
+    assert.match(changelog.text, /id="lot-\d{4}-\d{2}-\d{2}"/, '/changelog is filled from CHANGELOG.md');
+    const png = await get('/demo/rank-card.png');
+    assert.equal(png.status, 200);
+    assert.equal(png.headers['content-type'], 'image/png');
     const index = await get('/dashboard');
     assert.equal(index.status, 200);
     assert.match(index.headers['content-type'], /^text\/html/);
@@ -2124,6 +2202,8 @@ describe('HTTP server', () => {
     assert.match(r.headers['content-type'], /^text\/html/);
     assert.equal(r.text.includes('<!--contact-->'), false, 'marker replaced');
     assert.ok(r.text.includes(contactHtml(null)), 'no DASHBOARD_CONTACT: the fallback text');
+    assert.ok(r.text.includes(`<p>${MODULE_NAMES.length} <a href="${fakes.discord.inviteUrl().replaceAll('&', '&amp;')}">Add</a></p>`),
+      'the header and footer markers are filled');
     assert.equal((await get('/terms')).status, 404, 'missing file: 404');
     assert.equal((await get('/privacy.html')).status, 404, 'served by its route only');
   });

@@ -1,0 +1,233 @@
+/* The public pages' "Variety Pack" world (landing.html, docs.html, changelog.html): Frost.Byte as a freezer-aisle
+   carton of individually wrapped modules. Flat printed inks only (no gradients, glow or shadows): freezer-blue carton,
+   frost-white inner board, navy print ink, and one flavour ink per catalog category, always printed with the module's
+   code. Display: Bricolage Grotesque; panel copy: Archivo (its width axis sets the stamps); commands: Spline Sans Mono.
+   The dashboard app keeps its own look (tokens.css, styles.css). Layout: up to 1240px wide, 16px gutters on phones,
+   24px from 640px up. */
+
+:root {
+  /* carton and board */
+  --carton: #1B4FCF;
+  --carton-deep: #143FAE;   /* board edge round the die-cut window, pressed buttons */
+  --carton-line: #6E95EA;   /* fold lines and rules printed on the carton */
+  --on-carton: #FFFFFF;
+  --on-carton-soft: #D6E3FF;
+  --board: #EEF4FF;
+  --board-raised: #FFFFFF;
+  --board-line: #C3D3EF;
+  --ink: #0B1A3F;
+  --ink-soft: #33446E;
+  --ink-line: #8FA3CC;
+
+  /* flavour inks, one per catalog category, and the ink printed on each */
+  --cherry: #D8213C;  --on-cherry: #FFFFFF;
+  --lemon: #FFD23A;   --on-lemon: #0B1A3F;
+  --lime: #4CC254;    --on-lime: #0B1A3F;
+  --grape: #6E3BD8;   --on-grape: #FFFFFF;
+
+  /* type */
+  --font-display: "Bricolage Grotesque", "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* layout */
+  --gutter: 16px;
+  --panel-y: 64px;
+  --radius: 14px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* the crimped wrapper end and the heat-seal ridges printed beside it */
+  --crimp: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0H10.5L16 5L10.5 10H0Z'/%3E%3C/svg%3E");
+  --ridges: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1.5' height='4' fill='%23000' fill-opacity='0.2'/%3E%3C/svg%3E");
+}
+
+@media (min-width: 640px) { :root { --gutter: 24px; } }
+@media (min-width: 960px) { :root { --panel-y: 96px; } }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-padding-top: 16px; scrollbar-color: var(--carton-deep) var(--board); }
+
+body {
+  margin: 0;
+  background: var(--carton);
+  color: var(--on-carton);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  font-variation-settings: "wdth" 100;
+  overflow-wrap: break-word;
+  caret-color: var(--lemon);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, h4, p, figure, ul, ol, dl, dd { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+code { font-family: var(--font-mono); font-size: 0.9em; }
+strong, b { font-weight: 700; }
+img, svg { display: block; }
+table { border-collapse: collapse; }
+[hidden] { display: none !important; }
+
+::selection { background: var(--lemon); color: var(--ink); }
+
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 3px; }
+:focus-visible { outline: 3px solid var(--lemon); outline-offset: 3px; border-radius: 4px; }
+.on-board :focus-visible, .leaf :focus-visible { outline-color: var(--ink); }
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.skip {
+  position: absolute;
+  top: -100px;
+  left: var(--gutter);
+  z-index: 10;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--lemon);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.skip:focus { top: 8px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: var(--gutter); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* The mark: a hexagonal ice crystal with a bite out of one edge. The <use> passes the hexagon colour as `color` and
+   the flake colour as fill and stroke (the symbol's flake has no colour of its own). */
+.mark { color: var(--on-carton); fill: var(--carton); stroke: var(--carton); flex: none; }
+.mark-ink { color: var(--ink); fill: var(--board); stroke: var(--board); }
+.mark-lemon { color: var(--lemon); fill: var(--ink); stroke: var(--ink); }
+
+/* Packaging stamps: Archivo at its widest, in capitals. */
+.stamp {
+  font-family: var(--font);
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── The top flap: brand, links and the two actions ───────────────────────────────────────────────────────── */
+.flap { position: relative; z-index: 2; }
+.flap-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding-block: 16px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--on-carton);
+  text-decoration: none;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.dot { color: var(--lemon); }
+.flap-links {
+  display: flex;
+  gap: 20px;
+  order: 3;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+}
+.flap-links::-webkit-scrollbar { display: none; }
+.flap-links .flap-narrow { display: none; }
+.flap-links a { color: var(--on-carton); text-decoration: none; padding-block: 4px; }
+.flap-links a:hover, .flap-links a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 2px; }
+.flap-actions { display: flex; gap: 10px; margin-left: auto; }
+
+@media (min-width: 900px) {
+  .flap-links { order: 0; width: auto; margin-left: 16px; }
+}
+
+/* the lid's score line, under the flap */
+.score { border: 0; border-top: 2px dashed var(--carton-line); margin: 0; }
+
+/* ── Buttons: printed tabs ─────────────────────────────────────────────────────────────────────────────────── */
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.tab:active { transform: translateY(1px); }
+.tab-lemon { background: var(--lemon); border-color: var(--lemon); color: var(--ink); }
+.tab-lemon:hover { background: var(--board-raised); border-color: var(--board-raised); }
+.tab-line { background: transparent; color: var(--on-carton); }
+.tab-line:hover { background: var(--on-carton); color: var(--carton); border-color: var(--on-carton); }
+.tab-ink { background: var(--ink); border-color: var(--ink); color: var(--board-raised); }
+.tab-ink:hover { background: var(--carton); border-color: var(--carton); }
+.tab-line-ink { background: transparent; color: var(--ink); }
+.tab-line-ink:hover { background: var(--ink); border-color: var(--ink); color: var(--board-raised); }
+
+@media (max-width: 479px) {
+  .flap-actions .tab-line, .flap-links .flap-wide { display: none; }
+  .flap-links .flap-narrow { display: inline; }
+}
+
+/* ── The bottom flap: barcode, links, small print ─────────────────────────────────────────────────────────── */
+.bottom-flap {
+  background: var(--ink);
+  color: var(--on-carton-soft);
+  border-top: 2px dashed var(--carton-line);
+  padding-block: 56px 40px;
+  font-size: 15px;
+}
+.bottom-grid {
+  display: grid;
+  gap: 32px 40px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+.barcode { display: flex; flex-direction: column; gap: 8px; color: var(--board-raised); }
+.barcode svg { width: 150px; height: 56px; padding: 8px 10px; background: var(--board-raised); fill: var(--ink); border-radius: 4px; }
+.barcode-digits { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.24em; color: var(--on-carton-soft); }
+.bottom-col { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.bottom-col .stamp { color: var(--lemon); margin-bottom: 4px; }
+.bottom-col a { color: var(--board-raised); text-decoration: none; }
+.bottom-col a:hover { text-decoration: underline; }
+.fine {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #24345C;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 13px;
+  color: #AFC0E6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

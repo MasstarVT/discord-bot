@@ -468,6 +468,12 @@ describe('A commands', () => {
       if (exp && chars > exp.budget) t.diagnostic(`/${c.payload.name}: ${chars} chars (planned ${exp.budget})`);
     }
   });
+
+  test('A11 src/dashboard/commands.json (the /docs command reference) matches the command files', async () => {
+    const { summarizeCommands } = await import('../src/dashboard/commandList.js');
+    const onDisk = JSON.parse(readRepo('src/dashboard/commands.json'));
+    assert.deepEqual(onDisk, summarizeCommands(OK_COMMANDS), 'stale: run npm run docs:commands');
+  });
 });
 
 // ── B. Hooks ─────────────────────────────────────────────────────────────────

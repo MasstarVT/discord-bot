@@ -79,7 +79,7 @@ export function parseDashboardUrl(raw) {
  *     databaseUrl: string, redisUrl: string, botOwnerId: string|null,
  *     url: string, urlIsDefault: boolean, origin: string, redirectUri: string, secureCookies: boolean,
  *     port: number, host: string, trustedProxies: readonly string[],
- *     contact: { kind: 'email'|'url', value: string }|null,
+ *     contact: { kind: 'email'|'url', value: string }|null, supportUrl: string|null,
  *   },
  * }}
  */
@@ -136,6 +136,15 @@ export function loadDashboardConfig(env = process.env) {
     if (!contact) warnings.push('DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact.');
   }
 
+  // The support server invite on the public pages; the pages show no support server link without it.
+  let supportUrl = null;
+  const rawSupport = read(env, 'DASHBOARD_SUPPORT_URL');
+  if (rawSupport) {
+    const parsed = parseContact(rawSupport);
+    if (parsed?.kind === 'url') supportUrl = parsed.value;
+    else warnings.push('DASHBOARD_SUPPORT_URL is not an https URL; the public pages show no support server link.');
+  }
+
   const config = Object.freeze({
     clientId,
     botToken: read(env, 'DISCORD_TOKEN'),
@@ -153,6 +162,7 @@ export function loadDashboardConfig(env = process.env) {
     host,
     trustedProxies: Object.freeze(trustedProxies),
     contact: contact && Object.freeze(contact),
+    supportUrl,
   });
 
   return { ok: missing.length === 0 && invalid.length === 0, missing, invalid, warnings, config };

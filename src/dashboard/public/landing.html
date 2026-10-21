@@ -3,245 +3,256 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Frost.Byte: a Discord bot with <!--module-count--> modules</title>
-<meta name="description" content="Frost.Byte is a Discord bot with <!--module-count--> modules: moderation, levels, tickets, economy, social feeds and more. Switch on only what you use and tune every option from the web dashboard.">
-<meta name="theme-color" content="#0A1020">
+<title>Frost.Byte: a free Discord bot with <!--module-count--> modules</title>
+<meta name="description" content="Frost.Byte is a free Discord bot with <!--module-count--> modules and <!--command-count--> slash commands: moderation, levels, tickets, economy, social feeds and more. Switch on only what you use and tune every option from the web dashboard.">
+<meta name="theme-color" content="#1B4FCF">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap">
-<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&amp;family=Spline+Sans+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="/site.css">
 <link rel="stylesheet" href="/landing.css">
 <script src="/landing.js" defer></script>
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs><clipPath id="fb-bite"><path d="M32 2L34.7 3.55A6.5 6.5 0 0 1 35.62 14.63A6.5 6.5 0 0 1 45.25 20.19A6.5 6.5 0 0 1 55.3 15.45L58 17V47L32 62L6 47V17Z"></path></clipPath></defs>
+  <symbol id="fb-mark" viewBox="0 0 64 64">
+    <g clip-path="url(#fb-bite)">
+      <path fill="currentColor" d="M0 0H64V64H0Z"></path>
+      <g fill="none" stroke-linecap="round">
+        <g id="fb-arm"><path d="M32 32V16" stroke-width="5"></path><path d="M32 23.5L27.4 18.9M32 23.5L36.6 18.9" stroke-width="4"></path></g>
+        <use href="#fb-arm" transform="rotate(60 32 32)"></use><use href="#fb-arm" transform="rotate(120 32 32)"></use><use href="#fb-arm" transform="rotate(180 32 32)"></use><use href="#fb-arm" transform="rotate(240 32 32)"></use><use href="#fb-arm" transform="rotate(300 32 32)"></use>
+      </g>
+      <circle cx="32" cy="32" r="4.4" stroke="none"></circle>
+    </g>
+  </symbol>
+</svg>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="site-header">
-  <nav class="wrap nav" aria-label="Main">
-    <a class="brand" href="#top">
-      <svg class="brand-mark" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g><g transform="rotate(60 12 12)"><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g><g transform="rotate(120 12 12)"><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g></svg>
-      <span class="wordmark">Frost<span class="dot">.</span>Byte</span>
-    </a>
-    <div class="nav-links">
-      <a href="#modules">Modules</a>
-      <a href="#dashboard">Dashboard</a>
-      <a href="#commands">Commands</a>
-      <a href="#start">Get started</a>
+<header class="flap">
+  <nav class="wrap flap-bar" aria-label="Main">
+    <a class="brand" href="/"><svg class="mark" width="36" height="36" aria-hidden="true"><use href="#fb-mark"></use></svg><span class="brand-name">Frost<span class="dot">.</span>Byte</span></a>
+    <div class="flap-links">
+      <a class="flap-wide" href="#inside">What's inside</a>
+      <a class="flap-wide" href="#dashboard">Dashboard demo</a>
+      <a href="/docs">Docs</a>
+      <a href="/changelog">Changelog</a>
+      <a href="https://github.com/MasstarVT/discord-bot">GitHub</a>
+      <a class="flap-narrow" href="/dashboard">Log in</a>
     </div>
-    <div class="nav-actions">
-      <a class="btn btn-secondary" href="/dashboard">Log in</a>
-      <a class="btn btn-primary" href="@@INVITE_URL@@">Add to Discord</a>
+    <div class="flap-actions">
+      <a class="tab tab-line" href="/dashboard">Log in</a>
+      <a class="tab tab-lemon" href="@@INVITE_URL@@">Add to Discord</a>
     </div>
   </nav>
+  <hr class="score">
 </header>
 
 <main id="main">
 
-<section id="top">
-  <div class="wrap hero">
-    <div class="hero-copy">
-      <p class="eyebrow">DISCORD BOT · <!--module-count--> MODULES · ONE DASHBOARD</p>
-      <h1>Every tool your server needs, frozen into one bot.</h1>
-      <p class="lead">Frost.Byte gives your Discord server <!--module-count--> modules: moderation, levels, tickets, economy, social feeds and more. Switch on only what you use, then tune every option from the web dashboard.</p>
-      <div class="actions">
-        <a class="btn btn-primary btn-lg" href="@@INVITE_URL@@"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add to Discord</a>
-        <a class="btn btn-secondary btn-lg" href="/dashboard">Open the dashboard</a>
-      </div>
-      <div class="hint">
-        <code class="chip">/module enable leveling</code>
-        <span>One command turns a module on.</span>
+<section class="panel front" aria-labelledby="front-title">
+  <div class="wrap front-grid">
+    <div class="front-copy">
+      <h1 class="lockup" id="front-title">
+        <span class="lockup-name">Frost<span class="dot">.</span>Byte</span>
+        <span class="lockup-line"><!--module-count--> modules, one Discord bot. Free, with no premium tier.</span>
+      </h1>
+      <p class="front-lead">Pick the modules your server needs, switch them on with <code>/module</code>, and tune every option from the web dashboard.</p>
+      <div class="front-actions">
+        <a class="sticker" href="@@INVITE_URL@@">
+          <svg class="sticker-burst" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 2L112 16.9L127.6 6L134.9 23.6L153 17.6L155 36.5L174.1 35.8L170.7 54.6L189.1 59.3L180.6 76.3L197 86.1L184 100L197 113.9L180.6 123.7L189.1 140.7L170.7 145.4L174.1 164.2L155 163.5L153 182.4L134.9 176.4L127.6 194L112 183.1L100 198L88 183.1L72.4 194L65.1 176.4L47 182.4L45 163.5L25.9 164.2L29.3 145.4L10.9 140.7L19.4 123.7L3 113.9L16 100L3 86.1L19.4 76.3L10.9 59.3L29.3 54.6L25.9 35.8L45 36.5L47 17.6L65.1 23.6L72.4 6L88 16.9Z"></path></svg>
+          <span class="sticker-text"><span class="sticker-free">Free</span><span class="sticker-cta">Add to Discord</span></span>
+        </a>
+        <a class="tab tab-line front-login" href="/dashboard">Log in to the dashboard</a>
       </div>
     </div>
 
-    <figure class="fig hero-fig">
-      <div class="mock" aria-hidden="true">
-        <div class="chat-head"><span># general</span><span>Night Owls</span></div>
-        <div class="chat-body">
-          <div class="msg">
-            <div class="avatar">NV</div>
-            <div class="msg-main">
-              <div class="msg-meta"><span class="msg-name">nova</span><span class="msg-time">Today at 9:41</span></div>
-              <div><code class="cmd">/rank</code></div>
-            </div>
-          </div>
-          <div class="msg">
-            <div class="avatar avatar-bot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g><g transform="rotate(60 12 12)"><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g><g transform="rotate(120 12 12)"><path d="M12 2v20"></path><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"></path></g></svg></div>
-            <div class="msg-main msg-wide">
-              <div class="msg-meta msg-meta-center"><span class="msg-name">Frost.Byte</span><span class="bot-tag">BOT</span><span class="msg-time">Today at 9:41</span></div>
-              <div class="rank-card">
-                <div class="rank-top">
-                  <div class="avatar avatar-lg">NV</div>
-                  <div class="rank-who"><div class="rank-name">nova</div><div class="rank-sub">Rank #4 on Night Owls</div></div>
-                  <div class="rank-level"><div class="rank-level-label">LEVEL</div><div class="rank-level-num">12</div></div>
+    <div class="front-window">
+      <figure class="window" aria-labelledby="window-cap">
+        <div class="window-cut">
+          <div class="dc">
+            <div class="dc-head"><span class="dc-hash" aria-hidden="true">#</span><span class="dc-channel" id="demo-channel">general</span><span class="dc-server"><span class="dc-server-name">Night Owls</span><span class="dc-sample">sample server</span></span></div>
+            <ol class="dc-log" id="demo-log" aria-live="polite">
+              <li class="dc-msg">
+                <span class="dc-av dc-av-nova" aria-hidden="true">N</span>
+                <div class="dc-body">
+                  <p class="dc-meta"><span class="dc-name">nova</span><span class="dc-time">Today at 21:40</span></p>
+                  <p class="dc-text">ok how close am I to level 13</p>
                 </div>
-                <div class="bar"><div class="bar-fill"></div></div>
-                <div class="rank-xp"><span>1,240 / 1,500 XP</span><span>260 XP to level 13</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="msg">
-            <div class="avatar avatar-bot"></div>
-            <div class="msg-main">
-              <div class="msg-meta msg-meta-center"><span class="msg-name">Frost.Byte</span><span class="bot-tag">BOT</span><span class="msg-time">Today at 9:58</span></div>
-              <div>GG <strong>nova</strong>, you just advanced to level <strong>13</strong>!</div>
-            </div>
+              </li>
+              <li class="dc-msg">
+                <span class="dc-av dc-av-bot" aria-hidden="true"><svg class="mark" width="26" height="26"><use href="#fb-mark"></use></svg></span>
+                <div class="dc-body">
+                  <p class="dc-reply"><span class="dc-reply-name">nova</span> used <code class="dc-cmd">/rank</code></p>
+                  <p class="dc-meta"><span class="dc-name">Frost.Byte</span><span class="dc-bot">APP</span><span class="dc-time">Today at 21:41</span></p>
+                  <img class="dc-attach" src="/demo/rank-card.png" width="700" height="250" alt="Rank card for nova: level 12, rank 4 on the server, 1.2K of 1.5K XP towards the next level.">
+                </div>
+              </li>
+              <li class="dc-msg">
+                <span class="dc-av dc-av-bot" aria-hidden="true"><svg class="mark" width="26" height="26"><use href="#fb-mark"></use></svg></span>
+                <div class="dc-body">
+                  <p class="dc-meta"><span class="dc-name">Frost.Byte</span><span class="dc-bot">APP</span><span class="dc-time">Today at 21:58</span></p>
+                  <p class="dc-text">GG <span class="dc-mention">@nova</span>, you just advanced to level 13!</p>
+                </div>
+              </li>
+            </ol>
+            <span class="glint glint-a" aria-hidden="true"></span>
+            <span class="glint glint-b" aria-hidden="true"></span>
           </div>
         </div>
+        <figcaption class="window-cap" id="window-cap">A sample server. The replies are Frost.Byte's own messages and cards; the members and numbers are made up.</figcaption>
+      </figure>
+      <div class="tastes" id="demo-tastes" role="group" aria-label="Run a sample command in the window" hidden>
+        <p class="stamp tastes-label">Try a flavour</p>
+        <button type="button" class="taste taste-<!--flavour:leveling-->" data-demo="rank" aria-pressed="true"><span class="taste-code"><!--code:leveling--></span>/rank</button>
+        <button type="button" class="taste taste-<!--flavour:economy-->" data-demo="daily" aria-pressed="false"><span class="taste-code"><!--code:economy--></span>/daily</button>
+        <button type="button" class="taste taste-<!--flavour:polls-->" data-demo="poll" aria-pressed="false"><span class="taste-code"><!--code:polls--></span>/poll</button>
+        <button type="button" class="taste taste-<!--flavour:autotime-->" data-demo="autotime" aria-pressed="false"><span class="taste-code"><!--code:autotime--></span>"friday 5pm"</button>
+        <button type="button" class="taste taste-<!--flavour:counting-->" data-demo="counting" aria-pressed="false"><span class="taste-code"><!--code:counting--></span>Counting</button>
+        <button type="button" class="taste taste-<!--flavour:moderation-->" data-demo="warn" aria-pressed="false"><span class="taste-code"><!--code:moderation--></span>/warn</button>
+        <button type="button" class="taste taste-<!--flavour:welcome-->" data-demo="welcome" aria-pressed="false"><span class="taste-code"><!--code:welcome--></span>Welcome</button>
       </div>
-      <figcaption>A /rank reply and a level-up message from the Levels module.</figcaption>
-    </figure>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <ul class="smallprint">
+      <li class="stamp"><b>Net</b> <!--command-count--> slash commands</li>
+      <li class="stamp"><b>Contents</b> <!--module-count--> modules, individually wrapped</li>
+      <li class="stamp"><b>Free from</b> premium tiers and paid API keys</li>
+      <li class="colour-bar" aria-hidden="true"><i class="cb-carton"></i><i class="cb-ink"></i><i class="cb-cherry"></i><i class="cb-lemon"></i><i class="cb-lime"></i><i class="cb-grape"></i></li>
+    </ul>
   </div>
 </section>
 
-<section id="modules" class="section section-raised">
-  <div class="wrap stack">
-    <div class="sec-head">
-      <div class="sec-title">
-        <p class="eyebrow">THE MODULE TABLE</p>
-        <h2><!--module-count--> modules. One switch each.</h2>
-      </div>
-      <p class="sec-lead">Every feature is a module. Switch it on with /module or one click in the dashboard; whatever you leave off stays out of your way.</p>
+<section class="panel inside on-board" id="inside" aria-labelledby="inside-title">
+  <div class="wrap">
+    <div class="inside-head">
+      <h2 class="panel-title" id="inside-title">What's inside: <!--module-count--> modules, one switch each.</h2>
+      <p class="panel-lead">Every feature comes individually wrapped. Open one to see its commands and the settings it ships with; switch it on with <code>/module enable</code> or one click on the dashboard, and whatever you leave off stays out of your way.</p>
     </div>
-    <div class="cats">
+    <div class="flavours">
 <!--module-table-->
     </div>
   </div>
 </section>
 
-<section id="dashboard" class="section">
-  <div class="wrap split">
-    <div class="split-copy">
-      <p class="eyebrow">WEB DASHBOARD</p>
-      <h2>Change any setting from your browser.</h2>
-      <p class="body-lg">Log in with Discord, pick a server, and every module's options are there: channels, roles, messages, limits and schedules. Saved embeds, custom commands, reminders and feeds are lists you can edit too.</p>
-      <div><a class="link-arrow" href="/dashboard">Open the dashboard<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a></div>
+<section class="panel serving" id="dashboard" aria-labelledby="serving-title">
+  <div class="wrap serving-grid">
+    <div class="serving-copy">
+      <h2 class="panel-title" id="serving-title">Serving suggestion: tune it on the dashboard.</h2>
+      <p class="panel-lead">Log in with Discord, pick a server, and every module's options are there: channels, roles, messages, limits and schedules. These are four real Levels settings with the defaults they ship with. Change them and the preview shows what Frost.Byte would post.</p>
+      <p class="serving-note">A sample. Nothing here is saved; <a href="/dashboard">log in to the dashboard</a> to change your own server.</p>
     </div>
-
-    <figure class="fig split-fig">
-      <div class="mock" aria-hidden="true">
-        <div class="set-head">
-          <div class="tile"><!--code:leveling--></div>
-          <div class="set-head-text"><div class="set-title">Levels</div><div class="set-sub">Level-up announcement</div></div>
-          <div class="switch"></div>
+    <div class="serving-board">
+      <form class="ss-form" id="levels-demo" aria-label="Sample Levels settings">
+        <p class="ss-head"><span class="ss-tile"><!--code:leveling--></span><span class="ss-head-text"><span class="ss-head-title">Levels</span><span class="ss-head-sub">Level-up announcement</span></span></p>
+<!--levels-demo-->
+      </form>
+      <div class="ss-preview">
+        <p class="stamp ss-preview-label">What Frost.Byte posts</p>
+        <div class="dc dc-small">
+          <div class="dc-head"><span class="dc-hash" aria-hidden="true">#</span><span class="dc-channel" id="ss-where">general</span></div>
+          <ol class="dc-log" id="ss-log" aria-live="polite">
+            <li class="dc-msg">
+              <span class="dc-av dc-av-bot" aria-hidden="true"><svg class="mark" width="26" height="26"><use href="#fb-mark"></use></svg></span>
+              <div class="dc-body">
+                <p class="dc-meta"><span class="dc-name">Frost.Byte</span><span class="dc-bot">APP</span><span class="dc-time">Today at 21:58</span></p>
+                <p class="dc-text">GG <span class="dc-mention">@nova</span>, you just advanced to level 13!</p>
+              </div>
+            </li>
+          </ol>
         </div>
-        <div class="set-body">
-          <div class="set-row">
-            <div class="field"><div class="field-label">Minimum XP per message</div><div class="field-box">15</div></div>
-            <div class="field"><div class="field-label">Maximum XP per message</div><div class="field-box">25</div></div>
-          </div>
-          <div class="set-group">
-            <div class="field-label">Announce level-ups</div>
-            <div class="seg"><span>Disabled</span><span class="on">Current channel</span><span>Private message</span><span>Custom channel</span></div>
-          </div>
-          <div class="set-toggle">
-            <div><div class="field-label">Level-up message as an embed</div><div class="field-note">Off sends plain text.</div></div>
-            <div class="switch switch-off"></div>
-          </div>
-        </div>
-        <div class="save-bar">
-          <div class="save-text">You have unsaved changes</div>
-          <div class="mini">Reset</div>
-          <div class="mini mini-primary">Save</div>
-        </div>
+        <p class="ss-xp" id="ss-xp">nova earns 15 to 25 XP per message.</p>
       </div>
-      <figcaption>The Levels page: every module's settings use the same parts.</figcaption>
-    </figure>
-  </div>
-</section>
-
-<section class="section section-raised" aria-labelledby="beyond-title">
-  <div class="wrap stack stack-tight">
-    <h2 id="beyond-title">Beyond the usual.</h2>
-    <ul class="cards">
-      <li class="card">
-        <span class="glyph" aria-hidden="true"><!--code:translation--></span>
-        <h3>Auto-Translate</h3>
-        <p>Translate a channel's messages into up to five languages as they're posted.</p>
-      </li>
-      <li class="card">
-        <span class="glyph" aria-hidden="true"><!--code:counting--></span>
-        <h3>Counting</h3>
-        <p>Members count up from 1 in turns. A wrong number or a double turn starts it over.</p>
-      </li>
-      <li class="card">
-        <span class="glyph" aria-hidden="true"><!--code:games--></span>
-        <h3>Scrabble and more</h3>
-        <p>A full two-player Scrabble game, plus tic-tac-toe, rock-paper-scissors and number guessing.</p>
-      </li>
-      <li class="card">
-        <span class="glyph" aria-hidden="true"><!--code:economy--></span>
-        <h3>A server economy</h3>
-        <p>A wallet per server: /daily streaks, work shifts, a shop, and blackjack, roulette and slots.</p>
-      </li>
-    </ul>
-  </div>
-</section>
-
-<section id="start" class="section">
-  <div class="wrap stack stack-tight">
-    <h2>Up and running in three steps.</h2>
-    <ol class="steps">
-      <li>
-        <span class="step-label">STEP 01</span>
-        <h3>Add Frost.Byte</h3>
-        <p>Invite the bot to a server where you have Manage Server.</p>
-      </li>
-      <li>
-        <span class="step-label">STEP 02</span>
-        <h3>Turn on modules</h3>
-        <p>Run <code class="cmd cmd-inline">/module enable tickets</code> or flip the switch in the dashboard.</p>
-      </li>
-      <li>
-        <span class="step-label">STEP 03</span>
-        <h3>Fine-tune on the web</h3>
-        <p>Log in with Discord and set channels, roles, messages and limits for each module.</p>
-      </li>
-    </ol>
-  </div>
-</section>
-
-<section id="commands" class="section section-raised">
-  <div class="wrap stack stack-tight">
-    <div class="sec-head sec-head-tight">
-      <h2>Slash commands, not syntax.</h2>
-      <p class="sec-lead sec-lead-narrow">Type /help in your server to see every command you can use there.</p>
     </div>
-    <ul class="cmds">
-      <li class="cmd-row"><code class="cmd-name">/rank</code><span class="cmd-desc">Show your rank card or a member's.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/ticket-panel</code><span class="cmd-desc">Set up ticket panels, managers, categories and transcripts.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/giveaway</code><span class="cmd-desc">Run a giveaway with a Participate button.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/reactionrole</code><span class="cmd-desc">Role panels with buttons, a dropdown or emoji reactions.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/poll</code><span class="cmd-desc">Create single or multiple choice polls.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/feed</code><span class="cmd-desc">RSS, YouTube, Reddit, Bluesky and podcast alerts.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/daily</code><span class="cmd-desc">Claim your daily coins and keep a streak going.</span></li>
-      <li class="cmd-row"><code class="cmd-name">/automod</code><span class="cmd-desc">Filters for bad words, spam, invites, links and honeypot channels.</span></li>
-    </ul>
   </div>
 </section>
 
-<section id="add" class="section">
-  <div class="wrap final">
-    <h2>Bring Frost<span class="dot">.</span>Byte to your server.</h2>
-    <p class="final-lead">Add the bot, switch on a module, and you're set.</p>
-    <div class="actions actions-center">
-      <a class="btn btn-primary btn-lg" href="@@INVITE_URL@@"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add to Discord</a>
-      <a class="btn btn-secondary btn-lg" href="/dashboard">Open the dashboard</a>
+<section class="panel back" aria-labelledby="facts-title">
+  <div class="wrap back-grid">
+    <div class="facts">
+      <h2 class="facts-title" id="facts-title">Bot Facts</h2>
+      <p class="facts-serving">Serving size: 1 Discord server</p>
+<!--bot-facts-->
+      <p class="facts-foot">Counted from the bot's own module list and command files.</p>
     </div>
+
+    <div class="back-copy">
+      <h2 class="panel-title">Directions</h2>
+      <ol class="directions">
+        <li><span class="dir-num" aria-hidden="true">1</span><div><h3>Add Frost.Byte</h3><p>Invite the bot to a server where you have Manage Server.</p></div></li>
+        <li><span class="dir-num" aria-hidden="true">2</span><div><h3>Switch on modules</h3><p>Run <code>/module enable tickets</code>, or flip the module's switch on the dashboard. Setup commands work before a module is on.</p></div></li>
+        <li><span class="dir-num" aria-hidden="true">3</span><div><h3>Fine-tune on the web</h3><p>Log in with Discord and set channels, roles, messages and limits for each module. Type <code>/help</code> in your server to see what you can use there.</p></div></li>
+      </ol>
+
+      <div class="ingredients">
+        <p><b class="stamp">Ingredients</b> <!--ingredients-->.</p>
+        <p><b class="stamp">Contains</b> Discord data and public, keyless web endpoints. <b class="stamp">Free from</b> premium tiers and paid API keys.</p>
+      </div>
+
+      <div class="packed">
+        <h3 class="stamp packed-title">Packed on</h3>
+        <ul class="packed-list">
+<!--latest-changes-->
+        </ul>
+        <a class="packed-more" href="/changelog">The full changelog</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel close on-board" aria-labelledby="close-title">
+  <div class="tear" aria-hidden="true"><span class="stamp">Tear here to open</span></div>
+  <div class="wrap close-inner">
+    <div class="close-copy">
+      <svg class="mark close-mark" width="88" height="88" aria-hidden="true"><use href="#fb-mark"></use></svg>
+      <h2 class="close-title" id="close-title">Open the box in your server.</h2>
+      <p class="close-lead">Add the bot, switch on a module, and you're set. Stuck? The <a href="/docs">docs</a> list every module and command.</p>
+    </div>
+    <a class="sticker sticker-close" href="@@INVITE_URL@@">
+      <svg class="sticker-burst" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 2L112 16.9L127.6 6L134.9 23.6L153 17.6L155 36.5L174.1 35.8L170.7 54.6L189.1 59.3L180.6 76.3L197 86.1L184 100L197 113.9L180.6 123.7L189.1 140.7L170.7 145.4L174.1 164.2L155 163.5L153 182.4L134.9 176.4L127.6 194L112 183.1L100 198L88 183.1L72.4 194L65.1 176.4L47 182.4L45 163.5L25.9 164.2L29.3 145.4L10.9 140.7L19.4 123.7L3 113.9L16 100L3 86.1L19.4 76.3L10.9 59.3L29.3 54.6L25.9 35.8L45 36.5L47 17.6L65.1 23.6L72.4 6L88 16.9Z"></path></svg>
+      <span class="sticker-text"><span class="sticker-free">Free</span><span class="sticker-cta">Add to Discord</span></span>
+    </a>
+    <a class="tab tab-line-ink close-second" href="/dashboard">Open the dashboard</a>
   </div>
 </section>
 
 </main>
 
-<footer class="site-footer">
-  <div class="wrap foot">
-    <span class="foot-brand">Frost<span class="dot">.</span>Byte</span>
-    <span class="foot-copy">&copy; 2026 MasstarVT</span>
-    <nav class="foot-links" aria-label="Footer">
-      <a href="/privacy">Privacy policy</a>
-      <a href="/terms">Terms of service</a>
-      <!--contact-->
-    </nav>
+<footer class="bottom-flap">
+  <div class="wrap">
+    <div class="bottom-grid">
+      <div class="barcode">
+        <svg viewBox="0 0 67 40" aria-hidden="true"><path d="M0 0h2v40h-2zM3 0h1v40h-1zM7 0h1v40h-1zM10 0h2v40h-2zM13 0h1v40h-1zM15 0h3v40h-3zM20 0h1v40h-1zM22 0h2v40h-2zM27 0h1v40h-1zM29 0h2v40h-2zM32 0h1v40h-1zM35 0h3v40h-3zM39 0h2v40h-2zM42 0h1v40h-1zM44 0h2v40h-2zM48 0h1v40h-1zM52 0h1v40h-1zM54 0h2v40h-2zM57 0h2v40h-2zM60 0h1v40h-1zM64 0h1v40h-1z"></path></svg>
+        <span class="barcode-digits"><!--module-count--> · <!--command-count--> · 0</span>
+        <span class="brand-name">Frost<span class="dot">.</span>Byte</span>
+      </div>
+      <nav class="bottom-col" aria-label="The bot">
+        <span class="stamp">The bot</span>
+        <a href="@@INVITE_URL@@">Add to Discord</a>
+        <a href="/dashboard">Log in to the dashboard</a>
+        <a href="/docs">Docs: modules and commands</a>
+        <a href="/changelog">Changelog</a>
+      </nav>
+      <nav class="bottom-col" aria-label="Help">
+        <span class="stamp">Help</span>
+        <!--support-->
+        <a href="https://github.com/MasstarVT/discord-bot/issues">Report a bug</a>
+        <a href="https://github.com/MasstarVT/discord-bot">Source on GitHub</a>
+        <!--contact-->
+      </nav>
+      <nav class="bottom-col" aria-label="Legal">
+        <span class="stamp">Legal</span>
+        <a href="/privacy">Privacy policy</a>
+        <a href="/terms">Terms of service</a>
+      </nav>
+    </div>
+    <div class="fine">
+      <span>&copy; 2026 MasstarVT. MIT licensed.</span>
+      <span>Frost.Byte is not made by or affiliated with Discord.</span>
+    </div>
   </div>
 </footer>
 

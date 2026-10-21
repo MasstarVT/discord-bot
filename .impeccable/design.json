@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T00:23:25.229Z",
+  "title": "Design System: Frost.Byte public site",
+  "extensions": {
+    "colorMeta": {
+      "carton": {
+        "role": "primary",
+        "displayName": "Freezer Carton Blue",
+        "canonical": "#1B4FCF",
+        "tonalRamp": [
+          "oklch(15% 0.062 263.6)",
+          "oklch(25% 0.103 263.6)",
+          "oklch(35% 0.144 263.6)",
+          "oklch(45% 0.185 263.6)",
+          "oklch(55% 0.178 263.6)",
+          "oklch(65% 0.138 263.6)",
+          "oklch(80% 0.079 263.6)",
+          "oklch(95% 0.020 263.6)"
+        ]
+      },
+      "carton-deep": {
+        "role": "primary",
+        "displayName": "Pressed Carton",
+        "canonical": "#143FAE",
+        "tonalRamp": [
+          "oklch(15% 0.055 263.9)",
+          "oklch(25% 0.091 263.9)",
+          "oklch(35% 0.128 263.9)",
+          "oklch(45% 0.165 263.9)",
+          "oklch(55% 0.142 263.9)",
+          "oklch(65% 0.110 263.9)",
+          "oklch(80% 0.063 263.9)",
+          "oklch(95% 0.016 263.9)"
+        ]
+      },
+      "carton-line": {
+        "role": "primary",
+        "displayName": "Carton Fold Blue",
+        "canonical": "#6E95EA",
+        "tonalRamp": [
+          "oklch(15% 0.040 264.4)",
+          "oklch(25% 0.067 264.4)",
+          "oklch(35% 0.093 264.4)",
+          "oklch(45% 0.120 264.4)",
+          "oklch(55% 0.134 264.4)",
+          "oklch(65% 0.134 264.4)",
+          "oklch(80% 0.083 264.4)",
+          "oklch(95% 0.021 264.4)"
+        ]
+      },
+      "on-carton": {
+        "role": "neutral",
+        "displayName": "Carton White Print",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(55% 0.000 89.9)",
+          "oklch(65% 0.000 89.9)",
+          "oklch(80% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "on-carton-soft": {
+        "role": "neutral",
+        "displayName": "Frost Print",
+        "canonical": "#D6E3FF",
+        "tonalRamp": [
+          "oklch(15% 0.012 265.7)",
+          "oklch(25% 0.020 265.7)",
+          "oklch(35% 0.029 265.7)",
+          "oklch(45% 0.037 265.7)",
+          "oklch(55% 0.041 265.7)",
+          "oklch(65% 0.041 265.7)",
+          "oklch(80% 0.041 265.7)",
+          "oklch(95% 0.024 265.7)"
+        ]
+      },
+      "board": {
+        "role": "neutral",
+        "displayName": "Frost Board",
+        "canonical": "#EEF4FF",
+        "tonalRamp": [
+          "oklch(15% 0.005 262.8)",
+          "oklch(25% 0.008 262.8)",
+          "oklch(35% 0.011 262.8)",
+          "oklch(45% 0.014 262.8)",
+          "oklch(55% 0.016 262.8)",
+          "oklch(65% 0.016 262.8)",
+          "oklch(80% 0.016 262.8)",
+          "oklch(95% 0.016 262.8)"
+        ]
+      },
+      "board-raised": {
+        "role": "neutral",
+        "displayName": "Raised Board",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(55% 0.000 89.9)",
+          "oklch(65% 0.000 89.9)",
+          "oklch(80% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "board-line": {
+        "role": "neutral",
+        "displayName": "Board Rule",
+        "canonical": "#C3D3EF",
+        "tonalRamp": [
+          "oklch(15% 0.013 261.7)",
+          "oklch(25% 0.021 261.7)",
+          "oklch(35% 0.030 261.7)",
+          "oklch(45% 0.038 261.7)",
+          "oklch(55% 0.043 261.7)",
+          "oklch(65% 0.043 261.7)",
+          "oklch(80% 0.043 261.7)",
+          "oklch(95% 0.016 261.7)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Print Navy",
+        "canonical": "#0B1A3F",
+        "tonalRamp": [
+          "oklch(15% 0.022 264.6)",
+          "oklch(25% 0.037 264.6)",
+          "oklch(35% 0.052 264.6)",
+          "oklch(45% 0.066 264.6)",
+          "oklch(55% 0.043 264.6)",
+          "oklch(65% 0.034 264.6)",
+          "oklch(80% 0.019 264.6)",
+          "oklch(95% 0.005 264.6)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Faded Ink",
+        "canonical": "#33446E",
+        "tonalRamp": [
+          "oklch(15% 0.022 266.3)",
+          "oklch(25% 0.037 266.3)",
+          "oklch(35% 0.052 266.3)",
+          "oklch(45% 0.067 266.3)",
+          "oklch(55% 0.055 266.3)",
+          "oklch(65% 0.043 266.3)",
+          "oklch(80% 0.025 266.3)",
+          "oklch(95% 0.006 266.3)"
+        ]
+      },
+      "ink-line": {
+        "role": "neutral",
+        "displayName": "Ink Rule",
+        "canonical": "#8FA3CC",
+        "tonalRamp": [
+          "oklch(15% 0.019 264.5)",
+          "oklch(25% 0.032 264.5)",
+          "oklch(35% 0.045 264.5)",
+          "oklch(45% 0.058 264.5)",
+          "oklch(55% 0.064 264.5)",
+          "oklch(65% 0.064 264.5)",
+          "oklch(80% 0.045 264.5)",
+          "oklch(95% 0.011 264.5)"
+        ]
+      },
+      "cherry": {
+        "role": "tertiary",
+        "displayName": "Cherry",
+        "canonical": "#D8213C",
+        "tonalRamp": [
+          "oklch(15% 0.064 20.9)",
+          "oklch(25% 0.106 20.9)",
+          "oklch(35% 0.149 20.9)",
+          "oklch(45% 0.191 20.9)",
+          "oklch(55% 0.213 20.9)",
+          "oklch(65% 0.173 20.9)",
+          "oklch(80% 0.099 20.9)",
+          "oklch(95% 0.025 20.9)"
+        ]
+      },
+      "on-cherry": {
+        "role": "tertiary",
+        "displayName": "Cherry Print",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(55% 0.000 89.9)",
+          "oklch(65% 0.000 89.9)",
+          "oklch(80% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "lemon": {
+        "role": "secondary",
+        "displayName": "Lemon Sticker",
+        "canonical": "#FFD23A",
+        "tonalRamp": [
+          "oklch(15% 0.049 91.3)",
+          "oklch(25% 0.082 91.3)",
+          "oklch(35% 0.115 91.3)",
+          "oklch(45% 0.148 91.3)",
+          "oklch(55% 0.164 91.3)",
+          "oklch(65% 0.164 91.3)",
+          "oklch(80% 0.164 91.3)",
+          "oklch(95% 0.068 91.3)"
+        ]
+      },
+      "on-lemon": {
+        "role": "secondary",
+        "displayName": "Lemon Print",
+        "canonical": "#0B1A3F",
+        "tonalRamp": [
+          "oklch(15% 0.022 264.6)",
+          "oklch(25% 0.037 264.6)",
+          "oklch(35% 0.052 264.6)",
+          "oklch(45% 0.066 264.6)",
+          "oklch(55% 0.043 264.6)",
+          "oklch(65% 0.034 264.6)",
+          "oklch(80% 0.019 264.6)",
+          "oklch(95% 0.005 264.6)"
+        ]
+      },
+      "lime": {
+        "role": "tertiary",
+        "displayName": "Lime",
+        "canonical": "#4CC254",
+        "tonalRamp": [
+          "oklch(15% 0.055 144.5)",
+          "oklch(25% 0.092 144.5)",
+          "oklch(35% 0.129 144.5)",
+          "oklch(45% 0.166 144.5)",
+          "oklch(55% 0.184 144.5)",
+          "oklch(65% 0.184 144.5)",
+          "oklch(80% 0.133 144.5)",
+          "oklch(95% 0.033 144.5)"
+        ]
+      },
+      "on-lime": {
+        "role": "tertiary",
+        "displayName": "Lime Print",
+        "canonical": "#0B1A3F",
+        "tonalRamp": [
+          "oklch(15% 0.022 264.6)",
+          "oklch(25% 0.037 264.6)",
+          "oklch(35% 0.052 264.6)",
+          "oklch(45% 0.066 264.6)",
+          "oklch(55% 0.043 264.6)",
+          "oklch(65% 0.034 264.6)",
+          "oklch(80% 0.019 264.6)",
+          "oklch(95% 0.005 264.6)"
+        ]
+      },
+      "grape": {
+        "role": "tertiary",
+        "displayName": "Grape",
+        "canonical": "#6E3BD8",
+        "tonalRamp": [
+          "oklch(15% 0.067 291.2)",
+          "oklch(25% 0.111 291.2)",
+          "oklch(35% 0.156 291.2)",
+          "oklch(45% 0.201 291.2)",
+          "oklch(55% 0.205 291.2)",
+          "oklch(65% 0.159 291.2)",
+          "oklch(80% 0.091 291.2)",
+          "oklch(95% 0.023 291.2)"
+        ]
+      },
+      "on-grape": {
+        "role": "tertiary",
+        "displayName": "Grape Print",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(35% 0.000 89.9)",
+          "oklch(45% 0.000 89.9)",
+          "oklch(55% 0.000 89.9)",
+          "oklch(65% 0.000 89.9)",
+          "oklch(80% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Lockup",
+        "purpose": "The Frost.Byte lockup on the front panel only."
+      },
+      "headline": {
+        "displayName": "Panel Title",
+        "purpose": "Panel titles; the leaflet and close titles are larger siblings."
+      },
+      "title": {
+        "displayName": "Section Title",
+        "purpose": "Category heads, docs section heads, lot names, module names."
+      },
+      "body": {
+        "displayName": "Panel Copy",
+        "purpose": "All running copy, held to 44 to 72ch."
+      },
+      "label": {
+        "displayName": "Stamp",
+        "purpose": "Uppercase wide packaging labels; never a kicker above a headline."
+      },
+      "mono": {
+        "displayName": "Command",
+        "purpose": "Commands, setting values, input values, lot dates, barcode digits."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only easing curve on the public pages."
+      },
+      {
+        "name": "state",
+        "value": "160ms",
+        "purpose": "Tab, chip, input and toggle colour or nudge changes."
+      },
+      {
+        "name": "sticker",
+        "value": "260ms",
+        "purpose": "Sticker tilt and scale on hover."
+      },
+      {
+        "name": "settle",
+        "value": "320ms",
+        "purpose": "Demo messages arrive (8px rise and fade); the wrapper end lifting on hover."
+      },
+      {
+        "name": "unwrap",
+        "value": "340ms",
+        "purpose": "Pop contents clip-reveal when a wrapper opens."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "prefers-reduced-motion removes all animation and transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone-max",
+        "value": "479px"
+      },
+      {
+        "name": "gutter-wide",
+        "value": "640px"
+      },
+      {
+        "name": "serving-split",
+        "value": "760px"
+      },
+      {
+        "name": "flap-inline",
+        "value": "900px"
+      },
+      {
+        "name": "panel-y-wide",
+        "value": "960px"
+      },
+      {
+        "name": "desktop",
+        "value": "1024px"
+      },
+      {
+        "name": "serving-wide",
+        "value": "1100px"
+      }
+    ],
+    "focus": [
+      {
+        "name": "on-carton",
+        "value": "outline: 3px solid #FFD23A; outline-offset: 3px",
+        "purpose": "Default focus ring on carton."
+      },
+      {
+        "name": "on-board",
+        "value": "outline: 3px solid #0B1A3F; outline-offset: 3px",
+        "purpose": "Focus ring on board panels and the leaflet."
+      },
+      {
+        "name": "input",
+        "value": "outline: 3px solid #1B4FCF; outline-offset: 1px",
+        "purpose": "Form controls in the sample dashboard."
+      }
+    ],
+    "signatureShapes": [
+      {
+        "name": "die-cut-window",
+        "value": "border: 4px solid #D3E1FF; border-radius: 150px 150px 30px 30px / 72px 72px 30px 30px",
+        "purpose": "The arched window over the demo chat (110/54 and 26 below 480px)."
+      },
+      {
+        "name": "crimp",
+        "value": "16x10 chevron mask repeated down each wrapper end, with 1.5px ridges at 20% ink",
+        "purpose": "Heat-sealed wrapper ends on pops and taste chips."
+      }
+    ],
+    "scope": {
+      "world": "Variety Pack",
+      "governs": [
+        "src/dashboard/public/site.css",
+        "src/dashboard/public/landing.css",
+        "src/dashboard/public/leaflet.css",
+        "src/dashboard/public/landing.html",
+        "src/dashboard/public/docs.html",
+        "src/dashboard/public/changelog.html",
+        "src/dashboard/public/privacy.html",
+        "src/dashboard/public/terms.html",
+        "src/dashboard/public/landing.js",
+        "src/dashboard/public/favicon.svg",
+        "src/dashboard/landing.js",
+        "src/dashboard/docs.js",
+        "src/dashboard/changelog.js",
+        "src/dashboard/siteParts.js"
+      ],
+      "outOfScope": {
+        "world": "Polar Night",
+        "files": [
+          "src/dashboard/public/index.html",
+          "src/dashboard/public/styles.css",
+          "src/dashboard/public/tokens.css",
+          "src/dashboard/public/forms.css",
+          "src/dashboard/public/collections.css"
+        ]
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Lemon Tab",
+      "kind": "button",
+      "refersTo": "tab-lemon",
+      "description": "Primary printed tab: Add to Discord in the top flap.",
+      "html": "<div class=\"ds-carton\"><a class=\"ds-tab ds-tab-lemon\" href=\"#\">Add to Discord</a></div>",
+      "css": ".ds-carton{background:var(--carton,#1B4FCF);padding:24px;} .ds-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:2px solid currentColor;border-radius:999px;font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;font-weight:700;font-size:15px;line-height:1.1;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),color 160ms cubic-bezier(0.16, 1, 0.3, 1),transform 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-tab:active{transform:translateY(1px);} .ds-tab:focus-visible{outline:3px solid var(--lemon,#FFD23A);outline-offset:3px;} .ds-tab-lemon{background:var(--lemon,#FFD23A);border-color:var(--lemon,#FFD23A);color:var(--ink,#0B1A3F);} .ds-tab-lemon:hover{background:var(--board-raised,#FFFFFF);border-color:var(--board-raised,#FFFFFF);}"
+    },
+    {
+      "name": "Line Tab",
+      "kind": "button",
+      "refersTo": "tab-line",
+      "description": "Secondary outlined tab on carton: Log in.",
+      "html": "<div class=\"ds-carton\"><a class=\"ds-tab ds-tab-line\" href=\"#\">Log in</a></div>",
+      "css": ".ds-carton{background:var(--carton,#1B4FCF);padding:24px;} .ds-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:2px solid currentColor;border-radius:999px;font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;font-weight:700;font-size:15px;line-height:1.1;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),color 160ms cubic-bezier(0.16, 1, 0.3, 1),transform 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-tab:active{transform:translateY(1px);} .ds-tab:focus-visible{outline:3px solid var(--lemon,#FFD23A);outline-offset:3px;} .ds-tab-line{background:transparent;color:var(--on-carton,#FFFFFF);} .ds-tab-line:hover{background:var(--on-carton,#FFFFFF);color:var(--carton,#1B4FCF);border-color:var(--on-carton,#FFFFFF);}"
+    },
+    {
+      "name": "Ink Tab",
+      "kind": "button",
+      "refersTo": "tab-ink",
+      "description": "Solid navy tab for actions on frost board.",
+      "html": "<div class=\"ds-board\"><a class=\"ds-tab ds-tab-ink\" href=\"#\">Open the dashboard</a></div>",
+      "css": ".ds-board{background:var(--board,#EEF4FF);padding:24px;} .ds-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:2px solid currentColor;border-radius:999px;font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;font-weight:700;font-size:15px;line-height:1.1;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),color 160ms cubic-bezier(0.16, 1, 0.3, 1),transform 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-tab:active{transform:translateY(1px);} .ds-tab:focus-visible{outline:3px solid var(--ink,#0B1A3F);outline-offset:3px;} .ds-tab-ink{background:var(--ink,#0B1A3F);border-color:var(--ink,#0B1A3F);color:var(--board-raised,#FFFFFF);} .ds-tab-ink:hover{background:var(--carton,#1B4FCF);border-color:var(--carton,#1B4FCF);}"
+    },
+    {
+      "name": "Price Sticker",
+      "kind": "custom",
+      "refersTo": "sticker",
+      "description": "The primary Add to Discord action: a tilted lemon starburst.",
+      "html": "<div class=\"ds-carton\"><a class=\"ds-sticker\" href=\"#\"><svg class=\"ds-burst\" viewBox=\"0 0 200 200\" aria-hidden=\"true\"><path d=\"M100 2L112 16.9L127.6 6L134.9 23.6L153 17.6L155 36.5L174.1 35.8L170.7 54.6L189.1 59.3L180.6 76.3L197 86.1L184 100L197 113.9L180.6 123.7L189.1 140.7L170.7 145.4L174.1 164.2L155 163.5L153 182.4L134.9 176.4L127.6 194L112 183.1L100 198L88 183.1L72.4 194L65.1 176.4L47 182.4L45 163.5L25.9 164.2L29.3 145.4L10.9 140.7L19.4 123.7L3 113.9L16 100L3 86.1L19.4 76.3L10.9 59.3L29.3 54.6L25.9 35.8L45 36.5L47 17.6L65.1 23.6L72.4 6L88 16.9Z\"/></svg><span class=\"ds-sticker-text\"><span class=\"ds-free\">Free</span><span class=\"ds-cta\">Add to Discord</span></span></a></div>",
+      "css": ".ds-carton{background:var(--carton,#1B4FCF);padding:32px;} .ds-sticker{position:relative;display:grid;place-items:center;width:176px;height:176px;color:var(--ink,#0B1A3F);text-decoration:none;transform:rotate(-8deg);transition:transform 260ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-burst{position:absolute;inset:0;width:100%;height:100%;fill:var(--lemon,#FFD23A);transition:fill 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-sticker:hover{transform:rotate(-3deg) scale(1.04);} .ds-sticker:hover .ds-burst{fill:var(--board-raised,#FFFFFF);} .ds-sticker:active{transform:rotate(-3deg) scale(0.98);} .ds-sticker:focus-visible{outline:3px solid var(--on-carton,#FFFFFF);outline-offset:3px;border-radius:50%;} .ds-sticker-text{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1;} .ds-free{font-family:\"Bricolage Grotesque\",\"Archivo\",ui-sans-serif,sans-serif;font-weight:800;font-size:46px;font-variation-settings:\"opsz\" 96;letter-spacing:-0.04em;} .ds-cta{margin-top:6px;max-width:9ch;font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;font-weight:800;font-size:15px;font-variation-settings:\"wdth\" 112;letter-spacing:0.04em;line-height:1.15;text-transform:uppercase;}"
+    },
+    {
+      "name": "Module Wrapper",
+      "kind": "custom",
+      "refersTo": "pop-wrapper",
+      "description": "One individually wrapped module: a details element that tears open along its crimp.",
+      "html": "<div class=\"ds-board\"><details class=\"ds-pop\"><summary class=\"ds-pop-wrapper\"><span class=\"ds-pop-code\" aria-hidden=\"true\">MO</span><span class=\"ds-pop-text\"><span class=\"ds-pop-name\">Moderation</span><span class=\"ds-pop-desc\">Warn, timeout, kick and ban with a case log.</span></span><span class=\"ds-pop-state\">Off at start</span></summary><div class=\"ds-pop-inside\">Switch it on: <code>/module enable moderation</code></div></details></div>",
+      "css": ".ds-board{background:var(--board,#EEF4FF);padding:24px 31px;color:var(--ink,#0B1A3F);font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;} .ds-pop{--flav:var(--cherry,#D8213C);--on-flav:var(--on-cherry,#FFFFFF);} .ds-pop-wrapper{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;min-height:92px;padding:12px 22px;border-radius:3px;background:var(--flav);color:var(--on-flav);list-style:none;cursor:pointer;} .ds-pop-wrapper::-webkit-details-marker{display:none;} .ds-pop-wrapper::before,.ds-pop-wrapper::after{content:\"\";position:absolute;top:0;bottom:0;width:16px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1.5' height='4' fill='%23000' fill-opacity='0.2'/%3E%3C/svg%3E\") 0 0 / 4px 4px,var(--flav);-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0H10.5L16 5L10.5 10H0Z'/%3E%3C/svg%3E\") 0 50% / 16px 10px repeat-y;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0H10.5L16 5L10.5 10H0Z'/%3E%3C/svg%3E\") 0 50% / 16px 10px repeat-y;transition:transform 320ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-pop-wrapper::before{left:-7px;transform:scaleX(-1);} .ds-pop-wrapper::after{right:-7px;transform-origin:0 0;} .ds-pop-wrapper:hover::after{transform:rotate(3deg);} .ds-pop[open] .ds-pop-wrapper::after{transform:translate(8px,4px) rotate(9deg);} .ds-pop-wrapper:focus-visible{outline:3px solid var(--ink,#0B1A3F);outline-offset:3px;} .ds-pop-code{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--on-flav);color:var(--flav);font-family:\"Bricolage Grotesque\",\"Archivo\",ui-sans-serif,sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.03em;} .ds-pop-text{display:flex;flex-direction:column;gap:2px;min-width:0;} .ds-pop-name{font-family:\"Bricolage Grotesque\",\"Archivo\",ui-sans-serif,sans-serif;font-weight:800;font-size:20px;line-height:1.1;} .ds-pop-desc{font-size:14px;line-height:1.35;} .ds-pop-state{padding:3px 6px;border:2px solid currentColor;border-radius:6px;font-variation-settings:\"wdth\" 125;font-weight:800;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;} .ds-pop-inside{padding:16px 18px 18px;border:2px solid var(--ink,#0B1A3F);border-top:2px dashed var(--ink,#0B1A3F);background:var(--board-raised,#FFFFFF);font-size:14px;} .ds-pop[open] .ds-pop-inside{animation:ds-unwrap 340ms cubic-bezier(0.16, 1, 0.3, 1) both;} .ds-pop-inside code{font-family:\"Spline Sans Mono\",ui-monospace,monospace;padding:1px 5px;border-radius:4px;background:var(--board,#EEF4FF);font-weight:600;} @keyframes ds-unwrap{from{clip-path:inset(0 0 100% 0);transform:translateY(-8px);}to{clip-path:inset(0 0 0 0);transform:none;}} @media (prefers-reduced-motion: reduce){.ds-pop *,.ds-pop *::before,.ds-pop *::after{animation:none !important;transition:none !important;}}"
+    },
+    {
+      "name": "Taste Chip",
+      "kind": "chip",
+      "refersTo": "taste",
+      "description": "A mini wrapper that runs a command in the demo window.",
+      "html": "<div class=\"ds-carton\"><button class=\"ds-taste\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-taste-code\">LV</span>/rank</button></div>",
+      "css": ".ds-carton{background:var(--carton,#1B4FCF);padding:24px 32px;} .ds-taste{--flav:var(--lime,#4CC254);--on-flav:var(--on-lime,#0B1A3F);position:relative;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:5px 14px 5px 8px;border:2px solid transparent;border-radius:2px;background:var(--flav);color:var(--on-flav);font:600 14px \"Spline Sans Mono\",ui-monospace,monospace;cursor:pointer;transition:transform 160ms cubic-bezier(0.16, 1, 0.3, 1),border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-taste::before,.ds-taste::after{content:\"\";position:absolute;top:-2px;bottom:-2px;width:9px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1.5' height='4' fill='%23000' fill-opacity='0.2'/%3E%3C/svg%3E\") 0 0 / 4px 4px,var(--flav);-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0H10.5L16 5L10.5 10H0Z'/%3E%3C/svg%3E\") 0 50% / 9px 6px repeat-y;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0H10.5L16 5L10.5 10H0Z'/%3E%3C/svg%3E\") 0 50% / 9px 6px repeat-y;} .ds-taste::before{left:-8px;transform:scaleX(-1);} .ds-taste::after{right:-8px;} .ds-taste:hover{border-color:var(--board,#EEF4FF);transform:translateY(-1px);} .ds-taste[aria-pressed=\"true\"]{border-color:var(--on-carton,#FFFFFF);} .ds-taste:focus-visible{outline:3px solid var(--lemon,#FFD23A);outline-offset:3px;} .ds-taste-code{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--on-flav);color:var(--flav);font:800 12px \"Archivo\",ui-sans-serif,system-ui,sans-serif;}"
+    },
+    {
+      "name": "Board Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Number or text field in the sample dashboard form.",
+      "html": "<div class=\"ds-raised\"><label class=\"ds-field\"><span class=\"ds-label\">Minimum XP per message</span><input class=\"ds-input\" type=\"number\" value=\"15\"></label></div>",
+      "css": ".ds-raised{background:var(--board-raised,#FFFFFF);padding:18px;border:2px solid var(--ink,#0B1A3F);border-radius:14px;color:var(--ink,#0B1A3F);font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;} .ds-field{display:grid;gap:4px;} .ds-label{font-weight:700;font-size:14px;} .ds-input{width:100%;padding:8px 10px;border:2px solid var(--ink-line,#8FA3CC);border-radius:8px;background:var(--board,#EEF4FF);color:var(--ink,#0B1A3F);font:600 16px \"Spline Sans Mono\",ui-monospace,monospace;} .ds-input:hover{border-color:var(--ink-soft,#33446E);} .ds-input:focus-visible{border-color:var(--ink,#0B1A3F);outline:3px solid var(--carton,#1B4FCF);outline-offset:1px;} .ds-input[aria-invalid=\"true\"]{border-color:var(--cherry,#D8213C);}"
+    },
+    {
+      "name": "Segment Pills",
+      "kind": "chip",
+      "refersTo": "segment",
+      "description": "Single-choice option set in board forms.",
+      "html": "<div class=\"ds-raised\"><fieldset class=\"ds-seg\"><label class=\"ds-opt\"><input type=\"radio\" name=\"m\" checked><span>Same channel</span></label><label class=\"ds-opt\"><input type=\"radio\" name=\"m\"><span>DM</span></label><label class=\"ds-opt\"><input type=\"radio\" name=\"m\"><span>Off</span></label></fieldset></div>",
+      "css": ".ds-raised{background:var(--board-raised,#FFFFFF);padding:18px;color:var(--ink,#0B1A3F);font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;} .ds-seg{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;border:0;} .ds-opt{position:relative;} .ds-opt input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;} .ds-opt span{display:inline-block;padding:6px 12px;border:2px solid var(--ink,#0B1A3F);border-radius:999px;font-weight:600;font-size:13.5px;} .ds-opt input:hover + span{background:var(--board,#EEF4FF);} .ds-opt input:checked + span{background:var(--ink,#0B1A3F);color:var(--board-raised,#FFFFFF);} .ds-opt input:focus-visible + span{outline:3px solid var(--carton,#1B4FCF);outline-offset:2px;}"
+    },
+    {
+      "name": "Top Flap",
+      "kind": "nav",
+      "refersTo": "tab-lemon",
+      "description": "Site header: brand lockup, links, Log in and Add to Discord, over a dashed score line.",
+      "html": "<header class=\"ds-flap\"><nav class=\"ds-flap-bar\"><a class=\"ds-brand\" href=\"#\">Frost<span class=\"ds-dot\">.</span>Byte</a><span class=\"ds-links\"><a href=\"#\">Docs</a><a href=\"#\" aria-current=\"page\">Changelog</a><a href=\"#\">GitHub</a></span><span class=\"ds-actions\"><a class=\"ds-tab ds-tab-line\" href=\"#\">Log in</a><a class=\"ds-tab ds-tab-lemon\" href=\"#\">Add to Discord</a></span></nav><hr class=\"ds-score\"></header>",
+      "css": ".ds-flap{background:var(--carton,#1B4FCF);color:var(--on-carton,#FFFFFF);font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;padding-inline:24px;} .ds-flap-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding-block:16px;} .ds-brand{color:inherit;text-decoration:none;font-family:\"Bricolage Grotesque\",\"Archivo\",ui-sans-serif,sans-serif;font-weight:800;font-size:24px;letter-spacing:-0.02em;line-height:1;} .ds-dot{color:var(--lemon,#FFD23A);} .ds-links{display:flex;gap:20px;font-weight:600;font-size:15px;} .ds-links a{color:inherit;text-decoration:none;padding-block:4px;} .ds-links a:hover,.ds-links a[aria-current=\"page\"]{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:0.18em;} .ds-links a:focus-visible,.ds-brand:focus-visible{outline:3px solid var(--lemon,#FFD23A);outline-offset:3px;border-radius:4px;} .ds-actions{display:flex;gap:10px;margin-left:auto;} .ds-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:2px solid currentColor;border-radius:999px;font-family:\"Archivo\",ui-sans-serif,system-ui,sans-serif;font-weight:700;font-size:15px;line-height:1.1;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),color 160ms cubic-bezier(0.16, 1, 0.3, 1),transform 160ms cubic-bezier(0.16, 1, 0.3, 1);} .ds-tab:focus-visible{outline:3px solid var(--lemon,#FFD23A);outline-offset:3px;} .ds-tab-line{background:transparent;color:var(--on-carton,#FFFFFF);} .ds-tab-line:hover{background:var(--on-carton,#FFFFFF);color:var(--carton,#1B4FCF);} .ds-tab-lemon{background:var(--lemon,#FFD23A);border-color:var(--lemon,#FFD23A);color:var(--ink,#0B1A3F);} .ds-tab-lemon:hover{background:var(--board-raised,#FFFFFF);border-color:var(--board-raised,#FFFFFF);} .ds-score{border:0;border-top:2px dashed var(--carton-line,#6E95EA);margin:0;}"
+    },
+    {
+      "name": "Bot Facts",
+      "kind": "card",
+      "refersTo": "bot-facts",
+      "description": "Nutrition-label panel of real counts on the back panel.",
+      "html": "<div class=\"ds-carton\"><div class=\"ds-facts\"><p class=\"ds-facts-title\">Bot Facts</p><p class=\"ds-facts-serving\">Serving size: 1 Discord server</p><div class=\"ds-row ds-major\"><span>Modules</span><span>28</span></div><div class=\"ds-row ds-major ds-rule\"><span>Slash commands</span><span>81</span></div><p class=\"ds-foot\">Counted from the bot's own module list and command files.</p></div></div>",
+      "css": ".ds-carton{background:var(--carton,#1B4FCF);padding:24px;} .ds-facts{max-width:380px;padding:10px 14px 14px;border:2px solid var(--ink,#0B1A3F);background:var(--board-raised,#FFFFFF);color:var(--ink,#0B1A3F);font:16px \"Archivo\",ui-sans-serif,system-ui,sans-serif;} .ds-facts-title{margin:0;padding-bottom:4px;border-bottom:1px solid var(--ink,#0B1A3F);font-variation-settings:\"wdth\" 88;font-weight:900;font-size:46px;line-height:1;letter-spacing:-0.02em;} .ds-facts-serving{margin:0;padding-block:6px;border-bottom:12px solid var(--ink,#0B1A3F);font-weight:700;} .ds-row{display:flex;justify-content:space-between;gap:12px;padding-block:4px;border-bottom:1px solid var(--ink,#0B1A3F);font-variant-numeric:tabular-nums;} .ds-major{font-weight:800;} .ds-rule{border-top:6px solid var(--ink,#0B1A3F);} .ds-foot{margin:8px 0 0;font-size:12.5px;color:var(--ink-soft,#33446E);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Variety Pack",
+    "overview": "The public site is a printed freezer-aisle carton of ice pops, unfolded top to bottom along its dieline. Freezer-blue carton board owns the page. Frost-white inner board carries the reading panels, navy print ink sets the copy, and four flavour inks (cherry, lemon, lime, grape) mark the catalog's four categories. Each module is one individually wrapped pop with crimped, heat-sealed ends. The carton's furniture is real: dashed score and fold lines, a die-cut window with flat cellophane glints, a starburst price sticker, a nutrition-style Bot Facts panel, lot-dated \"Packed on\" stamps, a \"Tear here to open\" strip and a barcode.\n\nEverything is flat print. Depth comes from ink on board and from cut edges (the window's thick frost rim, the wrapper's crimp), never from light. The density is packaging density: big confident display type on the panels, and small wide capitals (\"stamps\") for the labels a carton actually prints. Motion is a few physical events: the wrapper end tears when a module unwraps, demo messages settle into the window, and the sticker tilts toward you on hover. The direction contract placed a snowflake seal beside the front lockup; the build carries the mark only in the top flap, the demo avatar and the close, and the build is the record.\n\nScope: this world covers only the public pages (`/`, `/docs`, `/changelog`, and the legal pages `/privacy` and `/terms`) and the favicon. Their files are `site.css` (tokens and shared chrome), `landing.css`, `leaflet.css`, `landing.html`, `docs.html`, `changelog.html`, `privacy.html`, `terms.html`, `landing.js` and `favicon.svg`, plus the server renderers `landing.js`, `docs.js`, `changelog.js` and `siteParts.js`. The legal pages are leaflet pages: plain paragraphs and lists under `.leaf-legal`, with a `.leaf-date` stamp for the last-updated date. The dashboard app (`index.html`, `styles.css`, `tokens.css`, `forms.css`, `collections.css`) keeps the older \"Polar Night\" look and is not governed by this file.",
+    "keyCharacteristics": [
+      "Freezer-blue carton ground with frost-white board panels and navy print ink.",
+      "Four flavour inks, one per catalog category, each with a fixed ink printed on it.",
+      "Crimped wrapper units of identical size act as the page's ruler.",
+      "Dashed fold lines between panels and sections; solid rules inside them.",
+      "Flat ink only: no shadows, gradients, glows or blurs.",
+      "Bricolage Grotesque display, Archivo copy and stamps (width axis), Spline Sans Mono commands."
+    ],
+    "rules": [
+      {
+        "name": "The Labeled Flavour Rule",
+        "body": "A flavour ink always travels with its label. On a module it is printed with the module's two-letter code (the wrapper disc, the taste chip, the docs module disc). On a category it sits next to the flavour or category name (the category pill, the docs category title, the contents dot). The one exemption is the six-swatch registration bar in the front smallprint, a printer's mark that is decorative and hidden from assistive tech.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed Print Rule",
+        "body": "Each flavour has one ink printed on it and never another: white on cherry and grape, navy on lemon and lime. Components pick up the pair through `--flav` and `--on-flav`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lemon Means Go Rule",
+        "body": "Outside its category role, lemon is reserved for the primary action and for \"you are here\" highlights: the sticker, the lemon tab, selection, the focus ring on carton, and targeted lots and commands.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stamp Labels Things Rule",
+        "body": "Stamps name a field, group or label printed on the pack (\"Net\", \"Ingredients\", \"Packed on\", \"Tear here to open\", footer column heads, the settings caption, who-can-run badges). A stamp never sits above a headline as a kicker or eyebrow.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Lockup Rule",
+        "body": "The display size belongs to the Frost.Byte lockup. Every other heading is a headline or title.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Ink Rule",
+        "body": "If it needs a shadow, gradient or glow to read, change the ink or add a printed rule instead.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do print every flavour ink with its label: the two-letter code on a module, the flavour or category name on a category.",
+      "Do pair each flavour with its fixed print ink: white on cherry and grape, navy on lemon and lime.",
+      "Do separate panels, sections and lots with 2px dashed fold lines, and use solid navy rules for structure inside them.",
+      "Do keep lemon for the primary action, selection, focus on carton and targeted highlights, beyond its community-category role.",
+      "Do set packaging labels as stamps: Archivo width 125, 800, about 12px, 0.06em tracking, uppercase.",
+      "Do keep motion physical and brief on the ease-out curve (cubic-bezier(0.16, 1, 0.3, 1)): 160ms for states, 320 to 340ms for the settle and the unwrap. Reduced motion removes all of it."
+    ],
+    "donts": [
+      "Don't add box-shadows, gradients, glows or blurs. Depth is ink, rules and cuts.",
+      "Don't use a flavour ink as unlabeled decoration (the registration bar is the only exemption).",
+      "Don't put a stamp above a headline as a kicker or eyebrow.",
+      "Don't take Discord's window greys or blurple outside the die-cut window.",
+      "Don't apply this system to the dashboard app. It keeps the Polar Night look."
+    ]
+  }
+}
