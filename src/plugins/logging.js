@@ -107,7 +107,7 @@ async function onMessageDelete(ctx) {
   if (!(await ready(ctx, 'messageDelete', channel))) return;
   const botReason = wasDeletedByBot(message.id);
   if (message.partial && botReason) return; // nothing useful is known about it
-  await emit(ctx, 'messageDelete', buildMessageDeleteEmbed({ message, botReason, now: Date.now() }));
+  await emit(ctx, 'messageDelete', buildMessageDeleteEmbed({ message, botReason, botId: ctx.client.user?.id, now: Date.now() }));
 }
 
 async function onMessageEdit(ctx) {
@@ -127,7 +127,7 @@ async function onBulkDelete(ctx) {
     botReason = wasDeletedByBot(id);
     if (botReason) break;
   }
-  const { embed, file } = buildBulkDeleteEmbed({ channel, messages, botReason });
+  const { embed, file } = buildBulkDeleteEmbed({ channel, messages, botReason, botId: ctx.client.user?.id });
   await emit(ctx, 'messageBulkDelete', embed, { files: file ? [file] : [] });
 }
 
@@ -327,7 +327,7 @@ async function onChannelDelete(ctx) {
     if (channel.isVoiceBased?.()) {
       occupants = [...guild.voiceStates.cache.values()].filter((vs) => vs.channelId === channel.id).map((vs) => vs.id);
     }
-    await emit(ctx, 'channelDelete', buildChannelDeleteEmbed({ channel, occupants, botReason: wasDeletedByBot(channel.id) }));
+    await emit(ctx, 'channelDelete', buildChannelDeleteEmbed({ channel, occupants, botReason: wasDeletedByBot(channel.id), botId: ctx.client.user?.id }));
   }
 
   // Cleanup (R147): forget the deleted channel in every log field (the moderation log included) and the ignore list.
@@ -361,7 +361,7 @@ async function onThreadUpdate(ctx) {
 async function onThreadDelete(ctx) {
   const { thread } = ctx;
   if (!(await ready(ctx, 'threadDelete'))) return;
-  await emit(ctx, 'threadDelete', buildThreadDeleteEmbed({ thread, botReason: wasDeletedByBot(thread.id) }));
+  await emit(ctx, 'threadDelete', buildThreadDeleteEmbed({ thread, botReason: wasDeletedByBot(thread.id), botId: ctx.client.user?.id }));
 }
 
 // ── Roles (§6.7) ──────────────────────────────────────────────────────────────

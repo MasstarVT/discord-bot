@@ -392,9 +392,12 @@ test('buildMessageDeleteEmbed: partial, plain, attachments, bot reason, limits',
   assert.equal(tick(withFiles).description, '*[No text content]*');
   assert.equal(fieldOf(withFiles, 'Attachments (2)').value, 'cat.png (2.4 MB)\na.txt (100 B)');
 
-  const bot = tick(ev.buildMessageDeleteEmbed({ message: fakeMessage({ mentionRoles: [{ id: '444444444444444444', name: 'Mods' }] }), botReason: 'automod' }));
-  assert.equal(bot.title, '🗑️ Message Deleted (removed by the bot: automod)');
+  const bot = tick(ev.buildMessageDeleteEmbed({ message: fakeMessage({ mentionRoles: [{ id: '444444444444444444', name: 'Mods' }] }), botReason: 'automod', botId: '999' }));
+  assert.equal(bot.title, '🗑️ Message Deleted');
+  assert.equal(bot.fields.find((f) => f.name === 'Deleted By').value, '<@999> (automod)');
   assert.equal(bot.fields.some((f) => f.name === '⚠️ Ghost Pinged'), false);
+  // Without the bot's id (a client that never logged in) it still says who.
+  assert.equal(tick(ev.buildMessageDeleteEmbed({ message: fakeMessage(), botReason: 'automod' })).fields.find((f) => f.name === 'Deleted By').value, 'the bot (automod)');
 
   const huge = ev.buildMessageDeleteEmbed({ message: fakeMessage({ content: 'x'.repeat(10_000), attachments: Array.from({ length: 200 }, (_, i) => ({ name: `file-${i}-${'n'.repeat(80)}.png`, size: 1 })) }) });
   assert.ok(tick(huge).description.length <= 4096);
@@ -431,9 +434,9 @@ test('buildBulkDeleteEmbed: counts, authors and the file', () => {
     ['1', fakeMessage({ id: '1', author: alice })], ['2', fakeMessage({ id: '2', author: alice })], ['3', fakeMessage({ id: '3', author: bob })],
     ['4', { id: '4', partial: true }],
   ]);
-  const { embed, file } = ev.buildBulkDeleteEmbed({ channel: { id: '700000000000000001', name: 'general' }, messages: msgs, botReason: '/purge by x (1)' });
+  const { embed, file } = ev.buildBulkDeleteEmbed({ channel: { id: '700000000000000001', name: 'general' }, messages: msgs, botReason: '/purge by x (1)', botId: '999' });
   const e = tick(embed);
-  assert.match(e.description, /^\*\*4\*\* messages were deleted in <#700000000000000001> \(by the bot: \/purge by x \(1\)\)\.$/);
+  assert.match(e.description, /^\*\*4\*\* messages were deleted in <#700000000000000001> by <@999> \(\/purge by x \(1\)\)\.$/);
   assert.equal(fieldOf(embed, 'Cached').value, '3 of 4 messages had cached content.');
   assert.equal(fieldOf(embed, 'Authors').value, '<@111111111111111111> ×2, <@222222222222222222> ×1');
   assert.equal(fieldOf(embed, 'Transcript').value, 'Attached as a text file.');
@@ -606,9 +609,9 @@ test('channel embeds', () => {
   assert.equal(fieldOf(created, 'Category').value, 'Cat');
   assert.equal(fieldOf(created, 'Topic').value, 'hello');
 
-  const deleted = ev.buildChannelDeleteEmbed({ channel: chan({ name: 'gone' }), occupants: ['u1', 'u2'], botReason: 'tempvoice' });
+  const deleted = ev.buildChannelDeleteEmbed({ channel: chan({ name: 'gone' }), occupants: ['u1', 'u2'], botReason: 'tempvoice', botId: '999' });
   assert.equal(fieldOf(deleted, 'Connected Members (2)').value, '<@u1>, <@u2>');
-  assert.equal(fieldOf(deleted, 'Deleted By').value, 'the bot (tempvoice)');
+  assert.equal(fieldOf(deleted, 'Deleted By').value, '<@999> (tempvoice)');
   assert.equal(fieldOf(deleted, 'Name').value, '`gone`');
 });
 
@@ -660,11 +663,11 @@ test('thread embeds', () => {
   assert.equal(tick(updated).description, '<#700000000000000777> `renamed`');
   assert.equal(ev.buildThreadUpdateEmbed({ thread: thread(), lines: [] }), null);
 
-  const deleted = ev.buildThreadDeleteEmbed({ thread: thread({ guild: { channels: { cache: new Map([['700000000000000001', {}]]) } } }), botReason: 'automation' });
+  const deleted = ev.buildThreadDeleteEmbed({ thread: thread({ guild: { channels: { cache: new Map([['700000000000000001', {}]]) } } }), botReason: 'automation', botId: '999' });
   assert.equal(tick(deleted).title, '🗑️ Thread Deleted');
   assert.equal(fieldOf(deleted, 'Name').value, '`bug reports`');
   assert.equal(fieldOf(deleted, 'Channel').value, '<#700000000000000001>');
-  assert.equal(fieldOf(deleted, 'Deleted By').value, 'the bot (automation)');
+  assert.equal(fieldOf(deleted, 'Deleted By').value, '<@999> (automation)');
   const nameless = ev.buildThreadDeleteEmbed({ thread: { id: '9', type: ChannelType.PublicThread } }); // an uncached name
   assert.equal(fieldOf(nameless, 'Name').value, '`unknown`');
 });
@@ -1103,7 +1106,8 @@ test('messageDelete hook: ghost ping, bot deletion, bot authors, ignored channel
   markBotDeletion('802', 'automod');
   await run(fakeMessage({ ...base, id: '802' }));
   await flushLogQueue();
-  assert.equal(firstEmbed(channel, 1).title, '🗑️ Message Deleted (removed by the bot: automod)');
+  assert.equal(firstEmbed(channel, 1).title, '🗑️ Message Deleted');
+  assert.equal(firstEmbed(channel, 1).fields.find((f) => f.name === 'Deleted By').value, '<@bot> (automod)');
   assert.equal(firstEmbed(channel, 1).fields.some((f) => f.name === '⚠️ Ghost Pinged'), false);
 
   const before = channel.sent.length;
@@ -1141,7 +1145,7 @@ test('messageDeleteBulk hook attaches the transcript and labels purge deletions'
   const source = { id: '700000000000000001', name: 'general', guild };
   await hook('messageDeleteBulk').run(fakeCtx(guild, settings, { messages, channel: source }));
   await flushLogQueue();
-  assert.match(firstEmbed(channel).description, /\(by the bot: \/purge by mod \(1\)\)/);
+  assert.match(firstEmbed(channel).description, / by <@bot> \(\/purge by mod \(1\)\)\.$/);
   assert.equal(channel.sent[0].files.length, 1);
   assert.match(channel.sent[0].files[0].name, /^bulk-delete-/);
 
@@ -1347,7 +1351,7 @@ test('thread hooks log create, real updates and delete into the server log, and 
   const embeds = channel.sent.flatMap((p) => p.embeds);
   assert.deepEqual(embeds.map((e) => e.title), ['🧵 Thread Created', '🧵 Thread Updated', '🗑️ Thread Deleted', '🧵 Thread Created']);
   assert.equal(embeds[1].fields.find((f) => f.name === 'Locked').value, 'Locked');
-  assert.equal(embeds[2].fields.find((f) => f.name === 'Deleted By').value, 'the bot (automation)');
+  assert.equal(embeds[2].fields.find((f) => f.name === 'Deleted By').value, '<@bot> (automation)');
 });
 
 test('roleUpdate housekeeping: a change to the bot role forgets dead channels', async () => {
@@ -1370,7 +1374,7 @@ test('channelDelete hook (offline part): marks a deleted log channel and logs th
   const e = firstEmbed(channel);
   assert.equal(e.title, '🗑️ Channel Deleted');
   assert.equal(e.fields.find((f) => f.name === 'Connected Members (1)').value, '<@u1>');
-  assert.equal(e.fields.find((f) => f.name === 'Deleted By').value, 'the bot (tempvoice)');
+  assert.equal(e.fields.find((f) => f.name === 'Deleted By').value, '<@bot> (tempvoice)');
 
 });
 

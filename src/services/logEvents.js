@@ -140,6 +140,9 @@ const msgFooter = (message) => (message.author?.id
 
 // ── Messages (§6.3) ───────────────────────────────────────────────────────────
 
+/** Credits a bot deletion: the bot's mention (Discord shows its name) and why, e.g. "<@id> (tempvoice)". */
+const deletedByBot = (botId, reason) => `${botId ? `<@${botId}>` : 'the bot'} (${clampText(reason, 100)})`;
+
 /**
  * Ghost-ping rule (R118/R267): a message is a ghost ping when it mentioned someone other than its author
  * (and not a bot) and was removed within an hour, and the bot did not delete it itself.
@@ -156,18 +159,16 @@ export function isGhostPing({ message, botReason = null, now = Date.now() }) {
 }
 
 /**
- * @param {{ message: object, botReason?: string|null, now?: number }} p
+ * @param {{ message: object, botReason?: string|null, botId?: string|null, now?: number }} p
  * @returns {import('discord.js').EmbedBuilder}
  */
-export function buildMessageDeleteEmbed({ message, botReason = null, now = Date.now() }) {
+export function buildMessageDeleteEmbed({ message, botReason = null, botId = null, now = Date.now() }) {
   const ghost = isGhostPing({ message, botReason, now });
   let title = '🗑️ Message Deleted';
   let color = LOG_COLORS.DELETE;
   if (ghost.ghost) {
     title = '👻 Ghost Ping Detected — Message Deleted';
     color = LOG_COLORS.ALERT;
-  } else if (botReason) {
-    title = `🗑️ Message Deleted (removed by the bot: ${clampText(botReason, 100)})`;
   }
   const embed = logEmbed(color, title);
   const channelId = message.channelId ?? message.channel?.id;
@@ -178,6 +179,7 @@ export function buildMessageDeleteEmbed({ message, botReason = null, now = Date.
     fields.push(field('Author', userLine(message.author), true));
   }
   fields.push(field('Channel', channelRef(message.guild, channelId), true));
+  if (botReason) fields.push(field('Deleted By', deletedByBot(botId, botReason), true));
 
   if (message.partial) setDescription(embed, '*Message was not cached — content unavailable.*');
   else if (message.content) setDescription(embed, clampText(message.content, 4000));
@@ -271,15 +273,15 @@ export function buildBulkDeleteTranscript(messages, channel = null) {
 
 /**
  * One embed for a bulk delete plus a transcript file (null when no message was cached).
- * @param {{ channel: object, messages: Iterable<object>|Map<string, object>, botReason?: string|null }} p
+ * @param {{ channel: object, messages: Iterable<object>|Map<string, object>, botReason?: string|null, botId?: string|null }} p
  * @returns {{ embed: import('discord.js').EmbedBuilder, file: AttachmentBuilder|null }}
  */
-export function buildBulkDeleteEmbed({ channel, messages, botReason = null }) {
+export function buildBulkDeleteEmbed({ channel, messages, botReason = null, botId = null }) {
   const list = values(messages);
   const n = list.length;
   const cached = list.filter((m) => !m.partial && m.author);
   const embed = logEmbed(LOG_COLORS.DELETE, '🧹 Messages Bulk-Deleted');
-  setDescription(embed, `**${n}** messages were deleted in ${channelRef(channel?.guild, channel?.id)}${botReason ? ` (by the bot: ${clampText(botReason, 100)})` : ''}.`);
+  setDescription(embed, `**${n}** messages were deleted in ${channelRef(channel?.guild, channel?.id)}${botReason ? ` by ${deletedByBot(botId, botReason)}` : ''}.`);
 
   const fields = [field('Cached', `${cached.length} of ${n} messages had cached content.`)];
   if (cached.length) {
@@ -738,8 +740,8 @@ export function buildChannelUpdateEmbed({ channel, lines }) {
   return fitEmbed(embed);
 }
 
-/** @param {{ channel: object, occupants?: string[], botReason?: string|null }} p */
-export function buildChannelDeleteEmbed({ channel, occupants = [], botReason = null }) {
+/** @param {{ channel: object, occupants?: string[], botReason?: string|null, botId?: string|null }} p */
+export function buildChannelDeleteEmbed({ channel, occupants = [], botReason = null, botId = null }) {
   const embed = logEmbed(LOG_COLORS.DELETE, '🗑️ Channel Deleted');
   const fields = [
     field('Name', `\`${clampText(channel.name, 100).replace(/`/g, "'")}\``, true),
@@ -749,7 +751,7 @@ export function buildChannelDeleteEmbed({ channel, occupants = [], botReason = n
   if (occupants.length) {
     fields.push(field(`Connected Members (${occupants.length})`, joinWithLimit(occupants.map((id) => `<@${id}>`), { sep: ', ', max: 1024 })));
   }
-  if (botReason) fields.push(field('Deleted By', `the bot (${clampText(botReason, 100)})`));
+  if (botReason) fields.push(field('Deleted By', deletedByBot(botId, botReason)));
   setFooter(embed, `Channel ID: ${channel.id}`);
   setFields(embed, fields);
   return fitEmbed(embed);
@@ -833,8 +835,8 @@ export function buildThreadUpdateEmbed({ thread, lines }) {
   return fitEmbed(embed);
 }
 
-/** @param {{ thread: object, botReason?: string|null }} p */
-export function buildThreadDeleteEmbed({ thread, botReason = null }) {
+/** @param {{ thread: object, botReason?: string|null, botId?: string|null }} p */
+export function buildThreadDeleteEmbed({ thread, botReason = null, botId = null }) {
   const embed = logEmbed(LOG_COLORS.DELETE, '🗑️ Thread Deleted');
   const fields = [
     field('Name', `\`${threadName(thread)}\``, true),
@@ -842,7 +844,7 @@ export function buildThreadDeleteEmbed({ thread, botReason = null }) {
   ];
   if (thread.parentId) fields.push(field('Channel', channelRef(thread.guild, thread.parentId), true));
   if (thread.ownerId) fields.push(field('Started By', `<@${thread.ownerId}>`, true));
-  if (botReason) fields.push(field('Deleted By', `the bot (${clampText(botReason, 100)})`));
+  if (botReason) fields.push(field('Deleted By', deletedByBot(botId, botReason)));
   setFooter(embed, `Thread ID: ${thread.id}`);
   setFields(embed, fields);
   return fitEmbed(embed);
