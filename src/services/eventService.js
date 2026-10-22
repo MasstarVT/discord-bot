@@ -9,7 +9,7 @@
 import { Prisma } from '@prisma/client';
 import {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel,
-  ModalBuilder, TextInputBuilder, TextInputStyle,
+  ModalBuilder, TextInputBuilder, TextInputStyle, escapeMarkdown,
 } from 'discord.js';
 import prisma from '../database/client.js';
 import { COLORS, LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
@@ -40,7 +40,7 @@ export const EVENT = Object.freeze({
   DISCORD_END_MS: 3_600_000,         // the Discord event's end when there is no duration (external events need one)
   OVERDUE_GRACE_MS: 10 * 60_000,
   GOING_SHOWN: 15, LIST_SHOWN: 25, ATTENDEES_MAX: 1000,
-  RENDER_INTERVAL_MS: 5_000,
+  RENDER_INTERVAL_MS: 5_000, NAME_LOOKUP_MS: 4_000,
   REMIND_USERS_MAX: 500, REMIND_CHUNK_USERS: 80, REMIND_CHUNK_CHARS: 1900,
   STRIP_BATCH: 100, STRIP_CONCURRENCY: 3, STRIP_RUNS_MAX: 50, STRIP_RESUME_MS: 15_000,
 });
@@ -151,8 +151,11 @@ export function tallyFromGroups(groups, goingIds = []) {
 
 export const emptyTally = () => ({ going: 0, maybe: 0, declined: 0, goingIds: [] });
 
-/** The card shown in the channel: details, who is going, and (while open) the RSVP buttons. */
-export function buildEventEmbed(event, tally = emptyTally(), { settings = null, now = Date.now() } = {}) {
+/**
+ * The card shown in the channel: details, who is going, and (while open) the RSVP buttons.
+ * `names`: id -> name of the members going (see memberNames), printed under their mentions.
+ */
+export function buildEventEmbed(event, tally = emptyTally(), { settings = null, now = Date.now(), names = null } = {}) {
   const start = new Date(event.startsAt);
   const title = clampText(event.title, 200);
   const embed = guildEmbed(settings, `📅 ${title}`, clampText(event.description ?? '', EVENT.DESCRIPTION_MAX) || undefined);
@@ -172,8 +175,12 @@ export function buildEventEmbed(event, tally = emptyTally(), { settings = null, 
   const cap = event.capacity ? ` / ${event.capacity}` : '';
   const shown = tally.goingIds.slice(0, EVENT.GOING_SHOWN);
   const hidden = Math.max(0, tally.going - shown.length);
+  // An embed carries no user data: an app that has not loaded a member shows their mention as a raw `<@id>`, so the names
+  // follow in a subtext line.
+  const shownNames = shown.map((id) => names?.get(id)).filter(Boolean).map((n) => escapeMarkdown(clampText(n, 32)));
   const goingText = shown.length
-    ? `${shown.map((id) => `<@${id}>`).join(' ')}${hidden ? ` +${hidden} more` : ''}`
+    ? clampText(`${shown.map((id) => `<@${id}>`).join(' ')}${hidden ? ` +${hidden} more` : ''}`
+      + `${shownNames.length ? `\n-# ${shownNames.join(' · ')}` : ''}`, 1024)
     : 'No one yet';
   fields.push({ name: `✅ Going (${tally.going}${cap})`, value: goingText });
   fields.push({ name: '❔ Maybe', value: String(tally.maybe), inline: true });
@@ -200,9 +207,9 @@ export function buildEventComponents(event, tally = emptyTally(), { disabled = !
   )];
 }
 
-export function buildEventPayload(event, tally, { settings = null, now = Date.now() } = {}) {
+export function buildEventPayload(event, tally, { settings = null, now = Date.now(), names = null } = {}) {
   return {
-    embeds: [buildEventEmbed(event, tally, { settings, now })],
+    embeds: [buildEventEmbed(event, tally, { settings, now, names })],
     components: buildEventComponents(event, tally),
     allowedMentions: NO_MENTIONS,
   };
@@ -503,6 +510,32 @@ async function resolveChannel(client, channelId) {
 }
 
 /**
+ * Display names for the card: the member's name in the server, else the account name (someone who left). Best effort: an id
+ * Discord does not answer for in time is left out, and the card shows only its mention.
+ * @returns {Promise<Map<string, string>>}
+ */
+export async function memberNames(client, guild, ids) {
+  const names = new Map();
+  const lookup = async () => {
+    const wanted = [...new Set(ids)].filter(Boolean);
+    const missing = wanted.filter((id) => !guild.members.cache.has(id));
+    const found = missing.length ? await guild.members.fetch({ user: missing }).catch(() => new Map()) : new Map();
+    const left = [];
+    for (const id of wanted) {
+      const member = guild.members.cache.get(id) ?? found.get(id);
+      if (member) names.set(id, member.displayName);
+      else left.push(id);
+    }
+    await mapLimit(left, 3, async (id) => {
+      const user = client.users.cache.get(id) ?? await client.users.fetch(id);
+      if (user) names.set(id, user.displayName ?? user.username);
+    });
+  };
+  await withTimeout(lookup(), EVENT.NAME_LOOKUP_MS, 'event names').catch(() => {});
+  return names;
+}
+
+/**
  * Edits the announcement to the event's current state.
  * @returns {Promise<'ok'|'skip'|'gone'>} 'gone' = the message was deleted (its id is cleared)
  */
@@ -516,7 +549,8 @@ async function editPost(client, event, { settings = undefined, tally = undefined
       return 'skip';
     }
     const [t, s] = await Promise.all([tally ?? getTally(event.id), settings === undefined ? getSettingsSafe(event.guildId) : settings]);
-    await found.channel.messages.edit(event.messageId, buildEventPayload(event, t, { settings: s }));
+    const names = await memberNames(client, guildFor(client, event.guildId), t.goingIds);
+    await found.channel.messages.edit(event.messageId, buildEventPayload(event, t, { settings: s, names }));
     return 'ok';
   } catch (err) {
     if (err?.code === UNKNOWN_MESSAGE) {

@@ -352,6 +352,32 @@ test('tallyFromGroups and the embed: counts, first 15 going, capacity, mentions'
   assert.match(now.fields[0].value, /Happening now/);
 });
 
+test('the Going list keeps its mentions and names them in a subtext line (an app may not resolve a mention in an embed)', async () => {
+  const event = { id: 'E1', title: 'Game night', hostId: 'HOST', startsAt: future(DAY), status: 'SCHEDULED' };
+  const t = svc.tallyFromGroups([{ status: 'GOING', _count: { _all: 4 } }], ['U1', 'U2', 'U3']);
+  const names = new Map([['U1', 'Rev'], ['U3', 'Frosty_*Fan*']]);
+  const json = svc.buildEventEmbed(event, t, { names }).toJSON();
+  const field = (name) => json.fields.find((f) => f.name.startsWith(name));
+  assert.equal(field('✅ Going').value, '<@U1> <@U2> <@U3> +1 more\n-# Rev · Frosty\\_\\*Fan\\*');
+  assert.equal(field('Host').value, '<@HOST>');
+  assert.equal(svc.buildEventEmbed(event, t).toJSON().fields.find((f) => f.name.startsWith('✅')).value, '<@U1> <@U2> <@U3> +1 more');
+
+  // Lookup: cached member, fetched member, then the account name of someone who left; an unknown id is left out.
+  const guild = {
+    members: {
+      cache: new Map([['U1', { displayName: 'Rev' }]]),
+      fetch: async ({ user }) => new Map(user.filter((id) => id === 'U2').map((id) => [id, { displayName: 'Mass' }])),
+    },
+  };
+  const client = { users: { cache: new Map(), fetch: async (id) => (id === 'LEFT' ? { displayName: 'Frosty' } : Promise.reject(new Error('Unknown User'))) } };
+  const got = await svc.memberNames(client, guild, ['U1', 'U2', 'LEFT', 'GHOST', 'LEFT']);
+  assert.deepEqual(Object.fromEntries(got), { U1: 'Rev', U2: 'Mass', LEFT: 'Frosty' });
+  // A failed member fetch still names the cached members and falls back to the account names.
+  const broken = { members: { cache: new Map([['U1', { displayName: 'Rev' }]]), fetch: async () => { throw new Error('gateway down'); } } };
+  assert.deepEqual(Object.fromEntries(await svc.memberNames(client, broken, ['U1', 'LEFT'])), { U1: 'Rev', LEFT: 'Frosty' });
+  assert.equal((await svc.memberNames(client, null, ['U1'])).size, 0);
+});
+
 test('buttons: customIds, disabled when closed, Going disabled when full', () => {
   const event = { id: 'E1', status: 'SCHEDULED', capacity: 2 };
   const row = (tally, e = event) => svc.buildEventComponents(e, tally)[0].toJSON().components;
