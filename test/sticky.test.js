@@ -755,6 +755,31 @@ test('the form submit: Admin level only, edits the text, keeps the embed, works 
   assert.equal(answer(dm).title, 'Form Expired');
 });
 
+test('the answer warns about variables a sticky cannot fill in, and stays quiet otherwise', async () => {
+  rows.clear();
+  await seed('M2', true);
+  const { client, guild } = world('M2', ['C1']);
+  const member = { id: 'ADMIN', guild: { ownerId: 'x' }, permissions: { has: (bit) => bit === PermissionFlagsBits.ManageGuild } };
+  const submit = (text) => fakeInteraction({
+    customId: 'sticky-modal:C1', guildId: 'M2', guild, client, member, inCachedGuild: () => true,
+    fields: { getTextInputValue: () => text },
+  });
+
+  const fine = submit('Welcome to {server}, see {channel}');
+  await handleStickyModal(fine);
+  assert.doesNotMatch(answer(fine).description, /⚠️.*variables|posted as written/);
+
+  const user = submit('Hi {user}, welcome to {server}');
+  await handleStickyModal(user);
+  assert.equal(answer(user).title, 'Sticky Message Updated');
+  assert.match(answer(user).description, /no member, so user variables like `\{user\}` are posted as written/);
+  assert.doesNotMatch(answer(user).description, /Unknown variables/);
+
+  const unknown = submit('Hello {nope}');
+  await handleStickyModal(unknown);
+  assert.match(answer(unknown).description, /Unknown variables are shown as typed: `\{nope\}`/);
+});
+
 // ── /sticky ───────────────────────────────────────────────────────────────────
 
 function charCount(node) {

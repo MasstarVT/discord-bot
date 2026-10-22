@@ -726,12 +726,26 @@ export async function searchAniList(type, query, { allowAdult = false, userId = 
   });
 }
 
+// One retry for a GET that failed before any answer came back: after a quiet spell the first request can hit a
+// reset keep-alive socket or a DNS hiccup. HTTP errors and timeouts are not retried.
+const RETRY_CODES = new Set(['NETWORK', 'DNS_FAILED']);
+
+async function getJson(url, opts) {
+  try {
+    return await deps.safeFetchJson(url, opts);
+  } catch (err) {
+    if (!(err instanceof SafeFetchError) || !RETRY_CODES.has(err.code)) throw err;
+    logger.debug(`search: retrying ${url} after ${err.message}`);
+    return deps.safeFetchJson(url, opts);
+  }
+}
+
 // ── PokeAPI ───────────────────────────────────────────────────────────────────
 
 /** The parsed JSON, or null on a 404. Throws SearchError. */
 async function pokeGet(path) {
   try {
-    return await deps.safeFetchJson(`${POKEAPI_BASE}${path}`, {
+    return await getJson(`${POKEAPI_BASE}${path}`, {
       timeoutMs: SEARCH_TIMEOUT_MS,
       maxBytes: MAX_BYTES.pokeapi,
       headers: { Accept: 'application/json' },
@@ -783,7 +797,7 @@ async function refreshPokemonIndex() {
     await assertNotPaused('pokeapi');
     let body;
     try {
-      body = await deps.safeFetchJson(`${POKEAPI_BASE}/pokemon-species?limit=2000`, {
+      body = await getJson(`${POKEAPI_BASE}/pokemon-species?limit=2000`, {
         timeoutMs: SEARCH_TIMEOUT_MS,
         maxBytes: MAX_BYTES.pokeIndex,
       });
@@ -845,7 +859,7 @@ export async function defineUrban(term, { userId = null } = {}) {
     async fetcher() {
       let body;
       try {
-        body = await deps.safeFetchJson(`${URBAN_DEFINE_URL}?term=${encodeURIComponent(t)}`, {
+        body = await getJson(`${URBAN_DEFINE_URL}?term=${encodeURIComponent(t)}`, {
           timeoutMs: SEARCH_TIMEOUT_MS,
           maxBytes: MAX_BYTES.urban,
           headers: { Accept: 'application/json' },

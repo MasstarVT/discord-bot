@@ -457,6 +457,14 @@ describe('LibreTranslate', () => {
     assert.equal(JSON.parse(calls[0].init.body).api_key, 'secret');
     assert.match(calls[0].url, /http:\/\/lt\.test\/detect$/);
   });
+
+  test('/detect: the confidence-0 `en` LibreTranslate gives when no loaded language matches is unknown', async () => {
+    __testing.configure(lt);
+    installFetch(() => jsonRes([{ language: 'en', confidence: 0 }]));
+    assert.deepEqual(await svc.detectLanguage('Guten Morgen, wie geht es dir?'), { code: null, name: 'Unknown' });
+    installFetch(() => jsonRes([{ language: 'en', confidence: 97 }]));
+    assert.deepEqual(await svc.detectLanguage('Good morning, how are you?'), { code: 'en', name: 'English' });
+  });
 });
 
 // ── 12. The hook body, fully offline (R011, R183, R184, R264, R265, R288) ─────

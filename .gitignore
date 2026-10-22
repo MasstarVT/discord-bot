@@ -45,3 +45,6 @@ claude-token-saver/
 # Impeccable design tooling scratch (review screenshots, decision-page state)
 .impeccable/review/
 .impeccable/questions/
+
+# Local live-test notes
+test.md

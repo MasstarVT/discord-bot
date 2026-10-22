@@ -310,6 +310,11 @@ test('the thank-you: default when blank, {boosts} and {tier} filled in, at most 
   assert.equal(renderThankYou({ boostMessage: '{user.id} / {boosts} / {tier} / {server}' }, m, w.guild), 'U1 / 14 / 2 / Test Guild');
   assert.equal(renderThankYou({ boostMessage: 'x'.repeat(5000) }, m, w.guild).length, 2000);
   assert.equal(renderThankYou({ boostMessage: '{unknownthing}' }, m, w.guild), '{unknownthing}');
+  // A preview counts the next boost, so a server with none does not read "We now have 0 boosts".
+  assert.equal(renderThankYou({ boostMessage: '{boosts}' }, m, w.guild, { preview: true }), '15');
+  const none = makeWorld({ tier: 0, boostCount: 0 });
+  assert.equal(renderThankYou({ boostMessage: '{boosts}' }, none.addMember('U2'), none.guild), '0', 'the real thank-you is not changed');
+  assert.match(renderThankYou({ boostMessage: null }, none.addMember('U3'), none.guild, { preview: true }), /We now have 1 boosts\./);
 });
 
 test('parseColor: #rrggbb with or without the #, blank means none, anything else is refused', () => {

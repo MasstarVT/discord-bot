@@ -363,10 +363,12 @@ const LIST_FILTERS = {
   cancelled: (guildId) => ({ guildId, status: 'CANCELLED' }),
   all: (guildId) => ({ guildId }),
 };
+const LIST_FILTER_NAMES = { open: 'open (active or draft) ', ended: 'ended ', cancelled: 'cancelled ', all: '' };
 
 async function list(interaction, client, settings) {
-  const status = interaction.options.getString('status') ?? 'open';
-  const where = (LIST_FILTERS[status] ?? LIST_FILTERS.open)(interaction.guildId);
+  const requested = interaction.options.getString('status') ?? 'open';
+  const status = Object.hasOwn(LIST_FILTERS, requested) ? requested : 'open';
+  const where = LIST_FILTERS[status](interaction.guildId);
   const rows = await prisma.giveaway.findMany({
     where,
     orderBy: { createdAt: 'desc' },
@@ -374,7 +376,10 @@ async function list(interaction, client, settings) {
     select: { id: true, prize: true, status: true, channelId: true, endsAt: true, endedAt: true, _count: { select: { entries: true } } },
   });
   if (!rows.length) {
-    return interaction.editReply({ embeds: [infoEmbed('No Giveaways', 'There are no giveaways to show. Start one with `/giveaway start`.')] });
+    const text = status === 'all'
+      ? 'There are no giveaways yet. Start one with `/giveaway start`.'
+      : `There are no ${LIST_FILTER_NAMES[status]}giveaways. Use \`/giveaway list status:all\` to see every status, or start one with \`/giveaway start\`.`;
+    return interaction.editReply({ embeds: [infoEmbed('No Giveaways', text)] });
   }
   const lines = rows.map(formatListLine);
   const pages = [];

@@ -195,6 +195,13 @@ test('suggestWhen previews a reading, or examples, or a hint', () => {
   const [hint] = ts.suggestWhen('banana', CHI, FRI_3PM_CHICAGO);
   assert.equal(hint.value, 'banana');
   assert.match(hint.name, /Can't read/);
+  // The date in the hint is computed from now, so it is never in the past.
+  assert.match(hint.name, /Try: fri 7pm · tomorrow 18:30 · oct 23 9am · in 2h$/);
+  const [late] = ts.suggestWhen('banana', CHI, new Date('2026-12-28T12:00:00Z'));
+  assert.match(late.name, /· jan 4 9am · in 2h$/);
+  assert.ok(ts.suggestWhen('x'.repeat(60), CHI, new Date('2026-11-28T12:00:00Z'))[0].name.length <= 100);
+  assert.deepEqual(ts.futureDayExample(CHI, FRI_3PM_CHICAGO), { words: 'oct 23', iso: '2026-10-23' });
+  assert.deepEqual(ts.futureDayExample('Pacific/Auckland', new Date('2026-12-28T20:00:00Z')), { words: 'jan 5', iso: '2027-01-05' }); // already Dec 29 there
   assert.equal(ts.roughRelative(-2 * 86_400_000), '2 days ago');
   assert.equal(ts.roughRelative(20_000), 'now');
 });

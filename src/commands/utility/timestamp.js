@@ -6,7 +6,7 @@ import { PERMISSION_LEVELS } from '../../config/constants.js';
 import { getSettingsSafe, peekSettings } from '../../services/settingsService.js';
 import { getUserTimezone, resolveMemberTimezone } from '../../services/userTimezoneService.js';
 import { guildEmbed } from '../../utils/embedBuilder.js';
-import { parseWhen, discordTimestamp } from '../../utils/time.js';
+import { parseWhen, discordTimestamp, zonedParts } from '../../utils/time.js';
 import { formatInZone, zoneLabel, zoneSourceText } from '../../utils/timezones.js';
 import { withTimeout, ackBudgetMs } from '../../utils/async.js';
 import { clampText } from '../../utils/text.js';
@@ -28,6 +28,24 @@ export const STYLES = Object.freeze([
 ]);
 
 export const EXAMPLES = Object.freeze(['now', 'in 2h', 'tomorrow 12pm', 'fri 7pm', 'next mon 9am']);
+
+const MONTH_NAMES = Object.freeze(['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']);
+
+/**
+ * A calendar day a week from now in `zone`, as a hint would type it ("oct 29") and as an ISO date. Always ahead, so a
+ * hint never shows a day that has already passed.
+ * @param {string} zone
+ * @param {Date} [now]
+ * @returns {{ words: string, iso: string }}
+ */
+export function futureDayExample(zone, now = new Date()) {
+  const p = zonedParts(now, zone);
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.day + 7));
+  const month = d.getUTCMonth();
+  const day = d.getUTCDate();
+  const pad = (n) => String(n).padStart(2, '0');
+  return { words: `${MONTH_NAMES[month]} ${day}`, iso: `${d.getUTCFullYear()}-${pad(month + 1)}-${pad(day)}` };
+}
 
 export const data = new SlashCommandBuilder()
   .setName('timestamp')
@@ -82,7 +100,7 @@ export function suggestWhen(typed, zone, now = new Date()) {
     out.push({ name: q ? preview : `${input} → ${preview}`, value: input });
   }
   if (q && !out.length) {
-    out.push({ name: `Can't read "${clampText(q, 30)}" yet. Try: fri 7pm · tomorrow 18:30 · oct 20 9am · in 2h`, value: q });
+    out.push({ name: `Can't read "${clampText(q, 30)}" yet. Try: fri 7pm · tomorrow 18:30 · ${futureDayExample(zone, now).words} 9am · in 2h`, value: q });
   }
   return out;
 }
@@ -144,9 +162,10 @@ export async function execute(interaction) {
   const { resolved, settings, personalUnknown } = await loadCallerZone(interaction);
   const parsed = parseWhen(raw, resolved.zone);
   if (!parsed) {
+    const day = futureDayExample(resolved.zone);
     return replyError(interaction, 'Could Not Read That Time', [
       `I couldn't read \`${shown(raw)}\` as a time.`,
-      'Try `fri 7pm`, `tomorrow 18:30`, `next mon 9am`, `oct 20 7:30pm`, `2026-10-20 19:00`, `in 2h` or `7pm CST`.',
+      `Try \`fri 7pm\`, \`tomorrow 18:30\`, \`next mon 9am\`, \`${day.words} 7:30pm\`, \`${day.iso} 19:00\`, \`in 2h\` or \`7pm CST\`.`,
       `Times are read in **${zoneLabel(resolved.zone)}**, ${zoneSourceText(resolved)}.`,
     ].join('\n'));
   }

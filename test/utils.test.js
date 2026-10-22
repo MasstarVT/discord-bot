@@ -814,6 +814,8 @@ describe('safeRegex', () => {
     assert.equal(validateRegex('').ok, false);
     assert.equal(validateRegex(5).ok, false);
     assert.equal(validateRegex('(').ok, false);
+    assert.doesNotMatch(validateRegex('[unclosed').reason, /Invalid regular expression: Invalid regular expression/);
+    assert.match(validateRegex('[unclosed').reason, /^Invalid regular expression: \/\[unclosed\/i: /);
     assert.equal(validateRegex('a'.repeat(201)).reason, 'Pattern is 201 characters (max 200).');
     assert.equal(validateRegex('abc', 'g').reason, 'Flag "g" is not allowed (use i, m, s or u).');
     assert.match(validateRegex('(a+)+').reason, /^Nested repetition/);

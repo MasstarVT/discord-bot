@@ -595,6 +595,17 @@ test('command payload shapes', () => {
   assert.equal(typeof levelconfig.autocomplete, 'function');
 });
 
+test('/levelconfig card warns only about Discord upload links, which expire', () => {
+  const expiring = levelconfig.isExpiringDiscordLink;
+  assert.equal(expiring('https://cdn.discordapp.com/attachments/1/2/card.png?ex=1&is=2&hm=3'), true);
+  assert.equal(expiring('https://media.discordapp.net/attachments/1/2/card.png'), true);
+  assert.equal(expiring('https://cdn.discordapp.com/ephemeral-attachments/1/2/card.png'), true);
+  assert.equal(expiring('https://cdn.discordapp.com/embed/avatars/1.png'), false);
+  assert.equal(expiring('https://cdn.discordapp.com/emojis/1.png'), false);
+  assert.equal(expiring('https://i.imgur.com/attachments/x.png'), false);
+  assert.equal(expiring('not a url'), false);
+});
+
 // ── 16. Plugin shape ─────────────────────────────────────────────────────────
 
 test('plugin declaration', async () => {

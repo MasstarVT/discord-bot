@@ -1275,6 +1275,8 @@ describe('16. command validation (no database needed)', () => {
     try {
       let i = await trig(sc, 'enable', {});
       assert.match(titleOf(i), /Triggers On/);
+      assert.match(textOf(i), /^Triggers now respond to matching messages\./);
+      assert.doesNotMatch(textOf(i), /Custom commands and triggers/, 'prefix commands are not part of this message');
       assert.deepEqual(writes.at(-1).update, { customCommandsEnabled: true, autoTriggersEnabled: true });
       i = await trig(sc, 'disable', {});
       assert.match(titleOf(i), /Triggers Off/);

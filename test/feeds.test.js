@@ -507,6 +507,12 @@ test('templateWarnings, parseMessageOption, displayNameUpdate, parseRetryAfterMs
   assert.deepEqual(S.templateWarnings('RSS', '{title} {server} {random:1:5} {channel.name} {random}'), []);
   assert.deepEqual(S.templateWarnings('YOUTUBE', 'x {Link}'), []);
   assert.deepEqual(S.templateWarnings('RSS', null), []);
+  // The source name never doubles a word ("RSS feed feeds").
+  for (const [type, phrase] of [['RSS', 'RSS feeds'], ['YOUTUBE', 'YouTube channels'], ['REDDIT', 'Subreddits'], ['BLUESKY', 'Bluesky accounts'], ['PODCAST', 'Podcasts']]) {
+    const [line] = S.templateWarnings(type, '{nope}');
+    assert.ok(line.includes(`don't work for ${phrase} and will appear as typed`), line);
+    assert.ok(!/\bfeed feeds\b/.test(line));
+  }
 
   assert.deepEqual(S.parseMessageOption('a\\nb'), { template: 'a\nb' });
   assert.deepEqual(S.parseMessageOption('   '), { template: null });
@@ -1518,7 +1524,7 @@ test('/feed add rss: validation, probe, seeding, job, duplicates', { skip: skipD
   assert.match(e.description, /Ping: <@&555>/);
   assert.match(e.description, /✅ 2 existing item\(s\) recorded — only new ones will be posted\./);
   assert.match(e.description, /Variables: `\{title\}`/);
-  assert.match(e.description, /don't work for RSS feed feeds/);
+  assert.match(e.description, /don't work for RSS feeds and will appear/);
   assert.ok(!e.description.includes('module is off'));
   assert.deepEqual(log.edits.at(-1).allowedMentions, { parse: [] });
   const row = await prisma.feed.findFirst({ where: { guildId: G_CMD } });

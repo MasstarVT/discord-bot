@@ -105,7 +105,8 @@ export function parseEmojiSource(input) {
   // Before the shortcode check: digits also match the shortcode pattern.
   if (/^\d{17,21}$/.test(s)) return { kind: 'id', id: s };
 
-  const short = /^:?([A-Za-z0-9_]{2,32})(?:~\d+)?:?$/.exec(s);
+  // Both colons: Discord sends ":name:" for an emoji the sender cannot use. A bare word is just text.
+  const short = /^:([A-Za-z0-9_]{2,32})(?:~\d+)?:$/.exec(s);
   if (short) return { kind: 'shortcode', name: short[1] };
 
   if (/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(s)) return { kind: 'unicode' };
@@ -515,7 +516,7 @@ async function runAdd(interaction) {
   switch (source.kind) {
     case 'empty':
     case 'invalid':
-      return replyError(interaction, 'Invalid Emoji', 'Paste a custom emoji (`<:name:id>`) or a direct image link starting with https://. Tip: right-click an emoji → **Copy Link**.');
+      return replyError(interaction, 'Invalid Emoji', "That isn't a custom emoji or an image link. Paste a custom emoji (`<:name:id>`) or a direct image link starting with https://. Tip: right-click an emoji → **Copy Link**.");
     case 'unicode':
       return replyError(interaction, 'Invalid Emoji', "Standard emojis are built into Discord and can't be uploaded. Paste a custom emoji or an image link instead.");
     case 'shortcode':

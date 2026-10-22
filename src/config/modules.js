@@ -29,7 +29,7 @@ export const MODULES = Object.freeze({
   economy: Object.freeze({ flag: "economyEnabled", label: "Economy", emoji: "🪙", mee6: "Economy", configCommand: "/economy-admin", default: DEFAULT_MODULE_SETTINGS.economy }),
   games: Object.freeze({ flag: "gamesEnabled", label: "Games", emoji: "🎮", mee6: "Economy › games (+ ours)", configCommand: "/games", default: DEFAULT_MODULE_SETTINGS.games }),
   feeds: Object.freeze({ flag: "feedsEnabled", label: "Social Feeds", emoji: "📰", mee6: "RSS / YouTube / Reddit / Bluesky / Podcast alerts", configCommand: "/feed", default: DEFAULT_MODULE_SETTINGS.feeds }),
-  search: Object.freeze({ flag: "searchEnabled", label: "Search Anything", emoji: "🔎", mee6: "Search Anything", configCommand: "/settings", default: DEFAULT_MODULE_SETTINGS.search }),
+  search: Object.freeze({ flag: "searchEnabled", label: "Search Anything", emoji: "🔎", mee6: "Search Anything", configCommand: "/search", default: DEFAULT_MODULE_SETTINGS.search }),
   liverole: Object.freeze({ flag: "liveRoleEnabled", label: "Live Role", emoji: "🔴", mee6: "Twitch Alerts › live-streaming role", configCommand: "/liverole", default: DEFAULT_MODULE_SETTINGS.liverole }),
   counting: Object.freeze({ flag: "countingEnabled", label: "Counting", emoji: "🔢", mee6: "(ours, beyond MEE6)", configCommand: "/counting", default: DEFAULT_MODULE_SETTINGS.counting }),
   autotime: Object.freeze({ flag: "autoTimeEnabled", label: "Auto Timestamps", emoji: "🕒", mee6: "(ours, beyond MEE6)", configCommand: "/autotime", default: DEFAULT_MODULE_SETTINGS.autotime }),

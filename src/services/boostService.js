@@ -106,14 +106,14 @@ export function messageTemplate(settings) {
   return own.trim() ? own : DEFAULT_BOOST_MESSAGE;
 }
 
-/** The thank-you for a member, placeholders rendered ({boosts} = boost count, {tier} = 0..3), at most 2000 characters. */
-export function renderThankYou(settings, member, guild, { maxLength = BOOST.MESSAGE_MAX } = {}) {
-  const text = renderPlaceholders(messageTemplate(settings), {
-    member, guild, vars: { boosts: Number(guild?.premiumSubscriptionCount ?? 0), tier: tierNumber(guild) },
-  }, { maxLength });
-  return text.trim() || renderPlaceholders(DEFAULT_BOOST_MESSAGE, {
-    member, guild, vars: { boosts: Number(guild?.premiumSubscriptionCount ?? 0), tier: tierNumber(guild) },
-  }, { maxLength });
+/**
+ * The thank-you for a member, placeholders rendered ({boosts} = boost count, {tier} = 0..3), at most 2000 characters.
+ * A preview counts one boost more than the server has: it shows the thank-you for the next boost, not "0 boosts".
+ */
+export function renderThankYou(settings, member, guild, { maxLength = BOOST.MESSAGE_MAX, preview = false } = {}) {
+  const vars = { boosts: Number(guild?.premiumSubscriptionCount ?? 0) + (preview ? 1 : 0), tier: tierNumber(guild) };
+  const text = renderPlaceholders(messageTemplate(settings), { member, guild, vars }, { maxLength });
+  return text.trim() || renderPlaceholders(DEFAULT_BOOST_MESSAGE, { member, guild, vars }, { maxLength });
 }
 
 /** `#rrggbb` (the # is optional) to an integer; null/blank is "no colour given". */
@@ -696,7 +696,7 @@ export async function postThankYou(guild, member, settings, { preview = false } 
     return { ok: false, reason: 'unusable', text: usable.reason };
   }
   const head = preview ? '🧪 **Preview of the boost thank-you** (nobody was pinged)\n' : '';
-  const content = head + renderThankYou(settings, member, guild, { maxLength: BOOST.MESSAGE_MAX - head.length });
+  const content = head + renderThankYou(settings, member, guild, { maxLength: BOOST.MESSAGE_MAX - head.length, preview });
   try {
     await channel.send({ content, allowedMentions: preview ? NO_MENTIONS : { parse: [], users: [member.id] } });
     return { ok: true, channelId };

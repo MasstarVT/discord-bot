@@ -1140,6 +1140,13 @@ test('DB: /reminder pause, resume (and refresh), next and list', { skip: skipDb 
   // Resume refuses a one-time reminder whose time has passed, and a deleted channel.
   const once = await mkRow(GUILD6, ch.id, { name: 'once-old', mode: 'ONE_SHOT', intervalMinutes: null, runAt: new Date(Date.now() - 3_600_000), enabled: false });
   assert.match(lastText(await run('resume', { name: once.name })), /Time Has Passed/);
+  // A one-time reminder that already fired is "sent", not "paused".
+  const fired = await mkRow(GUILD6, ch.id, {
+    name: 'once-fired', mode: 'ONE_SHOT', intervalMinutes: null, runAt: new Date(Date.now() - 7_200_000), lastSentAt: new Date(Date.now() - 7_200_000), enabled: false,
+  });
+  const sentText = lastText(await run('pause', { name: fired.name }));
+  assert.match(sentText, /Already Sent/);
+  assert.match(sentText, /already been sent/);
   await mkRow(GUILD6, 'deleted-channel', { name: 'orphan', enabled: false });
   assert.match(lastText(await run('resume', { name: 'orphan' })), /Channel Missing/);
 
@@ -1149,7 +1156,7 @@ test('DB: /reminder pause, resume (and refresh), next and list', { skip: skipDb 
   assert.match(text, /▶️ \*\*cycle\*\* · <#\d+> · Every day at 09:00\n↳ next <t:\d+:R>/);
   assert.match(text, /⏸️ \*\*orphan\*\*/);
   assert.match(text, /⏸️ \*\*once-old\*\*|✅ \*\*once-old\*\*/);
-  assert.match(lastEmbed(list).footer.text, /3\/100 reminders · Timezone: UTC/);
+  assert.match(lastEmbed(list).footer.text, /4\/100 reminders · Timezone: UTC/);
 
   const empty = makeInteraction({ guild: makeGuild({ id: GUILD5 }), sub: 'list' });
   await ensureGuild(GUILD5);

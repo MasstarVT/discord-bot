@@ -9,7 +9,7 @@ import {
 import { getSettingsSafe } from '../../services/settingsService.js';
 import { STAT_VIA, recordTranslation } from '../../services/translateStatsService.js';
 import { applyGuildColor, errorEmbed, infoEmbed, warnEmbed } from '../../utils/embedBuilder.js';
-import { isInteractionGone, respondAutocomplete } from '../../utils/interactionHelpers.js';
+import { isInteractionGone, respondAutocomplete, safeReply } from '../../utils/interactionHelpers.js';
 import { clampText } from '../../utils/text.js';
 import logger from '../../utils/logger.js';
 
@@ -33,6 +33,27 @@ export const data = new SlashCommandBuilder()
 export async function autocomplete(interaction) {
   if (providerName() === 'libretranslate') warmLanguageSupport();
   await respondAutocomplete(interaction, languageChoices(interaction.options.getFocused()));
+}
+
+/** Replaces the public "thinking..." placeholder with a failure only the caller sees (the way /search does). */
+async function replyFailure(interaction, embed) {
+  let removed = false;
+  try {
+    await interaction.deleteReply();
+    removed = true;
+    await interaction.followUp({ embeds: [embed], ephemeral: true });
+  } catch (err) {
+    if (isInteractionGone(err)) { logger.debug(`/translate: private failure not sent, interaction gone (${err.code})`); return undefined; }
+    logger.warn(`/translate: could not send the failure privately: ${err?.message ?? err}`);
+    if (removed) return safeReply(interaction, { embeds: [embed], ephemeral: true });
+    try {
+      return await interaction.editReply({ embeds: [embed] });
+    } catch (editErr) {
+      if (!isInteractionGone(editErr)) logger.warn(`/translate: could not edit the reply either: ${editErr?.message ?? editErr}`);
+      return undefined;
+    }
+  }
+  return undefined;
 }
 
 async function executeText(interaction) {
@@ -59,9 +80,7 @@ async function executeText(interaction) {
 
   await loadLanguageSupport(); // never throws
   if (isSupportedTarget(target) === false) {
-    return interaction.editReply({
-      embeds: [errorEmbed('Language Not Supported', `${languageName(target)} (\`${target}\`) isn't supported by this bot's translation backend (${providerLabel()}). Use \`/translate languages\` to see what is available.`)],
-    });
+    return replyFailure(interaction, errorEmbed('Language Not Supported', `${languageName(target)} (\`${target}\`) isn't supported by this bot's translation backend (${providerLabel()}). Use \`/translate languages\` to see what is available.`));
   }
 
   // The network call is alone in the try, so a failure while building the reply is never reported as
@@ -73,12 +92,12 @@ async function executeText(interaction) {
     const d = describeTranslationError(err);
     if (d.log === 'warn') logger.warn(`/translate text: ${err.code} ${err.status ?? ''} ${err.message}`);
     else if (d.log === 'error') logger.error('/translate text failed', err);
-    return interaction.editReply({ embeds: [d.embed] });
+    return replyFailure(interaction, d.embed);
   }
 
   const parts = splitForEmbeds(result.text, EMBED_PART_MAX, EMBED_MAX_PARTS);
   if (!parts.length) {
-    return interaction.editReply({ embeds: [errorEmbed('Translation Failed', 'The translation service returned an empty result.')] });
+    return replyFailure(interaction, errorEmbed('Translation Failed', 'The translation service returned an empty result.'));
   }
 
   const settings = interaction.guildId ? await getSettingsSafe(interaction.guildId) : null;
@@ -140,11 +159,11 @@ async function executeDetect(interaction) {
     const d = describeTranslationError(err);
     if (d.log === 'warn') logger.warn(`/translate detect: ${err.code} ${err.status ?? ''} ${err.message}`);
     else if (d.log === 'error') logger.error('/translate detect failed', err);
-    return interaction.editReply({ embeds: [d.embed] });
+    return replyFailure(interaction, d.embed);
   }
 
   if (found.code === null) {
-    return interaction.editReply({ embeds: [warnEmbed('Unknown Language', 'I could not tell which language that is. Try a longer sentence.')] });
+    return interaction.editReply({ embeds: [warnEmbed('Unknown Language', 'I could not tell which language that is. Try a longer sentence; it may also be a language the translator does not have (`/translate languages`).')] });
   }
 
   const settings = interaction.guildId ? await getSettingsSafe(interaction.guildId) : null;

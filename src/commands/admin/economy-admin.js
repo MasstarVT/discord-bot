@@ -669,6 +669,8 @@ async function configShow(interaction, settings) {
   const cfg = economyConfig(settings);
   const count = await countItems(guildId);
   const deny = cfg.gameChannelMode === 'DENY';
+  // An empty list restricts nothing, whichever mode it is in, so the mode name would only suggest a restriction.
+  const channelMode = cfg.gameChannelIds.length === 0 ? 'No restriction' : (deny ? 'Deny list' : 'Allow list');
   const embed = guildEmbed(settings, '🪙 Economy Settings', null).addFields(
     field('Module', isModuleEnabled(settings, 'economy') ? '✅ On' : '❌ Off · enable with /module enable economy'),
     field('Currency', `${cfg.currencyEmoji} ${cfg.currencyName}`),
@@ -679,7 +681,7 @@ async function configShow(interaction, settings) {
     field('Daily', `${rangeText(cfg.dailyMin, cfg.dailyMax)} base · streak up to ×4 · 24 h cooldown, streak kept for 48 h`, false),
     field('Work', `${rangeText(cfg.workMin, cfg.workMax)} every ${formatNumber(cfg.workCooldownMinutes)} min`),
     field('Pity', `${formatNumber(PITY_AMOUNT)} below ${formatNumber(PITY_THRESHOLD)}, every 12 h`),
-    field('Casino channels', `**${deny ? 'Deny list' : 'Allow list'}**\n${channelListText(settings, guild, { max: 800 })}`, false),
+    field('Casino channels', `**${channelMode}**\n${channelListText(settings, guild, { max: 800 })}`, false),
     field('Shop', `${count}/${LIMITS.SHOP_ITEMS} items`),
   );
   return interaction.editReply({ embeds: [embed] });

@@ -184,7 +184,7 @@ async function preview(interaction) {
   if (res.ok) return finish(interaction, successEmbed('Preview Posted', `Posted in <#${res.channelId}>.${off}`));
   if (res.reason === 'no-channel') {
     return finish(interaction, infoEmbed('No Thank-you Channel',
-      `Set one with \`/boost config channel:\`. This is what members will see:\n\n${renderThankYou(settings, member, guild, { maxLength: 1500 })}${off}`));
+      `Set one with \`/boost config channel:\`. This is what members will see:\n\n${renderThankYou(settings, member, guild, { maxLength: 1500, preview: true })}${off}`));
   }
   return finish(interaction, errorEmbed('Could Not Post', `${res.text ?? 'The preview could not be posted.'}${off}`));
 }

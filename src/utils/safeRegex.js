@@ -134,7 +134,9 @@ export function validateRegex(pattern, flags = 'i') {
     try {
       new RegExp(pattern, fl);
     } catch (e) {
-      return { ok: false, reason: `Invalid regular expression: ${clampText(e?.message, 150)}` };
+      // V8's message already starts with "Invalid regular expression: /.../: ", so do not say it twice.
+      const detail = String(e?.message ?? '').replace(/^Invalid regular expression:\s*/i, '');
+      return { ok: false, reason: `Invalid regular expression: ${clampText(detail, 150)}` };
     }
     const shape = scanShape(pattern);
     if (shape === 'backref') return { ok: false, reason: 'Backreferences (\\1, \\k<name>) are not allowed.' };

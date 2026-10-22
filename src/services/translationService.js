@@ -494,9 +494,15 @@ async function ltTranslate(text, target, source) {
   if (!data || typeof data !== 'object') throw new TranslationError('BAD_RESPONSE', 'Unexpected LibreTranslate response');
   return {
     text: typeof data.translatedText === 'string' ? data.translatedText : '',
-    detected: source === 'auto' ? normalizeLangCode(data.detectedLanguage?.language ?? null) : source,
+    detected: source === 'auto' ? ltLanguage(data.detectedLanguage) : source,
   };
 }
+
+// LibreTranslate answers `en` with confidence 0 when none of its loaded languages matches (German on a server
+// without German, say): that is "unknown", not English.
+const ltLanguage = (found) => (typeof found?.confidence === 'number' && found.confidence <= 0
+  ? null
+  : normalizeLangCode(found?.language ?? null));
 
 async function ltDetect(text) {
   const res = await ltPost('/detect', { q: text });
@@ -507,8 +513,7 @@ async function ltDetect(text) {
   } catch (err) {
     throw new TranslationError('BAD_RESPONSE', 'LibreTranslate returned invalid JSON', { cause: err });
   }
-  const best = Array.isArray(data) ? data[0] : null;
-  return normalizeLangCode(best?.language ?? null);
+  return ltLanguage(Array.isArray(data) ? data[0] : null);
 }
 
 /**

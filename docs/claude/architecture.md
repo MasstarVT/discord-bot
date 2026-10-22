@@ -133,7 +133,7 @@ The module registry (test-checked: every module key, flag and plugin file must b
 | `economy` | `economyEnabled` | on | 🪙 Economy | `/economy-admin` | `src/plugins/economy.js` |
 | `games` | `gamesEnabled` | on | 🎮 Games | `/games` | `src/plugins/games-fixes.js` |
 | `feeds` | `feedsEnabled` | on | 📰 Social Feeds | `/feed` | `src/plugins/feeds.js` |
-| `search` | `searchEnabled` | on | 🔎 Search Anything | `/settings` | (no plugin) |
+| `search` | `searchEnabled` | on | 🔎 Search Anything | `/search` | (no plugin) |
 | `liverole` | `liveRoleEnabled` | off | 🔴 Live Role | `/liverole` | `src/plugins/liverole.js` |
 | `counting` | `countingEnabled` | off | 🔢 Counting | `/counting` | `src/plugins/counting.js` |
 | `autotime` | `autoTimeEnabled` | off | 🕒 Auto Timestamps | `/autotime` | `src/plugins/autotime.js` |

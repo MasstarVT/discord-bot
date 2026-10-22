@@ -1423,6 +1423,7 @@ test('DB /giveaway end, reroll, list, entrants, odds and autocomplete', { skip: 
   assert.match(embedOf(i).description, /Cmd-Done.* 2 entries/s);
   i = await call('list', { status: 'cancelled' });
   assert.match(embedOf(i).title, /No Giveaways/);
+  assert.match(embedOf(i).description, /no cancelled giveaways.*status:all/, 'names the filter and points to status:all');
   i = await call('list', { status: 'all' });
   assert.match(embedOf(i).description, /Cmd-Done/);
 

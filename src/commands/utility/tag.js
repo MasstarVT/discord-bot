@@ -914,7 +914,7 @@ async function executeTrigger(interaction, sub) {
   const settings = await getSettings(interaction.guildId);
   try {
     switch (sub) {
-      case 'enable': return await triggerEnable(interaction);
+      case 'enable': return await triggerEnable(interaction, settings);
       case 'disable': return await triggerDisable(interaction);
       case 'add': return await triggerAdd(interaction, settings);
       case 'edit': return await triggerEdit(interaction, settings);
@@ -932,9 +932,13 @@ async function executeTrigger(interaction, sub) {
 
 // ── enable / disable ──────────────────────────────────────────────────────────
 
-async function triggerEnable(interaction) {
+async function triggerEnable(interaction, settings) {
   await updateSettings(interaction.guildId, { customCommandsEnabled: true, autoTriggersEnabled: true });
-  return triggerReply(interaction, successEmbed('Triggers On', 'Custom commands and triggers now respond.'));
+  // Prefix commands answered already when the module was on, so the text is about triggers; it names the module only when this turned it on.
+  const text = settings?.customCommandsEnabled
+    ? 'Triggers now respond to matching messages.'
+    : 'Triggers now respond to matching messages. The **Custom Commands** module was off and is now on.';
+  return triggerReply(interaction, successEmbed('Triggers On', text));
 }
 
 async function triggerDisable(interaction) {

@@ -1,4 +1,4 @@
-import { ChannelType, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, SlashCommandBuilder, escapeMarkdown } from 'discord.js';
 import { LIMITS, PERMISSION_LEVELS } from '../../config/constants.js';
 import {
   getSettings,
@@ -167,6 +167,8 @@ function packItems(items, sep, max) {
   return pages;
 }
 
+const NO_RULES_PROBLEM = 'No rules are active. Use `/automod rule` to turn one on.';
+
 /**
  * What would stop automod from working as configured. Evaluated over the active rules (every rule, or just `only`).
  * @param {import('discord.js').Guild} guild
@@ -203,7 +205,7 @@ export function collectProblems(guild, settings, config, { only = null } = {}) {
     }
   }
   if (only === null && settings?.automodEnabled && keys.length === 0 && config.honeypot.channelIds.length === 0) {
-    problems.push('No rules are active. Use `/automod rule` to turn one on.');
+    problems.push(NO_RULES_PROBLEM);
   }
   if (only === null) problems.push(...collectHoneypotProblems(guild, config));
   if (only === null && !settings?.modLogChannelId) {
@@ -255,7 +257,8 @@ async function enable(interaction) {
   const head = active.length
     ? `Active rules:\n${active.map((k) => describeRuleLine(k, config.rules[k], config)).join('\n')}`
     : 'No rules are active yet. Turn one on with `/automod rule`.';
-  const problems = collectProblems(interaction.guild, settings, config);
+  // The head already says when no rule is on, so that warning is not repeated under it.
+  const problems = collectProblems(interaction.guild, settings, config).filter((p) => p !== NO_RULES_PROBLEM);
   const body = problems.length ? `${head}\n\n${problemLines(problems)}` : head;
   await interaction.editReply({ embeds: [successEmbed('Automod Enabled', clampText(body, 4096))] });
 }
@@ -376,6 +379,9 @@ async function ruleSet(interaction) {
 
 // ── words (ephemeral) ─────────────────────────────────────────────────────────
 
+/** A listed word as a spoiler. Markdown in it (the whole-word `_word_` form) would otherwise turn into italics. */
+const spoilered = (w) => `||${escapeMarkdown(String(w))}||`;
+
 async function wordsAdd(interaction) {
   const raw = interaction.options.getString('words', true);
   const valid = [];
@@ -385,17 +391,17 @@ async function wordsAdd(interaction) {
     if (!cleaned) continue;
     const w = normalizeWord(cleaned);
     if (w !== null) valid.push(w);
-    else if (cleaned.length < 2) invalid.push(`${clampText(cleaned, 40)} (too short)`);
-    else if (cleaned.length > 64) invalid.push(`${clampText(cleaned, 40)} (too long)`);
-    else invalid.push(`${clampText(cleaned, 40)} (no letters or digits)`);
+    else if (cleaned.length < 2) invalid.push(`${escapeMarkdown(clampText(cleaned, 40))} (too short)`);
+    else if (cleaned.length > 64) invalid.push(`${escapeMarkdown(clampText(cleaned, 40))} (too long)`);
+    else invalid.push(`${escapeMarkdown(clampText(cleaned, 40))} (no letters or digits)`);
   }
 
   const { settings, report } = await writeConfig(interaction.guildId, (cfg, rep) => {
     rep.added = [];
     rep.skipped = [];
     for (const w of valid) {
-      if (cfg.badWords.includes(w)) rep.skipped.push(`${w} (already listed)`);
-      else if (cfg.badWords.length >= LIMITS.AUTOMOD_WORDS) rep.skipped.push(`${w} (list full: ${LIMITS.AUTOMOD_WORDS})`);
+      if (cfg.badWords.includes(w)) rep.skipped.push(`${escapeMarkdown(w)} (already listed)`);
+      else if (cfg.badWords.length >= LIMITS.AUTOMOD_WORDS) rep.skipped.push(`${escapeMarkdown(w)} (list full: ${LIMITS.AUTOMOD_WORDS})`);
       else { cfg.badWords.push(w); rep.added.push(w); }
     }
     return rep.added.length > 0;
@@ -408,7 +414,7 @@ async function wordsAdd(interaction) {
     return interaction.editReply({ embeds: [warnEmbed('Nothing Added', clampText(text, 4096))] });
   }
   const { config } = getAutomodConfig(settings);
-  let body = clampText(`Added **${added.length}**: ${added.map((w) => `||${w}||`).join(', ')}`, 3500);
+  let body = clampText(`Added **${added.length}**: ${added.map(spoilered).join(', ')}`, 3500);
   if (notes.length) body += `\nSkipped: ${clampText(notes.join(', '), 400)}`;
   body += offHint('badWords', config);
   return interaction.editReply({ embeds: [successEmbed('Words Added', clampText(body, 4096))] });
@@ -425,7 +431,7 @@ async function wordsRemove(interaction) {
   if (w === null || report.notFound) {
     return interaction.editReply({ embeds: [warnEmbed('Not Listed', 'That word is not on the list.')] });
   }
-  return interaction.editReply({ embeds: [successEmbed('Word Removed', `||${w}|| is no longer filtered.`)] });
+  return interaction.editReply({ embeds: [successEmbed('Word Removed', `${spoilered(w)} is no longer filtered.`)] });
 }
 
 async function wordsList(interaction) {
@@ -434,7 +440,7 @@ async function wordsList(interaction) {
   if (config.badWords.length === 0) {
     return interaction.editReply({ embeds: [infoEmbed('Bad Words', 'The list is empty. Add words with `/automod words add`.')] });
   }
-  const pages = packItems(config.badWords.map((w) => `||${w}||`), ', ', 3900)
+  const pages = packItems(config.badWords.map(spoilered), ', ', 3900)
     .map((text) => neutralEmbed(`🤬 Bad Words (${config.badWords.length})`, text));
   if (pages.length === 1) return interaction.editReply({ embeds: pages });
   return paginate(interaction, pages, { ephemeral: true });

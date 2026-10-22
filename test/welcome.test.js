@@ -1357,3 +1357,12 @@ test('DB: the setup form saves content and embed, keeps the card flag, refuses s
   assert.equal(last.goodbyeEmbed.title, 'Hi {usr}');
   await resetGuild();
 });
+
+test('/welcome enable names only the parts that are on (the DM and the goodbye have their own switches)', () => {
+  assert.equal(welcomeCmd.enabledParts({}),
+    'Welcome messages are on. Still off: the welcome DM (`/welcome dm enable`) and goodbye messages (`/welcome goodbye enable`).');
+  assert.equal(welcomeCmd.enabledParts({ goodbyeEnabled: true }),
+    'Welcome messages and goodbye messages are on. Still off: the welcome DM (`/welcome dm enable`).');
+  assert.equal(welcomeCmd.enabledParts({ welcomeDmEnabled: true, goodbyeEnabled: true }),
+    'Welcome messages, welcome DMs and goodbye messages are on.');
+});

@@ -163,16 +163,35 @@ async function obtainRole(interaction, name, baseName) {
     }
     const problem = permissionProblem(interaction, 'ManageRoles', 'role');
     if (problem) return { ok: false, message: problem };
+    // A new role lands just above @everyone: with no role of its own the bot could not give it out, and the command
+    // would refuse it after it was made, leaving it behind.
+    const highest = guild.members.me?.roles?.highest;
+    if (highest && highest.id === guild.id) {
+      return {
+        ok: false, title: 'Cannot Create Role',
+        message: "I have no role of my own, so a role I create would sit above my highest role and I couldn't give it out. "
+          + 'Give me a role near the top of **Server Settings → Roles** (or re-invite me so Discord adds one), then try again.',
+      };
+    }
+    let role;
     try {
-      const role = await withTimeout(
+      role = await withTimeout(
         guild.roles.create({ name, permissions: [], mentionable: false, hoist: false, reason: auditReason(interaction) }),
         CREATE_TIMEOUT_MS, 'create role',
       );
-      return { ok: true, entity: role, created: true };
     } catch (err) {
       logger.warn(`[newTargets] ${guild.id}: creating role "${name}" failed`, err);
       return { ok: false, message: describeCreateError(err, 'role') };
     }
+    // The same test checkAssignableRole makes, so the role goes exactly when the command would refuse it.
+    if (highest && role.position >= highest.position) {
+      await role.delete(auditReason(interaction)).catch((err) => logger.warn(`[newTargets] ${guild.id}: could not delete role ${role.id}`, err));
+      return {
+        ok: false, title: 'Cannot Create Role',
+        message: 'The new role ended up above my highest role, so I deleted it again. Move my role higher in **Server Settings → Roles**, then try again.',
+      };
+    }
+    return { ok: true, entity: role, created: true };
   });
 }
 

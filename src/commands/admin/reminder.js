@@ -396,6 +396,7 @@ async function listCmd(interaction) {
 async function pauseCmd(interaction) {
   const r = await lookupReminder(interaction);
   if (!r) return undefined;
+  if (isDone(r)) return replyError(interaction, 'Already Sent', `**${r.name}** is a one-time reminder and has already been sent, so there is nothing to pause.`);
   if (!r.enabled) return replyError(interaction, 'Already Paused', `**${r.name}** is already paused.`);
   await interaction.deferReply();
   await pauseReminder(r);

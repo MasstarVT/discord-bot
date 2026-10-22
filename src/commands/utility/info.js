@@ -126,9 +126,14 @@ const ts = (ms) => `<t:${Math.floor(ms / 1000)}:F>\n<t:${Math.floor(ms / 1000)}:
 const esc = (s) => escapeMarkdown(String(s ?? ''));
 const yes = (b) => (b ? 'Yes' : 'No');
 
+// Discord also reports flags that only track its own rollouts ("..._MIGRATION_COMPLETE", experiments,
+// legacy thread switches). They say nothing about the server, so /info server leaves them out.
+export const INTERNAL_FEATURE_PATTERN = /_MIGRATION(_COMPLETE)?$|_EXPERIMENT$|_OVERRIDE$|^(CHANNEL_ICON_EMOJIS_GENERATED|GUILD_ONBOARDING_EVER_ENABLED|GUILD_ONBOARDING_HAS_PROMPTS|NEW_THREAD_PERMISSIONS|THREADS_ENABLED|TEXT_IN_VOICE_ENABLED|SEVEN_DAY_THREAD_ARCHIVE|THREE_DAY_THREAD_ARCHIVE|HAS_DIRECTORY_ENTRY)$/;
+export const isPublicFeature = (feature) => !INTERNAL_FEATURE_PATTERN.test(String(feature).toUpperCase());
+
 function accessLevelLabel(level, member, guild) {
   if (level >= PERMISSION_LEVELS.OWNER) return 'Bot Owner';
-  if (level >= PERMISSION_LEVELS.ADMIN) return member.id === guild.ownerId ? 'Server Owner' : 'Administrator';
+  if (level >= PERMISSION_LEVELS.ADMIN) return member.id === guild.ownerId ? 'Server Owner' : 'Admin'; // /help calls this level "Admin"
   if (level >= PERMISSION_LEVELS.MODERATOR) return 'Moderator';
   return 'Member';
 }
@@ -280,8 +285,9 @@ export async function buildServerEmbed(guild, settings) {
   if (guild.vanityURLCode) {
     fields.push({ name: '🔗 Vanity URL', value: clampText(`discord.gg/${esc(guild.vanityURLCode)}`, 1024), inline: true });
   }
-  if (guild.features?.length) {
-    const list = guild.features
+  const publicFeatures = (guild.features ?? []).filter(isPublicFeature);
+  if (publicFeatures.length) {
+    const list = publicFeatures
       .map((f) => String(f).toLowerCase().split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '))
       .sort();
     fields.push({ name: '✨ Features', value: joinWithLimit(list.map(esc), { max: 1024 }), inline: false });

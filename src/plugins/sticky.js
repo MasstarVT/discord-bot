@@ -5,6 +5,7 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from
 import { PERMISSION_LEVELS } from '../config/constants.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { isModuleEnabled } from '../config/modules.js';
+import { unknownVariablesNote } from '../services/embedService.js';
 import { peekSettings } from '../services/settingsService.js';
 import {
   StickyError, setSticky, noteMessage, getChannels, peekChannels, clearLastMessage, dropChannel,
@@ -97,10 +98,31 @@ const STATUS_NOTES = Object.freeze({
 });
 const NOT_POSTED = 'It is saved but could not be posted just now; it is tried again after the next message.';
 
-/** The embed that answers a saved `/sticky set`. */
-export function setResultEmbed(channelId, { created, hasEmbed, status }) {
+const USER_TOKEN_RE = /\{user(\.[a-z_]+)?\}/i;
+const USER_TOKEN_WARNING = '\n⚠️ A sticky message has no member, so user variables like `{user}` are posted as written. Server and channel variables work.';
+
+/**
+ * Warning lines for variables a sticky cannot fill in: unknown ones, and `{user…}` (it renders with the server and the
+ * channel only, so nobody is "the user"). '' when there is nothing to warn about.
+ * @param {{ content?: string|null, embed?: { embed?: object|null, buttons?: object[] }|null }} part what was typed
+ * @param {{ guild: object, channel: object }} renderCtx
+ */
+export function variableNotes({ content = null, embed = null } = {}, renderCtx) {
+  try {
+    const tpl = { content, embed: embed?.embed ?? null, buttons: embed?.buttons ?? [] };
+    let notes = unknownVariablesNote(tpl, renderCtx);
+    if (USER_TOKEN_RE.test(JSON.stringify(tpl))) notes += USER_TOKEN_WARNING;
+    return notes;
+  } catch (err) {
+    logger.debug(`[sticky] variable check failed: ${err?.message}`); // the sticky is saved either way
+    return '';
+  }
+}
+
+/** The embed that answers a saved `/sticky set`. `notes` (variable warnings) is appended as is. */
+export function setResultEmbed(channelId, { created, hasEmbed, status }, notes = '') {
   const head = `The sticky message in <#${channelId}> is ${created ? 'set' : 'updated'}${hasEmbed ? ' (with an embed)' : ''}.`;
-  return successEmbed(created ? 'Sticky Message Set' : 'Sticky Message Updated', `${head}\n${STATUS_NOTES[status] ?? NOT_POSTED}`);
+  return successEmbed(created ? 'Sticky Message Set' : 'Sticky Message Updated', `${head}\n${STATUS_NOTES[status] ?? NOT_POSTED}${notes}`);
 }
 
 /**
@@ -113,7 +135,7 @@ export async function applySet(interaction, args) {
   try {
     const result = await setSticky({ client: interaction.client, userId: interaction.user.id, ...args });
     logger.info(`[sticky] ${args.guild.id}: ${args.channel.id} ${result.created ? 'set' : 'updated'} by ${interaction.user.id} (${result.status})`);
-    embed = setResultEmbed(args.channel.id, result);
+    embed = setResultEmbed(args.channel.id, result, variableNotes(args, { guild: args.guild, channel: args.channel }));
   } catch (err) {
     if (err instanceof StickyError) {
       embed = errorEmbed(err.title, err.message);

@@ -157,6 +157,16 @@ export async function execute(interaction) {
   }
 }
 
+/** What `/welcome enable` turned on: the DM and the goodbye have their own switches, so only the ones that are on are named. */
+export function enabledParts(s) {
+  const on = ['Welcome messages'];
+  const off = [];
+  if (s.welcomeDmEnabled) on.push('welcome DMs'); else off.push('the welcome DM (`/welcome dm enable`)');
+  if (s.goodbyeEnabled) on.push('goodbye messages'); else off.push('goodbye messages (`/welcome goodbye enable`)');
+  const list = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items[0]);
+  return `${list(on)} are on.${off.length ? ` Still off: ${list(off)}.` : ''}`;
+}
+
 async function run(interaction, key, s) {
   const { guild, guildId } = interaction;
   const reply = (embed, extra = {}) => interaction.editReply({ embeds: [embed], ...extra });
@@ -167,7 +177,7 @@ async function run(interaction, key, s) {
       const after = await saveSettings(guildId, { welcomeEnabled: true });
       const problems = diagnoseWelcome(guild, after, 'welcome');
       const tail = problems.length ? problems.join('\n') : 'Preview it with `/welcome test`.';
-      return reply(successEmbed('Welcome & Goodbye Enabled', `Welcome messages, welcome DMs and goodbye messages are on.\n${tail}`));
+      return reply(successEmbed('Welcome & Goodbye Enabled', `${enabledParts(after)}\n${tail}`));
     }
 
     case 'disable':

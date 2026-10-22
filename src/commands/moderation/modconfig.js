@@ -159,7 +159,9 @@ async function escalationAdd(interaction) {
 
   const tiers = normalizeEscalationTiers(saved.infractionEscalation);
   const mine = tiers.find((t) => t.warnCount === warns && t.withinSeconds === within);
-  let text = `${mine ? describeTier(mine) : 'Saved.'}\n\n${tierListText(tiers)}`;
+  // The tier is shown once, in bold inside the list of all tiers (the title already says it was added or updated).
+  const lines = tiers.map((t) => (t === mine ? `**${tierLine(t)}**` : tierLine(t)));
+  let text = `${mine ? 'All tiers (the one just saved is in bold):' : 'Saved.'}\n${lines.join('\n')}`;
   if (!saved.modEnabled) text += '\n\nModeration is off: tiers apply after `/module enable moderation`.';
   await interaction.editReply({ embeds: [successEmbed(replaced ? 'Escalation Tier Updated' : 'Escalation Tier Added', clampText(text, 4000))] });
 }

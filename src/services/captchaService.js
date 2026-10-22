@@ -254,9 +254,12 @@ export function isRoleNewlyAdded({ oldMember, newMember, oldKnown, roleId }) {
   return !!roleId && newMember.roles.cache.has(roleId) && (!oldKnown || !oldMember.roles.cache.has(roleId));
 }
 
-/** Derived from Discord: the server is locked while @everyone cannot view channels. */
+/**
+ * Derived from Discord: the server is locked while @everyone cannot view channels. The flag itself is read
+ * (no Administrator shortcut), or a lock taken while @everyone is an admin could never be undone.
+ */
 export function isLocked(guild) {
-  return !guild.roles.everyone.permissions.has(PermissionFlagsBits.ViewChannel);
+  return !guild.roles.everyone.permissions.has(PermissionFlagsBits.ViewChannel, false);
 }
 
 export function everyoneCanView(channel) {
@@ -673,8 +676,13 @@ async function report(interaction, run, final) {
 
     if (Date.now() - interaction.createdTimestamp < 14 * 60_000) {
       try {
-        await interaction.editReply({ embeds: [embed] });
-        if (final) await interaction.followUp({ embeds: [embed] }); // a new message notifies the admin
+        if (final) {
+          // The summary goes out once, as a new message so it notifies the admin; the progress message goes away.
+          await interaction.followUp({ embeds: [embed] });
+          await interaction.deleteReply().catch((err) => logger.debug(`verify-existing progress delete: ${err?.message}`));
+        } else {
+          await interaction.editReply({ embeds: [embed] });
+        }
       } catch (err) {
         logger.debug(`verify-existing report: ${err?.message}`);
       }

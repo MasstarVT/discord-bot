@@ -115,7 +115,9 @@ test('parseEmojiSource: every input shape', () => {
 
   assert.equal(p('http://').kind, 'invalid');
   assert.deepEqual(p('123456789012345678'), { kind: 'id', id: '123456789012345678' });
-  for (const s of [':pog:', 'pog', ':pog~1:']) assert.deepEqual(p(s), { kind: 'shortcode', name: 'pog' }, s);
+  for (const s of [':pog:', ':pog~1:']) assert.deepEqual(p(s), { kind: 'shortcode', name: 'pog' }, s);
+  // A bare word is not a shortcode: it is not an emoji or a link at all.
+  for (const s of ['pog', 'notanemoji', ':pog', 'pog:']) assert.equal(p(s).kind, 'invalid', s);
   assert.equal(p('😀').kind, 'unicode');
   assert.equal(p('🇺🇸').kind, 'unicode');
   assert.equal(p('').kind, 'empty');

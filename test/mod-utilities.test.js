@@ -975,6 +975,19 @@ test('/info server: fields, escaping, cached counts', async () => {
   assert.equal(e2.footer.text, 'Server ID: 9001');
 });
 
+test('/info server: Discord-internal feature flags are not listed', async () => {
+  const guild = fakeGuild({
+    id: '9011',
+    features: ['COMMUNITY', 'BYPASS_SLOWMODE_PERMISSION_MIGRATION_COMPLETE', 'PIN_PERMISSION_MIGRATION_COMPLETE', 'CHANNEL_ICON_EMOJIS_GENERATED', 'ROLE_ICONS'],
+  });
+  const e = (await info.buildServerEmbed(guild, null)).toJSON();
+  assert.equal(e.fields.find((x) => x.name.includes('Features')).value, 'Community, Role Icons');
+
+  const onlyInternal = fakeGuild({ id: '9012', features: ['PIN_PERMISSION_MIGRATION_COMPLETE'] });
+  const none = (await info.buildServerEmbed(onlyInternal, null)).toJSON();
+  assert.ok(!none.fields.some((x) => x.name.includes('Features')), 'no empty Features field');
+});
+
 test('/info server: REST failure falls back to the cached member count', async () => {
   const guild = fakeGuild({ id: '9002' });
   guild.roles.cache.set('9002', { id: '9002' });
@@ -1079,6 +1092,14 @@ test('/info user: fields, escaping, badges, access level', async () => {
   assert.equal(f['🛡️ Access level'], 'Moderator');
   assert.ok(!('💎 Boosting since' in f));
   assert.ok(!('🔇 Timed out until' in f));
+});
+
+test('/info user: the admin access level is named "Admin", as in /help', async () => {
+  const guild = fakeGuild({ id: '9010', ownerId: '999' });
+  const member = fakeMember(guild, { permissions: new PermissionsBitField(['Administrator']) });
+  const invoker = fakeMember(guild, { id: 'invoker', permissions: new PermissionsBitField(['BanMembers']) });
+  const e = (await info.buildUserEmbed(userInteraction({ guild, member, user: fakeUser(), invoker }), null)).toJSON();
+  assert.equal(e.fields.find((x) => x.name === '🛡️ Access level').value, 'Admin');
 });
 
 test('/info user: the timeout is shown to moderators only', async () => {

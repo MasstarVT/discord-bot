@@ -378,6 +378,9 @@ async function lockOn(interaction, s) {
     lines.push(`**${formatNumber(n)}** current member(s) don't have <@&${role.id}> yet.`);
   }
   if (getBulkRun(guildId)) lines.push('A verify-existing batch is still running.');
+  if (guild.roles.everyone.permissions.has(PermissionFlagsBits.Administrator, false)) {
+    lines.push('', '⚠️ @everyone has **Administrator**, so everyone still sees every channel: the lock has no effect until you remove it.');
+  }
 
   const ok = await awaitConfirm(interaction, {
     title: '🔒 Lock the server until members verify?',
@@ -391,7 +394,7 @@ async function lockOn(interaction, s) {
   if (!ok) return undefined; // awaitConfirm already showed "Cancelled" or "Timed out"
 
   // Remember whether @everyone could view channels before the lock, so `lock off` never opens a private server.
-  const prior = guild.roles.everyone.permissions.has(PermissionFlagsBits.ViewChannel);
+  const prior = guild.roles.everyone.permissions.has(PermissionFlagsBits.ViewChannel, false);
   const res = await applyLock(guild, { role, channel, plan, reason: auditReason(interaction, 'captcha lock-down') });
   let embed;
   if (res.error) {

@@ -209,6 +209,15 @@ class ConfigError extends Error {}
 
 const reply = (interaction, embed, extra = {}) => interaction.editReply({ embeds: [embed], ...extra });
 const fail = (interaction, title, text) => reply(interaction, errorEmbed(title, text));
+
+/** True for Discord CDN upload links, which are signed and stop working after a while. Its static art (avatars, emoji) never expires. */
+export function isExpiringDiscordLink(url) {
+  let parsed;
+  try { parsed = new URL(url); } catch { return false; }
+  const host = parsed.hostname.toLowerCase();
+  if (host !== 'cdn.discordapp.com' && host !== 'media.discordapp.net') return false;
+  return /^\/(ephemeral-)?attachments\//i.test(parsed.pathname);
+}
 const voiceKeys = (guildId) => `voice:start:${guildId}:*`;
 const roleLine = (roleId) => `<@&${roleId}>`;
 const listOr = (ids, fmt) => (ids.length ? ids.map(fmt).join(', ') : 'none');
@@ -557,9 +566,7 @@ async function subCard(interaction) {
       const v = await validateCardBackground(url);
       if (!v.ok) return fail(interaction, 'Image Not Loaded', `I couldn't load an image from that link (${v.reason}).`);
       changes.backgroundUrl = url;
-      let host = '';
-      try { host = new URL(url).hostname.toLowerCase(); } catch { /* isHttpUrl already accepted it */ }
-      if (host === 'cdn.discordapp.com' || host === 'media.discordapp.net') {
+      if (isExpiringDiscordLink(url)) {
         warning = '\n⚠️ Discord attachment links expire after about a day. Use a permanent image host.';
       }
     }
@@ -630,7 +637,9 @@ async function subNoxpChannel(interaction) {
   }));
   return reply(interaction, successEmbed(
     'No-XP Channels',
-    `<#${channel.id}> ${remove ? 'removed from' : 'added to'} the no-XP channels. Threads, forum posts and channels inside a no-XP category earn no XP either.`,
+    remove
+      ? `<#${channel.id}> removed from the no-XP channels.`
+      : `<#${channel.id}> added to the no-XP channels. Threads, forum posts and channels inside a no-XP category earn no XP either.`,
   ));
 }
 
@@ -951,12 +960,22 @@ async function xpGive(interaction, client, settings) {
   const member = opt.member ?? await guild.members.fetch(user.id).catch(() => null);
   if (!member) return fail(interaction, 'Not Saved', "That user isn't in this server.");
 
+  // Read first so the reply can say what the cap let through (display only; the write below stays atomic).
+  const before = await prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId: user.id } }, select: { xp: true } });
   const r = await applyXpDelta({ guildId, userId: user.id, delta: amount });
   const lc = await handleLevelChange({
     guild, member, userId: user.id, result: r, settings, source: 'admin', channel: interaction.channel, announce: false,
   });
-  let text = `Gave **${formatNumber(amount)} XP** to <@${user.id}>. Total: **${formatNumber(r.xp)} XP** (level ${r.newLevel}).${xpChangeLines(r, lc)}`;
-  if (r.xp === XP_MAX) text += `\nXP is capped at ${formatNumber(XP_MAX)}.`;
+  const added = Math.min(amount, Math.max(0, r.xp - (before?.xp ?? 0)));
+  if (added === 0) {
+    return reply(interaction, infoEmbed(
+      'Already at the XP Cap',
+      `<@${user.id}> is already at the XP cap of ${formatNumber(XP_MAX)}, so no XP was added. Total: **${formatNumber(r.xp)} XP** (level ${r.newLevel}).`,
+    ));
+  }
+  let text = `Gave **${formatNumber(added)} XP** to <@${user.id}>. Total: **${formatNumber(r.xp)} XP** (level ${r.newLevel}).${xpChangeLines(r, lc)}`;
+  if (added < amount) text += `\nOnly ${formatNumber(added)} of ${formatNumber(amount)} XP fitted: XP is capped at ${formatNumber(XP_MAX)}.`;
+  else if (r.xp === XP_MAX) text += `\nXP is capped at ${formatNumber(XP_MAX)}.`;
   return reply(interaction, successEmbed('XP Given', text));
 }
 
@@ -1002,7 +1021,9 @@ async function xpGiveToRole(interaction, client, settings, role, amount) {
 
     const res = await giveXpToMembers({ guildId, userIds: ids, amount });
     let text = `Gave **${formatNumber(amount)} XP** to **${formatNumber(res.updated)}** members of <@&${role.id}>. ${res.levelUps.length} levelled up.`;
-    if (res.levelUps.length) text += '\nSyncing their reward roles in the background…';
+    // With no reward roles there is nothing to sync, so say nothing about it (the level-up hooks still run below).
+    const hasRewards = res.levelUps.length > 0 && (await prisma.levelRole.count({ where: { guildId } }).catch(() => 1)) > 0;
+    if (hasRewards) text += '\nSyncing their reward roles in the background…';
     await reply(interaction, successEmbed('XP Given', text), { components: [] });
 
     if (res.levelUps.length) {
@@ -1035,7 +1056,9 @@ async function xpSyncRoleLevelUps({ interaction, client, settings, levelUps }) {
         logger.error(`levels: role-give follow-up failed for ${lu.userId}`, err instanceof Error ? err : new Error(String(err)));
       }
     }
-    await reportBulkResult(interaction, `XP give: reward roles checked for ${synced} of ${levelUps.length} member(s) who levelled up.`, { ephemeral: true });
+    if (rewards.length) {
+      await reportBulkResult(interaction, `XP give: reward roles checked for ${synced} of ${levelUps.length} member(s) who levelled up.`, { ephemeral: true });
+    }
   } catch (err) {
     logger.error('levels: role-give background task failed', err instanceof Error ? err : new Error(String(err)));
   } finally {

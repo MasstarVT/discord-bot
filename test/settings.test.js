@@ -90,8 +90,8 @@ test('payload: subcommands, limits, autocomplete wiring and exports', () => {
   assert.deepEqual(buildCommandPayload(s).integration_types, [0]);
 });
 
-test('MODULES.search is configured through /settings', () => {
-  assert.equal(MODULES.search.configCommand, '/settings');
+test('MODULES.search points people at /search', () => {
+  assert.equal(MODULES.search.configCommand, '/search');
 });
 
 // ── 2. listTimeZones ─────────────────────────────────────────────────────────────

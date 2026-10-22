@@ -235,7 +235,7 @@ export function templateWarnings(type, template) {
   const allowed = allowedTokens(type);
   const bad = tokens.filter((t) => !allowed.has(t) && !/^random:-?\d{1,10}:-?\d{1,10}$/.test(t));
   if (bad.length) {
-    let msg = `⚠️ These variables don't work for ${TYPE_LABELS[type]} feeds and will appear as typed: ${joinWithLimit(bad.map((t) => `\`{${t}}\``), { max: 500 })}`;
+    let msg = `⚠️ These variables don't work for ${TYPE_LABELS[type]}s and will appear as typed: ${joinWithLimit(bad.map((t) => `\`{${t}}\``), { max: 500 })}`;
     if (bad.some((t) => t.startsWith('user'))) msg += ' (feeds have no member, so {user…} variables never work)';
     out.push(msg);
   }

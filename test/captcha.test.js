@@ -160,7 +160,7 @@ function mkInteraction(guild, member, { customId = 'captcha:start', fromEphemera
 
 /** A slash-command interaction with an options bag. */
 function mkSlash(guild, member, sub, o = {}) {
-  const log = { defers: [], edits: [], replies: [], modals: [], followUps: [] };
+  const log = { defers: [], edits: [], replies: [], modals: [], followUps: [], deleted: 0 };
   const pick = (n) => (Object.hasOwn(o, n) ? o[n] : null);
   return {
     guild, guildId: guild.id, member, user: member.user, createdTimestamp: Date.now(), log, deferred: false, replied: false,
@@ -173,6 +173,7 @@ function mkSlash(guild, member, sub, o = {}) {
     deferReply: async function deferReply() { log.defers.push(['reply']); this.deferred = true; this.ephemeral = false; },
     editReply: async (p) => { log.edits.push(p); return {}; },
     followUp: async (p) => { log.followUps.push(p); return {}; },
+    deleteReply: async () => { log.deleted += 1; },
     reply: async function reply(p) { log.replies.push(p); this.replied = true; return {}; },
     showModal: async (m) => { log.modals.push(m); },
   };
@@ -322,6 +323,9 @@ test('isLocked, everyoneCanView, botSeesWithoutEveryone and lockPlan', () => {
   assert.equal(isLocked(open), false);
   const locked = mkGuild({ everyonePerms: perms('SendMessages') });
   assert.equal(isLocked(locked), true);
+  // Administrator on @everyone must not hide a lock (its View Channels flag is off), or `lock off` could never undo it.
+  assert.equal(isLocked(mkGuild({ everyonePerms: perms('Administrator', 'SendMessages') })), true);
+  assert.equal(isLocked(mkGuild({ everyonePerms: perms('Administrator', 'ViewChannel') })), false);
 
   // The bot's only View Channels comes from @everyone: it would be hidden by the lock.
   assert.equal(botSeesWithoutEveryone(open), false);
@@ -1090,6 +1094,10 @@ test('DB: verify-existing: skips holders, gives bots the role, spares pending me
   const final = lastEmbed(i.log.followUps);
   assert.match(final.description, /2\/2/);
   assert.match(final.description, /Gave <@&RV> to 2 member\(s\)/);
+  // The summary is posted once: the progress reply is deleted rather than edited into a second copy.
+  assert.equal(i.log.followUps.length, 1);
+  assert.equal(i.log.deleted, 1);
+  assert.equal(i.log.edits.some((p) => p.embeds?.[0]?.toJSON?.().title?.includes('Existing Members Verified')), false);
 
   // include_pending finishes their verification, with the autoroles after the role.
   const j = bulkInteraction(guild, admin);

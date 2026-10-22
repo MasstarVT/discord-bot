@@ -1238,6 +1238,7 @@ dbTest('command: rules, words, patterns, domains, exemptions and enable/disable 
     r = await cmd({ sub: 'enable' });
     assert.match(r.embed.title, /Automod Enabled/);
     assert.match(r.embed.description, /No rules are active yet/);
+    assert.doesNotMatch(r.embed.description, /No rules are active\. Use/, 'said once');
     assert.equal((await getSettings(guildId)).automodEnabled, true);
 
     // rule: validation errors.
@@ -1288,6 +1289,11 @@ dbTest('command: rules, words, patterns, domains, exemptions and enable/disable 
     assert.match(r.embed.title, /Word Removed/);
     r = await cmd({ group: 'words', sub: 'remove', options: { word: 'zzz' } });
     assert.match(r.embed.title, /Not Listed/);
+    // A whole-word entry keeps its underscores instead of turning into italics.
+    r = await cmd({ group: 'words', sub: 'add', options: { words: '_exact_' } });
+    assert.match(r.embed.description, /\|\|\\_exact\\_\|\|/);
+    r = await cmd({ group: 'words', sub: 'remove', options: { word: '_exact_' } });
+    assert.match(r.embed.description, /\|\|\\_exact\\_\|\|/);
 
     // patterns (ephemeral).
     r = await cmd({ group: 'patterns', sub: 'add', options: { pattern: '(a+)+$' } });

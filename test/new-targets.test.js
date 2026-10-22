@@ -189,6 +189,32 @@ test('resolveNewOptions: creating needs Manage Roles for the invoker and the bot
   assert.equal(bot.calls.roles.length, 0);
 });
 
+test('resolveNewOptions: no role is created when the bot has no role of its own, and one landing above it is deleted', async () => {
+  const { guild, calls } = fakeGuild();
+  const everyone = guild.roles.cache.get('G');
+  guild.members.me.roles = { highest: everyone };
+  const i = fakeInteraction(guild, 'role', [str('new_role', 'Lvl2')]);
+  assert.equal(await resolveNewOptions(i, data), false);
+  assert.equal(replyTitle(i), 'Cannot Create Role');
+  assert.match(i.replies[0].embeds[0].toJSON().description, /no role of my own/);
+  assert.equal(calls.roles.length, 0, 'nothing was created');
+
+  const deleted = [];
+  const create = guild.roles.create.bind(guild.roles);
+  guild.roles.create = async (o) => Object.assign(await create(o), { position: 1, delete: async () => { deleted.push(o.name); } });
+  guild.members.me.roles = { highest: { id: 'RB', position: 1 } };
+  const j = fakeInteraction(guild, 'role', [str('new_role', 'Lvl3')]);
+  assert.equal(await resolveNewOptions(j, data), false);
+  assert.match(j.replies[0].embeds[0].toJSON().description, /deleted it again/);
+  assert.deepEqual(deleted, ['Lvl3']);
+
+  guild.members.me.roles = { highest: { id: 'RB', position: 2 } };
+  const k = fakeInteraction(guild, 'role', [str('new_role', 'Lvl4')]);
+  assert.equal(await resolveNewOptions(k, data), true);
+  assert.equal(k.options.getRole('role').name, 'Lvl4');
+  assert.deepEqual(deleted, ['Lvl3']);
+});
+
 test('resolveNewOptions: Discord errors become friendly messages', async () => {
   const { guild } = fakeGuild({ fail: Object.assign(new Error('Maximum number of guild roles reached'), { code: 30005 }) });
   const i = fakeInteraction(guild, 'role', [str('new_role', 'Live')]);

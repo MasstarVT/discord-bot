@@ -1262,6 +1262,7 @@ test('DB: /modconfig escalation add | update | remove | list', { skip: skipDb },
   let e = await run('add', { warns: 3, action: 'TIMEOUT', duration: '1h' });
   assert.match(e.title, /Escalation Tier Added/);
   assert.match(e.description, /T1: 3 warnings → Timeout for 1 hour/);
+  assert.equal(e.description.split('T1: 3 warnings').length - 1, 1, 'the new tier is printed once');
   let tiers = svc.normalizeEscalationTiers((await getSettings(guildId)).infractionEscalation);
   assert.equal(tiers[0].countFrom, null, 'new tiers count all active warnings');
 

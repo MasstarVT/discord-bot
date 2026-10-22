@@ -800,6 +800,29 @@ test('PokeAPI 429 pauses the source using Retry-After; other HTTP errors are UNA
   assert.equal((await svc.getPokemon({ kind: 'name', slug: 'mew' }).then(() => null, (e) => e)).status, null);
 });
 
+test('PokeAPI: a network or DNS failure is retried once; a second one is UNAVAILABLE', async () => {
+  let n = 0;
+  const flaky = jsonFetch((path) => {
+    n += 1;
+    if (n === 1) return new SafeFetchError('NETWORK', 'Network error: ECONNRESET');
+    return { '/pokemon-species/pikachu': PIKACHU_SPECIES, '/pokemon/pikachu': PIKACHU }[path];
+  });
+  setup({ safeFetchJson: flaky });
+  assert.equal((await svc.getPokemon({ kind: 'name', slug: 'pikachu' })).results[0].name, 'Pikachu');
+  assert.equal(flaky.calls.length, 3, 'the species request ran twice, then the default variety');
+
+  const down = jsonFetch(() => new SafeFetchError('DNS_FAILED', 'Could not resolve pokeapi.co.'));
+  setup({ safeFetchJson: down });
+  const err = await svc.getPokemon({ kind: 'name', slug: 'mew' }).then(() => null, (e) => e);
+  assert.deepEqual([err.code, err.status], ['UNAVAILABLE', null]);
+  assert.equal(down.calls.length, 2);
+
+  const slow = jsonFetch(() => new SafeFetchError('TIMEOUT', 'slow'));
+  setup({ safeFetchJson: slow });
+  assert.equal((await svc.getPokemon({ kind: 'name', slug: 'mew' }).then(() => null, (e) => e)).code, 'TIMEOUT');
+  assert.equal(slow.calls.length, 1, 'a timeout is not retried');
+});
+
 // ── Pokémon index and autocomplete ─────────────────────────────────────────────
 
 const INDEX_BODY = {
@@ -843,7 +866,7 @@ test('Pokémon index: read from Redis, else refreshed in the background (never i
   await new Promise((r) => setTimeout(r, 20));
   await svc.getPokemonIndex();
   await svc.getPokemonIndex();
-  assert.equal(failing.calls.length, 1, 'a failed refresh is not retried for 10 minutes');
+  assert.equal(failing.calls.length, 2, 'one refresh (its request tried twice), then none for 10 minutes');
 });
 
 function fakeInteraction({ options = {}, channel = { nsfw: false }, guildId = 'g1', userId = 'u1', log = [] } = {}) {
