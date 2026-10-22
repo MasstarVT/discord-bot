@@ -875,19 +875,43 @@ test('/welcome and its /welcome goodbye group stay inside Discord limits and exp
 });
 
 test('/welcome autorole remove autocomplete lists configured roles, deleted ones included', async () => {
-  const guild = makeGuild();
+  const { invalidateSettings } = await import('../src/services/settingsService.js');
+  const guildId = '955008000000000777'; // in this package's range; never written (the model is stubbed)
+  const guild = makeGuild({ id: guildId });
   const a = '700000000000000001';
+  const gone = '700000000000000002';
   guild.roles.cache.set(a, role(a, { name: 'Members' }));
-  let answered = null;
-  const interaction = {
-    guildId: 'G', guild,
-    options: { getFocused: () => ({ name: 'role', value: '' }), getSubcommand: () => 'remove' },
-    responded: false,
-    respond: async (choices) => { answered = choices; },
+  const ask = async (value) => {
+    let answered = null;
+    await welcomeCmd.autocomplete({
+      guildId, guild, createdTimestamp: Date.now(), // the settings load is bounded by the ack budget
+
+      options: { getFocused: () => ({ name: 'role', value }), getSubcommand: () => 'remove' },
+      responded: false,
+      respond: async (choices) => { answered = choices; },
+    });
+    return answered;
   };
-  // No settings are loaded offline (Postgres is unreachable), so the answer is empty rather than an error.
-  await welcomeCmd.autocomplete(interaction);
-  assert.deepEqual(answered, []);
+  // The GuildSettings model is stubbed so the case is the same with or without a database.
+  const real = prisma.guildSettings;
+  try {
+    prisma.guildSettings = { findUnique: async ({ where }) => ({ guildId: where.guildId, autoroleIds: [a, gone] }) };
+    await invalidateSettings(guildId);
+    assert.deepEqual(await ask(''), [
+      { name: '@Members', value: a },
+      { name: `Deleted role (${gone})`, value: gone },
+    ]);
+    assert.deepEqual(await ask('MEM'), [{ name: '@Members', value: a }], 'the query matches the role name, case-insensitively');
+    assert.deepEqual(await ask('deleted'), [{ name: `Deleted role (${gone})`, value: gone }]);
+
+    // Settings that cannot be loaded give an empty answer rather than an error.
+    prisma.guildSettings = { findUnique: async () => { throw new Error('database down'); } };
+    await invalidateSettings(guildId);
+    assert.deepEqual(await ask(''), []);
+  } finally {
+    prisma.guildSettings = real;
+    await invalidateSettings(guildId);
+  }
 });
 
 // ── 20. Plugin shape ─────────────────────────────────────────────────────────

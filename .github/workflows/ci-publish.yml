@@ -73,9 +73,10 @@ jobs:
       - name: Validate the Prisma schema
         run: npx prisma validate
 
-      # Offline suite: no database, Redis, Discord or network. The tests force
-      # their own offline environment; the unreachable URL below is a second
-      # guard so a stray query fails fast instead of reaching the service.
+      # Offline suite: no database, Redis, Discord or network. Most test files
+      # use DATABASE_URL when TEST_DATABASE_URL is unset, so this step must
+      # override the job's real URL with an unreachable one: a stray query then
+      # fails fast instead of reaching the Postgres service container.
       - name: Run the offline test suite
         run: npm test
         env:

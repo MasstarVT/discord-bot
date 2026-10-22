@@ -804,6 +804,54 @@ test('autocomplete honours subcommandPermissions (group + subcommand beats subco
   }
 });
 
+test('slash commands refuse a caller one level below the required one and run at it (Discord permissions, moderator role, subcommand level)', async () => {
+  const ran = [];
+  const client = routerClient({
+    warn: { permissionLevel: PERMISSION_LEVELS.MODERATOR, execute: async (i) => { ran.push(`warn:${i.member.id}`); } },
+    config: {
+      permissionLevel: PERMISSION_LEVELS.MODERATOR,
+      subcommandPermissions: { reset: PERMISSION_LEVELS.ADMIN },
+      execute: async (i) => { ran.push(`config ${i.options.getSubcommand()}:${i.member.id}`); },
+    },
+  });
+  const member = (id, { bits = [], roles = [] } = {}) => ({
+    id, roles: { cache: new Map(roles.map((r) => [r, { id: r }])) }, guild: { ownerId: 'someone-else' },
+    permissions: { has: (bit) => bits.includes(bit) },
+  });
+  const plain = member('member-1');
+  const kicker = member('mod-perm', { bits: [PermissionFlagsBits.KickMembers] });
+  const modRole = member('mod-role', { roles: ['role-mod'] });
+  const admin = adminMember();
+  const run = async (command, who, sub = null) => {
+    const i = chat(command, {
+      inGuild: () => true, inCachedGuild: () => true, guildId: 'g-levels', member: who,
+      options: { getSubcommand: () => sub, getSubcommandGroup: () => null },
+    });
+    await routeInteraction(i, client);
+    return i;
+  };
+  const restore = stubSettings(() => ({ modRoleIds: ['role-mod'] }));
+  try {
+    const refused = await run('warn', plain);
+    assert.match(titleOf(refused.replies[0]), /Insufficient Permissions/, 'a MEMBER cannot run a MODERATOR command');
+    assert.deepEqual(ran, []);
+    for (const who of [kicker, modRole, admin]) assert.deepEqual((await run('warn', who)).replies, [], `${who.id} is not refused`);
+    assert.deepEqual(ran, ['warn:mod-perm', 'warn:mod-role', 'warn:admin-1'], 'Discord moderation permissions, a configured moderator role and an admin all reach it');
+
+    ran.length = 0;
+    for (const who of [kicker, modRole]) {
+      const i = await run('config', who, 'reset');
+      assert.match(titleOf(i.replies[0]), /Insufficient Permissions/, `${who.id}: a MODERATOR cannot run an ADMIN subcommand`);
+    }
+    assert.deepEqual(ran, []);
+    await run('config', kicker, 'show');
+    await run('config', admin, 'reset');
+    assert.deepEqual(ran, ['config show:mod-perm', 'config reset:admin-1']);
+  } finally {
+    restore();
+  }
+});
+
 test('autocomplete of a command in a disabled module gets [] (and runs once the module is on)', async () => {
   let gamesEnabled = false;
   const restore = stubSettings(() => ({ gamesEnabled }));
