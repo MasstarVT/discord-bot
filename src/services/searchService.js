@@ -1,6 +1,6 @@
 // ── Search Anything (pkg-search) ───────────────────────────────────────────────
-// /anime and /manga (AniList GraphQL), /pokemon (PokeAPI) and /urban (Urban Dictionary). Every API is keyless.
-// Everything with logic lives here; the four command files only declare their builders.
+// /search anime and /search manga (AniList GraphQL), /search pokemon (PokeAPI) and /search urban (Urban Dictionary). Every API
+// is keyless. Everything with logic lives here; commands/search/search.js only declares the builders and routes.
 //
 // Outbound traffic is deliberately polite. Every request goes through safeFetch / safeFetchJson (SSRF guard, 8 s
 // timeout, size cap) and passes, in this order:
@@ -887,7 +887,7 @@ async function failWith(interaction, err, { api, label, command }) {
       logger.warn(`search: ${api} ${err.code}${err.status ? ` (HTTP ${err.status})` : ''}`);
     }
   } else {
-    logger.error(`search: /${command} failed`, err);
+    logger.error(`search: /search ${command} failed`, err);
   }
   await replyFailure(interaction, searchErrorEmbed(err, label));
 }
@@ -905,7 +905,7 @@ async function settingsBeforeAck(interaction) {
   }
 }
 
-/** /anime and /manga. */
+/** /search anime and /search manga. */
 export async function executeAniList(interaction, type) {
   const command = type === 'MANGA' ? 'manga' : 'anime';
   const query = cleanQuery(interaction.options.getString('query', true));
@@ -938,7 +938,7 @@ export async function executeAniList(interaction, type) {
   await sendPages(interaction, pages);
 }
 
-/** /pokemon. */
+/** /search pokemon. */
 export async function executePokemon(interaction) {
   const raw = interaction.options.getString('name', true);
   const parsed = pokemonSlug(raw);
@@ -986,7 +986,7 @@ export async function autocompletePokemon(interaction) {
   }
 }
 
-/** /urban. Only age-restricted channels unless the guild turned urbanNsfwOnly off (fail closed on anything unknown). */
+/** /search urban. Only age-restricted channels unless the guild turned urbanNsfwOnly off (fail closed on anything unknown). */
 export async function executeUrban(interaction) {
   const term = cleanQuery(interaction.options.getString('term', true));
   if (!term) {

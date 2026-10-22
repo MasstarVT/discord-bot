@@ -690,7 +690,7 @@ export async function tickGuild(client, guild, { now = new Date() } = {}) {
     claimed = await claimBirthdays({ guildId: guild.id, ids: candidates.map((r) => r.id), year: local.year, setMarker: Boolean(role) });
   }
 
-  // 7. Announce. Without a usable channel the claims are completed silently (the role is still granted; /birthday-config show reports it).
+  // 7. Announce. Without a usable channel the claims are completed silently (the role is still granted; /birthday config show reports it).
   let completed = claimed;
   if (claimed.length && channel && channelOk) {
     completed = [];

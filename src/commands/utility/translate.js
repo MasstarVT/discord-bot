@@ -1,14 +1,14 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import {
-  EMBED_MAX_PARTS, EMBED_PART_MAX, TRANSLATE_MAX_CHUNKS, TranslationError, cleanForTranslation,
-  describeTranslationError, hasTranslatableText, isSupportedTarget, languageChoices, languageName,
-  loadLanguageSupport, providerLabel, providerName, resolveLanguageInput, splitForEmbeds, suggestLanguage,
+  EMBED_MAX_PARTS, EMBED_PART_MAX, LANGUAGES, TRANSLATE_MAX_CHUNKS, TranslationError, cleanForTranslation,
+  describeTranslationError, detectLanguage, getLanguages, hasTranslatableText, isSupportedTarget, languageChoices,
+  languageName, loadLanguageSupport, providerLabel, providerName, resolveLanguageInput, splitForEmbeds, suggestLanguage,
   translateText, translationPaused, warmLanguageSupport,
 } from '../../services/translationService.js';
 import { getSettingsSafe } from '../../services/settingsService.js';
 import { STAT_VIA, recordTranslation } from '../../services/translateStatsService.js';
-import { applyGuildColor, errorEmbed, infoEmbed } from '../../utils/embedBuilder.js';
+import { applyGuildColor, errorEmbed, infoEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { isInteractionGone, respondAutocomplete } from '../../utils/interactionHelpers.js';
 import { clampText } from '../../utils/text.js';
 import logger from '../../utils/logger.js';
@@ -19,19 +19,23 @@ export const allowInDMs = true; // needs no guild, so it keeps working in DMs
 
 export const data = new SlashCommandBuilder()
   .setName('translate')
-  .setDescription('Translate text into another language.')
-  .addStringOption((o) => o.setName('text').setDescription('The text to translate')
-    .setRequired(true).setMaxLength(1500))
-  .addStringOption((o) => o.setName('target_language')
-    .setDescription('Target language code or name (e.g. es, ja, zh-tw). See /languages.')
-    .setRequired(true).setMaxLength(40).setAutocomplete(true));
+  .setDescription('Translate text, detect its language or list the supported languages.')
+  .addSubcommand((s) => s.setName('text').setDescription('Translate text into another language.')
+    .addStringOption((o) => o.setName('text').setDescription('The text to translate')
+      .setRequired(true).setMaxLength(1500))
+    .addStringOption((o) => o.setName('target_language')
+      .setDescription('Target language code or name (e.g. es, ja, zh-tw). See /translate languages.')
+      .setRequired(true).setMaxLength(40).setAutocomplete(true)))
+  .addSubcommand((s) => s.setName('detect').setDescription('Detect the language of a piece of text.')
+    .addStringOption((o) => o.setName('text').setDescription('The text to analyse').setRequired(true).setMaxLength(1500)))
+  .addSubcommand((s) => s.setName('languages').setDescription('List all supported translation language codes.'));
 
 export async function autocomplete(interaction) {
   if (providerName() === 'libretranslate') warmLanguageSupport();
   await respondAutocomplete(interaction, languageChoices(interaction.options.getFocused()));
 }
 
-export async function execute(interaction) {
+async function executeText(interaction) {
   const text = interaction.options.getString('text').trim();
   const input = interaction.options.getString('target_language');
 
@@ -40,7 +44,7 @@ export async function execute(interaction) {
     const suggestion = suggestLanguage(input);
     const hint = suggestion ? ` Did you mean \`${suggestion}\` (${languageName(suggestion)})?` : '';
     return interaction.reply({
-      embeds: [errorEmbed('Invalid Language', `\`${clampText(input, 40)}\` is not a language I know.${hint} Use \`/languages\` to see every code.`)],
+      embeds: [errorEmbed('Invalid Language', `\`${clampText(input, 40)}\` is not a language I know.${hint} Use \`/translate languages\` to see every code.`)],
       ephemeral: true,
     });
   }
@@ -56,7 +60,7 @@ export async function execute(interaction) {
   await loadLanguageSupport(); // never throws
   if (isSupportedTarget(target) === false) {
     return interaction.editReply({
-      embeds: [errorEmbed('Language Not Supported', `${languageName(target)} (\`${target}\`) isn't supported by this bot's translation backend (${providerLabel()}). Use \`/languages\` to see what is available.`)],
+      embeds: [errorEmbed('Language Not Supported', `${languageName(target)} (\`${target}\`) isn't supported by this bot's translation backend (${providerLabel()}). Use \`/translate languages\` to see what is available.`)],
     });
   }
 
@@ -67,8 +71,8 @@ export async function execute(interaction) {
     result = await translateText(text, target, { maxChunks: TRANSLATE_MAX_CHUNKS });
   } catch (err) {
     const d = describeTranslationError(err);
-    if (d.log === 'warn') logger.warn(`/translate: ${err.code} ${err.status ?? ''} ${err.message}`);
-    else if (d.log === 'error') logger.error('/translate failed', err);
+    if (d.log === 'warn') logger.warn(`/translate text: ${err.code} ${err.status ?? ''} ${err.message}`);
+    else if (d.log === 'error') logger.error('/translate text failed', err);
     return interaction.editReply({ embeds: [d.embed] });
   }
 
@@ -99,7 +103,7 @@ export async function execute(interaction) {
       });
     }
   } catch (err) {
-    if (isInteractionGone(err)) { logger.debug(`/translate: interaction gone (${err.code})`); return undefined; }
+    if (isInteractionGone(err)) { logger.debug(`/translate text: interaction gone (${err.code})`); return undefined; }
     throw err;
   }
 
@@ -110,9 +114,76 @@ export async function execute(interaction) {
         allowedMentions: { parse: [] },
       });
     } catch (err) {
-      if (isInteractionGone(err)) logger.debug(`/translate: follow-up not sent, interaction gone (${err.code})`);
-      else logger.warn(`/translate: follow-up failed: ${err?.message ?? err}`);
+      if (isInteractionGone(err)) logger.debug(`/translate text: follow-up not sent, interaction gone (${err.code})`);
+      else logger.warn(`/translate text: follow-up failed: ${err?.message ?? err}`);
     }
   }
   return undefined;
+}
+
+async function executeDetect(interaction) {
+  const text = interaction.options.getString('text');
+
+  if (!hasTranslatableText(cleanForTranslation(text))) {
+    return interaction.reply({ embeds: [errorEmbed('Nothing to Detect', 'That text has no words I can analyse.')], ephemeral: true });
+  }
+  if (translationPaused()) {
+    return interaction.reply({ embeds: [describeTranslationError(new TranslationError('PAUSED')).embed], ephemeral: true });
+  }
+
+  await interaction.deferReply();
+
+  let found;
+  try {
+    found = await detectLanguage(text);
+  } catch (err) {
+    const d = describeTranslationError(err);
+    if (d.log === 'warn') logger.warn(`/translate detect: ${err.code} ${err.status ?? ''} ${err.message}`);
+    else if (d.log === 'error') logger.error('/translate detect failed', err);
+    return interaction.editReply({ embeds: [d.embed] });
+  }
+
+  if (found.code === null) {
+    return interaction.editReply({ embeds: [warnEmbed('Unknown Language', 'I could not tell which language that is. Try a longer sentence.')] });
+  }
+
+  const settings = interaction.guildId ? await getSettingsSafe(interaction.guildId) : null;
+  const embed = applyGuildColor(infoEmbed('Language Detected', `**${found.name}** (\`${found.code}\`)`), settings);
+  if (!Object.hasOwn(LANGUAGES, found.code)) {
+    embed.setFooter({ text: 'Detected only: this language is not available as a translation target.' });
+  }
+  return interaction.editReply({ embeds: [embed] });
+}
+
+async function executeLanguages(interaction) {
+  await interaction.deferReply({ ephemeral: true }); // the LibreTranslate list may need a network call
+
+  const support = await loadLanguageSupport(); // never throws; null for Google or when unknown
+  const entries = Object.entries(getLanguages()).sort((a, b) => a[1].localeCompare(b[1]));
+  const lines = entries.map(([code, name]) => `\`${code}\` — ${name}`);
+  const settings = interaction.guildId ? await getSettingsSafe(interaction.guildId) : null;
+
+  const embed = applyGuildColor(
+    infoEmbed('Supported Languages', clampText(lines.join('\n'), 4096), `${entries.length} languages · backend: ${providerLabel()}`),
+    settings,
+  ).addFields({
+    name: 'Also accepted',
+    value: 'Aliases: `iw`→`he`, `nb`→`no`, `zh-cn`→`zh`, `zh-hant`→`zh-tw`, `fil`→`tl`. Names work too, e.g. `Japanese`.',
+  });
+  if (providerName() === 'libretranslate' && support === null) {
+    embed.addFields({
+      name: 'Note',
+      value: "Could not load the LibreTranslate server's language list; some of these may be unavailable.",
+    });
+  }
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
+export async function execute(interaction) {
+  switch (interaction.options.getSubcommand()) {
+    case 'detect': return executeDetect(interaction);
+    case 'languages': return executeLanguages(interaction);
+    default: return executeText(interaction);
+  }
 }

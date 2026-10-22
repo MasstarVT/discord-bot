@@ -24,7 +24,7 @@ export const MODULES = Object.freeze({
   tickets: Object.freeze({ flag: "ticketsEnabled", label: "Ticketing", emoji: "🎫", mee6: "Ticketing", configCommand: "/ticket-panel", default: DEFAULT_MODULE_SETTINGS.tickets }),
   tempvoice: Object.freeze({ flag: "tempVoiceEnabled", label: "Temporary Channels", emoji: "🔊", mee6: "Temporary Channels", configCommand: "/voice-hub", default: DEFAULT_MODULE_SETTINGS.tempvoice }),
   stats: Object.freeze({ flag: "statsEnabled", label: "Statistics Channels", emoji: "📈", mee6: "Statistics Channels", configCommand: "/stats", default: DEFAULT_MODULE_SETTINGS.stats }),
-  birthdays: Object.freeze({ flag: "birthdaysEnabled", label: "Birthdays", emoji: "🎂", mee6: "Birthdays", configCommand: "/birthday-config", default: DEFAULT_MODULE_SETTINGS.birthdays }),
+  birthdays: Object.freeze({ flag: "birthdaysEnabled", label: "Birthdays", emoji: "🎂", mee6: "Birthdays", configCommand: "/birthday", default: DEFAULT_MODULE_SETTINGS.birthdays }),
   achievements: Object.freeze({ flag: "achievementsEnabled", label: "Achievements", emoji: "🏆", mee6: "Achievements", configCommand: "/achievement-config", default: DEFAULT_MODULE_SETTINGS.achievements }),
   economy: Object.freeze({ flag: "economyEnabled", label: "Economy", emoji: "🪙", mee6: "Economy", configCommand: "/economy-admin", default: DEFAULT_MODULE_SETTINGS.economy }),
   games: Object.freeze({ flag: "gamesEnabled", label: "Games", emoji: "🎮", mee6: "Economy › games (+ ours)", configCommand: "/games", default: DEFAULT_MODULE_SETTINGS.games }),
@@ -41,6 +41,12 @@ export const MODULES = Object.freeze({
   antiraid: Object.freeze({ flag: "antiRaidEnabled", label: "Anti-Raid", emoji: "🚨", mee6: "(ours, beyond MEE6)", configCommand: "/antiraid", default: DEFAULT_MODULE_SETTINGS.antiraid }),
   events: Object.freeze({ flag: "eventsEnabled", label: "Events", emoji: "📅", mee6: "(ours, beyond MEE6)", configCommand: "/event", default: DEFAULT_MODULE_SETTINGS.events }),
   rolepersist: Object.freeze({ flag: "rolePersistEnabled", label: "Role Persistence", emoji: "🔁", mee6: "(ours, beyond MEE6)", configCommand: "/rolepersist", default: DEFAULT_MODULE_SETTINGS.rolepersist }),
+  boosts: Object.freeze({ flag: "boostsEnabled", label: "Server Boosts", emoji: "💎", mee6: "(ours, beyond MEE6)", configCommand: "/boost", default: DEFAULT_MODULE_SETTINGS.boosts }),
+  backups: Object.freeze({ flag: "backupsEnabled", label: "Server Backups", emoji: "💾", mee6: "(ours, beyond MEE6)", configCommand: "/backup", default: DEFAULT_MODULE_SETTINGS.backups }),
+  confessions: Object.freeze({ flag: "confessionsEnabled", label: "Confessions", emoji: "🤫", mee6: "(ours, beyond MEE6)", configCommand: "/confession", default: DEFAULT_MODULE_SETTINGS.confessions }),
+  autothreads: Object.freeze({ flag: "autoThreadsEnabled", label: "Auto Threads", emoji: "🧵", mee6: "(ours, beyond MEE6)", configCommand: "/autothread", default: DEFAULT_MODULE_SETTINGS.autothreads }),
+  voiceroles: Object.freeze({ flag: "voiceRolesEnabled", label: "Voice Roles", emoji: "🎙️", mee6: "(ours, beyond MEE6)", configCommand: "/voicerole", default: DEFAULT_MODULE_SETTINGS.voiceroles }),
+  bumps: Object.freeze({ flag: "bumpsEnabled", label: "Bump Reminders", emoji: "📣", mee6: "(ours, beyond MEE6)", configCommand: "/bumps", default: DEFAULT_MODULE_SETTINGS.bumps }),
 });
 
 export const MODULE_NAMES = Object.freeze(Object.keys(MODULES));

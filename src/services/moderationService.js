@@ -616,7 +616,7 @@ const DM_TYPES = new Set(['WARN', 'TIMEOUT', 'MUTE', 'KICK', 'SOFTBAN', 'BAN']);
 
 /**
  * Records only (no Discord action), then DMs + mod-logs best-effort, then escalation for WARN.
- * Used by the expiry jobs, the external ban/unban hooks, `/history clear`'s NOTE and the legacy automod path.
+ * Used by the expiry jobs, the external ban/unban hooks, `/case clear-history`'s NOTE and the legacy automod path.
  * @param {import('discord.js').Guild} guild
  * @param {{ id: string }} target User or `{ id }`
  * @param {{ id: string }} moderator
@@ -1759,7 +1759,7 @@ export async function deliverModReply(interaction, settings, { title, lines, war
 }
 
 /**
- * Lookup commands (/case, /history): PUBLIC -> deleteReply + followUp(payload); ANONYMOUS / PRIVATE -> editReply(payload)
+ * Lookup commands (/case): PUBLIC -> deleteReply + followUp(payload); ANONYMOUS / PRIVATE -> editReply(payload)
  * (the deferred reply is ephemeral). Never throws.
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  * @param {{ modVisibility?: string }|null} settings

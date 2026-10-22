@@ -18,6 +18,10 @@ export const JOB_TYPES = Object.freeze({
   "antiraid.unlock": Object.freeze({ owner: "antiraid", recurring: false, dedupe: "antiraid.unlock:{guildId}" }),
   "event.remind": Object.freeze({ owner: "events", recurring: false, dedupe: "event.remind:{eventId}" }),
   "event.end": Object.freeze({ owner: "events", recurring: false, dedupe: "event.end:{eventId}" }),
+  "boosts.sweep": Object.freeze({ owner: "boosts", recurring: true, dedupe: "boosts.sweep:{guildId}" }),
+  "backup.auto": Object.freeze({ owner: "backups", recurring: true, dedupe: "backup.auto:{guildId}" }),
+  "backup.restore": Object.freeze({ owner: "backups", recurring: false, dedupe: "backup.restore:{guildId}" }),
+  "bump.remind": Object.freeze({ owner: "bumps", recurring: false, dedupe: "bump.remind:{guildId}:{site}" }),
 });
 
 /** @returns {boolean} true when `type` is a registered job type */

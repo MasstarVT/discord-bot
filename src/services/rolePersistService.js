@@ -138,6 +138,20 @@ export function resetPruneStamps() {
 // ── What to save ──────────────────────────────────────────────────────────────
 
 /**
+ * Roles never saved or given back: the ignored roles, and the Voice Roles roles (they follow voice presence, so a member
+ * who rejoins must not get them back while not in voice).
+ * @param {object} settings
+ * @returns {Set<string>}
+ */
+export function skippedRoleIds(settings) {
+  const out = new Set(settings?.rolePersistIgnoredRoleIds ?? []);
+  for (const id of settings?.voiceRoleAnyRoleIds ?? []) out.add(id);
+  const links = Array.isArray(settings?.voiceRoleLinks) ? settings.voiceRoleLinks : [];
+  for (const l of links) if (typeof l?.roleId === 'string') out.add(l.roleId);
+  return out;
+}
+
+/**
  * The roles and nickname to save for a member who left, or null when there is nothing worth saving (so an older row is
  * kept). A partial member (not cached, roles unknown) is never saved. @everyone, managed roles, roles that no longer
  * exist and ignored roles are left out.
@@ -150,7 +164,7 @@ export function snapshotMember(member, guild, settings) {
   const held = member?.roles?.cache;
   if (!held) return null;
   if (member.partial === true && ![...held.keys()].some((id) => id !== guild.id)) return null;
-  const ignored = new Set(settings?.rolePersistIgnoredRoleIds ?? []);
+  const ignored = skippedRoleIds(settings);
   const roleIds = [];
   for (const id of held.keys()) {
     if (id === guild.id || ignored.has(id)) continue;
@@ -177,7 +191,7 @@ export function snapshotMember(member, guild, settings) {
  * @returns {{ give: import('discord.js').Role[], skipped: { roleId: string, reason: string, deleted?: boolean }[] }}
  */
 export function planRoles(guild, roleIds, settings, { held = null } = {}) {
-  const ignored = new Set(settings?.rolePersistIgnoredRoleIds ?? []);
+  const ignored = skippedRoleIds(settings);
   const gateRoleId = settings?.captchaEnabled === true ? settings?.captchaRoleId ?? null : null;
   const give = [];
   const skipped = [];

@@ -33,7 +33,7 @@ const modTasks = await import('../src/services/dashboardTasks/moderation.js');
 const memberTasks = await import('../src/services/dashboardTasks/members.js');
 const { TASKS } = await import('../src/services/dashboardTasks/index.js');
 const { TaskError } = await import('../src/services/dashboardTasks/shared.js');
-const xpCommand = await import('../src/commands/leveling/xp.js');
+const levelconfigCommand = await import('../src/commands/admin/levelconfig.js');
 const economyAdmin = await import('../src/commands/admin/economy-admin.js');
 const banCommand = await import('../src/commands/moderation/ban.js');
 const caseCommand = await import('../src/commands/moderation/case.js');
@@ -223,10 +223,10 @@ describe('descriptors', () => {
     assert.equal(opt(ban, ['reason']).max_length, cases.COMMAND_REASON_MAX);
     assert.equal(opt(ban, ['delete_days']).max_value, cases.DELETE_DAYS_MAX);
     assert.equal(opt(caseCommand.data.toJSON(), ['reason', 'reason']).max_length, cases.REASON_MAX);
-    const xp = xpCommand.data.toJSON();
-    assert.equal(opt(xp, ['give', 'amount']).max_value, levels.XP_STEP_MAX);
-    assert.equal(opt(xp, ['remove', 'amount']).max_value, levels.XP_STEP_MAX);
-    assert.equal(opt(xp, ['set', 'amount']).max_value, XP_MAX);
+    const levelconfig = levelconfigCommand.data.toJSON();
+    assert.equal(opt(levelconfig, ['xp', 'give', 'amount']).max_value, levels.XP_STEP_MAX);
+    assert.equal(opt(levelconfig, ['xp', 'remove', 'amount']).max_value, levels.XP_STEP_MAX);
+    assert.equal(opt(levelconfig, ['xp', 'set', 'amount']).max_value, XP_MAX);
     const eco = economyAdmin.data.toJSON();
     assert.equal(opt(eco, ['coins', 'give', 'amount']).max_value, COIN_MAX);
     assert.equal(opt(eco, ['coins', 'set', 'amount']).min_value, 0);
@@ -647,7 +647,7 @@ describe('mod.editCase and mod.clearWarnings', () => {
     await taskRefusal(gone.tasks['mod.editCase'].run(gone.ctx({ caseId: 9, reason: 'x' })), /Case #9 doesn't exist/);
   });
 
-  test('/history clear: administrators only; pardons and records a silent NOTE', async () => {
+  test('/case clear-history: administrators only; pardons and records a silent NOTE', async () => {
     const mod = setup({ level: 'mod' });
     await taskRefusal(mod.tasks['mod.clearWarnings'].run(mod.ctx({ userId: ALICE })), /Only administrators/);
 
@@ -695,7 +695,7 @@ describe('xp.adjust', () => {
   }
   const run = (s, payload, actor) => s.tasks['xp.adjust'].run(s.ctx(payload, actor));
 
-  test('give: the /xp pipeline without an announcement', async () => {
+  test('give: the /levelconfig xp pipeline without an announcement', async () => {
     const s = setup();
     const r = await run(s, { op: 'give', userId: ALICE, amount: 100 });
     assert.deepEqual(s.calls[0], { name: 'applyXpDelta', args: [{ guildId: s.guild.id, userId: ALICE, delta: 100 }] });
@@ -916,7 +916,7 @@ describe('stores (TEST_DATABASE_URL)', { skip: skipDb }, () => {
     assert.equal((await stores.levels.actions.set(guildId, ALICE, { xp: 42 }, ctx)).item.xp, 42);
     const reset = await stores.levels.actions.reset(guildId, ALICE, {}, ctx);
     assert.equal(reset.item.xp, 0);
-    assert.equal(await stores.levels.get(guildId, ALICE), null, 'the row is gone, like /xp reset');
+    assert.equal(await stores.levels.get(guildId, ALICE), null, 'the row is gone, like /levelconfig xp reset');
     assert.equal(await code(stores.levels.actions.reset(guildId, ALICE, {}, ctx)), 'failed', 'nothing to reset');
     assert.equal(await code(stores.levels.create(guildId, { userId: CAROL, amount: 5 }, ctx)), 'failed', 'not a member');
     assert.equal(await code(stores.levels.create(guildId, { userId: ALICE, amount: 5 }, { ...ctx, runTask: async () => ({ status: 'pending', message: 'wait' }) })), 'unavailable');
@@ -991,7 +991,7 @@ describe('stores (TEST_DATABASE_URL)', { skip: skipDb }, () => {
     assert.deepEqual(calls.at(-1), { kind: 'mod.editCase', payload: { caseId: 1, reason: 'spam links', proofUrl: 'https://x.test/q' } });
     assert.equal(await code(stores.cases.update(guildId, '999', { reason: 'x' }, ctx)), 'not_found');
 
-    // /history clear
+    // /case clear-history
     const cleared = await stores.cases.actions.clearWarnings(guildId, '1', { clearReason: 'fresh start' }, ctx);
     assert.equal(cleared.item.status, 'pardoned');
     assert.match(cleared.message, /^Cleared 1 warning\(s\) for member03 \(case #34\)\.$/);

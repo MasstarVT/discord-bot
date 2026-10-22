@@ -21,12 +21,22 @@ const { buildCommandPayload } = await import('../src/handlers/commandLoader.js')
 const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const { parseCustomId } = await import('../src/config/customIds.js');
 const gamesCmd = await import('../src/commands/games/games.js');
-const numguessCmd = await import('../src/commands/games/numguess.js');
-const rpsCmd = await import('../src/commands/games/rps.js');
-const tttCmd = await import('../src/commands/games/tictactoe.js');
 const scrabbleCmd = await import('../src/commands/games/scrabble.js');
-const scrabblePlayCmd = await import('../src/commands/games/scrabble-play.js');
-const scrabbleHelpCmd = await import('../src/commands/games/scrabble-help.js');
+// /rps, /numguess and /tictactoe are `/games` subcommands now, and /scrabble start|help replaced /scrabble and
+// /scrabble-help. These shims run the merged execute with the subcommand the old command became, so the call sites
+// below read as before (the fake interactions carry no getSubcommand of their own).
+const asSub = (mod, name) => ({
+  execute: (it, client) => {
+    it.options ??= {};
+    it.options.getSubcommand ??= () => name;
+    return mod.execute(it, client);
+  },
+});
+const numguessCmd = asSub(gamesCmd, 'numguess');
+const rpsCmd = asSub(gamesCmd, 'rps');
+const tttCmd = asSub(gamesCmd, 'tictactoe');
+const scrabbleStartCmd = asSub(scrabbleCmd, 'start');
+const scrabbleHelpCmd = asSub(scrabbleCmd, 'help');
 const { plugin } = await import('../src/plugins/games-fixes.js');
 
 const {
@@ -580,26 +590,26 @@ const descOf = (payload) => payload?.embeds?.[0]?.toJSON?.().description ?? '';
 
 describe('tictactoe', () => {
   test('18. checkWinner covers the 8 lines, draws and open boards', () => {
-    for (const [a, b, c] of tttCmd.WIN_CONDITIONS) {
+    for (const [a, b, c] of gamesCmd.WIN_CONDITIONS) {
       const board = Array(9).fill('');
       board[a] = board[b] = board[c] = 'X';
-      assert.equal(tttCmd.checkWinner(board), 'X');
+      assert.equal(gamesCmd.checkWinner(board), 'X');
     }
-    assert.equal(tttCmd.checkWinner(['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X']), 'draw');
-    assert.equal(tttCmd.checkWinner(['X', 'O', '', '', '', '', '', '', '']), null);
+    assert.equal(gamesCmd.checkWinner(['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X']), 'draw');
+    assert.equal(gamesCmd.checkWinner(['X', 'O', '', '', '', '', '', '', '']), null);
   });
 
   test('18. buildBoard makes 3x3 buttons with ttt:id:n ids; filled and disabled cells are disabled', () => {
-    const rows = tttCmd.buildBoard(Array(9).fill(''), 'id').map((r) => r.toJSON());
+    const rows = gamesCmd.buildBoard(Array(9).fill(''), 'id').map((r) => r.toJSON());
     assert.equal(rows.length, 3);
     assert.ok(rows.every((r) => r.components.length === 3));
     assert.deepEqual(rows.flatMap((r) => r.components.map((c) => c.custom_id)), Array.from({ length: 9 }, (_, n) => `ttt:id:${n}`));
     assert.ok(rows.flatMap((r) => r.components).every((c) => !c.disabled));
-    const filled = tttCmd.buildBoard(['X', '', '', '', 'O', '', '', '', ''], 'id').flatMap((r) => r.toJSON().components);
+    const filled = gamesCmd.buildBoard(['X', '', '', '', 'O', '', '', '', ''], 'id').flatMap((r) => r.toJSON().components);
     assert.equal(filled[0].disabled, true);
     assert.equal(filled[4].disabled, true);
     assert.ok(!filled[1].disabled);
-    assert.ok(tttCmd.buildBoard(Array(9).fill(''), 'id', true).flatMap((r) => r.toJSON().components).every((c) => c.disabled));
+    assert.ok(gamesCmd.buildBoard(Array(9).fill(''), 'id', true).flatMap((r) => r.toJSON().components).every((c) => c.disabled));
   });
 
   async function startGame() {
@@ -621,8 +631,8 @@ describe('tictactoe', () => {
     assert.deepEqual(verbs(accept), ['update']);
     assert.deepEqual(verbs(second), ['deferUpdate'], 'the in-flight second click is acknowledged and ignored (settled)');
     const game = it.collectors[1];
-    assert.equal(game.options.idle, tttCmd.MOVE_IDLE_MS);
-    assert.equal(game.options.time, tttCmd.GAME_MAX_MS);
+    assert.equal(game.options.idle, gamesCmd.TTT_MOVE_IDLE_MS);
+    assert.equal(game.options.time, gamesCmd.TTT_MAX_MS);
     assert.notEqual(game.options.time, 60_000);
     assert.ok(game.options.filter({ customId: `ttt:${it.id}:3` }));
     assert.equal(game.options.filter({ customId: `ttt-ch:${it.id}:accept` }), false);
@@ -759,7 +769,7 @@ describe('rps', () => {
     };
     for (const [pair, outcome] of Object.entries(expected)) {
       const [p, b] = pair.split(',');
-      assert.equal(rpsCmd.decide(p, b), outcome, pair);
+      assert.equal(gamesCmd.decideRps(p, b), outcome, pair);
     }
   });
 
@@ -816,7 +826,7 @@ describe('rps', () => {
 
 describe('numguess', () => {
   test('20. evaluateGuess', () => {
-    const e = numguessCmd.evaluateGuess;
+    const e = gamesCmd.evaluateGuess;
     assert.equal(e(42, 42), 'correct');
     assert.equal(e(42, 10), 'higher');
     assert.equal(e(42, 90), 'lower');
@@ -849,8 +859,8 @@ describe('numguess', () => {
 
   test('timers: idle 60 s (reset by guesses) + 10 min cap, no absolute 2-minute limit (R234)', async () => {
     const { it, collector } = await startGame();
-    assert.equal(collector.options.idle, numguessCmd.GUESS_IDLE_MS);
-    assert.equal(collector.options.time, numguessCmd.GAME_MAX_MS);
+    assert.equal(collector.options.idle, gamesCmd.GUESS_IDLE_MS);
+    assert.equal(collector.options.time, gamesCmd.NUMGUESS_MAX_MS);
     assert.match(descOf(lastOf(it.calls, 'reply')), /60 seconds/);
     assert.equal(collector.options.filter(guessMsg(it.user.id, ' 42 ')), true);
     assert.equal(collector.options.filter(guessMsg(it.user.id, 'hello')), false);
@@ -959,16 +969,16 @@ describe('numguess', () => {
   });
 });
 
-// ── /scrabble (challenge) ─────────────────────────────────────────────────────
+// ── /scrabble start (challenge) ───────────────────────────────────────────────
 
-describe('/scrabble challenge', () => {
+describe('/scrabble start (challenge)', () => {
   const { dictionaryStatus } = svc;
 
   async function challenge(channelId = nextChannel()) {
     const challenger = snowflake();
     const target = snowflake();
     const it = mkSlash({ userId: challenger, targetId: target, channelId });
-    await scrabbleCmd.execute(it);
+    await scrabbleStartCmd.execute(it);
     return { challenger, target, it, channelId, collector: it.collectors[0] };
   }
   const accept = (it, userId) => mkClick(`scrabble-ch:${it.id}:accept`, userId);
@@ -983,7 +993,7 @@ describe('/scrabble challenge', () => {
     assert.equal(collector.options.time, 30_000);
 
     const second = mkSlash({ userId: snowflake(), targetId: snowflake(), channelId });
-    await scrabbleCmd.execute(second);
+    await scrabbleStartCmd.execute(second);
     assert.match(lastOf(second.calls, 'reply').content, /already a Scrabble game or a pending challenge/);
     assert.equal(second.collectors.length, 0);
     collector.stop('user');
@@ -1019,7 +1029,7 @@ describe('/scrabble challenge', () => {
     assert.equal(getGame(channelId), game);
     // and a new challenge in the channel is refused while the game runs
     const another = mkSlash({ userId: snowflake(), targetId: snowflake(), channelId });
-    await scrabbleCmd.execute(another);
+    await scrabbleStartCmd.execute(another);
     assert.match(lastOf(another.calls, 'reply').content, /already a Scrabble game/);
   });
 
@@ -1073,30 +1083,30 @@ describe('/scrabble challenge', () => {
   test('R089: a failed challenge reply releases the reservation', async () => {
     const channelId = nextChannel();
     const bad = mkSlash({ userId: snowflake(), targetId: snowflake(), channelId, replyError: new Error('boom') });
-    await assert.rejects(() => scrabbleCmd.execute(bad), /boom/);
+    await assert.rejects(() => scrabbleStartCmd.execute(bad), /boom/);
     assert.equal(isChannelBusy(channelId), false);
   });
 
   test('pre-checks: self, bot, not a member', async () => {
     const x = snowflake();
     const self = mkSlash({ userId: x, targetId: x });
-    await scrabbleCmd.execute(self);
+    await scrabbleStartCmd.execute(self);
     assert.match(lastOf(self.calls, 'reply').content, /cannot challenge yourself/);
     const bot = mkSlash({ userId: x, targetId: snowflake() });
     bot.options.getUser = () => ({ id: '9', username: 'bot', bot: true });
-    await scrabbleCmd.execute(bot);
+    await scrabbleStartCmd.execute(bot);
     assert.match(lastOf(bot.calls, 'reply').content, /cannot challenge a bot/);
     const absent = mkSlash({ userId: x, targetId: snowflake() });
     absent.options.getMember = () => null;
-    await scrabbleCmd.execute(absent);
+    await scrabbleStartCmd.execute(absent);
     assert.match(lastOf(absent.calls, 'reply').content, /isn't in this server/);
     assert.ok(dictionaryStatus());
   });
 });
 
-// ── /scrabble-play ────────────────────────────────────────────────────────────
+// ── /scrabble word, pass, exchange, resign ────────────────────────────────────
 
-describe('/scrabble-play', () => {
+describe('/scrabble word, pass, exchange, resign', () => {
   function mkPlay(sub, userId, channelId, opts = {}) {
     const calls = [];
     const i = {
@@ -1129,7 +1139,7 @@ describe('/scrabble-play', () => {
     try {
       const { g, channelId } = liveGame();
       const it = word(A, channelId, 'cat', 8, 'H');
-      await scrabblePlayCmd.execute(it);
+      await scrabbleCmd.execute(it);
       assert.deepEqual(verbs(it), ['deferReply', 'editReply', 'followUp']);
       assert.equal(it.ephemeral, true);
       assert.match(titleOf(lastOf(it.calls, 'editReply')), /Word Played/);
@@ -1150,7 +1160,7 @@ describe('/scrabble-play', () => {
       const { g, channelId } = liveGame();
       const first = word(A, channelId, 'CAT', 8, 'H');
       const second = word(A, channelId, 'XE', 9, 'H');
-      await Promise.all([scrabblePlayCmd.execute(first), scrabblePlayCmd.execute(second)]);
+      await Promise.all([scrabbleCmd.execute(first), scrabbleCmd.execute(second)]);
       assert.equal(g.moves, 1);
       assert.match(titleOf(lastOf(first.calls, 'editReply')), /Word Played/);
       assert.match(titleOf(lastOf(second.calls, 'editReply')), /Invalid Move/);
@@ -1165,17 +1175,17 @@ describe('/scrabble-play', () => {
     try {
       const { g, channelId } = liveGame();
       const bad = word(A, channelId, 'CAT', 1, 'A');
-      await scrabblePlayCmd.execute(bad);
+      await scrabbleCmd.execute(bad);
       assert.deepEqual(verbs(bad), ['deferReply', 'editReply']);
       assert.match(descOf(lastOf(bad.calls, 'editReply')), /centre square/);
       assert.equal(g.currentTurn, 0);
 
       const stranger = word(snowflake(), channelId, 'CAT', 8, 'H');
-      await scrabblePlayCmd.execute(stranger);
+      await scrabbleCmd.execute(stranger);
       assert.match(titleOf(lastOf(stranger.calls, 'editReply')), /Not Your Game/);
 
       const nobody = word(A, nextChannel(), 'CAT', 8, 'H');
-      await scrabblePlayCmd.execute(nobody);
+      await scrabbleCmd.execute(nobody);
       assert.match(titleOf(lastOf(nobody.calls, 'editReply')), /No Active Game/);
     } finally {
       mock.timers.reset();
@@ -1186,11 +1196,11 @@ describe('/scrabble-play', () => {
     try {
       const { g, channelId } = liveGame();
       const pass = mkPlay('pass', A, channelId);
-      await scrabblePlayCmd.execute(pass);
+      await scrabbleCmd.execute(pass);
       assert.match(lastOf(pass.calls, 'followUp').content, new RegExp(`<@${B}>, it's your turn! \\*\\*Alice\\*\\* passed`));
 
       const swap = mkPlay('exchange', B, channelId, { tiles: 'OX' });
-      await scrabblePlayCmd.execute(swap);
+      await scrabbleCmd.execute(swap);
       const text = lastOf(swap.calls, 'followUp').content;
       assert.match(text, /exchanged 2 tiles/);
       assert.doesNotMatch(text, /\*\*O\*\*|\*\*X\*\*/);
@@ -1200,7 +1210,7 @@ describe('/scrabble-play', () => {
       let last;
       for (let n = 0; n < 4; n++) {
         last = mkPlay('pass', currentPlayerId(g), channelId);
-        await scrabblePlayCmd.execute(last);
+        await scrabbleCmd.execute(last);
       }
       assert.equal(g.ended, true);
       assert.equal(getGame(channelId), null);
@@ -1229,7 +1239,7 @@ describe('/scrabble-play', () => {
           if (ids) [yesId, noId] = ids;
           return { id: 'confirm', createMessageComponentCollector(opts) { collector = new FakeCollector(opts); return collector; } };
         };
-        const run = scrabblePlayCmd.execute(it);
+        const run = scrabbleCmd.execute(it);
         for (let n = 0; n < 50 && !collector; n++) await new Promise((r) => setImmediate(r));
         assert.ok(collector, 'the confirm dialog was shown');
         await collector.deliver(mkClick(answer ? yesId : noId, userId));
@@ -1250,7 +1260,7 @@ describe('/scrabble-play', () => {
       assert.match(post.embeds[1].toJSON().description, /Winner: \*\*Alice\*\*/);
 
       const gone = mkPlay('resign', A, channelId);
-      await scrabblePlayCmd.execute(gone);
+      await scrabbleCmd.execute(gone);
       assert.match(titleOf(lastOf(gone.calls, 'editReply')), /No Active Game/);
     } finally {
       mock.timers.reset();
@@ -1258,18 +1268,20 @@ describe('/scrabble-play', () => {
   });
 });
 
-// ── /scrabble-help ────────────────────────────────────────────────────────────
+// ── /scrabble help ────────────────────────────────────────────────────────────
 
-describe('/scrabble-help', () => {
+describe('/scrabble help', () => {
   test('every field stays within 1024 characters and the dictionary line follows the status', () => {
     for (const status of [{ state: 'missing', size: 0 }, { state: 'loaded', size: 172823 }]) {
-      const json = scrabbleHelpCmd.buildHelpEmbed(null, status).toJSON();
+      const json = scrabbleCmd.buildHelpEmbed(null, status).toJSON();
       assert.ok(json.fields.every((f) => f.value.length <= 1024 && f.name.length <= 256));
       assert.ok(json.fields.length <= 25);
+      assert.ok(!JSON.stringify(json).includes('/scrabble-'), 'the help names the /scrabble subcommands, not the old commands');
+      assert.ok(JSON.stringify(json).includes('/scrabble start') && JSON.stringify(json).includes('/scrabble word'));
       const rules = json.fields.find((f) => f.name.includes('Rules')).value;
       assert.match(rules, status.state === 'loaded' ? /\*\*172,823-word\*\* list/ : /Word checking is \*\*off\*\*/);
     }
-    const names = scrabbleHelpCmd.buildHelpEmbed(null, { state: 'missing', size: 0 }).toJSON().fields.map((f) => f.name);
+    const names = scrabbleCmd.buildHelpEmbed(null, { state: 'missing', size: 0 }).toJSON().fields.map((f) => f.name);
     assert.deepEqual(names.length, 6);
     assert.ok(names.some((n) => n.includes('Ending the Game')));
   });
@@ -1298,8 +1310,15 @@ describe('/games', () => {
 
   test('21. fields stay within limits, every real game has an emoji, the casino group needs economy entries', () => {
     const real = gameFiles.filter((n) => n !== 'games');
-    assert.ok(real.length >= 7);
+    assert.ok(real.length >= 4);
     for (const name of real) assert.ok(gamesCmd.GAME_EMOJI[name], `${name} needs a GAME_EMOJI entry`);
+    // /games and /scrabble are listed per subcommand, so each of those paths needs an emoji too.
+    for (const mod of [gamesCmd, scrabbleCmd]) {
+      for (const o of mod.data.options) {
+        if (mod === gamesCmd && o.name === 'list') continue;
+        assert.ok(gamesCmd.GAME_EMOJI[`${mod.data.name} ${o.name}`], `${mod.data.name} ${o.name} needs a GAME_EMOJI entry`);
+      }
+    }
 
     const synthetic = Array.from({ length: 40 }, (_, n) => entry(`synthetic-game-${n}`, 'games', 'x'.repeat(150)));
     const economy = [entry('blackjack', 'economy'), entry('roulette', 'economy'), entry('slots', 'economy')];
@@ -1310,11 +1329,12 @@ describe('/games', () => {
     assert.match(withCasino.footer.text, /see \/balance/);
     assert.ok(JSON.stringify(withCasino).length < 6000);
 
-    const noCasino = gamesCmd.buildGamesEmbed([entry('rps'), entry('scrabble'), entry('scrabble-play'), entry('scrabble-help')], null).toJSON();
+    const scrabbleLines = ['start', 'word', 'pass', 'exchange', 'resign', 'help'].map((n) => `scrabble ${n}`);
+    const noCasino = gamesCmd.buildGamesEmbed([entry('games rps'), ...scrabbleLines.map((n) => entry(n))], null).toJSON();
     assert.ok(!noCasino.fields.some((f) => f.name.includes('Casino')));
     assert.equal(noCasino.footer, undefined);
     assert.deepEqual(noCasino.fields.map((f) => f.name), ['🕹️ Games', '🔤 Scrabble']);
-    assert.deepEqual(noCasino.fields[1].value.split('\n').map((l) => l.match(/`\/([a-z-]+)`/)[1]), ['scrabble', 'scrabble-play', 'scrabble-help']);
+    assert.deepEqual(noCasino.fields[1].value.split('\n').map((l) => l.match(/`\/([a-z ]+)`/)[1]), scrabbleLines);
     assert.equal(withCasino.fields.length > 0, true);
     void economy;
   });
@@ -1325,7 +1345,7 @@ describe('/games', () => {
     assert.match(other.fields[0].name, /Achievements/);
   });
 
-  test('collectGameCommands uses the category or the module, and skips /games', () => {
+  test('collectGameCommands uses the category or the module, lists subcommands one by one and skips /games list', () => {
     const mod = (name, module, description = 'd') => ({ data: { name, description }, module });
     const client = {
       commands: new Map([
@@ -1340,11 +1360,25 @@ describe('/games', () => {
     // without commandCategories the module still finds games
     const noCat = gamesCmd.collectGameCommands({ commands: client.commands });
     assert.deepEqual(noCat.map((e) => e.name).sort(), ['oddball', 'rps']);
+
+    // The real /games and /scrabble: one entry per subcommand, the list itself left out.
+    const real = gamesCmd.collectGameCommands({
+      commands: new Map([['games', gamesCmd], ['scrabble', scrabbleCmd], ['slots', mod('slots', 'economy')]]),
+      commandCategories: new Map([['games', 'games'], ['scrabble', 'games'], ['slots', 'games']]),
+    });
+    assert.deepEqual(real.map((e) => e.name), [
+      'games rps', 'games numguess', 'games tictactoe',
+      'scrabble start', 'scrabble word', 'scrabble pass', 'scrabble exchange', 'scrabble resign', 'scrabble help',
+      'slots',
+    ]);
+    assert.ok(real.filter((e) => e.name !== 'slots').every((e) => e.module === 'games' && e.description.length > 0));
   });
 
   test('execute hides games whose module is off', async () => {
     const calls = [];
-    const it = { guildId: 'guild-1', createdTimestamp: Date.now(), reply: async (o) => { calls.push(o); } };
+    const it = {
+      guildId: 'guild-1', createdTimestamp: Date.now(), options: { getSubcommand: () => 'list' }, reply: async (o) => { calls.push(o); },
+    };
     const mod = (name, module) => ({ data: { name, description: `d-${name}` }, module });
     const client = {
       commands: new Map([['rps', mod('rps', 'games')], ['slots', mod('slots', 'economy')]]),
@@ -1370,23 +1404,29 @@ describe('payloads, exports and the plugin', () => {
     for (const o of node.options ?? []) n += charCount(o);
     return n;
   };
-  const mods = {
-    games: [gamesCmd, 60], numguess: [numguessCmd, 60], rps: [rpsCmd, 60], tictactoe: [tttCmd, 90],
-    scrabble: [scrabbleCmd, 110], 'scrabble-play': [scrabblePlayCmd, 320], 'scrabble-help': [scrabbleHelpCmd, 70],
-  };
+  const mods = { games: [gamesCmd, 340], scrabble: [scrabbleCmd, 520] };
 
-  test('22. /scrabble-play has four subcommands and 15 column choices', () => {
-    const json = buildCommandPayload(scrabblePlayCmd).options ? buildCommandPayload(scrabblePlayCmd) : null;
-    assert.ok(json);
-    assert.deepEqual(json.options.map((o) => o.name), ['word', 'pass', 'exchange', 'resign']);
+  test('22. /games has list, rps, numguess and tictactoe', () => {
+    const json = buildCommandPayload(gamesCmd);
+    assert.deepEqual(json.options.map((o) => o.name), ['list', 'rps', 'numguess', 'tictactoe']);
     assert.ok(json.options.every((o) => o.type === 1));
-    const col = json.options[0].options.find((o) => o.name === 'col');
-    assert.equal(col.choices.length, 15);
-    assert.equal(col.required, true);
-    assert.ok(charCount(json) <= 320);
+    const target = json.options[3].options.find((o) => o.name === 'target');
+    assert.equal(target.required, true);
+    assert.equal(target.type, 6);
   });
 
-  test('22. payload budgets, module and permission level of the seven commands', () => {
+  test('22. /scrabble has start, word, pass, exchange, resign and help, with 15 column choices', () => {
+    const json = buildCommandPayload(scrabbleCmd);
+    assert.deepEqual(json.options.map((o) => o.name), ['start', 'word', 'pass', 'exchange', 'resign', 'help']);
+    assert.ok(json.options.every((o) => o.type === 1));
+    assert.equal(json.options[0].options.find((o) => o.name === 'target').required, true);
+    const col = json.options[1].options.find((o) => o.name === 'col');
+    assert.equal(col.choices.length, 15);
+    assert.equal(col.required, true);
+    assert.ok(charCount(json) <= 520);
+  });
+
+  test('22. payload budgets, module and permission level of the two commands', () => {
     for (const [name, [mod, budget]] of Object.entries(mods)) {
       const json = buildCommandPayload(mod);
       assert.equal(json.name, name);
@@ -1413,7 +1453,7 @@ describe('payloads, exports and the plugin', () => {
 
   test('source checks: no lazy registration, no absolute 60/120 s limits, no console', async () => {
     const { readFileSync } = await import('node:fs');
-    const files = ['games', 'numguess', 'rps', 'scrabble-help', 'scrabble-play', 'scrabble', 'tictactoe']
+    const files = ['games', 'scrabble']
       .map((n) => `src/commands/games/${n}.js`)
       .concat(['src/services/scrabbleService.js', 'src/plugins/games-fixes.js']);
     for (const f of files) {
@@ -1421,8 +1461,6 @@ describe('payloads, exports and the plugin', () => {
       assert.doesNotMatch(text, /buttonHandlers/, `${f}: lazy handler registration`);
       assert.doesNotMatch(text, /\bconsole\./, `${f}: console`);
     }
-    for (const f of ['tictactoe', 'numguess']) {
-      assert.doesNotMatch(readFileSync(resolve(ROOT, `src/commands/games/${f}.js`), 'utf8'), /time: 60_000|time: 120_000/);
-    }
+    assert.doesNotMatch(readFileSync(resolve(ROOT, 'src/commands/games/games.js'), 'utf8'), /time: 60_000|time: 120_000/);
   });
 });

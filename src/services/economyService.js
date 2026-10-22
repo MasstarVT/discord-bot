@@ -1109,7 +1109,7 @@ export async function deleteItem(guildId, itemId) {
   return { copies: agg._sum.quantity ?? 0 };
 }
 
-// ── Boosts (managed by /economy-boost) ────────────────────────────────────────
+// ── Boosts (managed by /economy-admin boost) ──────────────────────────────────
 
 /** @returns {Promise<Array<object & { _count: { uses: number } }>>} every boost of the guild, oldest first */
 export async function listBoosts(guildId) {

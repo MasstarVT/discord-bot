@@ -99,13 +99,6 @@
     ]
   },
   {
-    "name": "anime",
-    "description": "Search AniList for an anime: score, episodes, status, genres.",
-    "module": "search",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
     "name": "antiraid",
     "description": "Raid protection: join floods, lockdowns and brand-new accounts.",
     "module": "antiraid",
@@ -314,6 +307,34 @@
     ]
   },
   {
+    "name": "autothread",
+    "description": "Start a thread on every message in a channel, and publish announcement posts.",
+    "module": "autothreads",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "add",
+        "description": "Start a thread on every member message in a channel."
+      },
+      {
+        "name": "remove",
+        "description": "Stop starting threads in a channel."
+      },
+      {
+        "name": "list",
+        "description": "Show the auto-thread and auto-publish channels."
+      },
+      {
+        "name": "publish add",
+        "description": "Publish every new post in an announcement channel."
+      },
+      {
+        "name": "publish remove",
+        "description": "Stop publishing posts in an announcement channel."
+      }
+    ]
+  },
+  {
     "name": "autotime",
     "description": "Answer times typed in chat (\"fri 5pm\") with a timestamp everyone sees in their own timezone.",
     "module": "autotime",
@@ -347,6 +368,42 @@
     "module": "translation",
     "who": "admins",
     "subcommands": []
+  },
+  {
+    "name": "backup",
+    "description": "Back up and restore roles, channels and permissions.",
+    "module": "backups",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "create",
+        "description": "Save the roles, channels and permissions now."
+      },
+      {
+        "name": "list",
+        "description": "Show the saved backups."
+      },
+      {
+        "name": "info",
+        "description": "Show what a backup holds."
+      },
+      {
+        "name": "export",
+        "description": "Download a backup as a JSON file."
+      },
+      {
+        "name": "status",
+        "description": "Show the schedule and any restore in progress."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a backup. Server owner only."
+      },
+      {
+        "name": "restore",
+        "description": "Rebuild roles and channels from a backup. Server owner only."
+      }
+    ]
   },
   {
     "name": "balance",
@@ -383,53 +440,45 @@
       {
         "name": "next",
         "description": "List the next 10 birthdays on this server (MEE6 /next-birthdays)."
-      }
-    ]
-  },
-  {
-    "name": "birthday-config",
-    "description": "Configure birthday announcements and the birthday role (MEE6 Birthdays).",
-    "module": "birthdays",
-    "who": "admins",
-    "subcommands": [
+      },
       {
-        "name": "channel",
+        "name": "config channel",
         "description": "Set the birthday announcement channel; leave empty to turn announcements off."
       },
       {
-        "name": "role",
+        "name": "config role",
         "description": "Set the role members get on their birthday; leave empty to turn it off."
       },
       {
-        "name": "hour",
+        "name": "config hour",
         "description": "Set the hour (server timezone) when birthdays are announced."
       },
       {
-        "name": "message",
+        "name": "config message",
         "description": "Set the message used when the age is unknown; leave empty for the default."
       },
       {
-        "name": "message-age",
+        "name": "config message-age",
         "description": "Set the message used when the age is known; leave empty for the default."
       },
       {
-        "name": "require-year",
+        "name": "config require-year",
         "description": "Require members to include their birth year."
       },
       {
-        "name": "set-user",
+        "name": "config set-user",
         "description": "Set a member's birthday (MEE6 /set-user-birthday)."
       },
       {
-        "name": "unset-user",
+        "name": "config unset-user",
         "description": "Remove a member's birthday (MEE6 /unset-user-birthday)."
       },
       {
-        "name": "show",
+        "name": "config show",
         "description": "Show the birthday settings and any problems."
       },
       {
-        "name": "test",
+        "name": "config test",
         "description": "Preview both birthday messages with you as the birthday member."
       }
     ]
@@ -440,6 +489,66 @@
     "module": "economy",
     "who": "everyone",
     "subcommands": []
+  },
+  {
+    "name": "boost",
+    "description": "Boosters can make a role of their own. Admins set it up.",
+    "module": "boosts",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "role create",
+        "description": "Make your booster role."
+      },
+      {
+        "name": "role edit",
+        "description": "Change your booster role."
+      },
+      {
+        "name": "role delete",
+        "description": "Delete your booster role."
+      },
+      {
+        "name": "config",
+        "description": "Show or change the boost settings."
+      },
+      {
+        "name": "test",
+        "description": "Post a preview of the thank-you."
+      },
+      {
+        "name": "list",
+        "description": "List the booster roles."
+      },
+      {
+        "name": "remove",
+        "description": "Delete a member's booster role."
+      }
+    ]
+  },
+  {
+    "name": "bumps",
+    "description": "Bump reminders and the bump leaderboard.",
+    "module": "bumps",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "status",
+        "description": "When the server can be bumped again."
+      },
+      {
+        "name": "leaderboard",
+        "description": "Who has bumped the server the most."
+      },
+      {
+        "name": "setup",
+        "description": "Set where and how to remind the server (no options: show them)."
+      },
+      {
+        "name": "reset",
+        "description": "Clear bump counts."
+      }
+    ]
   },
   {
     "name": "captcha",
@@ -495,7 +604,7 @@
   },
   {
     "name": "case",
-    "description": "View or edit a moderation case.",
+    "description": "View or edit a moderation case, or list or clear a member's infractions.",
     "module": "moderation",
     "who": "moderators",
     "subcommands": [
@@ -510,6 +619,50 @@
       {
         "name": "proof",
         "description": "Set a case's proof link."
+      },
+      {
+        "name": "history",
+        "description": "List a member's moderation cases (MEE6 /infractions)."
+      },
+      {
+        "name": "clear-history",
+        "description": "Pardon all of a member's active warnings (MEE6 /clear-all-infractions)."
+      }
+    ]
+  },
+  {
+    "name": "confession",
+    "description": "Post an anonymous confession, or manage confessions.",
+    "module": "confessions",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "submit",
+        "description": "Post a confession. Leave the text empty to write it in a form."
+      },
+      {
+        "name": "panel",
+        "description": "Post a message with a Confess button."
+      },
+      {
+        "name": "delete",
+        "description": "Delete a confession and its post."
+      },
+      {
+        "name": "block",
+        "description": "Stop the author of a confession from confessing. You will not see who."
+      },
+      {
+        "name": "unblock",
+        "description": "Let the author of a confession confess again."
+      },
+      {
+        "name": "reveal",
+        "description": "Show who wrote a confession. Written to the moderation log."
+      },
+      {
+        "name": "setup",
+        "description": "Set the confession and review channels (no options: show them)."
       }
     ]
   },
@@ -537,13 +690,6 @@
     "name": "daily",
     "description": "Claim your daily coins; claim on consecutive days for a streak bonus (MEE6 /daily).",
     "module": "economy",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
-    "name": "detectlanguage",
-    "description": "Detect the language of a piece of text.",
-    "module": null,
     "who": "everyone",
     "subcommands": []
   },
@@ -614,32 +760,24 @@
         "description": "Show the current economy settings"
       },
       {
-        "name": "reset",
-        "description": "Reset coins and/or items for everyone or one member"
-      }
-    ]
-  },
-  {
-    "name": "economy-boost",
-    "description": "Manage coin boosts for /daily and /work (MEE6 boosts, up to 10).",
-    "module": "economy",
-    "who": "admins",
-    "subcommands": [
-      {
-        "name": "add",
+        "name": "boost add",
         "description": "Create a coin boost"
       },
       {
-        "name": "remove",
+        "name": "boost remove",
         "description": "Delete a boost"
       },
       {
-        "name": "toggle",
+        "name": "boost toggle",
         "description": "Turn a boost on or off"
       },
       {
-        "name": "list",
+        "name": "boost list",
         "description": "List the boosts"
+      },
+      {
+        "name": "reset",
+        "description": "Reset coins and/or items for everyone or one member"
       }
     ]
   },
@@ -841,10 +979,27 @@
   },
   {
     "name": "games",
-    "description": "Browse all games available to play.",
+    "description": "Browse the games, or play Rock Paper Scissors, a number guess or Tic-Tac-Toe.",
     "module": "games",
     "who": "everyone",
-    "subcommands": []
+    "subcommands": [
+      {
+        "name": "list",
+        "description": "Browse all games available to play."
+      },
+      {
+        "name": "rps",
+        "description": "Play Rock, Paper, Scissors against the bot!"
+      },
+      {
+        "name": "numguess",
+        "description": "Guess the bot's number (1–100) in 7 tries!"
+      },
+      {
+        "name": "tictactoe",
+        "description": "Challenge another player to Tic-Tac-Toe!"
+      }
+    ]
   },
   {
     "name": "giveaway",
@@ -891,63 +1046,11 @@
     ]
   },
   {
-    "name": "goodbye",
-    "description": "Goodbye message when a member leaves (MEE6 Goodbye message).",
-    "module": "welcome",
-    "who": "admins",
-    "subcommands": [
-      {
-        "name": "enable",
-        "description": "Post a goodbye message when members leave."
-      },
-      {
-        "name": "disable",
-        "description": "Stop goodbye messages."
-      },
-      {
-        "name": "channel",
-        "description": "Set the goodbye channel."
-      },
-      {
-        "name": "message",
-        "description": "Set the goodbye text (mentions do not ping)."
-      },
-      {
-        "name": "embed",
-        "description": "Send the goodbye as text or as an embed."
-      },
-      {
-        "name": "setup",
-        "description": "Edit the goodbye text and embed in a form."
-      },
-      {
-        "name": "test",
-        "description": "Preview the goodbye message here."
-      }
-    ]
-  },
-  {
     "name": "help",
     "description": "Show the commands you can use here.",
     "module": null,
     "who": "everyone",
     "subcommands": []
-  },
-  {
-    "name": "history",
-    "description": "View or clear a member's infractions (MEE6 /infractions, /clear-all-infractions).",
-    "module": "moderation",
-    "who": "moderators",
-    "subcommands": [
-      {
-        "name": "view",
-        "description": "List a member's moderation cases (MEE6 /infractions)."
-      },
-      {
-        "name": "clear",
-        "description": "Pardon all of a member's active warnings (MEE6 /clear-all-infractions)."
-      }
-    ]
   },
   {
     "name": "info",
@@ -1005,13 +1108,6 @@
     "description": "Kick a member from the server (MEE6 /kick).",
     "module": "moderation",
     "who": "moderators",
-    "subcommands": []
-  },
-  {
-    "name": "languages",
-    "description": "List all supported translation language codes.",
-    "module": null,
-    "who": "everyone",
     "subcommands": []
   },
   {
@@ -1110,6 +1206,26 @@
       {
         "name": "boost list",
         "description": "List the XP boost roles."
+      },
+      {
+        "name": "xp give",
+        "description": "Give XP to a member, or to every member of a role."
+      },
+      {
+        "name": "xp remove",
+        "description": "Remove XP from a member."
+      },
+      {
+        "name": "xp set",
+        "description": "Set a member's total XP."
+      },
+      {
+        "name": "xp reset",
+        "description": "Reset a member's XP and level to zero."
+      },
+      {
+        "name": "xp view",
+        "description": "View a member's XP data."
       }
     ]
   },
@@ -1184,13 +1300,6 @@
         "description": "List ignored channels."
       }
     ]
-  },
-  {
-    "name": "manga",
-    "description": "Search AniList for a manga: score, chapters, status, genres.",
-    "module": "search",
-    "who": "everyone",
-    "subcommands": []
   },
   {
     "name": "modconfig",
@@ -1309,13 +1418,6 @@
     ]
   },
   {
-    "name": "numguess",
-    "description": "Guess the bot's number (1–100) in 7 tries!",
-    "module": "games",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
     "name": "owner",
     "description": "Show who owns this bot.",
     "module": null,
@@ -1333,13 +1435,6 @@
     "name": "pity",
     "description": "Get 500 coins when your balance is below 100 (12-hour cooldown).",
     "module": "economy",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
-    "name": "pokemon",
-    "description": "Look up a Pokémon on PokeAPI: types, abilities, stats.",
-    "module": "search",
     "who": "everyone",
     "subcommands": []
   },
@@ -1504,32 +1599,15 @@
     "subcommands": []
   },
   {
-    "name": "rps",
-    "description": "Play Rock, Paper, Scissors against the bot!",
-    "module": "games",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
     "name": "scrabble",
-    "description": "Challenge another player to a game of Scrabble!",
-    "module": "games",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
-    "name": "scrabble-help",
-    "description": "Learn how to play Scrabble and use its commands.",
-    "module": "games",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
-    "name": "scrabble-play",
-    "description": "Scrabble move: word, pass, exchange or resign",
+    "description": "Play Scrabble: challenge a player, place words, pass, exchange tiles or resign.",
     "module": "games",
     "who": "everyone",
     "subcommands": [
+      {
+        "name": "start",
+        "description": "Challenge another player to a game of Scrabble!"
+      },
       {
         "name": "word",
         "description": "Place a word"
@@ -1545,12 +1623,40 @@
       {
         "name": "resign",
         "description": "Forfeit the game"
+      },
+      {
+        "name": "help",
+        "description": "Learn how to play Scrabble and use its commands."
+      }
+    ]
+  },
+  {
+    "name": "search",
+    "description": "Look up an anime, manga, Pokémon or Urban Dictionary entry.",
+    "module": "search",
+    "who": "everyone",
+    "subcommands": [
+      {
+        "name": "anime",
+        "description": "Search AniList for an anime: score, episodes, status, genres."
+      },
+      {
+        "name": "manga",
+        "description": "Search AniList for a manga: score, chapters, status, genres."
+      },
+      {
+        "name": "pokemon",
+        "description": "Look up a Pokémon on PokeAPI: types, abilities, stats."
+      },
+      {
+        "name": "urban",
+        "description": "Look up a word or phrase on Urban Dictionary."
       }
     ]
   },
   {
     "name": "settings",
-    "description": "Server settings: timezone, timezone roles, embed colour, custom-command prefix, /urban.",
+    "description": "Server settings: timezone, timezone roles, embed colour, custom-command prefix, /search urban.",
     "module": null,
     "who": "admins",
     "subcommands": [
@@ -1572,7 +1678,7 @@
       },
       {
         "name": "urban",
-        "description": "Choose where /urban (Urban Dictionary) may be used."
+        "description": "Choose where /search urban (Urban Dictionary) may be used."
       },
       {
         "name": "timezone-role add",
@@ -1818,6 +1924,38 @@
       {
         "name": "response remove",
         "description": "Remove a random reply (admin)."
+      },
+      {
+        "name": "trigger enable",
+        "description": "Turn on custom commands and triggers."
+      },
+      {
+        "name": "trigger disable",
+        "description": "Turn off triggers; /tag keeps working."
+      },
+      {
+        "name": "trigger add",
+        "description": "Add a trigger."
+      },
+      {
+        "name": "trigger edit",
+        "description": "Change a trigger."
+      },
+      {
+        "name": "trigger remove",
+        "description": "Delete a trigger."
+      },
+      {
+        "name": "trigger toggle",
+        "description": "Pause or resume a trigger."
+      },
+      {
+        "name": "trigger info",
+        "description": "Show a trigger's details."
+      },
+      {
+        "name": "trigger list",
+        "description": "List triggers with their numbers and IDs."
       }
     ]
   },
@@ -1926,13 +2064,6 @@
     ]
   },
   {
-    "name": "tictactoe",
-    "description": "Challenge another player to Tic-Tac-Toe!",
-    "module": "games",
-    "who": "everyone",
-    "subcommands": []
-  },
-  {
     "name": "timeout",
     "description": "Time out a member; over 28 days uses the mute role (MEE6 /mute, /tempmute).",
     "module": "moderation",
@@ -1968,48 +2099,21 @@
   },
   {
     "name": "translate",
-    "description": "Translate text into another language.",
+    "description": "Translate text, detect its language or list the supported languages.",
     "module": null,
     "who": "everyone",
-    "subcommands": []
-  },
-  {
-    "name": "trigger",
-    "description": "Auto-responders for matching messages (custom commands).",
-    "module": "customcommands",
-    "who": "admins",
     "subcommands": [
       {
-        "name": "enable",
-        "description": "Turn on custom commands and triggers."
+        "name": "text",
+        "description": "Translate text into another language."
       },
       {
-        "name": "disable",
-        "description": "Turn off triggers; /tag keeps working."
+        "name": "detect",
+        "description": "Detect the language of a piece of text."
       },
       {
-        "name": "add",
-        "description": "Add a trigger."
-      },
-      {
-        "name": "edit",
-        "description": "Change a trigger."
-      },
-      {
-        "name": "remove",
-        "description": "Delete a trigger."
-      },
-      {
-        "name": "toggle",
-        "description": "Pause or resume a trigger."
-      },
-      {
-        "name": "info",
-        "description": "Show a trigger's details."
-      },
-      {
-        "name": "list",
-        "description": "List triggers with their numbers and IDs."
+        "name": "languages",
+        "description": "List all supported translation language codes."
       }
     ]
   },
@@ -2025,13 +2129,6 @@
     "description": "Remove a member's timeout or mute role (MEE6 /unmute).",
     "module": "moderation",
     "who": "moderators",
-    "subcommands": []
-  },
-  {
-    "name": "urban",
-    "description": "Look up a word or phrase on Urban Dictionary.",
-    "module": "search",
-    "who": "everyone",
     "subcommands": []
   },
   {
@@ -2138,6 +2235,38 @@
     ]
   },
   {
+    "name": "voicerole",
+    "description": "Give members a role while they are in a voice channel.",
+    "module": "voiceroles",
+    "who": "admins",
+    "subcommands": [
+      {
+        "name": "add",
+        "description": "Give a role to members in a voice channel or category."
+      },
+      {
+        "name": "remove",
+        "description": "Stop giving a role to a voice channel or category."
+      },
+      {
+        "name": "any add",
+        "description": "Give a role to members in any voice channel."
+      },
+      {
+        "name": "any remove",
+        "description": "Stop giving a role in every voice channel."
+      },
+      {
+        "name": "list",
+        "description": "Show the voice roles and any problems."
+      },
+      {
+        "name": "sync",
+        "description": "Fix the roles of everyone now."
+      }
+    ]
+  },
+  {
     "name": "warn",
     "description": "Warn a member; warnings can trigger automatic actions (MEE6 /warn).",
     "module": "moderation",
@@ -2146,7 +2275,7 @@
   },
   {
     "name": "welcome",
-    "description": "Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye).",
+    "description": "Welcome & Goodbye: join message, card, DM, autoroles and goodbye (MEE6 Welcome & Goodbye).",
     "module": "welcome",
     "who": "admins",
     "subcommands": [
@@ -2221,6 +2350,34 @@
       {
         "name": "autorole list",
         "description": "List the autoroles and the delay."
+      },
+      {
+        "name": "goodbye enable",
+        "description": "Post a goodbye message when members leave."
+      },
+      {
+        "name": "goodbye disable",
+        "description": "Stop goodbye messages."
+      },
+      {
+        "name": "goodbye channel",
+        "description": "Set the goodbye channel."
+      },
+      {
+        "name": "goodbye message",
+        "description": "Set the goodbye text (mentions do not ping)."
+      },
+      {
+        "name": "goodbye embed",
+        "description": "Send the goodbye as text or as an embed."
+      },
+      {
+        "name": "goodbye setup",
+        "description": "Edit the goodbye text and embed in a form."
+      },
+      {
+        "name": "goodbye test",
+        "description": "Preview the goodbye message here."
       }
     ]
   },
@@ -2230,33 +2387,5 @@
     "module": "economy",
     "who": "everyone",
     "subcommands": []
-  },
-  {
-    "name": "xp",
-    "description": "Manage member XP (MEE6 /give-xp, /remove-xp).",
-    "module": "leveling",
-    "who": "admins",
-    "subcommands": [
-      {
-        "name": "give",
-        "description": "Give XP to a member, or to every member of a role."
-      },
-      {
-        "name": "remove",
-        "description": "Remove XP from a member."
-      },
-      {
-        "name": "set",
-        "description": "Set a member's total XP."
-      },
-      {
-        "name": "reset",
-        "description": "Reset a member's XP and level to zero."
-      },
-      {
-        "name": "view",
-        "description": "View a member's XP data."
-      }
-    ]
   }
 ]

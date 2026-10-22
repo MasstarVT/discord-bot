@@ -31,7 +31,7 @@ export const VOICE_KEY_TTL_SECONDS = 93_600; // 26 h: outlives the 24 h segment 
 export const VOICE_SEGMENT_CAP_MINUTES = 1_440; // a single unpaid stretch credits at most 24 h (R194)
 export const VOICE_CHECKPOINT_MS = 10 * 60_000; // pay out and rotate a session at most every 10 minutes
 export const VOICE_CHANNEL_SCAN_CAP = 50; // other members re-evaluated per channel per event
-export const ROLE_GIVE_MAX_MEMBERS = 5_000; // /xp give target:@Role
+export const ROLE_GIVE_MAX_MEMBERS = 5_000; // /levelconfig xp give target:@Role
 export const BULK_SYNC_MAX_MEMBERS = 5_000; // role add backfill / role sync
 export const BULK_SQL_CHUNK = 500;
 export const LEADERBOARD_MAX_ROWS = 200; // 20 pages x 10
@@ -373,7 +373,7 @@ export function buildLevelUpPayload({ template, useEmbed, member, user, guild, c
 }
 
 /**
- * The single tie rule shared by `{rank}`, /rank, /xp view and the leaderboard (which orders by xp desc, userId asc).
+ * The single tie rule shared by `{rank}`, /rank, /levelconfig xp view and the leaderboard (which orders by xp desc, userId asc).
  * @returns {object} a Prisma `where` for the rows ranked ahead of this member
  */
 export function rankWhere(guildId, userId, xp) {

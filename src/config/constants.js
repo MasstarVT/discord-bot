@@ -55,6 +55,18 @@ export const LIMITS = Object.freeze({
   AFK_IGNORED_CHANNELS: 100,   // GuildSettings.afkIgnoredChannelIds
   EVENTS_ACTIVE: 25,           // SCHEDULED or ACTIVE GuildEvent rows per guild
   ROLEPERSIST_IGNORED_ROLES: 50, // GuildSettings.rolePersistIgnoredRoleIds
+  BOOSTER_ROLE_NAME: 50,       // BoosterRole names (/boost role)
+  BOOSTER_ROLE_ICON_BYTES: 256000, // image uploaded as a booster role icon (Discord's cap)
+  BACKUPS_MANUAL: 10,          // ServerBackup rows made by members, per guild
+  BACKUPS_AUTO_KEEP: 25,       // most automatic backups kept (GuildSettings.backupKeep)
+  BACKUP_BYTES: 2000000,       // ServerBackup.data, serialised
+  CONFESSION_LENGTH: 2000,     // Confession.content
+  CONFESSION_IMAGE_BYTES: 8000000, // image attached to a confession
+  CONFESSION_BLOCKED_USERS: 500, // GuildSettings.confessionBlockedUserIds
+  AUTOTHREAD_CHANNELS: 25,     // GuildSettings.autoThreadChannels
+  AUTOPUBLISH_CHANNELS: 25,    // GuildSettings.autoPublishChannelIds
+  VOICE_ROLE_LINKS: 50,        // GuildSettings.voiceRoleLinks
+  VOICE_ROLE_ANY: 5,           // GuildSettings.voiceRoleAnyRoleIds
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────
@@ -96,6 +108,12 @@ export const DEFAULT_MODULE_SETTINGS = Object.freeze({
   antiraid: false,
   events: false,
   rolepersist: false,
+  boosts: false,
+  backups: false,
+  confessions: false,
+  autothreads: false,
+  voiceroles: false,
+  bumps: false,
 });
 
 export const XP_DEFAULTS = {

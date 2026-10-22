@@ -1,4 +1,4 @@
-// Descriptor of the `economyBoosts` collection: coin boosts for /daily and /work (/economy-boost add|remove|toggle).
+// Descriptor of the `economyBoosts` collection: coin boosts for /daily and /work (/economy-admin boost add|remove|toggle).
 // Pure: constants only; the limits that live in economyService.js are copied here and test/dashboard-collections-more.test.js
 // fails when they drift apart.
 import { LIMITS } from '../../config/constants.js';

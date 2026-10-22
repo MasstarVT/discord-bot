@@ -579,14 +579,14 @@ test('DB: /settings writes through settingsService, answers No Change without wr
     // Urban: relax, No Change, restrict again.
     out = await run({ sub: 'urban', booleans: { 'nsfw-only': false } });
     assert.ok(titleOf(out).includes('Urban Dictionary'));
-    assert.equal(embedOf(out).description, '/urban now works in every channel.');
+    assert.equal(embedOf(out).description, '/search urban now works in every channel.');
     assert.equal((await stamp()).urbanNsfwOnly, false);
     out = await run({ sub: 'urban', booleans: { 'nsfw-only': false } });
     assert.ok(titleOf(out).includes('No Change'));
     out = await run({ sub: 'show' });
     assert.ok(field(embedOf(out), 'Search').value.includes('everywhere'));
     out = await run({ sub: 'urban', booleans: { 'nsfw-only': true } });
-    assert.equal(embedOf(out).description, '/urban now only works in age-restricted channels.');
+    assert.equal(embedOf(out).description, '/search urban now only works in age-restricted channels.');
     assert.equal((await stamp()).urbanNsfwOnly, true);
     await updateSettings(GID, { searchEnabled: false });
     out = await run({ sub: 'urban', booleans: { 'nsfw-only': false } });

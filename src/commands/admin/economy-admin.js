@@ -1,5 +1,6 @@
 // /economy-admin (pkg-economy §5.13, MEE6 economy admin): coins (give / remove / set), shop items (create / edit / delete /
-// give / remove / list), settings (currency, daily, work, limits, casino channels, show) and reset. This file is thin:
+// give / remove / list), settings (currency, daily, work, limits, casino channels, show), coin boosts (add / remove / toggle /
+// list) and reset. This file is thin:
 // option parsing, validation and replies. Every data access goes through economyService.js (accounts, items, inventories,
 // reset) or settingsService.js (GuildSettings); nothing here touches Prisma or Redis.
 //
@@ -7,6 +8,11 @@
 // (replyFail, which swaps the public deferral for a private follow-up). Every subcommand defers before any database
 // access: publicly, except `item delete` and `reset`, which defer ephemerally, ask for confirmation in that private
 // message and post their result with followUp.
+//
+// `boost add | remove | toggle | list` (pkg-economy.md amendments item 5, MEE6 Economy > Boosts): a boost multiplies ONE
+// /daily or /work payout by (100 + percent) % for a member who holds its role (or for everyone). The period says how often a
+// member may use it: one-time (once ever), daily, weekly or monthly (guild timezone). At most LIMITS.ECONOMY_BOOSTS per server.
+// Rewards, /pay, casino winnings and admin grants are never boosted. Replies are public; validation errors are private.
 //
 // `config channels` (casino game channel list), options `action` (add / remove / clear / list), `channel` and `mode`:
 //  - `mode` (allow / deny) can be combined with ANY action, `list` included. When given, it sets
@@ -22,11 +28,12 @@ import { ChannelType, PermissionFlagsBits, SlashCommandBuilder, escapeMarkdown }
 import { COIN_MAX, LIMITS, PERMISSION_LEVELS } from '../../config/constants.js';
 import { isModuleEnabled } from '../../config/modules.js';
 import {
-  EconomyError, GAME_CHANNELS_MAX, ITEM_DESCRIPTION_MAX, ITEM_IMAGE_MAX, ITEM_MESSAGE_MAX, ITEM_NAME_MAX, ITEM_TYPE_LABELS,
-  MAX_STOCK, PITY_AMOUNT, PITY_THRESHOLD, RANGE_MAX, WORK_COOLDOWN_MAX_MINUTES,
-  clampBalancesToCap, countItems, credit, deleteItem, economyConfig, effectiveMaxOwned, findItemByNameInsensitive,
-  formatCoins, giveItem, itemLabel, listItems, removeCoins, replyFail, resetEconomy, resolveItem, searchItems, setBalance,
-  streakMultiplierLabel, takeItem, createItem, updateItem, validateCurrencyEmoji, validateCurrencyName, validateItemName,
+  BOOST_PERCENT_MAX, BOOST_PERIOD_LABELS, EconomyError, GAME_CHANNELS_MAX, ITEM_DESCRIPTION_MAX, ITEM_IMAGE_MAX, ITEM_MESSAGE_MAX,
+  ITEM_NAME_MAX, ITEM_TYPE_LABELS, MAX_STOCK, PITY_AMOUNT, PITY_THRESHOLD, RANGE_MAX, WORK_COOLDOWN_MAX_MINUTES,
+  clampBalancesToCap, countItems, createBoost, credit, deleteBoost, deleteItem, economyConfig, effectiveMaxOwned,
+  findItemByNameInsensitive, formatCoins, giveItem, itemLabel, listBoosts, listItems, removeCoins, replyFail, resetEconomy,
+  resolveBoost, resolveItem, searchBoosts, searchItems, setBalance, setBoostEnabled, streakMultiplierLabel, takeItem, createItem,
+  updateItem, validateBoostName, validateCurrencyEmoji, validateCurrencyName, validateItemName,
 } from '../../services/economyService.js';
 import { getSettings, updateSettings, updateSettingsWith } from '../../services/settingsService.js';
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
@@ -44,10 +51,11 @@ export const permissionLevel = PERMISSION_LEVELS.ADMIN;
 // No allowInDMs export: buildCommandPayload registers the command for servers only.
 
 // ── Builder ───────────────────────────────────────────────────────────────────
-// The payload budget is tight (3400 of Discord's 4000 characters): keep every description short.
+// The payload budget is tight (about 3800 of Discord's 4000 characters): keep every description short.
 
 const member = (d) => (o) => o.setName('member').setDescription(d).setRequired(true);
 const itemOpt = (o) => o.setName('item').setDescription('Shop item').setRequired(true).setAutocomplete(true).setMaxLength(100);
+const boostName = (o) => o.setName('name').setDescription('Boost name').setRequired(true).setAutocomplete(true).setMaxLength(32);
 const qty = (o) => o.setName('quantity').setDescription('How many copies (default 1)').setMinValue(1).setMaxValue(LIMITS.ITEM_COPIES_PER_USER);
 const TYPE_CHOICES = [
   { name: 'Static (collectible)', value: 'STATIC' },
@@ -132,6 +140,16 @@ export const data = new SlashCommandBuilder()
       .addStringOption((o) => o.setName('mode').setDescription('allow: only listed channels; deny: all except listed').addChoices(
         { name: 'allow', value: 'allow' }, { name: 'deny', value: 'deny' })))
     .addSubcommand((s) => s.setName('show').setDescription('Show the current economy settings')))
+  .addSubcommandGroup((g) => g.setName('boost').setDescription('Coin boosts for /daily and /work (MEE6 boosts, up to 10).')
+    .addSubcommand((s) => s.setName('add').setDescription('Create a coin boost')
+      .addStringOption((o) => o.setName('name').setDescription('Boost name (unique)').setRequired(true).setMaxLength(32))
+      .addIntegerOption((o) => o.setName('percent').setDescription('Extra coins in percent (1-500)').setRequired(true).setMinValue(1).setMaxValue(BOOST_PERCENT_MAX))
+      .addStringOption((o) => o.setName('period').setDescription('How often a member can use it').setRequired(true).addChoices(
+        { name: 'One-time', value: 'one-time' }, { name: 'Daily', value: 'daily' }, { name: 'Weekly', value: 'weekly' }, { name: 'Monthly', value: 'monthly' }))
+      .addRoleOption((o) => o.setName('role').setDescription('Only members with this role (default: everyone)')))
+    .addSubcommand((s) => s.setName('remove').setDescription('Delete a boost').addStringOption(boostName))
+    .addSubcommand((s) => s.setName('toggle').setDescription('Turn a boost on or off').addStringOption(boostName))
+    .addSubcommand((s) => s.setName('list').setDescription('List the boosts')))
   .addSubcommand((s) => s.setName('reset').setDescription('Reset coins and/or items for everyone or one member')
     .addStringOption((o) => o.setName('what').setDescription('What to reset').setRequired(true).addChoices(
       { name: 'Coins', value: 'coins' }, { name: 'Items', value: 'items' }, { name: 'Coins and items', value: 'all' }))
@@ -667,6 +685,81 @@ async function configShow(interaction, settings) {
   return interaction.editReply({ embeds: [embed] });
 }
 
+// ── boost ─────────────────────────────────────────────────────────────────────
+
+const BOOST_PER_PAGE = 10;
+const PERIOD_CHOICES = Object.freeze({ 'one-time': 'ONE_TIME', daily: 'DAILY', weekly: 'WEEKLY', monthly: 'MONTHLY' });
+const PERIOD_TEXT = Object.freeze({
+  ONE_TIME: 'once per member, ever',
+  DAILY: 'once per member per day',
+  WEEKLY: 'once per member per week',
+  MONTHLY: 'once per member per month',
+});
+
+const boostLabel = (b) => `**${clampText(escapeMarkdown(b.name), 40)}**`;
+const boostTarget = (b) => (b.roleId ? `<@&${b.roleId}>` : 'everyone');
+
+async function boostAdd(interaction, settings) {
+  const checked = validateBoostName(interaction.options.getString('name', true));
+  if (!checked.ok) return replyFail(interaction, 'Invalid Name', checked.reason);
+  const period = PERIOD_CHOICES[interaction.options.getString('period', true)];
+  const role = interaction.options.getRole('role');
+  const roleId = role && role.id !== interaction.guildId ? role.id : null; // @everyone means "everyone"
+  const percent = interaction.options.getInteger('percent', true);
+
+  let boost;
+  try {
+    boost = await createBoost(interaction.guildId, { name: checked.value, percent, period, roleId, createdBy: interaction.user.id });
+  } catch (err) {
+    if (err instanceof EconomyError && err.code === 'INVALID') {
+      if (err.data.reason === 'limit') return replyFail(interaction, 'Too Many Boosts', `This server already has ${LIMITS.ECONOMY_BOOSTS} boosts (the maximum).`);
+      if (err.data.reason === 'name-taken') return replyFail(interaction, 'Name Taken', `A boost named ${boostLabel({ name: checked.value })} already exists.`);
+    }
+    throw err;
+  }
+  logger.info(`Economy boost "${boost.name}" +${percent}% (${period}) created in ${interaction.guildId} by ${interaction.user.id}`);
+  return interaction.editReply({
+    embeds: [successEmbed('Boost Added',
+      `${boostLabel(boost)} gives ${boostTarget(boost)} **+${boost.percent}%** on one /daily or /work payout, ${PERIOD_TEXT[boost.period]}.`,
+      `${settings.economyEnabled ? '' : 'The economy module is off right now. '}Only the highest unused boost applies to a payout.`)],
+  });
+}
+
+async function boostRemove(interaction) {
+  const value = interaction.options.getString('name', true);
+  const boost = await resolveBoost(interaction.guildId, value);
+  if (!boost || !(await deleteBoost(interaction.guildId, boost.id))) {
+    return replyFail(interaction, 'Boost Not Found', `No boost called **${clampText(escapeMarkdown(value), 40)}** exists.`);
+  }
+  logger.info(`Economy boost "${boost.name}" deleted in ${interaction.guildId} by ${interaction.user.id}`);
+  return interaction.editReply({ embeds: [successEmbed('Boost Removed', `${boostLabel(boost)} was deleted.`)] });
+}
+
+async function boostToggle(interaction) {
+  const value = interaction.options.getString('name', true);
+  const boost = await resolveBoost(interaction.guildId, value);
+  const updated = boost ? await setBoostEnabled(interaction.guildId, boost.id, !boost.enabled) : null;
+  if (!updated) return replyFail(interaction, 'Boost Not Found', `No boost called **${clampText(escapeMarkdown(value), 40)}** exists.`);
+  return interaction.editReply({
+    embeds: [successEmbed(updated.enabled ? 'Boost Enabled' : 'Boost Disabled', `${boostLabel(updated)} is now ${updated.enabled ? 'on' : 'off'}.`)],
+  });
+}
+
+async function boostList(interaction, settings) {
+  const boosts = await listBoosts(interaction.guildId);
+  if (boosts.length === 0) {
+    return interaction.editReply({ embeds: [guildEmbed(settings, '🚀 Coin Boosts', 'No boosts yet. Create one with `/economy-admin boost add`.')] });
+  }
+  const lines = boosts.map((b) =>
+    `${boostLabel(b)} · +${b.percent}% · ${BOOST_PERIOD_LABELS[b.period]} · ${boostTarget(b)} · ${b.enabled ? '✅ on' : '⛔ off'} · ${formatNumber(b._count.uses)} use${b._count.uses === 1 ? '' : 's'}`);
+  const footer = `${boosts.length}/${LIMITS.ECONOMY_BOOSTS} boosts`;
+  const pages = [];
+  for (let i = 0; i < lines.length; i += BOOST_PER_PAGE) {
+    pages.push(guildEmbed(settings, '🚀 Coin Boosts', lines.slice(i, i + BOOST_PER_PAGE).join('\n'), footer));
+  }
+  return paginate(interaction, pages, { footer: 'append' });
+}
+
 // ── reset ─────────────────────────────────────────────────────────────────────
 
 async function reset(interaction, settings) {
@@ -722,6 +815,10 @@ const HANDLERS = {
   'config limits': configLimits,
   'config channels': configChannels,
   'config show': configShow,
+  'boost add': boostAdd,
+  'boost remove': boostRemove,
+  'boost toggle': boostToggle,
+  'boost list': boostList,
   reset,
 };
 /** These two confirm privately and post the result with followUp; every other subcommand answers publicly. */
@@ -755,7 +852,25 @@ export async function execute(interaction) {
 
 // ── Autocomplete ──────────────────────────────────────────────────────────────
 
+/** `boost remove | toggle`: the boost names. */
+async function boostAutocomplete(interaction) {
+  try {
+    const rows = await withTimeout(
+      searchBoosts(interaction.guildId, String(interaction.options.getFocused() ?? '')),
+      ackBudgetMs(interaction), 'economy-admin boost autocomplete',
+    );
+    await respondAutocomplete(interaction, rows.map((row) => ({
+      name: `${row.name} (+${row.percent}%)${row.enabled ? '' : ' (off)'}`,
+      value: row.id,
+    })));
+  } catch (err) {
+    logger.debug(`economy-admin boost autocomplete failed: ${err?.message}`);
+    await respondAutocomplete(interaction, []);
+  }
+}
+
 export async function autocomplete(interaction) {
+  if (interaction.options.getSubcommandGroup(false) === 'boost') return boostAutocomplete(interaction);
   try {
     const focused = interaction.options.getFocused(true);
     if (focused.name !== 'item' || !interaction.guildId) return respondAutocomplete(interaction, []);

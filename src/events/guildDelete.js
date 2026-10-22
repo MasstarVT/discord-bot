@@ -23,8 +23,9 @@ export async function execute(guild, client) {
 
   try {
     // Recurring jobs (stats, birthdays, feeds, reminders, voice sweeps) would stay PENDING forever;
-    // the guildReady hooks re-seed them after a re-invite. One-off jobs are kept.
-    await cancelJobs({ guildId: guild.id, types: RECURRING_JOB_TYPES });
+    // the guildReady hooks re-seed them after a re-invite. One-off jobs are kept, except a running server-backup
+    // restore: it must not resume on its own long after a re-invite.
+    await cancelJobs({ guildId: guild.id, types: [...RECURRING_JOB_TYPES, 'backup.restore'] });
   } catch (err) {
     logger.error(`guildDelete: could not cancel recurring jobs of guild ${guild.id}`, err instanceof Error ? err : new Error(String(err)));
   }

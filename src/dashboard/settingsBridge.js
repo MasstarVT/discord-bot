@@ -128,7 +128,7 @@ async function refreshCaptchaPanel(guildId, row, discord) {
  *   - voice XP or the Levels module switched off: open voice sessions are dropped without credit (/levelconfig);
  *   - the captcha kick timer set to 0: the scheduled kicks are cancelled (/captcha timeout);
  *   - the panel message or Verify button changed: the posted panel is edited (/captcha message);
- *   - birthday channel, role or hour changed: the birthday job is rescheduled (/birthday-config);
+ *   - birthday channel, role or hour changed: the birthday job is rescheduled (/birthday config);
  *   - the maximum balance lowered: balances above it are lowered (/economy-admin config limits);
  *   - a new moderation log channel: a confirmation is posted there (/modconfig logchannel);
  *   - Auto-Moderation switched on: the stored config is rewritten in the current format (/automod enable);

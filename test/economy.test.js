@@ -40,7 +40,7 @@ const cmd = {};
 for (const [key, file] of Object.entries({
   balance: 'economy/balance.js', daily: 'economy/daily.js', pity: 'economy/pity.js', work: 'economy/work.js', pay: 'economy/pay.js',
   richest: 'economy/richest.js', shop: 'economy/shop.js', inventory: 'economy/inventory.js', use: 'economy/use.js',
-  admin: 'admin/economy-admin.js', boost: 'admin/economy-boost.js',
+  admin: 'admin/economy-admin.js',
 })) cmd[key] = await import(`../src/commands/${file}`);
 
 const {
@@ -284,7 +284,7 @@ function charCount(node) {
 }
 
 test('command modules: exports, permission levels and payload budgets (item 24)', () => {
-  const budgets = { balance: 110, daily: 90, pity: 90, work: 70, pay: 150, richest: 70, shop: 400, inventory: 110, use: 120, admin: 3450, boost: 650 };
+  const budgets = { balance: 110, daily: 90, pity: 90, work: 70, pay: 150, richest: 70, shop: 400, inventory: 110, use: 120, admin: 3800 };
   for (const [key, budget] of Object.entries(budgets)) {
     const mod = cmd[key];
     assert.equal(mod.module, 'economy', key);
@@ -292,7 +292,7 @@ test('command modules: exports, permission levels and payload budgets (item 24)'
     const json = buildCommandPayload(mod);
     assert.ok(charCount(json) <= budget, `${key}: ${charCount(json)} > ${budget}`);
     assert.deepEqual(json.contexts, [0], key);
-    if (key === 'admin' || key === 'boost') {
+    if (key === 'admin') {
       assert.equal(mod.gated, false, key);
       assert.equal(mod.permissionLevel, PERMISSION_LEVELS.ADMIN, key);
       assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ManageGuild), key);
@@ -303,14 +303,16 @@ test('command modules: exports, permission levels and payload budgets (item 24)'
     const hasAutocomplete = JSON.stringify(json).includes('"autocomplete":true');
     assert.equal(hasAutocomplete, typeof mod.autocomplete === 'function', `${key} autocomplete wiring`);
   }
-  assert.equal(buildCommandPayload(cmd.boost).options.length, 4);
-  assert.deepEqual(buildCommandPayload(cmd.boost).options.find((o) => o.name === 'add').options.map((o) => o.name), ['name', 'percent', 'period', 'role']);
+  const boost = buildCommandPayload(cmd.admin).options.find((o) => o.name === 'boost');
+  assert.equal(boost.type, 2);
+  assert.deepEqual(boost.options.map((o) => o.name), ['add', 'remove', 'toggle', 'list']);
+  assert.deepEqual(boost.options.find((o) => o.name === 'add').options.map((o) => o.name), ['name', 'percent', 'period', 'role']);
 });
 
 test('/economy-admin builder: option layout and the amendment options', () => {
   const json = buildCommandPayload(cmd.admin);
   const groups = Object.fromEntries(json.options.filter((o) => o.type === 2).map((g) => [g.name, g]));
-  assert.deepEqual(Object.keys(groups).sort(), ['coins', 'config', 'item']);
+  assert.deepEqual(Object.keys(groups).sort(), ['boost', 'coins', 'config', 'item']);
   const sub = (g, name) => groups[g].options.find((o) => o.name === name);
   const names = (s) => s.options.map((o) => o.name);
   assert.ok(names(sub('config', 'channels')).includes('mode'));
@@ -458,7 +460,7 @@ function walk(dir) {
 }
 const read = (p) => readFileSync(p, 'utf8');
 const MY_COMMANDS = ['economy/balance', 'economy/daily', 'economy/pity', 'economy/work', 'economy/pay', 'economy/richest', 'economy/shop',
-  'economy/inventory', 'economy/use', 'admin/economy-admin', 'admin/economy-boost'].map((f) => join(CMD_DIR, `${f}.js`));
+  'economy/inventory', 'economy/use', 'admin/economy-admin'].map((f) => join(CMD_DIR, `${f}.js`));
 
 test('UserEconomy is never written anywhere in src (item 27)', () => {
   const bad = /userEconomy\.(create|update|upsert|delete|updateMany|deleteMany|createMany)/;
@@ -1115,13 +1117,13 @@ test('/use consumes a copy, gives the item back when the role grant fails, and r
   assert.match((await run('ghost')).calls[2][1].embeds[0].data.title, /Item Not Found/);
 });
 
-test('/economy-boost add, toggle, list and remove', { skip: skipDb }, async () => {
+test('/economy-admin boost add, toggle, list and remove', { skip: skipDb }, async () => {
   const g = G(4);
   await settingsSvc.updateSettings(g, { economyEnabled: true });
   const admin = { id: U(48), bot: false, username: 'admin' };
   const run = (sub, options = {}) => {
-    const i = fakeInteraction({ guildId: g, user: admin, sub, options });
-    return cmd.boost.execute(i).then(() => i);
+    const i = fakeInteraction({ guildId: g, user: admin, group: 'boost', sub, options });
+    return cmd.admin.execute(i).then(() => i);
   };
   const added = await run('add', { name: 'Happy Hour', percent: 25, period: 'daily' });
   assert.deepEqual(added.calls.map((c) => c[0]), ['deferReply', 'editReply']);

@@ -525,7 +525,7 @@ test('loadCommands fills client.commandCategories with each command\'s folder (/
   await loadCommands(client);
   assert.ok(client.commands.size > 30, 'the real command tree was loaded');
   for (const name of client.commands.keys()) assert.equal(typeof client.commandCategories.get(name), 'string', `${name} has a category`);
-  assert.equal(client.commandCategories.get('rps'), 'games');
+  assert.equal(client.commandCategories.get('scrabble'), 'games');
   assert.equal(client.commandCategories.get('slots'), 'games');
   assert.equal(client.commandCategories.get('ban'), 'moderation');
   // src/bot.js creates the map the loader fills.
@@ -884,7 +884,7 @@ test('/module is a core admin command and its autocomplete lists at most 25 modu
   const mod = await load(join(SRC, 'commands', 'admin', 'module.js'));
   assert.equal(mod.module, null);
   assert.equal(mod.permissionLevel, PERMISSION_LEVELS.ADMIN);
-  assert.equal(MODULE_NAMES.length, 36);
+  assert.equal(MODULE_NAMES.length, 42);
 
   const all = fakeAutocomplete('enable', '');
   await mod.autocomplete(all); // settings cannot load offline: plain MODULE_NAMES order, no state suffix

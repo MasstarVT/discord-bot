@@ -1,5 +1,5 @@
 // /settings: general server settings (MEE6 Settings): timezone, timezone roles, default embed colour,
-// custom-command prefix, the /urban age-restriction switch and a read-only overview. Every read and write goes
+// custom-command prefix, the /search urban age-restriction switch and a read-only overview. Every read and write goes
 // through settingsService (00-overview rule 8); nothing here touches Prisma or Redis directly.
 import { SlashCommandBuilder, PermissionFlagsBits, escapeMarkdown } from 'discord.js';
 import { PERMISSION_LEVELS, COLORS, LIMITS } from '../../config/constants.js';
@@ -20,7 +20,7 @@ export const permissionLevel = PERMISSION_LEVELS.ADMIN;
 
 export const data = new SlashCommandBuilder()
   .setName('settings')
-  .setDescription('Server settings: timezone, timezone roles, embed colour, custom-command prefix, /urban.')
+  .setDescription('Server settings: timezone, timezone roles, embed colour, custom-command prefix, /search urban.')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('show')
     .setDescription('Show the general settings, enabled modules and moderator roles.'))
@@ -40,7 +40,7 @@ export const data = new SlashCommandBuilder()
       .setDescription('1–5 characters, no spaces, e.g. ! ? . $ or +. Type off to disable.')
       .setRequired(true).setMinLength(1).setMaxLength(5)))
   .addSubcommand((s) => s.setName('urban')
-    .setDescription('Choose where /urban (Urban Dictionary) may be used.')
+    .setDescription('Choose where /search urban (Urban Dictionary) may be used.')
     .addBooleanOption((o) => o.setName('nsfw-only')
       .setDescription('True: age-restricted channels only (default). False: every channel.')
       .setRequired(true)))
@@ -170,7 +170,7 @@ export function buildOverviewEmbed(settings, guild, { now = new Date() } = {}) {
     ? `${head}\n${joinWithLimit(enabled.map((k) => `${MODULES[k].emoji} ${MODULES[k].label}`), { max: 1024 - head.length - 1 })}`
     : head;
 
-  // Urban Dictionary gate. Fail closed, like /urban itself: only an explicit false opens it up.
+  // Urban Dictionary gate. Fail closed, like /search urban itself: only an explicit false opens it up.
   const urbanValue = settings.urbanNsfwOnly === false
     ? 'Urban Dictionary: everywhere · `/settings urban`'
     : 'Urban Dictionary: age-restricted channels only · `/settings urban`';
@@ -339,17 +339,17 @@ async function runUrban(interaction) {
   const previous = await getSettingsSafe(interaction.guildId);
   if (previous && typeof previous.urbanNsfwOnly === 'boolean' && previous.urbanNsfwOnly === nsfwOnly) {
     return noChange(interaction, previous, nsfwOnly
-      ? '/urban already only works in age-restricted channels.'
-      : '/urban already works in every channel.');
+      ? '/search urban already only works in age-restricted channels.'
+      : '/search urban already works in every channel.');
   }
   const row = await saveSetting(interaction, 'urban', 'urbanNsfwOnly', nsfwOnly, previous);
   if (!row) return;
 
   let text = nsfwOnly
-    ? '/urban now only works in age-restricted channels.'
-    : '/urban now works in every channel.';
+    ? '/search urban now only works in age-restricted channels.'
+    : '/search urban now works in every channel.';
   if (!isModuleEnabled(row, 'search')) {
-    text += '\n\n⚠️ The **Search Anything** module is off, so /urban is unavailable. Enable it with `/module enable search`.';
+    text += '\n\n⚠️ The **Search Anything** module is off, so /search urban is unavailable. Enable it with `/module enable search`.';
   }
   return safeReply(interaction, reply([successEmbed('Urban Dictionary', text)]));
 }

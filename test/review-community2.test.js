@@ -529,7 +529,7 @@ test('a recurring reminder does not retry a permanent permission error', async (
 // ── birthdays: departed members cannot starve the members behind them ────────────────────────────
 
 const bday = await import('../src/services/birthdayService.js');
-const configCmd = await import('../src/commands/admin/birthday-config.js');
+const configCmd = await import('../src/commands/community/birthday.js'); // its `config` group (it was /birthday-config)
 
 function birthdayWorld({ departed, present }) {
   const guildId = sid('8', 500 + departed + present);
@@ -631,7 +631,7 @@ test('birthday tick: only a 51st present member asks for a continuation run', as
   }
 });
 
-// ── birthdays: /birthday-config set-user tells the admin the age will be public ─────────────────
+// ── birthdays: /birthday config set-user tells the admin the age will be public ─────────────────
 
 function setUserCall(guildId, { date, settings = {} }) {
   const member = { id: uid(77), user: { id: uid(77), bot: false }, toString: () => `<@${uid(77)}>` };
@@ -642,7 +642,7 @@ function setUserCall(guildId, { date, settings = {} }) {
     deferred: false, replied: false, ephemeral: undefined,
     inCachedGuild: () => true,
     options: {
-      getSubcommand: () => 'set-user', getSubcommandGroup: () => null,
+      getSubcommand: () => 'set-user', getSubcommandGroup: () => 'config',
       get: (n) => options[n] ?? null, getString: (n) => options[n] ?? null, getUser: () => null,
       getMember: (n) => options[`${n}:member`] ?? null, getChannel: () => null, getRole: () => null, getInteger: () => null, getBoolean: () => null,
     },
@@ -667,7 +667,7 @@ function setUserCall(guildId, { date, settings = {} }) {
   return { i, edits, restore, desc: () => edits.at(-1).embeds[0].data.description ?? '', title: () => edits.at(-1).embeds[0].data.title };
 }
 
-test('birthday-config set-user: a given year says the age shows in the announcement; the reply never carries it', async () => {
+test('birthday config set-user: a given year says the age shows in the announcement; the reply never carries it', async () => {
   const withYear = setUserCall(sid('8', 901), { date: '1990-04-06' });
   try {
     await configCmd.execute(withYear.i);
@@ -699,5 +699,32 @@ test('birthday-config set-user: a given year says the age shows in the announcem
   } finally {
     noChannel.restore();
     noAge.restore();
+  }
+});
+
+// ── birthdays: /birthday is not gated, so the member subcommands refuse while the module is off ──────────────────
+
+test('birthday set | forget | show | next refuse with the router wording while the module is off; config still answers', async () => {
+  for (const [n, sub] of ['set', 'forget', 'show', 'next'].entries()) {
+    const c = setUserCall(sid('8', 910 + n), { date: '04-06', settings: { birthdaysEnabled: false } });
+    c.i.options.getSubcommand = () => sub;
+    c.i.options.getSubcommandGroup = () => null;
+    try {
+      await configCmd.execute(c.i);
+      assert.match(c.title(), /Module Disabled/, sub);
+      assert.equal(c.desc(), 'The **Birthdays** module is turned off on this server. An admin can enable it with `/module enable birthdays`.', sub);
+      assert.equal(c.i.ephemeral, sub === 'set' || sub === 'forget', `${sub}: the refusal follows the subcommand's visibility`);
+    } finally {
+      c.restore();
+    }
+  }
+
+  const off = setUserCall(sid('8', 915), { date: '04-06', settings: { birthdaysEnabled: false } });
+  try {
+    await configCmd.execute(off.i); // config set-user
+    assert.match(off.title(), /Birthday Saved/);
+    assert.match(off.desc(), /module is off/);
+  } finally {
+    off.restore();
   }
 });

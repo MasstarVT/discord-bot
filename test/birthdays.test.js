@@ -21,7 +21,7 @@ const skipDb = DB ? false : 'TEST_DATABASE_URL not set';
 const { PermissionFlagsBits: P, PermissionsBitField } = await import('discord.js');
 const svc = await import('../src/services/birthdayService.js');
 const birthdayCmd = await import('../src/commands/community/birthday.js');
-const configCmd = await import('../src/commands/admin/birthday-config.js');
+const configCmd = birthdayCmd; // the `config` group of /birthday (it was /birthday-config)
 const { plugin } = await import('../src/plugins/birthdays.js');
 const { default: redis, cache } = await import('../src/services/redis.js');
 const { default: prisma } = await import('../src/database/client.js');
@@ -352,12 +352,12 @@ const charCount = (node) => {
 test('/birthday payload and exports', () => {
   const json = buildCommandPayload(birthdayCmd);
   assert.equal(json.name, 'birthday');
-  assert.deepEqual(json.options.map((o) => o.name), ['set', 'forget', 'show', 'next']);
-  assert.equal(json.default_member_permissions, undefined);
+  assert.deepEqual(json.options.map((o) => o.name), ['set', 'forget', 'show', 'next', 'config']);
+  assert.equal(json.default_member_permissions, undefined, 'members must see set, forget, show and next');
   assert.deepEqual(json.contexts, [0]);
-  assert.ok(charCount(json) <= 600, `${charCount(json)} chars`);
+  assert.ok(charCount(json) <= 1800, `${charCount(json)} chars`);
   assert.equal(birthdayCmd.module, 'birthdays');
-  assert.equal(birthdayCmd.gated, true);
+  assert.equal(birthdayCmd.gated, false, 'config works while the module is off; the member subcommands check it themselves');
   assert.equal(birthdayCmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
   assert.equal(birthdayCmd.allowInDMs, undefined);
   assert.equal(typeof birthdayCmd.execute, 'function');
@@ -367,23 +367,23 @@ test('/birthday payload and exports', () => {
   assert.equal(set.options[0].max_length, 10);
 });
 
-test('/birthday-config payload and exports', () => {
-  const json = buildCommandPayload(configCmd);
-  assert.equal(json.name, 'birthday-config');
-  assert.equal(json.options.length, 10);
-  assert.deepEqual(json.options.map((o) => o.name),
-    ['channel', 'role', 'hour', 'message', 'message-age', 'require-year', 'set-user', 'unset-user', 'show', 'test']);
-  assert.equal(json.default_member_permissions, String(P.ManageGuild));
-  assert.ok(charCount(json) <= 1300, `${charCount(json)} chars`);
-  assert.equal(configCmd.module, 'birthdays');
-  assert.equal(configCmd.gated, false);
-  assert.equal(configCmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
-  const hour = json.options.find((o) => o.name === 'hour').options[0];
+test('/birthday config group: the old /birthday-config subcommands, all ADMIN', () => {
+  const json = buildCommandPayload(birthdayCmd);
+  const group = json.options.find((o) => o.name === 'config');
+  assert.equal(group.type, 2);
+  assert.equal(group.options.length, 10);
+  const names = group.options.map((o) => o.name);
+  assert.deepEqual(names, ['channel', 'role', 'hour', 'message', 'message-age', 'require-year', 'set-user', 'unset-user', 'show', 'test']);
+  assert.deepEqual(Object.keys(birthdayCmd.subcommandPermissions).sort(), names.map((n) => `config ${n}`).sort());
+  for (const level of Object.values(birthdayCmd.subcommandPermissions)) assert.equal(level, PERMISSION_LEVELS.ADMIN);
+  assert.equal(birthdayCmd.subcommandPermissions.set, undefined);
+  assert.ok(charCount(group) <= 1300, `${charCount(group)} chars`);
+  const hour = group.options.find((o) => o.name === 'hour').options[0];
   assert.equal(hour.name, 'hour');
   assert.equal(hour.min_value, 0);
   assert.equal(hour.max_value, 23);
   for (const name of ['message', 'message-age']) {
-    assert.equal(json.options.find((o) => o.name === name).options[0].max_length, 1000);
+    assert.equal(group.options.find((o) => o.name === name).options[0].max_length, 1000);
   }
 });
 
@@ -1299,14 +1299,14 @@ test('DB: runBirthdayTick: the running guard, the mutex and error handling', { s
 
 // ── Commands end to end ──────────────────────────────────────────────────────
 
-function mkInteraction(guild, { sub, user, member, options = {}, channel = null }) {
+function mkInteraction(guild, { sub, group = null, user, member, options = {}, channel = null }) {
   const i = {
     guild, guildId: guild.id, user, member, channel,
     deferred: false, replied: false, ephemeral: undefined, edits: [], deferCalls: 0,
     inCachedGuild: () => true,
     options: {
       getSubcommand: () => sub,
-      getSubcommandGroup: () => null,
+      getSubcommandGroup: () => group,
       get: (n) => options[n] ?? null,
       getString: (n) => options[n] ?? null,
       getUser: (n) => options[n] ?? null,
@@ -1422,6 +1422,24 @@ test('DB: /birthday set, show, next and forget', { skip: skipDb }, async () => {
   assert.match(descOf(i), /\/birthday set/);
 });
 
+test('DB: /birthday member subcommands refuse while the module is off, config does not', { skip: skipDb }, async () => {
+  const guild = mkGuild();
+  await setup(guild, { birthdaysEnabled: false });
+  const me = mkActor(guild);
+  for (const sub of ['set', 'forget', 'show', 'next']) {
+    const i = mkInteraction(guild, { sub, user: me.user, member: me.member, options: { date: '03-14' } });
+    await birthdayCmd.execute(i, {});
+    assert.match(titleOf(i), /Module Disabled/, sub);
+    assert.match(descOf(i), /The \*\*Birthdays\*\* module is turned off on this server\. An admin can enable it with `\/module enable birthdays`\./, sub);
+    assert.equal(await rowOf(guild.id, me.user.id), null, `${sub} saved nothing`);
+  }
+  const admin = mkActor(guild, { admin: true });
+  const j = mkInteraction(guild, { sub: 'show', group: 'config', user: admin.user, member: admin.member });
+  await birthdayCmd.execute(j, {});
+  assert.match(titleOf(j), /Birthday Settings/);
+  assert.match(lastEmbed(j).fields.find((f) => f.name === 'Module').value, /Off/);
+});
+
 test('DB: /birthday set today after the hour is "late"; forget-then-set cannot repeat the celebration', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const ch = mkChannel(guild);
@@ -1453,14 +1471,14 @@ test('DB: /birthday set today after the hour is "late"; forget-then-set cannot r
   assert.equal(ch.sent.length, 0);
 });
 
-test('DB: /birthday-config channel, hour, require-year and the module-off note', { skip: skipDb }, async () => {
+test('DB: /birthday config channel, hour, require-year and the module-off note', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const text = mkChannel(guild);
   const quiet2 = mkChannel(guild, undefined, { canSend: false });
   await setup(guild, {});
   const admin = mkActor(guild, { admin: true });
   const run = async (sub, options = {}) => {
-    const i = mkInteraction(guild, { sub, user: admin.user, member: admin.member, options, channel: text });
+    const i = mkInteraction(guild, { sub, group: 'config', user: admin.user, member: admin.member, options, channel: text });
     await configCmd.execute(i, {});
     return i;
   };
@@ -1510,23 +1528,23 @@ test('DB: /birthday-config channel, hour, require-year and the module-off note',
   assert.equal(await job(), null);
 });
 
-test('DB: /birthday-config hour reports a catch-up when the hour has already passed', { skip: skipDb }, async () => {
+test('DB: /birthday config hour reports a catch-up when the hour has already passed', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const ch = mkChannel(guild);
   await setup(guild, { birthdayChannelId: ch.id });
   const admin = mkActor(guild, { admin: true });
-  const i = mkInteraction(guild, { sub: 'hour', user: admin.user, member: admin.member, options: { hour: 0 }, channel: ch });
+  const i = mkInteraction(guild, { sub: 'hour', group: 'config', user: admin.user, member: admin.member, options: { hour: 0 }, channel: ch });
   await configCmd.execute(i, {});
   assert.match(descOf(i), /haven't been celebrated yet will be celebrated in a moment/);
   const none = mkGuild();
   await setup(none, {});
   const a2 = mkActor(none, { admin: true });
-  const j = mkInteraction(none, { sub: 'hour', user: a2.user, member: a2.member, options: { hour: 0 } });
+  const j = mkInteraction(none, { sub: 'hour', group: 'config', user: a2.user, member: a2.member, options: { hour: 0 } });
   await configCmd.execute(j, {});
   assert.ok(!/in a moment/.test(descOf(j)), 'nothing configured: no catch-up promise');
 });
 
-test('DB: /birthday-config role: validation, transfer to a new role, and clearing', { skip: skipDb }, async () => {
+test('DB: /birthday config role: validation, transfer to a new role, and clearing', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const ch = mkChannel(guild);
   const roleA = mkRole(guild, undefined, { position: 5 });
@@ -1536,7 +1554,7 @@ test('DB: /birthday-config role: validation, transfer to a new role, and clearin
   await setup(guild, { birthdayChannelId: ch.id });
   const admin = mkActor(guild, { admin: true });
   const run = async (options) => {
-    const i = mkInteraction(guild, { sub: 'role', user: admin.user, member: admin.member, options, channel: ch });
+    const i = mkInteraction(guild, { sub: 'role', group: 'config', user: admin.user, member: admin.member, options, channel: ch });
     await configCmd.execute(i, {});
     return i;
   };
@@ -1578,13 +1596,13 @@ test('DB: /birthday-config role: validation, transfer to a new role, and clearin
   assert.match(titleOf(i), /Birthday Role Off/, 'clearing an unset role is harmless');
 });
 
-test('DB: /birthday-config message and message-age: preview, warnings, reset', { skip: skipDb }, async () => {
+test('DB: /birthday config message and message-age: preview, warnings, reset', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const ch = mkChannel(guild);
   await setup(guild, {});
   const admin = mkActor(guild, { admin: true });
   const run = async (sub, options = {}) => {
-    const i = mkInteraction(guild, { sub, user: admin.user, member: admin.member, options, channel: ch });
+    const i = mkInteraction(guild, { sub, group: 'config', user: admin.user, member: admin.member, options, channel: ch });
     await configCmd.execute(i, {});
     return i;
   };
@@ -1613,14 +1631,14 @@ test('DB: /birthday-config message and message-age: preview, warnings, reset', {
   assert.equal((await settingsRow()).birthdayMessageAge, null);
 });
 
-test('DB: /birthday-config set-user, unset-user, show and test', { skip: skipDb }, async () => {
+test('DB: /birthday config set-user, unset-user, show and test', { skip: skipDb }, async () => {
   const guild = mkGuild();
   const ch = mkChannel(guild);
   const role = mkRole(guild);
   await setup(guild, { birthdayChannelId: ch.id, birthdayRoleId: role.id, birthdayRequireYear: true });
   const admin = mkActor(guild, { admin: true });
   const run = async (sub, options = {}) => {
-    const i = mkInteraction(guild, { sub, user: admin.user, member: admin.member, options, channel: ch });
+    const i = mkInteraction(guild, { sub, group: 'config', user: admin.user, member: admin.member, options, channel: ch });
     await configCmd.execute(i, {});
     return i;
   };

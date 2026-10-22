@@ -1,7 +1,7 @@
 // pkg-levels tests (pkg-levels.md §10): level maths, XP rolls, boosts, no-XP channels, voice eligibility and sessions,
 // reward-role planning, announce routing, level-up payloads, rank tie rule, rank-card style and rendering, command
 // payloads, the plugin declaration and a static scan. Offline by default. With TEST_DATABASE_URL (a migrated database)
-// the DB cases also run (atomic XP SQL, the level-change pipeline, voice payouts, bulk gives, /levelconfig and /xp):
+// the DB cases also run (atomic XP SQL, the level-change pipeline, voice payouts, bulk gives, /levelconfig and /levelconfig xp):
 //   TEST_DATABASE_URL='<url>' node --test --test-concurrency=1 test/levels.test.js
 import { test, after, afterEach, mock } from 'node:test';
 import { EventEmitter } from 'node:events';
@@ -36,7 +36,6 @@ const { buildCommandPayload } = await import('../src/handlers/commandLoader.js')
 const { default: logger } = await import('../src/utils/logger.js');
 const { plugin } = await import('../src/plugins/levels.js');
 const levelconfig = await import('../src/commands/admin/levelconfig.js');
-const xpCmd = await import('../src/commands/leveling/xp.js');
 const rankCmd = await import('../src/commands/leveling/rank.js');
 const boardCmd = await import('../src/commands/leveling/leaderboard.js');
 
@@ -560,14 +559,14 @@ const charCount = (node) => {
 
 test('command payload shapes', () => {
   const lc = levelconfig.data.toJSON();
-  assert.equal(lc.options.length, 14);
-  assert.ok(charCount(lc) <= 2600, `levelconfig ${charCount(lc)} characters`);
+  assert.equal(lc.options.length, 15);
+  assert.ok(charCount(lc) <= 2900, `levelconfig ${charCount(lc)} characters`);
   const names = lc.options.map((o) => o.name);
   for (const n of ['enable', 'disable', 'status', 'range', 'cooldown', 'multiplier', 'announce', 'message', 'voicexp', 'card', 'demotion-sync']) {
     assert.ok(names.includes(n), `${n} present`);
   }
   const groups = lc.options.filter((o) => o.type === 2).map((o) => o.name);
-  assert.deepEqual(groups.sort(), ['boost', 'noxp', 'role']);
+  assert.deepEqual(groups.sort(), ['boost', 'noxp', 'role', 'xp']);
   assert.equal(names.includes('rate'), false, '/levelconfig rate was removed');
   assert.equal(lc.options.some((o) => o.name === 'channel' && o.type === 1), false, 'the top-level channel subcommand was removed');
   const announce = lc.options.find((o) => o.name === 'announce');
@@ -575,7 +574,8 @@ test('command payload shapes', () => {
   const roleRemove = lc.options.find((o) => o.name === 'role').options.find((o) => o.name === 'remove');
   assert.equal(roleRemove.options[0].autocomplete, true);
 
-  const xp = xpCmd.data.toJSON();
+  const xp = lc.options.find((o) => o.name === 'xp');
+  assert.equal(xp.type, 2);
   assert.ok(charCount(xp) <= 520);
   const give = xp.options.find((o) => o.name === 'give');
   assert.deepEqual(give.options.map((o) => o.type), [9, 4]);
@@ -583,14 +583,12 @@ test('command payload shapes', () => {
   assert.ok(charCount(rankCmd.data.toJSON()) <= 90);
   assert.ok(charCount(boardCmd.data.toJSON()) <= 90);
 
-  for (const mod of [levelconfig, xpCmd, rankCmd, boardCmd]) {
+  for (const mod of [levelconfig, rankCmd, boardCmd]) {
     assert.equal(mod.module, 'leveling');
     assert.doesNotThrow(() => buildCommandPayload(mod));
   }
-  for (const mod of [levelconfig, xpCmd]) {
-    assert.equal(mod.gated, false);
-    assert.equal(mod.permissionLevel, PERMISSION_LEVELS.ADMIN);
-  }
+  assert.equal(levelconfig.gated, false);
+  assert.equal(levelconfig.permissionLevel, PERMISSION_LEVELS.ADMIN);
   assert.equal(rankCmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
   assert.equal(boardCmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
   assert.equal(rankCmd.gated, undefined);
@@ -823,7 +821,7 @@ test('handleMessageXp: exemptions first, Redis down fails closed', async () => {
 
 test('owned files obey the static rules', () => {
   const files = [
-    'src/services/xpService.js', 'src/plugins/levels.js', 'src/commands/admin/levelconfig.js', 'src/commands/leveling/xp.js',
+    'src/services/xpService.js', 'src/plugins/levels.js', 'src/commands/admin/levelconfig.js',
     'src/commands/leveling/rank.js', 'src/commands/leveling/leaderboard.js', 'src/utils/profileCard.js',
   ];
   for (const f of files) {
@@ -995,7 +993,7 @@ test('DB: level-change pipeline: one announcement for a multi-level jump, roles,
   assert.ok(member.roles.cache.has(R(3)));
   assert.deepEqual(lc2.roles.added, [R(3)]);
 
-  // Demotion: /xp remove drops below level 20 and 5: reward roles above the new level are removed.
+  // Demotion: /levelconfig xp remove drops below level 20 and 5: reward roles above the new level are removed.
   const sub = await svc.subtractXp({ guildId, userId: U(1), amount: XP_MAX });
   assert.equal(sub.newLevel, 0);
   const lc3 = await svc.handleLevelChange({ guild, member, userId: U(1), result: sub, settings, source: 'admin', announce: false });
@@ -1389,7 +1387,7 @@ test('DB: /levelconfig role rewards and card (R060)', { skip: skipDb }, async ()
   assert.equal((await settingsSvc.getSettings(guildId, { fresh: true })).rankCardStyle, null);
 });
 
-test('DB: /xp give, remove, set, reset, view (R196, R299, R300)', { skip: skipDb }, async () => {
+test('DB: /levelconfig xp give, remove, set, reset, view (R196, R299, R300)', { skip: skipDb }, async () => {
   const guildId = G(12);
   await prisma.userLevel.deleteMany({ where: { guildId } });
   await prisma.levelRole.deleteMany({ where: { guildId } });
@@ -1401,8 +1399,8 @@ test('DB: /xp give, remove, set, reset, view (R196, R299, R300)', { skip: skipDb
   guild.members.fetch = async (id) => guild.members.cache.get(id) ?? null;
   const ch = fakeChannel(C(1));
   const run = async (sub, opts) => {
-    const i = fakeInteraction(guild, { sub, opts, user: admin, member: fakeMember(guild, U(1)), channel: ch });
-    await xpCmd.execute(i, guild.client);
+    const i = fakeInteraction(guild, { group: 'xp', sub, opts, user: admin, member: fakeMember(guild, U(1)), channel: ch });
+    await levelconfig.execute(i, guild.client);
     return i;
   };
   const row = () => prisma.userLevel.findUnique({ where: { guildId_userId: { guildId, userId: U(2) } } });
@@ -1454,7 +1452,7 @@ test('DB: /xp give, remove, set, reset, view (R196, R299, R300)', { skip: skipDb
   assert.equal(embedOf(i).title, 'ℹ️  No Data');
 });
 
-// ── /xp give @Role, /rank and /leaderboard against the database ─────────────
+// ── /levelconfig xp give @Role, /rank and /leaderboard against the database ─────────────
 
 /** Makes the first editReply of a fake interaction look like awaitConfirm's message, and answers it. */
 function autoConfirm(interaction, { yes = true } = {}) {
@@ -1491,7 +1489,7 @@ const waitFor = async (fn, ms = 3000) => {
   return false;
 };
 
-test('DB: /xp give target:@Role confirms, gives in bulk and releases the bulk lock (R196, 5,000 cap)', { skip: skipDb }, async () => {
+test('DB: /levelconfig xp give target:@Role confirms, gives in bulk and releases the bulk lock (R196, 5,000 cap)', { skip: skipDb }, async () => {
   const guildId = G(13);
   await prisma.userLevel.deleteMany({ where: { guildId } });
   await prisma.levelRole.deleteMany({ where: { guildId } });
@@ -1506,28 +1504,28 @@ test('DB: /xp give target:@Role confirms, gives in bulk and releases the bulk lo
   const role = { id: R(5), members: new Collection([[U(1), m1], [U(2), m2], [U(3), m3], [U(4), robot]]) };
   const emitted = [];
   registerHook({ event: 'levelUp', id: 'achievements', run: (ctx) => emitted.push([ctx.userId, ctx.source]) }, { pluginId: 'test' });
-  const make = (opts) => fakeInteraction(guild, { sub: 'give', opts, user: fakeUser(U(9)), member: fakeMember(guild, U(9)), channel: fakeChannel(C(1)) });
+  const make = (opts) => fakeInteraction(guild, { group: 'xp', sub: 'give', opts, user: fakeUser(U(9)), member: fakeMember(guild, U(9)), channel: fakeChannel(C(1)) });
 
   // @everyone is refused, and a running bulk task blocks a second one.
   let i = make({ amount: 500, _target: { role: { id: guild.id } } });
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.match(embedOf(i).description, /@everyone isn't allowed/);
   assert.equal(svc.tryStartBulk(guildId), true);
   i = make({ amount: 500, _target: { role } });
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.equal(embedOf(i).title, '❌  Busy');
   svc.endBulk(guildId);
 
   // Cancelled: nothing is given and the lock is released.
   i = autoConfirm(make({ amount: 500, _target: { role } }), { yes: false });
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.equal(embedOf(i).title, 'ℹ️  Cancelled');
   assert.equal(await prisma.userLevel.count({ where: { guildId } }), 0);
   assert.equal(svc.isBulkRunning(guildId), false);
 
   // Confirmed: three humans get the XP, the bot does not, roles sync and levelUp fires in the background.
   i = autoConfirm(make({ amount: 500, _target: { role } }));
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.equal(embedOf(i).title, '✅  XP Given');
   assert.match(embedOf(i).description, /\*\*3\*\* members.*3 levelled up/);
   assert.equal(await prisma.userLevel.count({ where: { guildId } }), 3);
@@ -1540,11 +1538,11 @@ test('DB: /xp give target:@Role confirms, gives in bulk and releases the bulk lo
 
   // A role with nobody (but bots) and a role beyond the cap are refused without leaking the lock.
   i = make({ amount: 5, _target: { role: { id: R(6), members: new Collection([[U(4), robot]]) } } });
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.match(embedOf(i).description, /No members/);
   const huge = new Collection(Array.from({ length: svc.ROLE_GIVE_MAX_MEMBERS + 1 }, (_, n) => [String(n), { id: String(n), user: { bot: false } }]));
   i = make({ amount: 5, _target: { role: { id: R(7), members: huge } } });
-  await xpCmd.execute(i, guild.client);
+  await levelconfig.execute(i, guild.client);
   assert.match(embedOf(i).description, /limit is 5,000/);
   assert.equal(svc.isBulkRunning(guildId), false);
 });

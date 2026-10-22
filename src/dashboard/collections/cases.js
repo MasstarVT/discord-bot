@@ -2,7 +2,7 @@
 // first. Creating a case performs the action with the same rules as the slash commands (/warn, /timeout, /unmute, /kick,
 // /softban, /ban, /unban): the bot runs it through executeModAction with the dashboard user as the moderator (task
 // `mod.action`, src/services/dashboardTasks/moderation.js). Editing changes what /case reason | proof change; the one
-// destructive action is /history clear (pardon a member's warnings). Cases are never deleted. Pure.
+// destructive action is /case clear-history (pardon a member's warnings). Cases are never deleted. Pure.
 import { formatDuration, parseDuration } from '../../utils/parseDuration.js';
 import { avatarFor, profileLabel, profileName, toIso } from './levels.js';
 
@@ -196,7 +196,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'clearWarnings',
       label: 'Clear warnings',
-      description: "Pardons all of this case's member's active warnings, like /history clear (administrators only). Their cases "
+      description: "Pardons all of this case's member's active warnings, like /case clear-history (administrators only). Their cases "
         + 'stay in the history, and escalation counting starts over.',
       danger: true,
       confirm: "Pardon every active warning of this case's member? Their cases stay in the history.",

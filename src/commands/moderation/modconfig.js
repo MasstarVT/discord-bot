@@ -399,8 +399,8 @@ async function logChannelCommand(interaction) {
 
 const VISIBILITY_TEXT = {
   PUBLIC: 'Action confirmations are posted publicly.',
-  ANONYMOUS: 'A public notice is posted without the moderator; the moderator gets a private confirmation. /case and /history replies become private.',
-  PRIVATE: 'Only the moderator sees confirmations. /case and /history replies are private.',
+  ANONYMOUS: 'A public notice is posted without the moderator; the moderator gets a private confirmation. /case replies (history included) become private.',
+  PRIVATE: 'Only the moderator sees confirmations. /case replies (history included) are private.',
 };
 
 async function visibilityCommand(interaction) {

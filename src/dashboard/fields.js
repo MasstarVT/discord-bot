@@ -37,6 +37,9 @@ export const DEFAULT_TEXTS = Object.freeze({
   achievementMessage: '🏆 {player} unlocked **{achievement}**!',
   liveRoleAnnounceMessage: '🔴 {user} is now live on {platform}!\n{url}',
   modmailGreeting: 'Thanks for your message! The staff of **{server}** will answer you here soon.',
+  boostMessage: '💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts.',
+  bumpReminderMessage: '📣 The server can be bumped again! Use `/bump` to keep us near the top of Disboard.',
+  bumpThanksMessage: '📣 Thanks for bumping, {user}! The next bump is possible {next}.',
 });
 
 /** DEFAULT_WELCOME_EMBED / DEFAULT_GOODBYE_EMBED (src/services/welcomeService.js): sent while the column is null. */
@@ -1063,7 +1066,7 @@ const BIRTHDAY_GROUPS = [
     fields: [
       { field: 'birthdayRoleId', type: 'role', label: 'Birthday role', nullable: true, assignable: true, default: null,
         description: "Given for the member's birthday and removed the next day. Changing it here does not take the old role off "
-          + 'members celebrating today; /birthday-config role in Discord does.' },
+          + 'members celebrating today; /birthday config role in Discord does.' },
     ],
   },
   {
@@ -1195,7 +1198,7 @@ export const MODULE_GROUPS = {
   search: [{
     id: 'urban',
     title: 'Urban Dictionary',
-    fields: [bool('urbanNsfwOnly', true, '/urban only in age-restricted channels',
+    fields: [bool('urbanNsfwOnly', true, '/search urban only in age-restricted channels',
       'Urban Dictionary lookups only work in age-restricted channels.')],
   }],
   liverole: [{
@@ -1351,6 +1354,141 @@ export const MODULE_GROUPS = {
         { unit: 'days' }),
     ],
   }],
+  boosts: [{
+    id: 'boost-thanks',
+    title: 'Boost thank-you',
+    fields: [
+      channel('boostChannelId', 'Thank-you channel', 'A thank-you is posted here when a member boosts the server. Empty = none.'),
+      messageField('boostMessage', 'Thank-you message', 'Posted when a member starts boosting.',
+        { maxLength: 2000, placeholders: ['{boosts}', '{tier}'] }),
+    ],
+  }, {
+    id: 'booster-roles',
+    title: 'Booster roles',
+    description: 'Boosters make a role of their own with /boost role. Booster roles never get any permissions.',
+    fields: [
+      bool('boostCustomRoles', false, 'Let boosters make their own role',
+        'Boosters can create a role with their own name, colour and icon (the bot needs Manage Roles).'),
+      { field: 'boostRoleAnchorId', type: 'role', label: 'Place booster roles below', nullable: true, assignable: true,
+        default: null, description: 'Booster roles go just below this role. Empty = just above the Nitro Booster role (or at the bottom), '
+          + 'so moderators keep power over boosters.' },
+      int('boostRoleGraceDays', 0, 0, 30, 'Keep the role after a boost ends',
+        'Days a member keeps their role after they stop boosting. 0 = removed at once.', { unit: 'days' }),
+    ],
+  }],
+  backups: [{
+    id: 'backups',
+    title: 'Automatic backups',
+    description: 'Make, restore and download backups with /backup. Only the server owner can restore or delete a backup.',
+    fields: [
+      int('backupIntervalHours', 0, 0, 720, 'Back up every', 'Hours between automatic backups. 0 = off.', { unit: 'hours' }),
+      int('backupKeep', 7, 1, LIMITS.BACKUPS_AUTO_KEEP, 'Automatic backups kept',
+        'When a new automatic backup would go over this, the oldest one is deleted.'),
+    ],
+  }],
+  confessions: [{
+    id: 'confessions',
+    title: 'Confessions',
+    description: 'Members confess with /confession submit. Staff never see who wrote one; only admins can reveal an author '
+      + 'with /confession reveal, and that is written to the moderation log.',
+    fields: [
+      channel('confessionChannelId', 'Confession channel', 'Confessions are posted here.'),
+      channel('confessionReviewChannelId', 'Review channel',
+        'Confessions wait here for a moderator to approve them. Empty = posted at once. Keep it hidden from members.'),
+      bool('confessionAllowImages', false, 'Allow an image', 'Members may attach one image to a confession.'),
+      bool('confessionBlockLinks', true, 'Refuse links', 'Confessions that contain a link are refused.'),
+      int('confessionCooldownSeconds', 300, 0, 86400, 'Cooldown between confessions',
+        'Seconds a member waits between two confessions. 0 = no cooldown.', { unit: 'seconds' }),
+    ],
+  }],
+  autothreads: [{
+    id: 'auto-threads',
+    title: 'Auto threads',
+    description: 'Every member message in these channels gets its own thread (the bot needs Create Public Threads).',
+    fields: [
+      {
+        field: 'autoThreadChannels', type: 'objectList', label: 'Channels', maxItems: LIMITS.AUTOTHREAD_CHANNELS, default: [],
+        description: 'Thread names may use {user} (display name), {content} (the start of the message), {channel} and {date}.',
+        itemFields: [
+          { field: 'channelId', type: 'channel', label: 'Channel', required: true, channelTypes: ['text', 'announcement'], default: null },
+          { field: 'name', type: 'text', label: 'Thread name', maxLength: 100, minLength: 1, default: '{content}' },
+          {
+            field: 'archiveMinutes', type: 'enum', label: 'Archive after', default: '1440',
+            options: [
+              { value: '60', label: '1 hour without messages' },
+              { value: '1440', label: '1 day without messages' },
+              { value: '4320', label: '3 days without messages' },
+              { value: '10080', label: '1 week without messages' },
+            ],
+          },
+          { field: 'closeButton', type: 'boolean', label: 'Close button', default: false,
+            description: 'Posts a button in each thread that its starter or a moderator can use to close it.' },
+        ],
+        read: (row) => (Array.isArray(row?.autoThreadChannels) ? row.autoThreadChannels : []),
+        check: (list) => {
+          const seen = new Set();
+          for (const [i, l] of list.entries()) {
+            if (seen.has(l.channelId)) return { path: `${i}.channelId`, message: 'That channel is already in the list.' };
+            seen.add(l.channelId);
+          }
+          return null;
+        },
+      },
+    ],
+  }, {
+    id: 'auto-publish',
+    title: 'Auto publish',
+    fields: [
+      { field: 'autoPublishChannelIds', type: 'channels', label: 'Announcement channels', channelTypes: ['announcement'],
+        maxItems: LIMITS.AUTOPUBLISH_CHANNELS, default: [],
+        description: 'New posts here, by members, bots or webhooks, are published to the servers that follow the channel '
+          + '(the bot needs Manage Messages). Discord allows 10 per channel per hour; the rest stay unpublished.' },
+    ],
+  }],
+  voiceroles: [{
+    id: 'voice-roles',
+    title: 'Voice roles',
+    description: 'Use roles made only for this: the bot takes them away from anyone who is not in a linked voice channel.',
+    fields: [
+      {
+        field: 'voiceRoleLinks', type: 'objectList', label: 'Channel roles', maxItems: LIMITS.VOICE_ROLE_LINKS, default: [],
+        description: 'Members in the channel, or in any voice channel of the category, have the role.',
+        itemFields: [
+          { field: 'channelId', type: 'channel', label: 'Voice channel or category', required: true,
+            channelTypes: ['voice', 'stage', 'category'], default: null },
+          { field: 'roleId', type: 'role', label: 'Role', required: true, assignable: true, default: null },
+        ],
+        read: (row) => (Array.isArray(row?.voiceRoleLinks) ? row.voiceRoleLinks : []),
+        check: (list) => {
+          const seen = new Set();
+          for (const [i, l] of list.entries()) {
+            const key = `${l.channelId}:${l.roleId}`;
+            if (seen.has(key)) return { path: `${i}.roleId`, message: 'That channel already has this role.' };
+            seen.add(key);
+          }
+          return null;
+        },
+      },
+      { field: 'voiceRoleAnyRoleIds', type: 'roles', label: 'Roles for any voice channel', maxItems: LIMITS.VOICE_ROLE_ANY,
+        assignable: true, default: [], description: 'Members in any voice channel of the server have these roles.' },
+      bool('voiceRoleIgnoreAfk', true, 'None in the AFK channel', 'Members in the server\'s AFK channel get no voice roles.'),
+    ],
+  }],
+  bumps: [{
+    id: 'bump-reminders',
+    title: 'Bump reminders',
+    description: 'Works with Disboard: the bot sees each successful /bump and reminds the server when it can bump again.',
+    fields: [
+      channel('bumpChannelId', 'Reminder channel', 'Reminders are posted here. Empty = the channel of the last bump.'),
+      { field: 'bumpRoleId', type: 'role', label: 'Role to ping', nullable: true, default: null,
+        description: 'Pinged with each reminder. Empty = no ping.' },
+      messageField('bumpReminderMessage', 'Reminder message', 'Posted when the server can be bumped again.', { maxLength: 1000 }),
+      bool('bumpThanks', true, 'Thank the bumper', 'Replies with a thank-you right after a successful bump.'),
+      messageField('bumpThanksMessage', 'Thank-you message', 'Sent after each successful bump.',
+        { maxLength: 1000, placeholders: ['{next}', '{count}'] }),
+      int('bumpRewardCoins', 0, 0, 100000, 'Coins per bump', 'Coins given for each bump while Economy is on. 0 = none.'),
+    ],
+  }],
 };
 for (const key of MODULE_NAMES) MODULE_GROUPS[key] ??= [];
 
@@ -1394,6 +1532,7 @@ export const NOT_EXPOSED = Object.freeze({
   captchaMessageId: 'bot-managed: the id of the posted verification panel',
   captchaLockdownPrior: 'bot-managed: what /captcha lock off restores',
   modmailBlockedUserIds: 'a list of members: /modmail block and unblock manage it',
+  confessionBlockedUserIds: 'secret: blocked by confession number so staff never learn who wrote it (/confession block)',
 });
 
 for (const desc of Object.values(SETTINGS_FIELDS)) deepFreeze(desc);

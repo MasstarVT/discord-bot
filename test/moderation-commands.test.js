@@ -1,7 +1,7 @@
-// pkg-moderation-commands tests (pkg-moderation.md §9 items 13 and 15, restricted to the nine command files)
+// pkg-moderation-commands tests (pkg-moderation.md §9 items 13 and 15, restricted to the eight command files)
 // plus behaviour cases that drive the commands through fake interactions and guilds.
 // Offline by default (payloads, static scan, bounded-input errors). DB cases, which exercise executeModAction,
-// the reply helpers and the Prisma queries of /case, /history and /warn, run with:
+// the reply helpers and the Prisma queries of /case (history and clear-history included) and /warn, run with:
 //   TEST_DATABASE_URL='<migrated db>' node --test --test-concurrency=1 test/moderation-commands.test.js
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,7 +32,6 @@ const { buildCommandPayload } = await import('../src/handlers/commandLoader.js')
 const COMMANDS = {
   ban: await import('../src/commands/moderation/ban.js'),
   case: await import('../src/commands/moderation/case.js'),
-  history: await import('../src/commands/moderation/history.js'),
   kick: await import('../src/commands/moderation/kick.js'),
   softban: await import('../src/commands/moderation/softban.js'),
   timeout: await import('../src/commands/moderation/timeout.js'),
@@ -76,7 +75,6 @@ const PERMS = {
   unmute: PermissionFlagsBits.ModerateMembers,
   warn: PermissionFlagsBits.ModerateMembers,
   case: PermissionFlagsBits.ModerateMembers,
-  history: PermissionFlagsBits.ModerateMembers,
 };
 
 test('command payloads: size, module, visibility defaults, option bounds', () => {
@@ -94,28 +92,30 @@ test('command payloads: size, module, visibility defaults, option bounds', () =>
 
     walkOptions(json, (o) => {
       if (o.type !== 3) return; // string options only (/case has a subcommand named reason)
-      if (o.name === 'reason') assert.equal(o.max_length, name === 'case' ? 1000 : 512, `/${name} reason max_length`);
+      if (o.name === 'reason') assert.ok([512, ...(name === 'case' ? [1000] : [])].includes(o.max_length), `/${name} reason max_length`);
       if (o.name === 'proof') assert.equal(o.max_length, 1000, `/${name} proof max_length`);
     });
   }
   // Measured sizes stay close to the spec table (pkg-moderation.md §5); they only need to stay under 4000.
   const sizes = Object.fromEntries(Object.entries(COMMANDS).map(([n, m]) => [n, charCount(buildCommandPayload(m))]));
-  assert.ok(sizes.history < 700 && sizes.ban < 500, JSON.stringify(sizes));
+  assert.ok(sizes.case < 700 && sizes.ban < 500, JSON.stringify(sizes));
 });
 
-test('command payloads: /history, /case, /ban, /timeout, /unban, /warn shapes', () => {
-  const history = buildCommandPayload(COMMANDS.history);
-  assert.deepEqual(history.options.map((o) => o.name), ['view', 'clear']);
-  assert.deepEqual(COMMANDS.history.subcommandPermissions, { clear: PERMISSION_LEVELS.ADMIN });
-  assert.equal(COMMANDS.history.subcommandPermissions.clear, PERMISSION_LEVELS.ADMIN);
-  const type = history.options[0].options.find((o) => o.name === 'type');
+test('command payloads: /case, /ban, /timeout, /unban, /warn shapes', () => {
+  const cas = buildCommandPayload(COMMANDS.case);
+  assert.deepEqual(cas.options.map((o) => o.name), ['view', 'reason', 'proof', 'history', 'clear-history']);
+  assert.deepEqual(COMMANDS.case.subcommandPermissions, { 'clear-history': PERMISSION_LEVELS.ADMIN });
+  assert.equal(COMMANDS.case.subcommandPermissions['clear-history'], PERMISSION_LEVELS.ADMIN);
+  const subOf = (name) => cas.options.find((o) => o.name === name);
+  const type = subOf('history').options.find((o) => o.name === 'type');
   assert.equal(type.choices.length, 10);
   assert.ok(type.choices.some((c) => c.value === 'active') && type.choices.some((c) => c.value === 'UNMUTE'));
-
-  const cas = buildCommandPayload(COMMANDS.case);
-  assert.deepEqual(cas.options.map((o) => o.name), ['view', 'reason', 'proof']);
-  assert.equal(cas.options[2].options.find((o) => o.name === 'url').max_length, 1000, '/case proof url is bounded (R095)');
-  for (const sub of cas.options) assert.equal(sub.options.find((o) => o.name === 'id').min_value, 1);
+  assert.equal(subOf('history').options.find((o) => o.name === 'user').required, true);
+  assert.equal(subOf('clear-history').options.find((o) => o.name === 'user').required, true);
+  assert.equal(subOf('proof').options.find((o) => o.name === 'url').max_length, 1000, '/case proof url is bounded (R095)');
+  assert.equal(subOf('reason').options.find((o) => o.name === 'reason').max_length, 1000, '/case reason is bounded (R095)');
+  assert.equal(subOf('clear-history').options.find((o) => o.name === 'reason').max_length, 512, '/case clear-history reason keeps its 512 bound');
+  for (const name of ['view', 'reason', 'proof']) assert.equal(subOf(name).options.find((o) => o.name === 'id').min_value, 1);
 
   const ban = buildCommandPayload(COMMANDS.ban);
   assert.deepEqual(ban.options.map((o) => o.name), ['user', 'reason', 'duration', 'delete_days', 'proof']);
@@ -151,7 +151,7 @@ test('every moderationService import of a command file is a real export', () => 
 // §9 item 15: static scan (command files only)
 // ═════════════════════════════════════════════════════════════════════════════
 
-test('static scan of the nine command files', () => {
+test('static scan of the eight command files', () => {
   let infractionCalls = 0;
   for (const name of Object.keys(COMMANDS)) {
     const f = `src/commands/moderation/${name}.js`;
@@ -166,12 +166,12 @@ test('static scan of the nine command files', () => {
     assert.match(text, /export const module = 'moderation'/, `${f}: explicit module export`);
     assert.match(text, /deferReply\(\{ ephemeral: true \}\)/, `${f}: ephemeral defer`);
     const n = (text.match(/createInfraction\(/g) ?? []).length;
-    if (name === 'history') infractionCalls += n;
-    else assert.equal(n, 0, `${f}: createInfraction( is only allowed in history.js (the pardon NOTE)`);
+    if (name === 'case') infractionCalls += n;
+    else assert.equal(n, 0, `${f}: createInfraction( is only allowed in case.js (the pardon NOTE)`);
   }
-  assert.equal(infractionCalls, 1, 'history.js records exactly one NOTE through createInfraction');
-  const history = readFileSync(resolve(ROOT, 'src/commands/moderation/history.js'), 'utf8');
-  assert.match(history, /paginate\(interaction, pages, \{ followUp: true \}\)/, '/history pages through followUp after deleteReply (R055)');
+  assert.equal(infractionCalls, 1, 'case.js records exactly one NOTE through createInfraction');
+  const history = readFileSync(resolve(ROOT, 'src/commands/moderation/case.js'), 'utf8');
+  assert.match(history, /paginate\(interaction, pages, \{ followUp: true \}\)/, '/case history pages through followUp after deleteReply (R055)');
   assert.ok(history.indexOf('deleteReply()') < history.indexOf('{ followUp: true }'), 'deleteReply comes first');
 });
 
@@ -816,7 +816,7 @@ test('DB: /case reason and proof update the row, clamp, and post a mod-log note'
   assert.match(lastEdit(goneProof).title, /Not Found/);
 });
 
-// ── /history ──────────────────────────────────────────────────────────────────
+// ── /case history and /case clear-history ──────────────────────────────────────────────────────────────────
 
 async function seedCases(guildId, n, { type = 'WARN', userId = ALICE } = {}) {
   for (let k = 0; k < n; k++) {
@@ -824,12 +824,12 @@ async function seedCases(guildId, n, { type = 'WARN', userId = ALICE } = {}) {
   }
 }
 
-test('DB: /history view posts every page through followUp after deleteReply (R026, R027, R028, R055)', { skip: skipDb }, async () => {
+test('DB: /case history posts every page through followUp after deleteReply (R026, R027, R028, R055)', { skip: skipDb }, async () => {
   const guild = mkGuild(G(24));
   await seedCases(guild.id, 7);
   await svc.recordInfraction({ guildId: guild.id, targetUserId: ALICE, moderatorId: MOD, type: 'BAN', expiresAt: new Date(Date.now() + DAY) });
 
-  const i = await run('history', guild, { sub: 'view', opts: { user: mkUser(ALICE) } });
+  const i = await run('case', guild, { sub: 'history', opts: { user: mkUser(ALICE) } });
   // the call order is the regression: no editReply may follow deleteReply
   assert.deepEqual(names(i), ['deferReply', 'deleteReply', 'followUp']);
   const payload = callsOf(i, 'followUp')[0];
@@ -852,25 +852,25 @@ test('DB: /history view posts every page through followUp after deleteReply (R02
   // a single page still goes out as a plain follow-up, without buttons
   const small = mkGuild(G(25));
   await seedCases(small.id, 3);
-  const j = await run('history', small, { sub: 'view', opts: { user: mkUser(ALICE) } });
+  const j = await run('case', small, { sub: 'history', opts: { user: mkUser(ALICE) } });
   assert.deepEqual(names(j), ['deferReply', 'deleteReply', 'followUp']);
   assert.equal(callsOf(j, 'followUp')[0].components.length, 0);
   assert.equal(jsonOf(callsOf(j, 'followUp')[0])[0].fields.length, 3);
 });
 
-test('DB: /history view respects PRIVATE and ANONYMOUS visibility with an ephemeral edit', { skip: skipDb }, async () => {
+test('DB: /case history respects PRIVATE and ANONYMOUS visibility with an ephemeral edit', { skip: skipDb }, async () => {
   for (const [n, mode] of [[26, 'PRIVATE'], [27, 'ANONYMOUS']]) {
     const guild = mkGuild(G(n));
     await updateSettings(guild.id, { modVisibility: mode });
     await seedCases(guild.id, 6);
-    const i = await run('history', guild, { sub: 'view', opts: { user: mkUser(ALICE) } });
+    const i = await run('case', guild, { sub: 'history', opts: { user: mkUser(ALICE) } });
     assert.deepEqual(names(i), ['deferReply', 'editReply'], mode);
     assert.equal(callsOf(i, 'editReply')[0].components.length, 1, `${mode}: two pages`);
     assert.equal(i.ephemeral, true);
   }
 });
 
-test('DB: /history view filters, and only explains a live ban when the member has no records (R246)', { skip: skipDb }, async () => {
+test('DB: /case history filters, and only explains a live ban when the member has no records (R246)', { skip: skipDb }, async () => {
   const guild = mkGuild(G(28));
   const fetchOpts = [];
   guild.bans.fetch = async (o) => { fetchOpts.push(o); return { user: { id: ALICE }, reason: 'raid' }; };
@@ -878,7 +878,7 @@ test('DB: /history view filters, and only explains a live ban when the member ha
   await svc.recordInfraction({ guildId: guild.id, targetUserId: ALICE, moderatorId: MOD, type: 'WARN', active: false });
 
   // the member has recorded cases (a ban and a pardoned warning); a filter that matches nothing
-  const filtered = await run('history', guild, { sub: 'view', opts: { user: mkUser(ALICE), type: 'KICK' } });
+  const filtered = await run('case', guild, { sub: 'history', opts: { user: mkUser(ALICE), type: 'KICK' } });
   assert.deepEqual(names(filtered), ['deferReply', 'deleteReply', 'followUp']);
   const empty = publicPost(filtered);
   assert.match(empty.title, /No Records/);
@@ -886,14 +886,14 @@ test('DB: /history view filters, and only explains a live ban when the member ha
   assert.doesNotMatch(empty.description, /currently banned/, 'a recorded ban is never called a pre-bot ban');
   assert.equal(fetchOpts.length, 0, 'the live lookup is not even made');
 
-  const active = await run('history', guild, { sub: 'view', opts: { user: mkUser(ALICE), type: 'active' } });
+  const active = await run('case', guild, { sub: 'history', opts: { user: mkUser(ALICE), type: 'active' } });
   assert.match(publicPost(active).fields[0].name, /Case #1 \| Ban 🔴 active/);
-  const warns = await run('history', guild, { sub: 'view', opts: { user: mkUser(ALICE), type: 'WARN' } });
+  const warns = await run('case', guild, { sub: 'history', opts: { user: mkUser(ALICE), type: 'WARN' } });
   assert.equal(publicPost(warns).fields.length, 1);
   assert.match(publicPost(warns).fields[0].name, /Warn$/);
 
   // no records at all, but Discord shows a ban: now the hint is true
-  const bare = await run('history', guild, { sub: 'view', opts: { user: mkUser('100000000000000066') } });
+  const bare = await run('case', guild, { sub: 'history', opts: { user: mkUser('100000000000000066') } });
   const hint = publicPost(bare);
   assert.match(hint.title, /No Records/);
   assert.match(hint.description, /currently banned/);
@@ -904,36 +904,36 @@ test('DB: /history view filters, and only explains a live ban when the member ha
   const guild2 = mkGuild(G(29));
   const ghost = mkMember(guild2, ALICE, { isCommunicationDisabled: () => true, communicationDisabledUntilTimestamp: Date.now() + 3_600_000 });
   guild2.members.cache.set(ALICE, ghost);
-  const t = await run('history', guild2, { sub: 'view', opts: { user: mkUser(ALICE) } });
+  const t = await run('case', guild2, { sub: 'history', opts: { user: mkUser(ALICE) } });
   assert.match(publicPost(t).description, /currently timed out/);
   assert.match(publicPost(t).description, /<t:\d+:R>/);
 
   // no records and nothing live: a plain answer
   const guild3 = mkGuild(G(30));
-  const plain = await run('history', guild3, { sub: 'view', opts: { user: mkUser(ALICE) } });
+  const plain = await run('case', guild3, { sub: 'history', opts: { user: mkUser(ALICE) } });
   assert.equal(publicPost(plain).description, `No moderation history for <@${ALICE}>.`);
 });
 
-test('DB: /history view tells the moderator when the pages cannot be posted', { skip: skipDb }, async () => {
+test('DB: /case history tells the moderator when the pages cannot be posted', { skip: skipDb }, async () => {
   const guild = mkGuild(G(24));
-  const i = mkInteraction(guild, { sub: 'view', opts: { user: mkUser(ALICE) } });
+  const i = mkInteraction(guild, { sub: 'history', opts: { user: mkUser(ALICE) } });
   const original = i.followUp;
   let first = true;
   i.followUp = async (p) => {
     if (first) { first = false; throw Object.assign(new Error('Missing Access'), { code: 50001 }); }
     return original(p);
   };
-  await COMMANDS.history.execute(i, guild.client);
+  await COMMANDS.case.execute(i, guild.client);
   const err = callsOf(i, 'followUp').at(-1);
   assert.equal(err.ephemeral, true);
   assert.match(jsonOf(err)[0].title, /Action Failed/);
 });
 
-test('DB: /history clear pardons active warnings after a confirmation, as an administrator action', { skip: skipDb }, async () => {
-  const guild = mkGuild(G(24)); // shares its rows with the first /history test, so use a user of its own
+test('DB: /case clear-history pardons active warnings after a confirmation, as an administrator action', { skip: skipDb }, async () => {
+  const guild = mkGuild(G(24)); // shares its rows with the first /case history test, so use a user of its own
   const bob = '100000000000000088';
   const bobUser = mkUser(bob);
-  const nothing = await run('history', guild, { sub: 'clear', opts: { user: bobUser } });
+  const nothing = await run('case', guild, { sub: 'clear-history', opts: { user: bobUser } });
   assert.deepEqual(names(nothing), ['deferReply', 'editReply']);
   assert.match(lastEdit(nothing).title, /Nothing To Clear/);
   assert.equal((await rowsOf(guild.id, { targetUserId: bob })).length, 0);
@@ -942,7 +942,7 @@ test('DB: /history clear pardons active warnings after a confirmation, as an adm
   await svc.recordInfraction({ guildId: guild.id, targetUserId: bob, moderatorId: MOD, type: 'WARN', active: false });
 
   // cancelled: nothing changes and nothing is posted
-  const cancelled = await run('history', guild, { sub: 'clear', opts: { user: bobUser }, confirm: 'no' });
+  const cancelled = await run('case', guild, { sub: 'clear-history', opts: { user: bobUser }, confirm: 'no' });
   assert.equal(callsOf(cancelled, 'editReply').length, 1, 'only the confirmation dialog');
   assert.match(jsonOf(callsOf(cancelled, 'editReply')[0])[0].description, /\*\*3\*\* active warning/);
   assert.ok(!names(cancelled).includes('followUp'));
@@ -950,7 +950,7 @@ test('DB: /history clear pardons active warnings after a confirmation, as an adm
   assert.equal((await rowsOf(guild.id, { targetUserId: bob, type: 'NOTE' })).length, 0);
 
   // confirmed
-  const done = await run('history', guild, { sub: 'clear', opts: { user: bobUser, reason: 'fresh start' }, confirm: 'yes' });
+  const done = await run('case', guild, { sub: 'clear-history', opts: { user: bobUser, reason: 'fresh start' }, confirm: 'yes' });
   assert.deepEqual(names(done).filter((n) => n !== 'pickedUpdate'), ['deferReply', 'editReply', 'deleteReply', 'followUp']);
   const post = publicPost(done);
   assert.match(post.title, /Warnings Cleared/);

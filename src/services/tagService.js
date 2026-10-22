@@ -1010,7 +1010,7 @@ export function selectTrigger(entries, content, scope) {
   return firstPlain >= 0 ? entries[firstPlain].t : null;
 }
 
-/** True when the regex of a trigger timed out recently and is being skipped (for /trigger info). */
+/** True when the regex of a trigger timed out recently and is being skipped (for /tag trigger info). */
 export function triggerQuarantined(row) {
   try {
     const re = compiledFor(toProjection({ ...row, updatedAt: row.updatedAt ?? new Date(0) }), row.guildId);
@@ -1104,7 +1104,7 @@ export async function handleTriggers(ctx, { checkPermissions = true } = {}) {
 // ── Resolving a trigger reference (R014) ──────────────────────────────────────
 
 /**
- * `#3` / `3` (the number /trigger list shows), an ID (autocomplete value) or an exact pattern.
+ * `#3` / `3` (the number /tag trigger list shows), an ID (autocomplete value) or an exact pattern.
  * @returns {Promise<object>} the AutoTrigger row
  * @throws {TagError} NOT_FOUND or AMBIGUOUS
  */
@@ -1129,10 +1129,10 @@ export async function resolveTrigger(guildId, input) {
     });
     if (byPattern.length === 1) return byPattern[0];
     if (byPattern.length === 2) {
-      throw new TagError('AMBIGUOUS', 'Several Matches', 'Several triggers use that pattern; use its #number or ID from /trigger list.');
+      throw new TagError('AMBIGUOUS', 'Several Matches', 'Several triggers use that pattern; use its #number or ID from /tag trigger list.');
     }
   }
-  throw new TagError('NOT_FOUND', 'Not Found', `No trigger matches \`${codeSafe(clampText(s, 80))}\`. Use /trigger list to see numbers and IDs.`);
+  throw new TagError('NOT_FOUND', 'Not Found', `No trigger matches \`${codeSafe(clampText(s, 80))}\`. Use /tag trigger list to see numbers and IDs.`);
 }
 
 /** The #n of a trigger: the count of rows ordered up to and including it. */
@@ -1164,7 +1164,7 @@ export async function createTriggerRow(data) {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(lockSql(`autotrigger:${data.guildId}`));
     if (await tx.autoTrigger.count({ where: { guildId: data.guildId } }) >= LIMITS.AUTO_TRIGGERS) {
-      throw new TagError('LIMIT', 'Limit Reached', `This server already has ${LIMITS.AUTO_TRIGGERS} triggers, the maximum. Remove one with \`/trigger remove\`.`);
+      throw new TagError('LIMIT', 'Limit Reached', `This server already has ${LIMITS.AUTO_TRIGGERS} triggers, the maximum. Remove one with \`/tag trigger remove\`.`);
     }
     return tx.autoTrigger.create({ data });
   });

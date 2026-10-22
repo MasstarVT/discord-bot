@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType } from 'discord.js';
 
 process.env.NODE_ENV = 'test';
 process.env.DISCORD_TOKEN ??= 'test-token';
@@ -29,7 +29,6 @@ const { buildCommandPayload } = await import('../src/handlers/commandLoader.js')
 const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const tagCmd = await import('../src/commands/utility/tag.js');
 const { tagRolesAllow } = await import('../src/commands/utility/help.js');
-const triggerCmd = await import('../src/commands/admin/trigger.js');
 const { plugin } = await import('../src/plugins/custom-commands.js');
 const settingsSvc = await import('../src/services/settingsService.js');
 const prisma = (await import('../src/database/client.js')).default;
@@ -762,16 +761,12 @@ function charCount(node) {
 
 test('11. command payloads, exports and permission keys', () => {
   const tagJson = buildCommandPayload(tagCmd);
-  const trigJson = buildCommandPayload(triggerCmd);
-  assert.ok(charCount(tagJson) <= 2200, `/tag is ${charCount(tagJson)} characters`);
-  assert.ok(charCount(trigJson) <= 1150, `/trigger is ${charCount(trigJson)} characters`);
-  for (const json of [tagJson, trigJson]) {
-    assert.ok(json.options.length <= 25);
-    for (const o of json.options) assert.ok((o.options?.length ?? 0) <= 25);
-  }
+  assert.ok(charCount(tagJson) <= 3500, `/tag is ${charCount(tagJson)} characters`);
+  assert.ok(tagJson.options.length <= 25);
+  for (const o of tagJson.options) assert.ok((o.options?.length ?? 0) <= 25);
 
   assert.equal(tagCmd.module, 'customcommands');
-  assert.equal(tagCmd.gated, true);
+  assert.equal(tagCmd.gated, false, 'the trigger group works while the module is off; execute() gates the rest');
   assert.equal(tagCmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
   assert.equal(tagJson.default_member_permissions, undefined, 'members must see /tag use');
   assert.equal(typeof tagCmd.autocomplete, 'function');
@@ -786,16 +781,16 @@ test('11. command payloads, exports and permission keys', () => {
     assert.equal(tagCmd.subcommandPermissions[key], PERMISSION_LEVELS.ADMIN, key);
   }
   assert.equal(tagCmd.subcommandPermissions['action list'], PERMISSION_LEVELS.MEMBER);
+  for (const sub of ['enable', 'disable', 'add', 'edit', 'remove', 'toggle', 'info', 'list']) {
+    assert.equal(tagCmd.subcommandPermissions[`trigger ${sub}`], PERMISSION_LEVELS.ADMIN, `trigger ${sub}`);
+  }
   for (const read of ['use', 'info', 'raw', 'list', 'placeholders']) {
     assert.ok(!(read in tagCmd.subcommandPermissions) || tagCmd.subcommandPermissions[read] === PERMISSION_LEVELS.MEMBER, read);
   }
 
-  assert.equal(triggerCmd.module, 'customcommands');
-  assert.equal(triggerCmd.gated, false);
-  assert.equal(triggerCmd.permissionLevel, PERMISSION_LEVELS.ADMIN);
-  assert.equal(trigJson.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
-  assert.equal(typeof triggerCmd.autocomplete, 'function');
-  assert.deepEqual(trigJson.options.map((o) => o.name), ['enable', 'disable', 'add', 'edit', 'remove', 'toggle', 'info', 'list']);
+  const trigGroup = tagJson.options.find((o) => o.name === 'trigger');
+  assert.equal(trigGroup.type, 2);
+  assert.deepEqual(trigGroup.options.map((o) => o.name), ['enable', 'disable', 'add', 'edit', 'remove', 'toggle', 'info', 'list']);
 });
 
 // ── 12. Plugin ────────────────────────────────────────────────────────────────
@@ -822,7 +817,7 @@ test('12. the plugin declares exactly the two hooks', async () => {
 // ── 13. Static checks ─────────────────────────────────────────────────────────
 
 test('13. static checks on the owned files', () => {
-  const files = ['src/services/tagService.js', 'src/plugins/custom-commands.js', 'src/commands/utility/tag.js', 'src/commands/admin/trigger.js'];
+  const files = ['src/services/tagService.js', 'src/plugins/custom-commands.js', 'src/commands/utility/tag.js'];
   for (const f of files) {
     const text = readFileSync(resolve(ROOT, f), 'utf8');
     assert.ok(!/new RegExp\(/.test(text), `${f}: no new RegExp`);
@@ -1176,8 +1171,8 @@ describe('16. command validation (no database needed)', () => {
     return i;
   };
   const trig = async (sc, sub, options) => {
-    const i = makeInteraction({ sub, options, ...sc });
-    await triggerCmd.execute(i);
+    const i = makeInteraction({ sub, group: 'trigger', options, ...sc });
+    await tagCmd.execute(i);
     return i;
   };
 
@@ -1251,7 +1246,7 @@ describe('16. command validation (no database needed)', () => {
     assert.match(textOf(locked), /Mention @everyone, @here and All Roles/);
   });
 
-  test('/trigger add refuses unsafe, invalid and empty input (R010, R048)', async () => {
+  test('/tag trigger add refuses unsafe, invalid and empty input (R010, R048)', async () => {
     const sc = setup();
     let i = await trig(sc, 'add', { pattern: '(a+)+$', response: 'x', match_type: 'REGEX' });
     assert.equal(i.calls.deferReply.length, 1);
@@ -1266,7 +1261,7 @@ describe('16. command validation (no database needed)', () => {
     assert.match(titleOf(i), /Invalid Pattern/);
   });
 
-  test('/trigger enable and disable write through updateSettings with the right fields', async () => {
+  test('/tag trigger enable and disable write through updateSettings with the right fields', async () => {
     const sc = setup();
     const writes = [];
     const prev = prisma.guildSettings;
@@ -1319,6 +1314,56 @@ async function cleanupGuild(...ids) {
   }
 }
 
+// ── 16b. The module toggle (the command is not gated, execute() checks it) ───────
+
+describe('16b. /tag while the Custom Commands module is off', () => {
+  const GOFF = 'goff';
+  before(() => {
+    prisma.guildSettings = {
+      findUnique: async () => ({ guildId: GOFF, customCommandsEnabled: false, autoTriggersEnabled: true, customPrefix: '!', embedColor: null }),
+      upsert: async ({ update, create }) => ({
+        guildId: GOFF, customCommandsEnabled: false, autoTriggersEnabled: true, customPrefix: '!', embedColor: null, ...create, ...update,
+      }),
+    };
+  });
+  after(() => { prisma.guildSettings = realGuildSettings; });
+
+  const setup = () => {
+    const guild = makeGuild({ id: GOFF, roles: [makeRole(ROLE_A)] });
+    const channel = makeChannel(guild);
+    const user = makeUser();
+    const member = makeMember(guild, user);
+    member.roles.highest = { position: 50 };
+    member.permissions = { has: () => false };
+    return { guild, channel, user, member };
+  };
+
+  test('every other subcommand refuses with the router wording, before any defer', async () => {
+    for (const [sub, group, options] of [
+      ['use', null, { name: 'x' }], ['placeholders', null, {}], ['list', null, {}], ['create', null, { name: 'ok', content: 'x' }],
+      ['add', 'action', { name: 'x', type: 'reply', text: 'x' }],
+    ]) {
+      const i = makeInteraction({ sub, group, options, ...setup() });
+      await tagCmd.execute(i);
+      assert.equal(i.calls.deferReply.length, 0, `${group ?? ''} ${sub}: no defer`);
+      const p = i.calls.reply[0];
+      assert.match(embedData(p).title, /Module Disabled/, `${group ?? ''} ${sub}`);
+      assert.equal(embedData(p).description, 'The **Custom Commands** module is turned off on this server. An admin can enable it with `/module enable customcommands`.');
+    }
+  });
+
+  test('the name autocomplete answers nothing, and the trigger group still works', async () => {
+    const i = makeInteraction({ sub: 'use', focused: { name: 'name', value: '' }, ...setup() });
+    await tagCmd.autocomplete(i);
+    assert.deepEqual(i.calls.respond[0], []);
+
+    const t = makeInteraction({ sub: 'enable', group: 'trigger', options: {}, ...setup() });
+    await tagCmd.execute(t);
+    assert.equal(t.calls.deferReply.length, 1);
+    assert.match(titleOf(t), /Triggers On/);
+  });
+});
+
 describe('17. database', { skip: skipDb }, () => {
   before(async () => { await cleanupGuild(DBG, DBG2, DBG3); });
   after(async () => { await cleanupGuild(DBG, DBG2, DBG3); });
@@ -1338,8 +1383,8 @@ describe('17. database', { skip: skipDb }, () => {
     return i;
   };
   const trigRun = async (sc, sub, options) => {
-    const i = makeInteraction({ sub, options, ...sc });
-    await triggerCmd.execute(i);
+    const i = makeInteraction({ sub, group: 'trigger', options, ...sc });
+    await tagCmd.execute(i);
     return i;
   };
 
@@ -1507,7 +1552,7 @@ describe('17. database', { skip: skipDb }, () => {
     await assert.rejects(svc.resolveTrigger(DBG, 'same'), (e) => e.code === 'AMBIGUOUS');
     await assert.rejects(svc.resolveTrigger(DBG, '#0'), (e) => e.code === 'NOT_FOUND', '#0 never reaches skip: -1');
     await assert.rejects(svc.resolveTrigger(DBG, '#99'), (e) => e.code === 'NOT_FOUND');
-    await assert.rejects(svc.resolveTrigger(DBG, 'nothing here'), (e) => e.code === 'NOT_FOUND' && /Use \/trigger list/.test(e.message));
+    await assert.rejects(svc.resolveTrigger(DBG, 'nothing here'), (e) => e.code === 'NOT_FOUND' && /Use \/tag trigger list/.test(e.message));
     await assert.rejects(svc.resolveTrigger(DBG2, a.id), (e) => e.code === 'NOT_FOUND', 'another guild');
     for (let k = 0; k < rows.length; k++) assert.equal(await svc.triggerNumber(DBG, rows[k]), k + 1);
     await prisma.autoTrigger.deleteMany({ where: { guildId: DBG } });
@@ -1524,8 +1569,8 @@ describe('17. database', { skip: skipDb }, () => {
     });
     const sc = dbScenario(DBG);
     const ask = async (focused) => {
-      const i = makeInteraction({ sub: 'info', focused, ...sc });
-      await triggerCmd.autocomplete(i);
+      const i = makeInteraction({ sub: 'info', group: 'trigger', focused, ...sc });
+      await tagCmd.autocomplete(i);
       return i.calls.respond[0];
     };
     const all = await ask('');
@@ -1789,7 +1834,7 @@ describe('17. database', { skip: skipDb }, () => {
     await prisma.customTag.deleteMany({ where: { guildId: DBG3 } });
   });
 
-  test('/trigger end to end: add, edit scope, toggle, list, info and remove', async () => {
+  test('/tag trigger end to end: add, edit scope, toggle, list, info and remove', async () => {
     const sc = dbScenario(DBG3);
     await settingsSvc.ensureGuildSettings(DBG3);
     await settingsSvc.updateSettings(DBG3, { customCommandsEnabled: false, autoTriggersEnabled: true });

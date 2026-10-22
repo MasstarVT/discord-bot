@@ -1,5 +1,5 @@
 // Database access of the `levels` collection: the UserLevel rows of the guild ordered like the leaderboard (XP
-// descending, then user id), in pages. Every change runs in the bot (task `xp.adjust`, the same xpService calls as /xp),
+// descending, then user id), in pages. Every change runs in the bot (task `xp.adjust`, the same xpService calls as /levelconfig xp),
 // because reward roles and the `levelUp` hook need the gateway; the store then reads the member's row back.
 import prisma from '../../database/client.js';
 import { RecordError, taskOutcome } from './errors.js';
@@ -90,7 +90,7 @@ export const store = Object.freeze({
     return isUserId(id) ? readItem(guildId, id, ctx) : null;
   },
 
-  /** Gives XP to a member (/xp give) and answers their row. */
+  /** Gives XP to a member (/levelconfig xp give) and answers their row. */
   async create(guildId, data, ctx) {
     const { item, message, status } = await adjust(guildId, data.userId, { op: 'give', amount: data.amount }, ctx);
     if (status === 'pending') throw new RecordError('unavailable', PENDING_CREATE, { saved: true });
@@ -107,13 +107,13 @@ export const store = Object.freeze({
   },
 
   actions: Object.freeze({
-    /** /xp give: `{ amount }`. */
+    /** /levelconfig xp give: `{ amount }`. */
     give: (guildId, id, data, ctx) => adjust(guildId, userIdOf(id), { op: 'give', amount: data.amount }, ctx),
-    /** /xp remove: `{ amount }`. */
+    /** /levelconfig xp remove: `{ amount }`. */
     take: (guildId, id, data, ctx) => adjust(guildId, userIdOf(id), { op: 'take', amount: data.amount }, ctx),
-    /** /xp set: `{ xp }`. */
+    /** /levelconfig xp set: `{ xp }`. */
     set: (guildId, id, data, ctx) => adjust(guildId, userIdOf(id), { op: 'set', amount: data.xp }, ctx),
-    /** /xp reset. */
+    /** /levelconfig xp reset. */
     reset: (guildId, id, data, ctx) => adjust(guildId, userIdOf(id), { op: 'reset' }, ctx),
   }),
 });

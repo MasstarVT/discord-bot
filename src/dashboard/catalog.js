@@ -13,7 +13,7 @@ export const CATEGORIES = Object.freeze([
     id: 'safety',
     label: 'Moderation & Safety',
     description: 'Keep the server safe with moderation tools, automatic filters, audit logs and member verification.',
-    modules: Object.freeze(['moderation', 'automod', 'logging', 'captcha', 'antiraid', 'rolepersist']),
+    modules: Object.freeze(['moderation', 'automod', 'logging', 'captcha', 'antiraid', 'rolepersist', 'backups']),
   }),
   Object.freeze({
     id: 'community',
@@ -21,7 +21,7 @@ export const CATEGORIES = Object.freeze([
     description: 'Greet members, hand out roles and run the features your community uses every day.',
     modules: Object.freeze([
       'welcome', 'reactionroles', 'invites', 'tickets', 'tempvoice', 'stats', 'birthdays', 'polls', 'giveaways', 'starboard',
-      'suggestions', 'modmail', 'applications', 'events', 'afk',
+      'suggestions', 'modmail', 'applications', 'events', 'afk', 'boosts', 'confessions', 'voiceroles',
     ]),
   }),
   Object.freeze({
@@ -34,7 +34,8 @@ export const CATEGORIES = Object.freeze([
     id: 'tools',
     label: 'Content & Utilities',
     description: 'Custom commands, automations, scheduled messages, feeds and other handy tools.',
-    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole', 'autotime', 'sticky']),
+    modules: Object.freeze(['customcommands', 'automations', 'embeds', 'reminders', 'feeds', 'translation', 'search', 'liverole', 'autotime', 'sticky',
+      'autothreads', 'bumps']),
   }),
 ]);
 
@@ -76,6 +77,12 @@ export const DESCRIPTIONS = Object.freeze({
   antiraid: 'Spots join floods and brand-new accounts, pauses invites and alerts your moderators.',
   events: 'Schedule server events with Going and Maybe buttons, reminders and an attendee role.',
   rolepersist: 'Gives members their roles and nickname back when they leave and rejoin.',
+  boosts: 'Thanks members who boost the server and lets boosters make a role of their own.',
+  backups: 'Saves your roles, channels and permissions, and rebuilds what a raid or a mistake deleted.',
+  confessions: 'Members post anonymously; staff can review confessions before they appear.',
+  autothreads: 'Opens a thread on every message in chosen channels and publishes announcement posts.',
+  voiceroles: 'Gives members a role while they are in a voice channel.',
+  bumps: 'Reminds the server to bump it on Disboard when the cooldown ends, and counts who bumps.',
 });
 
 /**
@@ -119,6 +126,12 @@ export const CODES = Object.freeze({
   antiraid: 'Ar',
   events: 'Ev',
   rolepersist: 'Rp',
+  boosts: 'Bo',
+  backups: 'Bk',
+  confessions: 'Cf',
+  autothreads: 'At',
+  voiceroles: 'Vr',
+  bumps: 'Bm',
 });
 
 /** The boolean sub-settings of each module (their descriptors live in fields.js). */
@@ -137,6 +150,10 @@ const SUB_TOGGLE_FIELDS = Object.freeze({
   antiraid: ['antiRaidPauseInvites', 'antiRaidLockChat'],
   events: ['eventCreateDiscordEvent'],
   rolepersist: ['rolePersistNicknames'],
+  boosts: ['boostCustomRoles'],
+  confessions: ['confessionAllowImages', 'confessionBlockLinks'],
+  voiceroles: ['voiceRoleIgnoreAfk'],
+  bumps: ['bumpThanks'],
 });
 
 const sub = (field) => {

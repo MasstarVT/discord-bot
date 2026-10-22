@@ -1,4 +1,4 @@
-// Database access of the `triggers` collection (auto-responders): the AutoTrigger rows /trigger writes, through the
+// Database access of the `triggers` collection (auto-responders): the AutoTrigger rows /tag trigger writes, through the
 // same tagService helpers (createTriggerRow: per-guild advisory lock and cap; writeTrigger: optimistic update;
 // validateTriggerPattern: safe regexes). Every write drops the shared Redis list (invalidateTriggerCache); the bot's
 // own per-shard memo of it lives up to 60 s, so a change reaches the bot within a minute.
@@ -30,7 +30,7 @@ const FIELDS = Object.freeze([
 
 export const store = Object.freeze({
   async list(guildId) {
-    // Creation order: the #numbers /trigger list shows, and the order in which triggers are tried.
+    // Creation order: the #numbers /tag trigger list shows, and the order in which triggers are tried.
     const rows = await prisma.autoTrigger.findMany({
       where: { guildId }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: LIMITS.AUTO_TRIGGERS,
     });

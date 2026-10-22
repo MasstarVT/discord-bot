@@ -49,7 +49,7 @@ Three directories are auto-discovered; **never edit `commandLoader.js`, `eventLo
 - `permissionLevel` (default MEMBER) and `subcommandPermissions` `{ 'sub': level, 'group sub': level }` (a key that is not a real subcommand is a bug; tests check).
 - `allowInDMs`: `true` only for DM-safe commands; all others fail closed outside a cached guild. `autocomplete`: gated exactly like `execute`; a refusal answers an empty list.
 
-ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (89 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
+ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides them; our level check is separate). At most 100 global commands (79 today), each under 4000 payload characters (tests enforce it): use subcommands, and autocomplete instead of `choices` for lists over 25.
 
 **Events** (`src/events/*.js`, `{ name, once, execute }`; the client is injected last) are thin dispatchers: pre-filter, then `await runHooks('<event>', { client, guild, ...fields })`. **Never put feature logic in `src/events/`.** They may import only `discord.js`, `hookRegistry`, `settingsService`, `scheduler`, `redis`, `config/jobTypes`, `utils/async`, `utils/logger` (tested). Besides gateway events there are the synthetic `guildReady` and the internal `levelUp` and `economyPurchase` points. `messageCreate` passes only real user messages (no bots, webhooks or system messages).
 
@@ -59,7 +59,8 @@ ADMIN commands call `setDefaultMemberPermissions(ManageGuild)` (Discord hides th
 
 `src/config/hookPoints.js` (`HOOK_ORDER`: event → ordered hook ids `<pluginId>` or `<pluginId>:<name>`) is the order of truth; add a hook's id there first. `runHooks(event, fields)` (never throws) runs each hook: sync `filter` (false or throwing skips) → module gate (skipped for `always: true` and `module: null`; no settings counts as disabled) → `run(ctx)` with a soft timeout (10 s default, or `timeoutMs`). A failing or timed-out hook is logged; the next still runs.
 - `ctx`: `event`, `client`, `guild`, `guildId`, `state` (shared scratch; keys in use: `invite`, `captchaPending`, `customCommand`, `automodAction`), `stop(reason)`, `stopped`, `getSettings()` (memoised, never throws), plus the event's fields. **Only automod and custom-commands may call `ctx.stop()`** (a test enforces it).
-- Internal points: `levelUp` (from `xpService.js` and `/xp give`: `member` may be null, `userId`, `oldLevel`, `newLevel`, `channel`, `source`) and `economyPurchase` (`/shop buy` only: `member`, `userId`, `item`, `quantity`, `totalPrice`, `channel`).
+- `directMessage` (from `messageCreate`, DMs only: `guild` null, `message`, `channel`, `user`; ungated hooks find the server themselves) and `botMessage` (from `messageCreate`, guild messages by other bots and webhooks, including interaction replies such as Disboard's `/bump` answer, before the message-type filter: `message`, `channel`; the bot's own messages never arrive; `messageUpdate` also sends other bots' edits with `edited: true` and `wasLoading` (the old message was a "thinking" placeholder; null when it was not cached), since a deferred interaction reply arrives as an edit of its "thinking" message). Hooks on `botMessage` need a cheap sync `filter`, since every bot message in every server reaches it.
+- Internal points: `levelUp` (from `xpService.js` and `/levelconfig xp give`: `member` may be null, `userId`, `oldLevel`, `newLevel`, `channel`, `source`) and `economyPurchase` (`/shop buy` only: `member`, `userId`, `item`, `quantity`, `totalPrice`, `channel`).
 
 ### Interaction routing and the customId registry
 
@@ -127,7 +128,7 @@ The module registry (test-checked: every module key, flag and plugin file must b
 | `tickets` | `ticketsEnabled` | on | 🎫 Ticketing | `/ticket-panel` | `src/plugins/tickets.js` |
 | `tempvoice` | `tempVoiceEnabled` | on | 🔊 Temporary Channels | `/voice-hub` | `src/plugins/temp-voice.js` |
 | `stats` | `statsEnabled` | on | 📈 Statistics Channels | `/stats` | `src/plugins/stat-channels.js` |
-| `birthdays` | `birthdaysEnabled` | on | 🎂 Birthdays | `/birthday-config` | `src/plugins/birthdays.js` |
+| `birthdays` | `birthdaysEnabled` | on | 🎂 Birthdays | `/birthday` | `src/plugins/birthdays.js` |
 | `achievements` | `achievementsEnabled` | off | 🏆 Achievements | `/achievement-config` | `src/plugins/achievements.js` |
 | `economy` | `economyEnabled` | on | 🪙 Economy | `/economy-admin` | `src/plugins/economy.js` |
 | `games` | `gamesEnabled` | on | 🎮 Games | `/games` | `src/plugins/games-fixes.js` |
@@ -144,8 +145,14 @@ The module registry (test-checked: every module key, flag and plugin file must b
 | `antiraid` | `antiRaidEnabled` | off | 🚨 Anti-Raid | `/antiraid` | `src/plugins/antiraid.js` |
 | `events` | `eventsEnabled` | off | 📅 Events | `/event` | `src/plugins/events.js` |
 | `rolepersist` | `rolePersistEnabled` | off | 🔁 Role Persistence | `/rolepersist` | `src/plugins/role-persist.js` |
+| `boosts` | `boostsEnabled` | off | 💎 Server Boosts | `/boost` | `src/plugins/boosts.js` |
+| `backups` | `backupsEnabled` | off | 💾 Server Backups | `/backup` | `src/plugins/backups.js` |
+| `confessions` | `confessionsEnabled` | off | 🤫 Confessions | `/confession` | `src/plugins/confessions.js` |
+| `autothreads` | `autoThreadsEnabled` | off | 🧵 Auto Threads | `/autothread` | `src/plugins/auto-threads.js` |
+| `voiceroles` | `voiceRolesEnabled` | off | 🎙️ Voice Roles | `/voicerole` | `src/plugins/voice-roles.js` |
+| `bumps` | `bumpsEnabled` | off | 📣 Bump Reminders | `/bumps` | `src/plugins/bumps.js` |
 
-Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task` `antiraid.unlock` `event.remind` `event.end`. Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`.
+Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task` `antiraid.unlock` `event.remind` `event.end` `boosts.sweep` `backup.auto` `backup.restore` `bump.remind`. Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`.
 
 `levelingEnabled` is deprecated and never read (`xpEnabled` is used).
 
@@ -197,7 +204,7 @@ Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.e
 
 Every model with a `guildId` has an FK to `GuildSettings(guildId)` with `onDelete: Cascade` (leaving a guild keeps its rows); children without `guildId` cascade from their parent.
 
-- `GuildSettings`: one row per guild, parent of all; use `settingsService` only. One boolean flag per `MODULES` entry (`autoTriggersEnabled` is a `/trigger` sub-switch; `levelingEnabled` and `xpRate` are legacy), plus `timezone`, `embedColor`, `customPrefix`, and JSON such as `automodConfig` and `infractionEscalation`. `String[]` fields change via `updateSettingsWith` (row lock), not `updateSettings`.
+- `GuildSettings`: one row per guild, parent of all; use `settingsService` only. One boolean flag per `MODULES` entry (`autoTriggersEnabled` is a `/tag trigger` sub-switch; `levelingEnabled` and `xpRate` are legacy), plus `timezone`, `embedColor`, `customPrefix`, and JSON such as `automodConfig` and `infractionEscalation`. `String[]` fields change via `updateSettingsWith` (row lock), not `updateSettings`.
 - `ScheduledJob`: `dedupeKey` unique globally (`scheduleJob` upserts), `version` bumped on reschedule, lease `lockedBy`/`lockedUntil`.
 - `Infraction`: `caseId` is per guild, `@@unique([guildId, caseId])`, allocated under `pg_advisory_xact_lock`, never MAX+1.
 - `UserLevel` `[guildId, userId]` (`xp` clamped to `XP_MAX`); `LevelRole` `[guildId, level]`: one reward role per level.

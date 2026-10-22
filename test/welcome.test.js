@@ -29,7 +29,6 @@ const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const { buildCommandPayload } = await import('../src/handlers/commandLoader.js');
 const { PERMISSION_LEVELS } = await import('../src/config/constants.js');
 const welcomeCmd = await import('../src/commands/admin/welcome.js');
-const goodbyeCmd = await import('../src/commands/admin/goodbye.js');
 const { Prisma } = await import('@prisma/client');
 
 const {
@@ -847,17 +846,19 @@ function checkTree(path, options, problems) {
   }
 }
 
-test('/welcome and /goodbye payloads stay inside Discord limits and export the command contract', () => {
+test('/welcome and its /welcome goodbye group stay inside Discord limits and export the command contract', () => {
   const problems = [];
   const w = buildCommandPayload(welcomeCmd);
-  const g = buildCommandPayload(goodbyeCmd);
+  const g = w.options.find((o) => o.name === 'goodbye'); // /goodbye is the `goodbye` group of /welcome now
+  w.options = w.options.filter((o) => o !== g); // the checks on `w` below cover the rest of /welcome
   assert.ok(charCount(w) <= 2000, `/welcome is ${charCount(w)} characters`);
   assert.ok(charCount(g) <= 800, `/goodbye is ${charCount(g)} characters`);
   checkTree('/welcome', w.options, problems);
   checkTree('/goodbye', g.options, problems);
+  assert.ok(charCount(w) + charCount(g) <= 2900, `/welcome with its goodbye group is ${charCount(w) + charCount(g)} characters`);
   assert.deepEqual(problems, []);
 
-  for (const mod of [welcomeCmd, goodbyeCmd]) {
+  for (const mod of [welcomeCmd]) {
     assert.equal(mod.module, 'welcome');
     assert.equal(mod.gated, false);
     assert.equal(mod.permissionLevel, PERMISSION_LEVELS.ADMIN);
@@ -867,7 +868,7 @@ test('/welcome and /goodbye payloads stay inside Discord limits and export the c
     assert.equal(mod.data.default_member_permissions, String(PermissionFlagsBits.ManageGuild));
   }
   assert.equal(typeof welcomeCmd.autocomplete, 'function');
-  assert.equal(goodbyeCmd.autocomplete, undefined);
+  assert.equal(g.type, 2); // /goodbye is a subcommand group of /welcome, so it has no command file or autocomplete of its own
   assert.deepEqual(w.options.map((o) => o.name), ['enable', 'disable', 'status', 'channel', 'message', 'embed', 'setup', 'card', 'test', 'dm', 'autorole']);
   assert.deepEqual(g.options.map((o) => o.name), ['enable', 'disable', 'channel', 'message', 'embed', 'setup', 'test']);
   assert.equal(welcomeCmd.registerHandlers, undefined);
@@ -933,12 +934,11 @@ test('static scan: no invite tracking, timers, direct DB client or cache deletes
   assert.doesNotMatch(service, /EMPTY_MESSAGE_ERROR/);
   assert.match(service, /parseTemplateModal\(interaction, setupBase\(kind, settings\), \{ requireSomething: false \}\)/);
   assert.match(read('src/commands/admin/welcome.js'), /utils\/logger\.js/);
-  assert.match(read('src/commands/admin/goodbye.js'), /utils\/logger\.js/);
-  for (const f of ['src/services/welcomeService.js', 'src/commands/admin/welcome.js', 'src/commands/admin/goodbye.js', 'src/utils/welcomeCard.js', 'src/plugins/welcome.js']) {
+  for (const f of ['src/services/welcomeService.js', 'src/commands/admin/welcome.js', 'src/utils/welcomeCard.js', 'src/plugins/welcome.js']) {
     assert.doesNotMatch(read(f), /\bconsole\./, `${f} uses console`);
     assert.doesNotMatch(read(f), /LIMITS\.[A-Z_]+\s*\?\?/, `${f} has a LIMITS fallback`);
   }
-  for (const f of ['src/commands/admin/welcome.js', 'src/commands/admin/goodbye.js']) {
+  for (const f of ['src/commands/admin/welcome.js']) {
     assert.doesNotMatch(read(f), /modalHandlers|registerHandlers|database\/client|cache\.del/, f);
   }
   const cardSrc = read('src/utils/welcomeCard.js');

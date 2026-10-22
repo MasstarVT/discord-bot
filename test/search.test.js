@@ -21,8 +21,14 @@ const { SafeFetchError } = await import('../src/utils/safeFetch.js');
 const { PERMISSION_LEVELS, COLORS } = await import('../src/config/constants.js');
 const { buildCommandPayload } = await import('../src/handlers/commandLoader.js');
 const { default: redis } = await import('../src/services/redis.js');
-const cmds = Object.fromEntries(await Promise.all(['anime', 'manga', 'pokemon', 'urban']
-  .map(async (n) => [n, await import(`../src/commands/search/${n}.js`)])));
+const searchCmd = await import('../src/commands/search/search.js');
+// /anime, /manga, /pokemon and /urban are `/search` subcommands now. These shims run the merged execute / autocomplete with
+// the subcommand the old command became, so the call sites below read as before (the fakes carry no getSubcommand).
+const asSub = (name) => ({
+  execute: (i) => { i.options.getSubcommand = () => name; return searchCmd.execute(i); },
+  autocomplete: (i) => { i.options.getSubcommand = () => name; return searchCmd.autocomplete(i); },
+});
+const cmds = Object.fromEntries(['anime', 'manga', 'pokemon', 'urban'].map((n) => [n, asSub(n)]));
 
 // Silence the Redis reconnect and logger noise (logger prints through console).
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
@@ -163,30 +169,40 @@ const field = (embed, word) => embed.fields.find((f) => f.name.includes(word));
 
 // ── 1. Payloads ───────────────────────────────────────────────────────────────
 
-test('command payloads: names, metadata, limits and the single required option', () => {
+test('command payload: /search, its four subcommands and the single required option of each', () => {
   const expected = { anime: ['query', 100], manga: ['query', 100], pokemon: ['name', 40], urban: ['term', 100] };
-  for (const [n, [optName, maxLen]] of Object.entries(expected)) {
-    const mod = cmds[n];
-    const json = mod.data.toJSON();
-    assert.equal(json.name, n);
-    assert.equal(mod.module, 'search');
-    assert.equal(mod.gated, true);
-    assert.equal(mod.permissionLevel, PERMISSION_LEVELS.MEMBER);
-    assert.ok(json.default_member_permissions === undefined || json.default_member_permissions === null);
-    assert.deepEqual(buildCommandPayload(mod).contexts, [0]);
-    assert.ok(charCount(json) <= 90, `${n}: ${charCount(json)} chars`);
-    assert.equal(json.options.length, 1);
-    const o = json.options[0];
+  const mod = searchCmd;
+  const json = mod.data.toJSON();
+  assert.equal(json.name, 'search');
+  assert.equal(mod.module, 'search');
+  assert.equal(mod.gated, true);
+  assert.equal(mod.permissionLevel, PERMISSION_LEVELS.MEMBER);
+  assert.ok(json.default_member_permissions === undefined || json.default_member_permissions === null);
+  assert.deepEqual(buildCommandPayload(mod).contexts, [0]);
+  assert.ok(charCount(json) <= 430, `search: ${charCount(json)} chars`);
+  assert.equal(typeof mod.execute, 'function');
+  assert.equal(typeof mod.autocomplete, 'function');
+  assert.equal(mod.allowInDMs, undefined);
+  assert.deepEqual(json.options.map((o) => o.name), Object.keys(expected));
+  for (const sub of json.options) {
+    const [optName, maxLen] = expected[sub.name];
+    assert.equal(sub.type, 1);
+    assert.equal(sub.options.length, 1);
+    const o = sub.options[0];
     assert.equal(o.name, optName);
     assert.equal(o.type, 3);
     assert.equal(o.required, true);
     assert.equal(o.min_length, 1);
     assert.equal(o.max_length, maxLen);
-    assert.equal(Boolean(o.autocomplete), n === 'pokemon');
-    assert.equal(typeof mod.autocomplete === 'function', n === 'pokemon');
-    assert.equal(typeof mod.execute, 'function');
-    assert.equal(mod.allowInDMs, undefined);
+    assert.equal(Boolean(o.autocomplete), sub.name === 'pokemon');
   }
+});
+
+test('/search autocomplete answers nothing outside /search pokemon', async () => {
+  const i = fakeInteraction({ options: { focused: 'pi' } });
+  i.options.getSubcommand = () => 'anime';
+  await searchCmd.autocomplete(i);
+  assert.deepEqual(sent(i, 'respond'), []);
 });
 
 // ── 2-3. cleanQuery, keyForm, cacheKey ────────────────────────────────────────
@@ -856,7 +872,7 @@ function fakeInteraction({ options = {}, channel = { nsfw: false }, guildId = 'g
 const names = (i) => i.log.map((e) => e[0]);
 const sent = (i, kind) => i.log.find((e) => e[0] === kind)?.[1];
 
-test('/pokemon autocomplete: suggestions from the index, [] when the module is off or the index is missing', async () => {
+test('/search pokemon autocomplete: suggestions from the index, [] when the module is off or the index is missing', async () => {
   const index = { v: 1, entries: [['bulbasaur', 1], ['pikachu', 25], ['pichu', 172]] };
   setup({ cache: makeCache({ seed: { [svc.POKEAPI_INDEX_KEY]: index } }), settings: { searchEnabled: true } });
   const i = fakeInteraction({ options: { focused: 'pi' } });
@@ -906,7 +922,7 @@ test('Urban: request, negative cache, bad shape and 429', async () => {
 
 // ── Command flows (fake interactions) ─────────────────────────────────────────
 
-test('/urban: refused (ephemeral, before any defer or fetch) outside age-restricted channels while urbanNsfwOnly is on', async () => {
+test('/search urban: refused (ephemeral, before any defer or fetch) outside age-restricted channels while urbanNsfwOnly is on', async () => {
   for (const settings of [null, {}, { urbanNsfwOnly: true }]) {
     const fetch = jsonFetch({ '/v0/define?term=yeet': { list: [YEET] } });
     setup({ safeFetchJson: fetch, settings });
@@ -928,7 +944,7 @@ test('/urban: refused (ephemeral, before any defer or fetch) outside age-restric
   assert.deepEqual(names(missing), ['reply']);
 });
 
-test('/urban: allowed in an age-restricted channel, or anywhere once the guild turned urbanNsfwOnly off', async () => {
+test('/search urban: allowed in an age-restricted channel, or anywhere once the guild turned urbanNsfwOnly off', async () => {
   for (const [settings, channel] of [[null, { nsfw: true }], [{ urbanNsfwOnly: false }, { nsfw: false }], [{ urbanNsfwOnly: true }, { isThread: () => true, parent: { nsfw: true } }]]) {
     const fetch = jsonFetch({ '/v0/define?term=Yeet': { list: [YEET, { ...YEET, word: 'Yeet 2' }] } });
     setup({ safeFetchJson: fetch, settings });
@@ -943,7 +959,7 @@ test('/urban: allowed in an age-restricted channel, or anywhere once the guild t
   }
 });
 
-test('/urban: invalid term, no result and service errors reply privately; the placeholder is deleted', async () => {
+test('/search urban: invalid term, no result and service errors reply privately; the placeholder is deleted', async () => {
   setup({ settings: { urbanNsfwOnly: false } });
   const empty = fakeInteraction({ options: { term: '  \u0000 ' } });
   await cmds.urban.execute(empty);
@@ -966,7 +982,7 @@ test('/urban: invalid term, no result and service errors reply privately; the pl
   assert.ok(sent(slow, 'followUp').embeds[0].toJSON().title.includes('Search Timed Out'));
 });
 
-test('/anime and /manga: the interaction is deferred before the network is touched', async () => {
+test('/search anime and /search manga: the interaction is deferred before the network is touched', async () => {
   for (const [cmd, type] of [[cmds.anime, 'ANIME'], [cmds.manga, 'MANGA']]) {
     const order = [];
     const fetch = aniFetch((n, call) => {
@@ -982,7 +998,7 @@ test('/anime and /manga: the interaction is deferred before the network is touch
   }
 });
 
-test('/anime: SFW channel gets pages without adult titles; NSFW channel omits isAdult and may show them', async () => {
+test('/search anime: SFW channel gets pages without adult titles; NSFW channel omits isAdult and may show them', async () => {
   const fetchSfw = aniFetch(() => res(aniBody([ADULT, FRIEREN, { ...FRIEREN, id: 2 }])));
   setup({ safeFetch: fetchSfw, settings: { embedColor: 0x123456 } });
   const sfw = fakeInteraction({ options: { query: 'frieren' }, channel: { nsfw: false } });
@@ -1011,7 +1027,7 @@ test('/anime: SFW channel gets pages without adult titles; NSFW channel omits is
   assert.deepEqual(sent(one, 'editReply').components, []);
 });
 
-test('/anime: invalid query, no results (with the adult hint), rate limit and cooldown answer privately', async () => {
+test('/search anime: invalid query, no results (with the adult hint), rate limit and cooldown answer privately', async () => {
   setup({ safeFetch: aniFetch(() => res(aniBody([]))) });
   const invalid = fakeInteraction({ options: { query: '   ' } });
   await cmds.anime.execute(invalid);
@@ -1041,7 +1057,7 @@ test('/anime: invalid query, no results (with the adult hint), rate limit and co
   assert.ok(sent(again, 'followUp').embeds[0].toJSON().description.includes('too fast'));
 });
 
-test('/anime: settings that are not in the memo are loaded within the acknowledgement budget, or skipped', async () => {
+test('/search anime: settings that are not in the memo are loaded within the acknowledgement budget, or skipped', async () => {
   const fetch = aniFetch(() => res(aniBody([FRIEREN])));
   setup({ safeFetch: fetch });
   svc.__setDeps({ peekSettings: () => null, getSettingsSafe: () => new Promise(() => {}) }); // never resolves
@@ -1054,7 +1070,7 @@ test('/anime: settings that are not in the memo are loaded within the acknowledg
   assert.equal(sent(i, 'editReply').embeds[0].toJSON().color, COLORS.INFO);
 });
 
-test('/pokemon: invalid input, a found Pokémon, and no match', async () => {
+test('/search pokemon: invalid input, a found Pokémon, and no match', async () => {
   setup({ safeFetchJson: jsonFetch({ '/pokemon-species/pikachu': PIKACHU_SPECIES, '/pokemon/pikachu': PIKACHU }) });
   const bad = fakeInteraction({ options: { name: '!!!' } });
   await cmds.pokemon.execute(bad);
@@ -1076,8 +1092,8 @@ test('/pokemon: invalid input, a found Pokémon, and no match', async () => {
 
 // ── 17. Static checks ─────────────────────────────────────────────────────────
 
-test('static checks on the five source files', () => {
-  const files = ['src/services/searchService.js', ...['anime', 'manga', 'pokemon', 'urban'].map((n) => `src/commands/search/${n}.js`)];
+test('static checks on the two source files', () => {
+  const files = ['src/services/searchService.js', 'src/commands/search/search.js'];
   for (const f of files) {
     const text = readFileSync(join(ROOT, f), 'utf8');
     assert.ok(!/database\/client\.js/.test(text), `${f} imports the database client`);

@@ -1,5 +1,5 @@
 // Descriptor of the `levels` collection (Levels module): the XP leaderboard of the server (UserLevel rows), with what
-// /xp give | remove | set | reset does on each member. The XP changes run in the bot (task `xp.adjust`,
+// /levelconfig xp give | remove | set | reset does on each member. The XP changes run in the bot (task `xp.adjust`,
 // src/services/dashboardTasks/members.js) because reward roles and the `levelUp` hook need the gateway.
 // Also home of the pure helpers the three member lists share (levels, balances, cases): member names and avatars from
 // ctx.discord, the member search and the page cursors. Pure: nothing is read or connected at import time.
@@ -122,7 +122,7 @@ export function levelProgress(total) {
 
 // ── The collection ───────────────────────────────────────────────────────────
 
-/** /xp give and /xp remove take 1 to 1,000,000 XP at a time; /xp set takes 0 to XP_MAX. */
+/** /levelconfig xp give and /levelconfig xp remove take 1 to 1,000,000 XP at a time; /levelconfig xp set takes 0 to XP_MAX. */
 export const XP_STEP_MAX = 1_000_000;
 
 const amountField = (label, description) => Object.freeze({
@@ -159,9 +159,9 @@ export const collection = Object.freeze({
   module: 'leveling',
   label: 'Member levels',
   singular: 'member',
-  description: 'The XP leaderboard of this server. Give, remove or set XP and reset members like /xp does: reward roles follow '
+  description: 'The XP leaderboard of this server. Give, remove or set XP and reset members like /levelconfig xp does: reward roles follow '
     + 'the new level and no level-up message is posted. This works while the Levels module is off. Giving XP to every member '
-    + 'of a role is only available with /xp give in Discord.',
+    + 'of a role is only available with /levelconfig xp give in Discord.',
   limit: null,
   searchable: true,
   searchPlaceholder: 'Search by member name or user ID',
@@ -177,19 +177,19 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'give',
       label: 'Give XP',
-      description: 'Adds XP to this member (like /xp give).',
+      description: 'Adds XP to this member (like /levelconfig xp give).',
       fields: Object.freeze([amountField('XP to give', 'At most 1,000,000 at a time.')]),
     }),
     Object.freeze({
       id: 'take',
       label: 'Remove XP',
-      description: 'Takes XP from this member, never below 0 (like /xp remove).',
+      description: 'Takes XP from this member, never below 0 (like /levelconfig xp remove).',
       fields: Object.freeze([amountField('XP to remove', 'At most 1,000,000 at a time.')]),
     }),
     Object.freeze({
       id: 'set',
       label: 'Set XP',
-      description: "Sets this member's total XP (like /xp set).",
+      description: "Sets this member's total XP (like /levelconfig xp set).",
       fields: Object.freeze([Object.freeze({
         field: 'xp', type: 'int', label: 'Total XP', description: `From 0 to ${fmt(XP_MAX)}.`, min: 0, max: XP_MAX, unit: 'XP', default: 0,
         required: true,
@@ -198,7 +198,7 @@ export const collection = Object.freeze({
     Object.freeze({
       id: 'reset',
       label: 'Reset XP',
-      description: "Wipes this member's XP and level (like /xp reset).",
+      description: "Wipes this member's XP and level (like /levelconfig xp reset).",
       danger: true,
       confirm: "Reset this member's XP and level to zero? This cannot be undone.",
       fields: Object.freeze([]),
@@ -210,7 +210,7 @@ export const collection = Object.freeze({
 
 /**
  * A UserLevel row as a list item. The level is computed from the XP (the stored level can lag behind during a race,
- * as /xp view and /rank do).
+ * as /levelconfig xp view and /rank do).
  * @param {{ userId: string, xp: number, messageCount?: number, voiceMinutes?: number, lastXpAt?: Date|null }} row
  * @param {{ rank?: number|null, profile?: object|null }} [extra]
  */

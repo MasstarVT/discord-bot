@@ -3,7 +3,7 @@
 // case-log post that needs the gateway client and the moderation rules of the slash commands:
 //   create              → mod.action (the action, then the new case is read back)
 //   update (reason/proof) → mod.editCase (/case reason | proof, with the case-log note)
-//   clearWarnings       → mod.clearWarnings (/history clear)
+//   clearWarnings       → mod.clearWarnings (/case clear-history)
 // Cases are never deleted (no command deletes one).
 import prisma from '../../database/client.js';
 import { RecordError, taskOutcome } from './errors.js';
@@ -115,7 +115,7 @@ export const store = Object.freeze({
   },
 
   actions: Object.freeze({
-    /** /history clear for this case's member (task mod.clearWarnings: administrators only). */
+    /** /case clear-history for this case's member (task mod.clearWarnings: administrators only). */
     async clearWarnings(guildId, id, data, ctx) {
       const caseId = caseIdOf(id);
       const row = caseId === null ? null : await findCase(guildId, caseId);

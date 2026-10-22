@@ -4,7 +4,7 @@
 //                       (source 'dashboard': the moderator's roles, immunity and self-moderation are checked like a
 //                       command; DM per modDmTargets, case log, escalation, scheduled unban / expiry)
 //   mod.editCase        /case reason | proof (and its case-log note)
-//   mod.clearWarnings   /history clear (administrators): pardons the active warnings and records a NOTE case
+//   mod.clearWarnings   /case clear-history (administrators): pardons the active warnings and records a NOTE case
 // modVisibility only decides where a command's confirmation goes; the dashboard shows its own message and posts nothing in
 // a chat channel. Commands that are refused while the Moderation module is off are refused here too.
 import prisma from '../../database/client.js';
@@ -264,7 +264,7 @@ export function createModerationTasks(overrides = {}) {
     return { message: `Case #${caseId} updated.`, data: { caseId } };
   }
 
-  /** mod.clearWarnings: `{ userId, reason }` → `{ cleared, caseId }` (/history clear, administrators only). */
+  /** mod.clearWarnings: `{ userId, reason }` → `{ cleared, caseId }` (/case clear-history, administrators only). */
   async function clearWarnings({ guild, client, actor, payload }) {
     if (!isObject(payload)) throw new TaskError('The request was malformed.');
     const userId = userIdOf(payload);

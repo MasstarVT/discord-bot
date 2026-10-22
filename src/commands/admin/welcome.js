@@ -25,7 +25,7 @@ const thumb = (o) => o.setName('thumbnail').setDescription('Small corner image')
 
 export const data = new SlashCommandBuilder()
   .setName('welcome')
-  .setDescription('Welcome & Goodbye: join message, card, DM and autoroles (MEE6 Welcome & Goodbye).')
+  .setDescription('Welcome & Goodbye: join message, card, DM, autoroles and goodbye (MEE6 Welcome & Goodbye).')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((s) => s.setName('enable').setDescription('Turn the Welcome & Goodbye module on.'))
   .addSubcommand((s) => s.setName('disable').setDescription('Turn the Welcome & Goodbye module off (settings are kept).'))
@@ -72,10 +72,30 @@ export const data = new SlashCommandBuilder()
       .addStringOption((o) => o.setName('role').setDescription('Autorole to remove').setRequired(true).setAutocomplete(true)))
     .addSubcommand((s) => s.setName('delay').setDescription('Set the delay before autoroles are given.')
       .addStringOption((o) => o.setName('duration').setDescription('e.g. 10m or 2h; 0 = at once; max 7d').setRequired(true).setMaxLength(32)))
-    .addSubcommand((s) => s.setName('list').setDescription('List the autoroles and the delay.')));
+    .addSubcommand((s) => s.setName('list').setDescription('List the autoroles and the delay.')))
+  .addSubcommandGroup((g) => g.setName('goodbye').setDescription('Goodbye message when a member leaves (MEE6 Goodbye message).')
+    .addSubcommand((s) => s.setName('enable').setDescription('Post a goodbye message when members leave.'))
+    .addSubcommand((s) => s.setName('disable').setDescription('Stop goodbye messages.'))
+    .addSubcommand((s) => s.setName('channel').setDescription('Set the goodbye channel.')
+      .addChannelOption((o) => o.setName('channel').setDescription('Goodbye channel').addChannelTypes(...TXT))
+      .addStringOption((o) => newChannelOption(o)))
+    .addSubcommand((s) => s.setName('message').setDescription('Set the goodbye text (mentions do not ping).')
+      .addStringOption((o) => o.setName('text').setDescription('Text, e.g. **{user.idname}** just left the server').setMaxLength(2000))
+      .addBooleanOption((o) => o.setName('reset').setDescription('Use the default text')))
+    .addSubcommand((s) => s.setName('embed').setDescription('Send the goodbye as text or as an embed.')
+      .addBooleanOption((o) => o.setName('enabled').setDescription('true = embed, false = text only'))
+      .addStringOption(thumb)
+      .addBooleanOption((o) => o.setName('reset').setDescription('Use the default embed')))
+    .addSubcommand((s) => s.setName('setup').setDescription('Edit the goodbye text and embed in a form.'))
+    .addSubcommand((s) => s.setName('test').setDescription('Preview the goodbye message here.')));
 
 const unavailable = () => errorEmbed('Temporarily Unavailable', 'Settings could not be loaded. Try again in a moment.');
 const PREVIEW_KINDS = Object.freeze({ channel: 'welcome', dm: 'dm' });
+const SETUP_KINDS = Object.freeze({ setup: 'welcome', 'dm setup': 'dm', 'goodbye setup': 'goodbye' });
+
+// Lines about the channel only: the module and sub-toggle lines have their own wording here.
+const channelWarnings = (guild, settings) => diagnoseWelcome(guild, settings, 'goodbye')
+  .filter((line) => !/module is off|goodbye message is off/.test(line));
 
 // ── Autocomplete ───────────────────────────────────────────────────────────────
 
@@ -108,14 +128,15 @@ export async function execute(interaction) {
 
   // Forms and previews are acknowledged by showModal / buildTestPreview themselves, so settings come
   // from the memo or a bounded lookup (rule 21) before any defer.
-  if (key === 'setup' || key === 'dm setup' || key === 'test') {
+  if (key === 'setup' || key === 'dm setup' || key === 'goodbye setup' || key === 'test' || key === 'goodbye test') {
     const settings = await settingsForAck(interaction);
     if (!settings) return interaction.reply({ embeds: [unavailable()], ephemeral: true });
+    if (key === 'goodbye test') return buildTestPreview(interaction, settings, 'goodbye');
     if (key === 'test') {
       const type = interaction.options.getString('type') ?? 'channel';
       return buildTestPreview(interaction, settings, PREVIEW_KINDS[type] ?? 'welcome');
     }
-    return interaction.showModal(buildSetupModal(key === 'setup' ? 'welcome' : 'dm', settings));
+    return interaction.showModal(buildSetupModal(SETUP_KINDS[key], settings));
   }
 
   await interaction.deferReply();
@@ -272,6 +293,47 @@ async function run(interaction, key, s) {
       }
       const lines = autoroleListLines(guild, current, { prunedCount: pruned });
       return reply(applyGuildColor(infoEmbed('Autoroles', joinWithLimit(lines, { sep: '\n', max: 4000 })), current));
+    }
+
+    case 'goodbye enable': {
+      const after = await saveSettings(guildId, { goodbyeEnabled: true });
+      const warnings = [];
+      if (!after.welcomeEnabled) warnings.push('⚠️ The Welcome & Goodbye module is off. Nothing is posted until an admin runs `/welcome enable`.');
+      warnings.push(...channelWarnings(guild, after));
+      return reply(successEmbed('Goodbye Enabled', ['A message is posted when a member leaves.', ...warnings].join('\n')));
+    }
+
+    case 'goodbye disable':
+      await saveSettings(guildId, { goodbyeEnabled: false });
+      return reply(successEmbed('Goodbye Disabled', 'No goodbye messages will be posted.'));
+
+    case 'goodbye channel': {
+      const picked = interaction.options.getChannel('channel', true);
+      const needs = ['ViewChannel', 'SendMessages', ...(s.goodbyeUseEmbed ? ['EmbedLinks'] : [])];
+      const check = await checkConfigChannel(guild, picked, needs);
+      if (!check.ok) return reply(errorEmbed('Cannot Use That Channel', check.message));
+      const after = await saveSettings(guildId, { goodbyeChannelId: picked.id });
+      const lines = [`Goodbye messages will be posted in <#${picked.id}>.`];
+      if (!after.welcomeEnabled) lines.push('⚠️ The Welcome & Goodbye module is off (`/welcome enable`).');
+      if (!after.goodbyeEnabled) lines.push('⚠️ The goodbye message is off (`/welcome goodbye enable`).');
+      return reply(successEmbed('Goodbye Channel Set', lines.join('\n')));
+    }
+
+    case 'goodbye message': {
+      const text = interaction.options.getString('text');
+      const reset = interaction.options.getBoolean('reset') === true;
+      if (text === null && !reset) return reply(messageInfoEmbed('Goodbye Text', 'goodbye', s));
+      const after = await updateMessage(guildId, 'goodbye', { text, reset });
+      const ctx = { member: interaction.member, guild, channel: interaction.channel };
+      return reply(messageUpdateEmbed('Goodbye Text Updated', 'goodbye', after, { text, reset }, ctx));
+    }
+
+    case 'goodbye embed': {
+      const enabled = interaction.options.getBoolean('enabled');
+      const thumbnail = interaction.options.getString('thumbnail');
+      const reset = interaction.options.getBoolean('reset') === true;
+      const after = await updateEmbedOptions(guildId, 'goodbye', { enabled, thumbnail, reset });
+      return reply(successEmbed('Goodbye Embed Updated', describeEmbedSettings('goodbye', after)));
     }
 
     default:

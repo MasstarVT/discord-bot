@@ -53,7 +53,7 @@ export const DICTIONARY_MAX_BYTES = 8 * 1024 * 1024;
 
 /** channelId → Game (running games only). */
 export const activeGames = new Map();
-/** channelId → challengeId (the /scrabble interaction id) while a challenge is pending. */
+/** channelId → challengeId (the /scrabble start interaction id) while a challenge is pending. */
 export const pendingChallenges = new Map();
 /** Serialises every move, pass, exchange and result post of one channel. */
 export const gameMutex = createKeyedMutex();
@@ -748,7 +748,7 @@ export async function handleRackButton(interaction) {
     const game = params[0] ? findGameById(params[0]) : getGame(interaction.channelId);
     if (!game) {
       await interaction.reply({
-        content: 'This Scrabble game is no longer active (it ended, or the bot restarted). Start a new one with `/scrabble`.',
+        content: 'This Scrabble game is no longer active (it ended, or the bot restarted). Start a new one with `/scrabble start`.',
         ephemeral: true,
       });
       return;
@@ -759,7 +759,7 @@ export async function handleRackButton(interaction) {
       return;
     }
     const turn = currentPlayerId(game) === p.id
-      ? "✅ It's your turn — use `/scrabble-play word`."
+      ? "✅ It's your turn — use `/scrabble word`."
       : `⏳ Waiting for **${game.players[currentPlayerId(game)].name}**.`;
     await interaction.reply({
       content: [

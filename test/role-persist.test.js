@@ -219,6 +219,13 @@ test('snapshot: skips @everyone, managed, deleted and ignored roles; keeps the n
   assert.equal(snap.nickname, 'Nick');
 });
 
+test('snapshot and plan: Voice Roles roles are never saved or given back', () => {
+  const guild = roleGuild();
+  const settings = SETTINGS({ voiceRoleLinks: [{ channelId: 'VC1', roleId: 'A' }], voiceRoleAnyRoleIds: ['B'] });
+  assert.equal(snapshotMember(fakeMember(guild, 'U1', { roles: ['A', 'B'], nickname: null }), guild, settings), null);
+  assert.deepEqual(planRoles(guild, ['A', 'B'], settings).give, []);
+});
+
 test('snapshot: a partial member with no roles known, or nothing to give back, saves nothing', () => {
   const guild = roleGuild();
   assert.equal(snapshotMember(fakeMember(guild, 'U1', { partial: true }), guild, SETTINGS()), null);

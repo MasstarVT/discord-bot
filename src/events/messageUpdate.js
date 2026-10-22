@@ -1,4 +1,4 @@
-import { Events } from 'discord.js';
+import { Events, MessageFlags } from 'discord.js';
 import { runHooks } from '../handlers/hookRegistry.js';
 
 export const name = Events.MessageUpdate;
@@ -21,7 +21,17 @@ export async function execute(oldMessage, newMessage, client) {
       return;
     }
   }
-  if (!newMessage.inGuild() || newMessage.author?.bot || newMessage.webhookId) return;
+  if (!newMessage.inGuild()) return;
+  if (newMessage.author?.bot || newMessage.webhookId) {
+    // A bot's deferred interaction reply arrives as an edit of its "thinking" message (a bump site may answer so):
+    // botMessage hooks see bot edits too, flagged `edited`; `wasLoading` says the edit turned the placeholder into the
+    // answer (null when the old message was not cached).
+    if (newMessage.author?.id !== client.user?.id) {
+      const wasLoading = oldMessage.partial ? null : oldMessage.flags?.has(MessageFlags.Loading) === true;
+      await runHooks('botMessage', { client, guild: newMessage.guild, message: newMessage, channel: newMessage.channel, edited: true, wasLoading });
+    }
+    return;
+  }
 
   // Pins, embed unfurls and thread creation update a message without editing it (R120/R121).
   const oldKnown = !oldMessage.partial;

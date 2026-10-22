@@ -95,6 +95,12 @@ model GuildSettings {
   antiRaidEnabled       Boolean @default(false)
   eventsEnabled         Boolean @default(false)
   rolePersistEnabled    Boolean @default(false)
+  boostsEnabled         Boolean @default(false)
+  backupsEnabled        Boolean @default(false)
+  confessionsEnabled    Boolean @default(false)
+  autoThreadsEnabled    Boolean @default(false)
+  voiceRolesEnabled     Boolean @default(false)
+  bumpsEnabled          Boolean @default(false)
 
   // ── General (/settings) ────────────────────────────────────────────────────
   // IANA zone name, validated with Intl.DateTimeFormat before saving.
@@ -366,6 +372,70 @@ model GuildSettings {
   // Saved roles of members who left more than this many days ago are dropped.
   rolePersistDays           Int      @default(90)
 
+  // ── Server Boosts ───────────────────────────────────────────────────────────
+  // Where the thank-you for a new boost is posted (null = none).
+  boostChannelId     String?
+  // The thank-you text (placeholders allowed; null = the default text).
+  boostMessage       String? @db.Text
+  // Boosters may make their own role with /boost role (needs Manage Roles).
+  boostCustomRoles   Boolean @default(false)
+  // Booster roles are placed just below this role (null = just below the bot's highest role).
+  boostRoleAnchorId  String?
+  // Days a member keeps their booster role after their boost ends (0 = removed at once).
+  boostRoleGraceDays Int     @default(0)
+
+  // ── Server Backups ──────────────────────────────────────────────────────────
+  // Hours between automatic backups (0 = off).
+  backupIntervalHours Int @default(0)
+  // How many automatic backups are kept; the oldest go first (LIMITS.BACKUPS_AUTO_KEEP).
+  backupKeep          Int @default(7)
+
+  // ── Confessions ─────────────────────────────────────────────────────────────
+  // Where confessions are posted (null = not set up).
+  confessionChannelId       String?
+  // Confessions wait here for a moderator (null = posted at once). Reviewers never see the author.
+  confessionReviewChannelId String?
+  // Members may attach one image.
+  confessionAllowImages     Boolean  @default(false)
+  // Confessions containing links are refused.
+  confessionBlockLinks      Boolean  @default(true)
+  // Seconds between two confessions from one member (0 = no cooldown).
+  confessionCooldownSeconds Int      @default(300)
+  // Members who may not confess, blocked by confession number so staff never learn who they are
+  // (LIMITS.CONFESSION_BLOCKED_USERS). Never shown on the dashboard.
+  confessionBlockedUserIds  String[] @default([])
+
+  // ── Auto Threads ────────────────────────────────────────────────────────────
+  // Channels where every member message gets its own thread (LIMITS.AUTOTHREAD_CHANNELS):
+  // [{ channelId, name (placeholders), archiveMinutes ("60"|"1440"|"4320"|"10080"), closeButton }].
+  autoThreadChannels    Json     @default("[]")
+  // Announcement channels whose new posts (members, other bots, webhooks) are published to following servers
+  // (LIMITS.AUTOPUBLISH_CHANNELS).
+  autoPublishChannelIds String[] @default([])
+
+  // ── Voice Roles ─────────────────────────────────────────────────────────────
+  // [{ channelId, roleId }]: members in that voice or stage channel, or in any voice channel of that category,
+  // have the role (LIMITS.VOICE_ROLE_LINKS).
+  voiceRoleLinks      Json     @default("[]")
+  // Roles members have while in any voice channel (LIMITS.VOICE_ROLE_ANY).
+  voiceRoleAnyRoleIds String[] @default([])
+  // Members in the server's AFK channel have no voice roles.
+  voiceRoleIgnoreAfk  Boolean  @default(true)
+
+  // ── Bump Reminders ──────────────────────────────────────────────────────────
+  // Where reminders are posted (null = the channel of the last bump).
+  bumpChannelId       String?
+  // Pinged when the server can be bumped again (null = no ping).
+  bumpRoleId          String?
+  // The reminder text (placeholders allowed; null = the default text).
+  bumpReminderMessage String? @db.Text
+  // Thank the member right after a successful bump.
+  bumpThanks          Boolean @default(true)
+  // The thank-you text (placeholders allowed; null = the default text).
+  bumpThanksMessage   String? @db.Text
+  // Coins for each bump while Economy is on (0 = none).
+  bumpRewardCoins     Int     @default(0)
+
   // ── Relations ───────────────────────────────────────────────────────────────
   infractions            Infraction[]
   reactionRoleGroups     ReactionRoleGroup[]
@@ -409,6 +479,11 @@ model GuildSettings {
   antiRaidState          AntiRaidState?
   guildEvents            GuildEvent[]
   persistedMembers       PersistedMember[]
+  boosterRoles           BoosterRole[]
+  serverBackups          ServerBackup[]
+  confessions            Confession[]
+  bumpStates             BumpState[]
+  bumpCounts             BumpCount[]
 }
 
 // New enums (CREATE TYPE in the migration — safe to use as defaults).
@@ -1891,4 +1966,116 @@ model PersistedMember {
 
   @@id([guildId, userId])
   @@index([guildId, leftAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SERVER BOOSTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// A booster's own role (/boost role). Deleted boostRoleGraceDays after their boost ends, or when they leave.
+model BoosterRole {
+  guildId      String
+  userId       String
+  roleId       String    @unique
+  // When the member stopped boosting (null = still boosting); the boosts.sweep job deletes the role later.
+  boostEndedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, userId])
+  @@index([guildId, boostEndedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SERVER BACKUPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ServerBackup {
+  id           String   @id @default(cuid())
+  guildId      String
+  name         String?
+  // Made by the backup.auto job (counts against backupKeep); otherwise by createdById (LIMITS.BACKUPS_MANUAL).
+  automatic    Boolean  @default(false)
+  createdById  String?
+  // Roles, categories, channels and permission overwrites (format: backupService; has a version number).
+  data         Json
+  sizeBytes    Int
+  roleCount    Int
+  channelCount Int
+  createdAt    DateTime @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@index([guildId, automatic, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFESSIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ConfessionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DELETED
+}
+
+model Confession {
+  id              String           @id @default(cuid())
+  guildId         String
+  // Per-guild sequential number (allocated under pg_advisory_xact_lock).
+  number          Int
+  // Only shown by /confession reveal (ADMIN, written to the moderation log).
+  authorId        String
+  content         String           @db.Text
+  // The image travels with the review message and the post (attachment URLs expire, so none is stored).
+  hasImage        Boolean          @default(false)
+  status          ConfessionStatus @default(PENDING)
+  channelId       String?
+  messageId       String?          @unique
+  reviewMessageId String?          @unique
+  reviewerId      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime         @default(now())
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, number])
+  @@index([guildId, status])
+  @@index([guildId, authorId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUMP REMINDERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// The last bump of a guild on one bump site (bumpService BUMP_SITES key, e.g. "disboard").
+model BumpState {
+  guildId      String
+  site         String
+  lastBumpAt   DateTime
+  lastBumperId String?
+  // The channel the bump happened in (reminders go here when bumpChannelId is null).
+  channelId    String
+  // When the site allows the next bump; the bump.remind job fires then.
+  nextBumpAt   DateTime
+  remindedAt   DateTime?
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, site])
+}
+
+model BumpCount {
+  guildId    String
+  userId     String
+  count      Int      @default(0)
+  lastBumpAt DateTime
+
+  guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@id([guildId, userId])
+  @@index([guildId, count])
 }

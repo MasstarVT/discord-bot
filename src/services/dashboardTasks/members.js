@@ -1,8 +1,8 @@
 // Member XP changes the web dashboard asks the bot to do (its `levels` list, src/dashboard/collections/levels.js):
-//   xp.adjust   { op: 'give'|'take'|'set'|'reset', userId, amount? }: /xp give (one member) | remove | set | reset
-// The same xpService calls as /xp: one atomic SQL statement per change (clamped to XP_MAX), then handleLevelChange (the
+//   xp.adjust   { op: 'give'|'take'|'set'|'reset', userId, amount? }: /levelconfig xp give (one member) | remove | set | reset
+// The same xpService calls as /levelconfig xp: one atomic SQL statement per change (clamped to XP_MAX), then handleLevelChange (the
 // stored level, reward roles, the `levelUp` hook; announce off: admin changes never post a level-up message), and for a
-// reset the role sync on demotion. Like /xp (gated = false, ADMIN), it works while the Levels module is off.
+// reset the role sync on demotion. Like /levelconfig xp (gated = false, ADMIN), it works while the Levels module is off.
 // Coins need no task: their writes are Discord-free, so the dashboard's `balances` store calls economyService directly.
 import { PERMISSION_LEVELS, XP_MAX } from '../../config/constants.js';
 import { getSettingsSafe } from '../settingsService.js';
@@ -11,7 +11,7 @@ import { resolvePermissionLevel } from '../../utils/permissionChecker.js';
 import { TaskError } from './shared.js';
 
 export const XP_OPS = Object.freeze(['give', 'take', 'set', 'reset']);
-/** /xp give and /xp remove: 1 to 1,000,000; /xp set: 0 to XP_MAX. */
+/** /levelconfig xp give and /levelconfig xp remove: 1 to 1,000,000; /levelconfig xp set: 0 to XP_MAX. */
 export const XP_STEP_MAX = 1_000_000;
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 
@@ -48,7 +48,7 @@ const roleName = (guild, id) => {
   return name ? `@${name}` : id;
 };
 
-/** The level change and reward-role lines of an admin change (changeLines of /xp, without mentions). */
+/** The level change and reward-role lines of an admin change (xpChangeLines of /levelconfig xp, without mentions). */
 function changeText(guild, result, lc) {
   const lines = [];
   if (result.newLevel !== result.oldLevel) lines.push(`Level ${result.oldLevel} → ${result.newLevel}.`);
@@ -74,7 +74,7 @@ export function createMemberTasks(overrides = {}) {
     if (!actor?.member && !actor?.isBotOwner) throw new TaskError('You are no longer a member of this server.');
     const settings = await deps.getSettingsSafe(guild.id);
     if (!settings) throw new TaskError("The bot couldn't load this server's settings. Try again in a moment.");
-    // /xp is an ADMIN command; the bot owner (OWNER level) passes even without being a member.
+    // /levelconfig xp is an ADMIN command; the bot owner (OWNER level) passes even without being a member.
     if (!actor.isBotOwner && resolvePermissionLevel(actor.member, settings) < PERMISSION_LEVELS.ADMIN) {
       throw new TaskError('Only administrators (Manage Server) can change XP.');
     }

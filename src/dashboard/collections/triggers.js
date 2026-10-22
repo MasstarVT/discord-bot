@@ -1,10 +1,10 @@
-// The `triggers` collection (Custom Commands → auto-responders): the AutoTrigger rows behind /trigger, which answer
+// The `triggers` collection (Custom Commands → auto-responders): the AutoTrigger rows behind /tag trigger, which answer
 // messages that contain, equal, start or end with a keyword, or match a regular expression.
 // Pure: nothing is read or connected at import time (safeRegex only validates patterns).
 import { LIMITS } from '../../config/constants.js';
 import { validateRegex } from '../../utils/safeRegex.js';
 
-/** tagService.TRIGGER_PATTERN_MAX and TRIGGER_COOLDOWN_MAX, and the /trigger response option's length. */
+/** tagService.TRIGGER_PATTERN_MAX and TRIGGER_COOLDOWN_MAX, and the /tag trigger response option's length. */
 export const TRIGGER_LIMITS = Object.freeze({ pattern: 500, response: 2000, cooldown: 86_400 });
 
 export const MATCH_TYPE_OPTIONS = Object.freeze([
@@ -94,7 +94,7 @@ export const collection = Object.freeze({
 });
 
 /**
- * The pattern rule of /trigger add and edit (validateTriggerPattern): a REGEX pattern must pass safeRegex
+ * The pattern rule of /tag trigger add and edit (validateTriggerPattern): a REGEX pattern must pass safeRegex
  * (no nested repetition or backreferences, at most 200 characters, valid syntax).
  * @returns {null|{ path: string, message: string }}
  */

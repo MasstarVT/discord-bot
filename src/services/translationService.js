@@ -877,7 +877,7 @@ export async function translateToTargets(text, targets, { deadline = Date.now() 
 }
 
 /**
- * Detects the language of `text` (used by /detectlanguage). Long input is sampled.
+ * Detects the language of `text` (used by /translate detect). Long input is sampled.
  * @param {string} text
  * @returns {Promise<{ code: string|null, name: string }>}
  * @throws {TranslationError}
@@ -924,7 +924,7 @@ export function describeTranslationError(err) {
         log: 'none',
         embed: errorEmbed(
           'Language Not Supported',
-          `${err.lang ? `${languageName(err.lang)} (\`${err.lang}\`)` : 'That language'} isn't supported by this bot's translation backend (${providerLabel()}). Use \`/languages\` to see what is available.`,
+          `${err.lang ? `${languageName(err.lang)} (\`${err.lang}\`)` : 'That language'} isn't supported by this bot's translation backend (${providerLabel()}). Use \`/translate languages\` to see what is available.`,
         ),
       };
     case 'EMPTY':

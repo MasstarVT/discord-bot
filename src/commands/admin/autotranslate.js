@@ -128,7 +128,7 @@ export async function execute(interaction) {
         const suggestion = suggestLanguage(input);
         return `• \`${clampText(String(input).trim(), 40)}\` is not a language I know.${suggestion ? ` Did you mean \`${suggestion}\` (${languageName(suggestion)})?` : ''}`;
       });
-      lines.push('Use `/languages` to see every code.');
+      lines.push('Use `/translate languages` to see every code.');
       return interaction.editReply({ embeds: [errorEmbed('Invalid Language', clampText(lines.join('\n'), 4096))] });
     }
 
@@ -138,7 +138,7 @@ export async function execute(interaction) {
     const targets = valid.filter((code) => isSupportedTarget(code) !== false);
     if (!targets.length) {
       return interaction.editReply({
-        embeds: [errorEmbed('Language Not Supported', `None of those languages are supported by this bot's translation backend (${providerLabel()}). Use \`/languages\` to see the supported list.`)],
+        embeds: [errorEmbed('Language Not Supported', `None of those languages are supported by this bot's translation backend (${providerLabel()}). Use \`/translate languages\` to see the supported list.`)],
       });
     }
 

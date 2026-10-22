@@ -1,6 +1,6 @@
 // Database access for the `economyBoosts` collection (the EconomyBoost table). Create and delete use economyService.js
 // (createBoost, deleteBoost), which keep the cap and the case-insensitive unique name under a lock on the GuildSettings
-// row. /economy-boost has no edit; the dashboard edits name, bonus, role and the on/off switch under the same lock.
+// row. /economy-admin boost has no edit; the dashboard edits name, bonus, role and the on/off switch under the same lock.
 // The period is create-only: members' usage rows are keyed by it, so changing it would silently hand out second uses.
 // Boosts are not cached anywhere.
 import prisma from '../../database/client.js';
@@ -65,7 +65,7 @@ export const store = Object.freeze({
       let row = await createBoost(guildId, {
         name, percent: data.percent, period: data.period, roleId: data.roleId ?? null, createdBy: ctx.userId ?? 'dashboard',
       });
-      // createBoost always starts a boost on; /economy-boost toggle is the only way to turn it off.
+      // createBoost always starts a boost on; /economy-admin boost toggle is the only way to turn it off.
       if (data.enabled === false) row = (await setBoostEnabled(guildId, row.id, false)) ?? row;
       ctx.logger?.info?.(`Dashboard coin boost "${row.name}" +${row.percent}% (${row.period}) created in ${guildId} by ${ctx.userId}`);
       return toItem({ ...row, _count: { uses: 0 } });

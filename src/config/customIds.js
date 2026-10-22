@@ -69,6 +69,11 @@ export const CUSTOM_ID_PREFIXES = Object.freeze({
   "event-start": Object.freeze({ owner: "events", types: ["field"], kind: "field" }),
   "event-duration": Object.freeze({ owner: "events", types: ["field"], kind: "field" }),
   "event-location": Object.freeze({ owner: "events", types: ["field"], kind: "field" }),
+  "backup": Object.freeze({ owner: "backups", types: ["button"], kind: "persistent" }),
+  "confession": Object.freeze({ owner: "confessions", types: ["button"], kind: "persistent" }),
+  "confession-modal": Object.freeze({ owner: "confessions", types: ["modal"], kind: "persistent" }),
+  "confession-text": Object.freeze({ owner: "confessions", types: ["field"], kind: "field" }),
+  "autothread": Object.freeze({ owner: "auto-threads", types: ["button"], kind: "persistent" }),
 });
 
 export const CUSTOM_ID_MAX_LENGTH = 100;

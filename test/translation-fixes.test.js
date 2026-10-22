@@ -24,8 +24,6 @@ const { PERMISSION_LEVELS } = await import('../src/config/constants.js');
 const { buildCommandPayload } = await import('../src/handlers/commandLoader.js');
 const { collectPlugins } = await import('../src/handlers/pluginLoader.js');
 const translateCmd = await import('../src/commands/utility/translate.js');
-const detectCmd = await import('../src/commands/utility/detectlanguage.js');
-const languagesCmd = await import('../src/commands/utility/languages.js');
 const autotranslateCmd = await import('../src/commands/admin/autotranslate.js');
 const { plugin } = await import('../src/plugins/translation-fixes.js');
 const prisma = (await import('../src/database/client.js')).default;
@@ -567,17 +565,22 @@ describe('command payloads', () => {
     assert.ok(!autotranslateCmd.allowInDMs);
   });
 
-  test('/translate, /detectlanguage, /languages', () => {
-    const budgets = [[translateCmd, 170], [detectCmd, 80], [languagesCmd, 60]];
-    for (const [mod, budget] of budgets) {
-      const json = buildCommandPayload(mod);
-      assert.ok(charCount(json) <= budget, `/${json.name}: ${charCount(json)} > ${budget}`);
-      assert.equal(mod.module, null);
-      assert.equal(mod.permissionLevel, PERMISSION_LEVELS.MEMBER);
-      assert.equal(mod.allowInDMs, true, `/${json.name} keeps working in DMs`);
-      assert.equal(json.contexts, undefined, 'registered for DMs too');
-    }
+  test('/translate: text, detect and languages', () => {
+    const json = buildCommandPayload(translateCmd);
+    assert.equal(json.name, 'translate');
+    assert.ok(charCount(json) <= 395, `/${json.name}: ${charCount(json)} > 395`);
+    assert.equal(translateCmd.module, null);
+    assert.equal(translateCmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
+    assert.equal(translateCmd.allowInDMs, true, `/${json.name} keeps working in DMs`);
+    assert.equal(json.contexts, undefined, 'registered for DMs too');
     assert.equal(typeof translateCmd.autocomplete, 'function');
+    assert.deepEqual(json.options.map((o) => o.name), ['text', 'detect', 'languages']);
+    assert.ok(json.options.every((o) => o.type === 1));
+    const [text, detect, languages] = json.options;
+    assert.deepEqual(text.options.map((o) => [o.name, o.required, o.max_length, Boolean(o.autocomplete)]),
+      [['text', true, 1500, false], ['target_language', true, 40, true]]);
+    assert.deepEqual(detect.options.map((o) => [o.name, o.required, o.max_length]), [['text', true, 1500]]);
+    assert.deepEqual(languages.options ?? [], []);
   });
 });
 
@@ -611,15 +614,15 @@ test('languageChoices', () => {
   for (const c of svc.languageChoices('')) assert.ok(c.name.length <= 100);
 });
 
-// ── 16. /translate, /detectlanguage and /languages against a fake interaction ─
+// ── 16. /translate text, detect and languages against a fake interaction ─────
 
 describe('commands', () => {
-  function fakeInteraction(options, { guildId = null } = {}) {
+  function fakeInteraction(options, { guildId = null, sub = 'text' } = {}) {
     const sent = { reply: [], edit: [], follow: [], deferred: false };
     return {
       sent,
       guildId,
-      options: { getString: (name) => options[name] ?? null },
+      options: { getString: (name) => options[name] ?? null, getSubcommand: () => sub },
       reply: async (p) => { sent.reply.push(p); },
       deferReply: async () => { sent.deferred = true; },
       editReply: async (p) => { sent.edit.push(p); },
@@ -627,7 +630,7 @@ describe('commands', () => {
     };
   }
 
-  test('/translate works in a DM and shows source and target', async () => {
+  test('/translate text works in a DM and shows source and target', async () => {
     installFetch(googleFake('ja', 'It is very hot today, isn\'t it'));
     const i = fakeInteraction({ text: '今日はとても暑いですね', target_language: 'English' });
     await translateCmd.execute(i);
@@ -638,7 +641,7 @@ describe('commands', () => {
     assert.equal(embed.footer.text, 'Original: 今日はとても暑いですね');
   });
 
-  test('/translate splits a very long result instead of failing (R104, R105)', async () => {
+  test('/translate text splits a very long result instead of failing (R104, R105)', async () => {
     installFetch(googleFake('es', 'word '.repeat(2000)));
     const i = fakeInteraction({ text: 'hola '.repeat(250), target_language: 'en' });
     await translateCmd.execute(i);
@@ -649,7 +652,7 @@ describe('commands', () => {
     assert.deepEqual(i.sent.follow[0].allowedMentions, { parse: [] });
   });
 
-  test('/translate reports the real error, not a blanket one (R104, R255)', async () => {
+  test('/translate text reports the real error, not a blanket one (R104, R255)', async () => {
     installFetch(() => { throw new TypeError('fetch failed'); });
     const i = fakeInteraction({ text: 'hello there', target_language: 'es' });
     await translateCmd.execute(i);
@@ -665,7 +668,7 @@ describe('commands', () => {
     assert.equal(paused.sent.reply[0].ephemeral, true);
   });
 
-  test('/translate rejects unknown languages with a hint, and empty text', async () => {
+  test('/translate text rejects unknown languages with a hint, and empty text', async () => {
     const calls = installFetch(googleFake('en'));
     const bad = fakeInteraction({ text: 'hello there', target_language: 'jp' });
     await translateCmd.execute(bad);
@@ -676,22 +679,22 @@ describe('commands', () => {
     assert.equal(calls.length, 0);
   });
 
-  test('/detectlanguage shows the language and handles Traditional Chinese codes', async () => {
+  test('/translate detect shows the language and handles Traditional Chinese codes', async () => {
     installFetch(googleFake('iw'));
-    const i = fakeInteraction({ text: 'שלום לכולם' });
-    await detectCmd.execute(i);
+    const i = fakeInteraction({ text: 'שלום לכולם' }, { sub: 'detect' });
+    await translateCmd.execute(i);
     assert.match(i.sent.edit[0].embeds[0].data.description, /\*\*Hebrew\*\* \(`he`\)/);
 
     installFetch(googleFake('ceb'));
-    const j = fakeInteraction({ text: 'Maayong buntag sa tanan' });
-    await detectCmd.execute(j);
+    const j = fakeInteraction({ text: 'Maayong buntag sa tanan' }, { sub: 'detect' });
+    await translateCmd.execute(j);
     assert.match(j.sent.edit[0].embeds[0].data.description, /\*\*Cebuano\*\* \(`ceb`\)/);
     assert.match(j.sent.edit[0].embeds[0].data.footer.text, /Detected only/);
   });
 
-  test('/languages lists 74 languages and the aliases', async () => {
-    const i = fakeInteraction({});
-    await languagesCmd.execute(i);
+  test('/translate languages lists 74 languages and the aliases', async () => {
+    const i = fakeInteraction({}, { sub: 'languages' });
+    await translateCmd.execute(i);
     const embed = i.sent.edit[0].embeds[0].data;
     assert.equal(embed.description.split('\n').length, 74);
     assert.match(embed.footer.text, /^74 languages · backend: Google/);

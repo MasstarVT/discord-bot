@@ -1,5 +1,5 @@
 // ── Welcome & Goodbye ──────────────────────────────────────────────────────────
-// Everything behind /welcome, /goodbye and the welcome plugin: the default texts, healing of stored
+// Everything behind /welcome (goodbye group included) and the welcome plugin: the default texts, healing of stored
 // JSON, the text/embed truth table, payload building (one render path for real joins and previews),
 // the card orchestration, the channel / DM / goodbye senders, autoroles (immediate, delayed through the
 // durable scheduler, screening watch, captcha gate), the hook and job bodies, and the setup modals.
@@ -935,8 +935,8 @@ export function diagnoseWelcome(guild, settings, kind) {
       const { content, embed } = resolveTemplate('dm', s);
       if (!content && !embed && !s.welcomeDmCard) out.push('⚠️ Nothing would be sent: the DM has no text, embed or card.');
     } else if (kind === 'goodbye') {
-      if (!s.goodbyeEnabled) out.push('⚠️ The goodbye message is off (`/goodbye enable`).');
-      out.push(...channelProblems(guild, s.goodbyeChannelId, 'goodbye', ['ViewChannel', 'SendMessages', ...(s.goodbyeUseEmbed ? ['EmbedLinks'] : [])], '/goodbye channel'));
+      if (!s.goodbyeEnabled) out.push('⚠️ The goodbye message is off (`/welcome goodbye enable`).');
+      out.push(...channelProblems(guild, s.goodbyeChannelId, 'goodbye', ['ViewChannel', 'SendMessages', ...(s.goodbyeUseEmbed ? ['EmbedLinks'] : [])], '/welcome goodbye channel'));
     } else if (kind === 'autoroles') {
       const { roles, missingIds } = resolveAutoroles(guild, s);
       if (missingIds.length) out.push(`⚠️ ${missingIds.length} autorole${missingIds.length === 1 ? '' : 's'} no longer exist${missingIds.length === 1 ? 's' : ''} and will be skipped: ${missingIds.map((id) => `\`${id}\``).join(', ')}.`);
@@ -1001,7 +1001,7 @@ const THUMBNAILS = Object.freeze({ avatar: '{user.avatar}', server: '{server.ico
 const PLACEHOLDER_IMAGES = new Set(['{user.avatar}', '{user.avatar_url}', '{server.icon}', '{server.icon_url}']);
 
 /**
- * `/welcome embed` and `/goodbye embed`. `imageUrl` is welcome-only.
+ * `/welcome embed` and `/welcome goodbye embed`. `imageUrl` is welcome-only.
  * @param {string} guildId
  * @param {'welcome'|'goodbye'} kind
  * @param {{ enabled?: boolean|null, thumbnail?: 'avatar'|'server'|'none'|null, imageUrl?: string|null, reset?: boolean }} opts
@@ -1273,7 +1273,7 @@ export function isStaleSetupForm(interaction) {
 }
 
 const SUBMIT_TITLES = Object.freeze({ welcome: 'Welcome Message Saved', dm: 'Welcome DM Saved', goodbye: 'Goodbye Message Saved' });
-const PREVIEW_COMMANDS = Object.freeze({ welcome: '/welcome test', dm: '/welcome test type:dm', goodbye: '/goodbye test' });
+const PREVIEW_COMMANDS = Object.freeze({ welcome: '/welcome test', dm: '/welcome test type:dm', goodbye: '/welcome goodbye test' });
 
 /**
  * Submit handler of the three setup modals. Replies publicly (admin convention).
@@ -1334,8 +1334,8 @@ export async function handleSetupModalSubmit(kind, interaction) {
     if (embedJson && after.welcomeUseEmbed === false) warnings.push('Embed saved, but the welcome is in text-only mode (`/welcome embed enabled:true`).');
     if (after.welcomeMessageEnabled === false) warnings.push('The channel welcome message is turned off (`/welcome message enabled:true`).');
   } else if (kind === 'goodbye') {
-    if (!embedJson && after.goodbyeUseEmbed) warnings.push('The embed is empty, so the default embed is used. For text only, run `/goodbye embed enabled:false`.');
-    if (!after.goodbyeEnabled) warnings.push('The goodbye message is off (`/goodbye enable`).');
+    if (!embedJson && after.goodbyeUseEmbed) warnings.push('The embed is empty, so the default embed is used. For text only, run `/welcome goodbye embed enabled:false`.');
+    if (!after.goodbyeEnabled) warnings.push('The goodbye message is off (`/welcome goodbye enable`).');
   } else if (!after.welcomeDmEnabled) {
     warnings.push('The welcome DM is off (`/welcome dm enable`).');
   }
@@ -1352,7 +1352,7 @@ export async function handleSetupModalSubmit(kind, interaction) {
 // ── Test previews ──────────────────────────────────────────────────────────────
 
 /**
- * `/welcome test` and `/goodbye test`: the exact message a join or leave would produce, rendered for the
+ * `/welcome test` and `/welcome goodbye test`: the exact message a join or leave would produce, rendered for the
  * invoker, with no pings. Uses the same payload builder as real events.
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  * @param {object} settings
@@ -1382,7 +1382,7 @@ export async function buildTestPreview(interaction, settings, kind) {
   }
 }
 
-// ── Command helpers (shared by /welcome and /goodbye) ───────────────────────────
+// ── Command helpers (shared by /welcome and /welcome goodbye) ───────────────────────────
 
 /**
  * Settings for a reply that must be acknowledged within 3 seconds (a modal or a test preview): the memo
