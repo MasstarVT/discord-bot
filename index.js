@@ -4,7 +4,8 @@ import { fileURLToPath }   from 'url';
 import { dirname, resolve } from 'path';
 import { setTimeout as sleep } from 'timers/promises';
 import logger               from './src/utils/logger.js';
-import { deployCommands, autoDeployCommands } from './src/handlers/commandLoader.js';
+import { deployCommands }     from './src/handlers/commandLoader.js';
+import { autoDeployInWorker } from './src/handlers/autoDeployWorker.js';
 import { startHealthServer } from './src/utils/healthServer.js';
 import { recordStart }       from './src/utils/restartBrake.js';
 import { FATAL_CLOSE_CODES, FATAL_MESSAGE_KEY, fatalCodeFromError } from './src/utils/fatalGateway.js';
@@ -160,8 +161,9 @@ async function boot() {
     logger.info(`Restart brake: start ${brake.starts} in the last hour (more than 5 are delayed).`);
   }
 
-  // Auto-deploy slash commands whenever the command set has changed
-  await autoDeployCommands();
+  // Auto-deploy slash commands whenever the command set has changed. A worker thread does it, so this
+  // thread never loads the command modules (the shard loads its own copy).
+  await autoDeployInWorker();
 
   // ── ShardingManager ─────────────────────────────────────────────────────────
   // totalShards: 'auto' asks Discord for the recommended shard count.

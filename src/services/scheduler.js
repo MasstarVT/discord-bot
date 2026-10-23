@@ -20,6 +20,12 @@ export class PermanentJobError extends Error {
 export const POLL_INTERVAL_MS = 5_000;
 /** Interactive jobs (INTERACTIVE_JOB_TYPES: someone waits for them) have their own loop, so slow jobs never delay them. */
 export const INTERACTIVE_POLL_INTERVAL_MS = 1_000;
+/**
+ * The interactive loop polls every ~1 s only this long after it last claimed a job, then every ~5 s: dashboard tasks
+ * are its only type and nobody uses the dashboard most of the time. The dashboard waits 12 s for a task (TASK_WAIT_MS).
+ */
+export const INTERACTIVE_ACTIVE_WINDOW_MS = 2 * 60_000;
+export const INTERACTIVE_IDLE_POLL_INTERVAL_MS = 5_000;
 /** An interactive job this late is failed instead of run: whoever asked has given up waiting. */
 export const INTERACTIVE_MAX_LATE_MS = 60_000;
 export const CLAIM_BATCH = 25;
@@ -55,7 +61,7 @@ let gcTimer = null;
 // ── Raw SQL ───────────────────────────────────────────────────────────────────
 
 // Which guilds' jobs a claim may take. `guildIds`: this shard's available guilds. `shards`: every guild of these shards,
-// by Discord's formula (guild_id >> 22) % shard_count, so the interactive loop's 1 s poll sends no guild list; null: all
+// by Discord's formula (guild_id >> 22) % shard_count, so the interactive loop's fast poll sends no guild list; null: all
 // guilds (one process holds them all). The CASE keeps one malformed guildId from failing every claim.
 const ownedSql = ({ guildIds, shards }) => {
   if (guildIds) return Prisma.sql`"guildId" = ANY(${guildIds}::text[])`;
@@ -509,9 +515,20 @@ export async function gc() {
 const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4));
 
 /**
+ * Pure. The interactive loop's next delay before jitter: INTERACTIVE_POLL_INTERVAL_MS within
+ * INTERACTIVE_ACTIVE_WINDOW_MS of its last claim, otherwise INTERACTIVE_IDLE_POLL_INTERVAL_MS.
+ * @param {number} sinceLastClaimMs Infinity when it has claimed nothing yet
+ * @returns {number}
+ */
+export function interactivePollDelay(sinceLastClaimMs) {
+  return sinceLastClaimMs < INTERACTIVE_ACTIVE_WINDOW_MS ? INTERACTIVE_POLL_INTERVAL_MS : INTERACTIVE_IDLE_POLL_INTERVAL_MS;
+}
+
+/**
  * Starts the poll loops (setTimeout chains, not setInterval, ±20 % jitter): every ~5 s the ordinary jobs' slot loop
- * (fillSlots; finished jobs also refill at once) and every ~1 s the interactive jobs. Idempotent. On the
- * shard whose ids include 0 (or with no sharding) it also starts the hourly GC.
+ * (fillSlots; finished jobs also refill at once) and the interactive jobs every ~1 s for 2 min after one was claimed,
+ * otherwise every ~5 s (interactivePollDelay). Idempotent. On the shard whose ids include 0 (or with no sharding) it
+ * also starts the hourly GC.
  * @param {import('discord.js').Client} client
  */
 export function start(client) {
@@ -528,17 +545,18 @@ export function start(client) {
   poll();
 
   // Interactive jobs (someone waits for them) are claimed by their own, faster loop, never behind a slow batch.
+  let lastInteractiveClaim = -Infinity;
   const pollInteractive = () => {
     if (!started) return;
     interactiveTimer = setTimeout(async () => {
       try {
-        await tick(client, { interactive: true });
+        if (await tick(client, { interactive: true }) > 0) lastInteractiveClaim = Date.now();
       } catch (err) {
         logger.error('Scheduler poll failed', err);
       } finally {
         pollInteractive();
       }
-    }, jitter(INTERACTIVE_POLL_INTERVAL_MS));
+    }, jitter(interactivePollDelay(Date.now() - lastInteractiveClaim)));
     interactiveTimer.unref?.();
   };
   pollInteractive();

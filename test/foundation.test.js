@@ -341,6 +341,35 @@ test('scheduler interactive loop claims by shard, without a guild list', async (
   }
 });
 
+test('scheduler interactive loop polls fast only within the active window of its last claim', () => {
+  const { interactivePollDelay, INTERACTIVE_POLL_INTERVAL_MS, INTERACTIVE_IDLE_POLL_INTERVAL_MS, INTERACTIVE_ACTIVE_WINDOW_MS } = scheduler;
+  assert.ok(INTERACTIVE_POLL_INTERVAL_MS < INTERACTIVE_IDLE_POLL_INTERVAL_MS);
+  // The dashboard waits TASK_WAIT_MS (12 s) for a task: the idle poll plus its +20 % jitter must fit well inside.
+  assert.ok(INTERACTIVE_IDLE_POLL_INTERVAL_MS * 1.2 <= 6_000);
+  assert.equal(interactivePollDelay(Infinity), INTERACTIVE_IDLE_POLL_INTERVAL_MS, 'nothing claimed yet');
+  assert.equal(interactivePollDelay(0), INTERACTIVE_POLL_INTERVAL_MS);
+  assert.equal(interactivePollDelay(INTERACTIVE_ACTIVE_WINDOW_MS - 1), INTERACTIVE_POLL_INTERVAL_MS);
+  assert.equal(interactivePollDelay(INTERACTIVE_ACTIVE_WINDOW_MS), INTERACTIVE_IDLE_POLL_INTERVAL_MS);
+});
+
+test('autoDeployInWorker resolves done, failed or timeout and never rejects', async () => {
+  const { autoDeployInWorker } = await import('../src/handlers/autoDeployWorker.js');
+  const script = (code) => new URL(`data:text/javascript,${encodeURIComponent(code)}`);
+  assert.equal(await autoDeployInWorker({ entry: script('process.exit(0)') }), 'done');
+  assert.equal(await autoDeployInWorker({ entry: script('process.exit(3)') }), 'failed');
+  assert.equal(await autoDeployInWorker({ entry: script('throw new Error("boom")') }), 'failed');
+  assert.equal(await autoDeployInWorker({ entry: script('setTimeout(() => {}, 1e9)'), timeoutMs: 200 }), 'timeout');
+  assert.equal(await autoDeployInWorker({ entry: '/no/such/worker.js' }), 'failed');
+  // The real entry, without credentials: autoDeployCommands() returns at once (no Discord call) and the thread exits.
+  // The worker copies process.env when it is constructed, which autoDeployInWorker does synchronously.
+  const { DISCORD_TOKEN, CLIENT_ID } = process.env;
+  delete process.env.DISCORD_TOKEN;
+  delete process.env.CLIENT_ID;
+  const real = autoDeployInWorker({ timeoutMs: 30_000 });
+  Object.assign(process.env, { DISCORD_TOKEN, CLIENT_ID });
+  assert.equal(await real, 'done');
+});
+
 test('scheduler getJobsByKeys: one query per 500 keys, a Map by dedupeKey, null on a database error', async () => {
   const real = prisma.scheduledJob.findMany;
   const calls = [];
