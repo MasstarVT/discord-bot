@@ -789,6 +789,37 @@ export function addItem(group, { roleId, label, emoji = null, style = 1, descrip
   return prisma.reactionRoleItem.create({ data: { groupId: group.id, ...draftItem(group.id, { roleId, label, emoji, style, description }, position) } });
 }
 
+/**
+ * Adds items and sets every item's position from `order` (role ids, first to last) in one transaction. A role missing
+ * from `order` keeps its relative place after the listed ones.
+ */
+export function insertItems(group, items, order) {
+  const all = orderItems([...group.items, ...items], order);
+  return prisma.$transaction(async (tx) => {
+    for (const [position, it] of all.entries()) {
+      if (it.id) {
+        if (it.position !== position) await tx.reactionRoleItem.update({ where: { id: it.id }, data: { position } });
+      } else {
+        await tx.reactionRoleItem.create({ data: { groupId: group.id, ...draftItem(group.id, it, position) } });
+      }
+    }
+  });
+}
+
+/** `items` sorted by their role's place in `order`; roles not in it go last, in their given order. */
+export function orderItems(items, order) {
+  const rank = (roleId) => (order.includes(roleId) ? order.indexOf(roleId) : order.length);
+  return items.map((it, i) => ({ it, i })).sort((a, b) => rank(a.it.roleId) - rank(b.it.roleId) || a.i - b.i).map(({ it }) => it);
+}
+
+/** This guild's Unique dropdown and button panels that the bot posted, with their items (template panels among them). */
+export function listUniquePanels(guildId) {
+  return prisma.reactionRoleGroup.findMany({
+    where: { guildId, type: 'UNIQUE', attached: false, layout: { in: ['SELECT', 'BUTTONS'] } },
+    include: withItems,
+  });
+}
+
 /** Deletes one item and renumbers the positions 0..n-1 in one transaction. */
 export function removeItem(group, itemId) {
   return prisma.$transaction(async (tx) => {

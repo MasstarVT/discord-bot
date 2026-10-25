@@ -447,7 +447,8 @@ export const ZONE_ABBREVIATIONS = Object.freeze({
   gst: 'Asia/Dubai', pkt: 'Asia/Karachi', npt: 'Asia/Kathmandu', ict: 'Asia/Bangkok', wib: 'Asia/Jakarta',
   sgt: 'Asia/Singapore', hkt: 'Asia/Hong_Kong', pht: 'Asia/Manila', jst: 'Asia/Tokyo', kst: 'Asia/Seoul',
   awst: 'Australia/Perth', acst: 'Australia/Adelaide', acdt: 'Australia/Adelaide',
-  aest: 'Australia/Sydney', aedt: 'Australia/Sydney', nzst: 'Pacific/Auckland', nzdt: 'Pacific/Auckland',
+  aest: 'Australia/Sydney', aedt: 'Australia/Sydney', chst: 'Pacific/Guam', nzst: 'Pacific/Auckland', nzdt: 'Pacific/Auckland',
+  chamorro: 'Pacific/Guam', // the zone's name, which no city in Pacific/Guam gives away
 });
 
 const UTC_WORDS = new Set(['utc', 'gmt', 'z', 'zulu']);

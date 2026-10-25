@@ -1,6 +1,7 @@
 // Reaction-roles plugin declaration (pkg-reaction-roles.md section 5). Declaration only: the hook bodies, filters and the
 // persistent component handlers live in services/reactionRoleService.js and nothing runs at import.
 import * as rr from '../services/reactionRoleService.js';
+import { upgradeTimezonePanels } from '../services/roleTemplateSetup.js';
 
 // Every hook id is exactly 'reaction-roles' (HOOK_ORDER lists it for each event below; the "event:id" pairs in packages.json are
 // not hook ids). All hooks are registered unconditionally because every slot is granted.
@@ -15,10 +16,14 @@ import * as rr from '../services/reactionRoleService.js';
 //
 // The reaction hooks return immediately and work in the background, so starboard, achievements and automations (which run after
 // this package in the same dispatch) are never held up.
+//
+// `guildReady` (gated) adds a timezone template's new roles to the panels posted from its older version (upgradeTimezonePanels);
+// a guild without such a panel costs one settings read.
 export const plugin = {
   id: 'reaction-roles',
   module: 'reactionroles',
   hooks: [
+    { event: 'guildReady',                 id: 'reaction-roles', timeoutMs: 60_000, run: (ctx) => upgradeTimezonePanels(ctx.guild) },
     { event: 'messageReactionAdd',         id: 'reaction-roles', filter: rr.reactionHookFilter, run: rr.onReactionAdd },
     { event: 'messageReactionRemove',      id: 'reaction-roles', filter: rr.reactionHookFilter, run: rr.onReactionRemove },
     { event: 'messageReactionRemoveAll',   id: 'reaction-roles', filter: rr.reactionHookFilter, run: rr.onReactionRemoveAll },

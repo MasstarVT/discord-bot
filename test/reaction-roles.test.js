@@ -552,8 +552,10 @@ test('15. plugin declaration', async () => {
   assert.equal(plugin.module, 'reactionroles');
   for (const h of plugin.hooks) assert.equal(h.id, 'reaction-roles');
   assert.deepEqual(plugin.hooks.map((h) => h.event).sort(), [
-    'messageDelete', 'messageReactionAdd', 'messageReactionRemove', 'messageReactionRemoveAll', 'messageReactionRemoveEmoji', 'roleDelete',
+    'guildReady', 'messageDelete', 'messageReactionAdd', 'messageReactionRemove', 'messageReactionRemoveAll', 'messageReactionRemoveEmoji',
+    'roleDelete',
   ]);
+  assert.equal(plugin.hooks.find((h) => h.event === 'guildReady').always, undefined, 'the timezone panel upgrade is gated');
   assert.equal(plugin.hooks.find((h) => h.event === 'messageDelete').always, true);
   assert.equal(plugin.hooks.find((h) => h.event === 'roleDelete').always, true);
   assert.deepEqual(plugin.components.map((c) => `${c.type}:${c.prefix}`).sort(), ['button:rr', 'select:rr-select']);
