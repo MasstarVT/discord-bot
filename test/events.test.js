@@ -1,5 +1,5 @@
 // Events tests. Offline (no Discord, Postgres or Redis): the pure rules (times, embeds, buttons, reminder chunks, field
-// parsing), the service against in-memory GuildEvent / EventRsvp tables and fake guilds (create, Discord event, jobs, RSVP
+// parsing, the calendar entry and payload), the service against in-memory GuildEvent / EventRsvp tables and fake guilds (create, Discord event, jobs, RSVP
 // capacity under concurrency, roles, end, cancel, edit, reminder, cleanup hooks), the edit form, the plugin declaration and
 // the /event payload.
 import { test, after } from 'node:test';
@@ -25,7 +25,7 @@ const { CUSTOM_ID_PREFIXES } = await import('../src/config/customIds.js');
 const { PERMISSION_LEVELS, LIMITS } = await import('../src/config/constants.js');
 const { updateSettings } = await import('../src/services/settingsService.js');
 const { parseWhen } = await import('../src/utils/time.js');
-const { PermissionFlagsBits } = await import('discord.js');
+const { GuildScheduledEventStatus, PermissionFlagsBits } = await import('discord.js');
 
 const { EVENT } = svc;
 
@@ -382,13 +382,13 @@ test('buttons: customIds, disabled when closed, Going disabled when full', () =>
   const event = { id: 'E1', status: 'SCHEDULED', capacity: 2 };
   const row = (tally, e = event) => svc.buildEventComponents(e, tally)[0].toJSON().components;
   const open = row({ going: 1, maybe: 0, declined: 0, goingIds: [] });
-  assert.deepEqual(open.map((b) => b.custom_id), ['event:E1:going', 'event:E1:maybe', 'event:E1:declined']);
-  assert.deepEqual(open.map((b) => Boolean(b.disabled)), [false, false, false]);
+  assert.deepEqual(open.map((b) => b.custom_id), ['event:E1:going', 'event:E1:maybe', 'event:E1:declined', 'event:E1:calendar']);
+  assert.deepEqual(open.map((b) => Boolean(b.disabled)), [false, false, false, false]);
   const full = row({ going: 2, maybe: 0, declined: 0, goingIds: [] });
-  assert.deepEqual(full.map((b) => Boolean(b.disabled)), [true, false, false]);
+  assert.deepEqual(full.map((b) => Boolean(b.disabled)), [true, false, false, false], 'a full event can still be added to a calendar');
   assert.equal(full[0].label, 'Going (full)');
   for (const status of ['ENDED', 'CANCELLED']) {
-    assert.deepEqual(row(svc.emptyTally(), { ...event, status }).map((b) => Boolean(b.disabled)), [true, true, true]);
+    assert.deepEqual(row(svc.emptyTally(), { ...event, status }).map((b) => Boolean(b.disabled)), [true, true, true, true]);
   }
   for (const b of open) assert.ok(b.custom_id.length <= 100);
   assert.ok(Object.hasOwn(CUSTOM_ID_PREFIXES, 'event'));
@@ -461,7 +461,7 @@ test('createEvent: row, post with buttons, stored ids, Discord event, both jobs'
   const { event } = out;
   assert.equal(channel.sent.length, 1);
   assert.deepEqual(channel.sent[0].allowedMentions, { parse: [] });
-  assert.equal(channel.sent[0].components[0].toJSON().components.length, 3);
+  assert.equal(channel.sent[0].components[0].toJSON().components.length, 4, 'three RSVP buttons and Add to calendar');
   assert.ok(event.messageId, 'message id stored');
   assert.equal(event.discordEventId, 'DE1');
   assert.equal(guild.scheduledEvents.created[0].entityMetadata.location, 'Voice 1');
@@ -612,6 +612,100 @@ test('RSVP button: gives the role on Going, takes it back on leaving, asks for a
   assert.equal(rsvps[0].roleGranted, false, 'the flag is cleared with the role');
 });
 
+test('calendar entry: plain text from cached names, 1 h end without a duration, stable uid, sequence from updatedAt', () => {
+  const guild = fakeGuild();
+  guild.members.cache.set('111111111111111111', { displayName: 'Ana' });
+  guild.channels.cache.set('333333333333333333', { name: 'general' });
+  guild.roles.cache.set('777777777777777777', { name: 'Gamers' });
+  const text = svc.plainDiscordText(
+    'Hi <@111111111111111111> <@!444444444444444444> <@&777777777777777777> <@&888888888888888888> <#333333333333333333> '
+    + '<:pog:555555555555555555> </play:666666666666666666> <t:1793905200:F>',
+    guild,
+  );
+  assert.equal(text, 'Hi @Ana @someone @Gamers @role #general :pog: /play 2026-11-05 19:00 UTC');
+  assert.equal(svc.plainDiscordText('<t:9999999999999>'), '<t:9999999999999>', 'an impossible time is left as it is');
+
+  const startsAt = new Date('2026-11-05T19:00:00Z');
+  const base = { id: 'E1', guildId: 'G', channelId: 'C1', messageId: 'M1', title: 'Movie night', startsAt, description: null };
+  const entry = svc.calendarEntry(base);
+  assert.equal(entry.uid, 'E1@events.discord-bot');
+  assert.equal(entry.end.getTime(), startsAt.getTime() + HOUR, 'same end as the Discord event');
+  assert.equal(entry.url, 'https://discord.com/channels/G/C1/M1');
+  assert.equal(entry.description, '');
+  assert.equal(entry.sequence, 0);
+  const ends = new Date('2026-11-05T22:00:00Z');
+  assert.equal(svc.calendarEntry({ ...base, endsAt: ends }).end.getTime(), ends.getTime());
+  const s1 = svc.calendarEntry({ ...base, updatedAt: new Date('2026-10-22T00:00:00Z') }).sequence;
+  const s2 = svc.calendarEntry({ ...base, updatedAt: new Date('2026-10-23T00:00:00Z') }).sequence;
+  assert.ok(s2 > s1 && s2 < 2 ** 31);
+  assert.equal(svc.discordEventOptions({ ...base, location: 'Hall' }).scheduledEndTime.getTime(), entry.end.getTime());
+});
+
+test('calendar payload: Google and Outlook link buttons within 512 characters, an .ics file, no mentions', () => {
+  const event = {
+    id: 'E1', guildId: 'G', channelId: 'C1', messageId: 'M1', title: '🎉 Big night: party/after-party', location: 'Hall',
+    description: '🍿'.repeat(500), startsAt: future(DAY), status: 'SCHEDULED',
+  };
+  const payload = svc.buildCalendarPayload(event);
+  const buttons = payload.components[0].toJSON().components;
+  assert.deepEqual(buttons.map((b) => b.label), ['Google Calendar', 'Outlook']);
+  for (const b of buttons) {
+    assert.equal(b.style, 5, 'link button');
+    assert.ok(b.url.length <= 512);
+  }
+  assert.equal(payload.files.length, 1);
+  assert.equal(payload.files[0].name, 'big-night-partyafter-party.ics');
+  assert.match(payload.files[0].attachment.toString('utf8'), /^BEGIN:VCALENDAR\r\n[\s\S]*UID:E1@events\.discord-bot\r\n/);
+  assert.deepEqual(payload.allowedMentions, { parse: [] });
+  assert.match(payload.content, /Big night/);
+  assert.equal(svc.buildCalendarPayload({ ...event, title: '🎉🎉' }).files[0].name, 'event.ics');
+});
+
+test('Add to calendar button: private reply with links and file; closed and unknown events are refused', async () => {
+  reset();
+  const guild = fakeGuild();
+  const client = fakeClient(guild);
+  const event = await seedEvent();
+  const i = rsvpInteraction(event.id, 'calendar', 'U1', { guild });
+  await svc.handleRsvpButton(i, client);
+  assert.equal(i.ephemeral, true, 'deferred privately');
+  assert.equal(i.replies.length, 1);
+  assert.equal(i.replies[0].files.length, 1);
+  assert.equal(i.replies[0].components[0].toJSON().components.length, 2);
+  assert.equal(rsvps.length, 0, 'not an RSVP');
+  await sleep(10);
+  assert.deepEqual(renders, [], 'the post is not re-rendered');
+
+  events.get(event.id).status = 'CANCELLED';
+  const closed = rsvpInteraction(event.id, 'calendar', 'U1', { guild });
+  await svc.handleRsvpButton(closed, client);
+  assert.equal(lastReply(closed), 'This event is no longer open.');
+  assert.equal(closed.replies[0].files, undefined);
+  const gone = rsvpInteraction('nope', 'calendar', 'U1', { guild });
+  await svc.handleRsvpButton(gone, client);
+  assert.equal(lastReply(gone), 'This event no longer exists.');
+});
+
+test('RSVP: a first Going or Maybe also offers the calendar; switching between them or Declined does not', async () => {
+  reset();
+  const guild = fakeGuild();
+  const client = fakeClient(guild);
+  const event = await seedEvent();
+  const click = async (action, user = 'U1') => {
+    const i = rsvpInteraction(event.id, action, user, { guild });
+    await svc.handleRsvpButton(i, client);
+    return i.replies.at(-1);
+  };
+  const first = await click('going');
+  assert.match(first.content, /Going.*Movie night[\s\S]*calendar/);
+  assert.equal(first.files.length, 1);
+  assert.equal((await click('maybe')).files, undefined, 'Going -> Maybe');
+  assert.equal((await click('maybe')).files, undefined, 'same answer');
+  assert.equal((await click('declined')).files, undefined);
+  assert.equal((await click('maybe')).files.length, 1, 'back from Declined');
+  assert.equal((await click('declined', 'U2')).files, undefined, 'a first Declined');
+});
+
 test('RSVP button: Maybe never touches roles; a full event and a closed event are refused; bad ids are inactive', async () => {
   reset();
   const guild = fakeGuild();
@@ -735,7 +829,7 @@ test('closeEvent: one winner, the post is edited with disabled buttons, jobs are
   assert.ok(stored === 'ENDED' || stored === 'CANCELLED');
   assert.equal(channel.edits.length, 1);
   const buttons = channel.edits[0][1].components[0].toJSON().components;
-  assert.deepEqual(buttons.map((x) => Boolean(x.disabled)), [true, true, true]);
+  assert.deepEqual(buttons.map((x) => Boolean(x.disabled)), [true, true, true, true]);
   assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === `event.remind:${event.id}`));
   assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === `event.end:${event.id}`));
   assert.equal((await svc.closeEvent(client, 'nope', { status: 'ENDED', reason: 'manual' })).code, 'NOT_FOUND');
@@ -910,6 +1004,36 @@ test('event.remind job: chunks a long list; skips a closed event, a started one,
   await configure('G');
   assert.equal(await run({}), 1);
   await assert.rejects(() => svc.handleRemindJob({ guildId: 'G', payload: {} }, { client, guild }), /missing eventId/);
+});
+
+test('event.remind job: a Discord event deleted or cancelled while the bot was away cancels the event instead of pinging', async () => {
+  reset();
+  await configure('G');
+  const guild = fakeGuild();
+  const channel = fakeChannel(guild);
+  const client = fakeClient(guild);
+  guild.scheduledEvents.fetch = async (id) => {
+    if (id === 'GONE') throw Object.assign(new Error('Unknown Guild Scheduled Event'), { code: 10070 });
+    if (id === 'FLAKY') throw Object.assign(new Error('Service Unavailable'), { status: 503 });
+    return { id, status: id === 'CXL' ? GuildScheduledEventStatus.Canceled : GuildScheduledEventStatus.Scheduled };
+  };
+  const run = async (discordEventId) => {
+    const e = await seedEvent({ startsAt: future(HOUR), discordEventId });
+    await going(e.id, '555555555555555555');
+    const before = channel.sent.length;
+    await svc.handleRemindJob({ guildId: 'G', payload: { eventId: e.id } }, { client, guild });
+    return { sent: channel.sent.length - before, row: events.get(e.id) };
+  };
+  for (const id of ['GONE', 'CXL']) {
+    const { sent, row } = await run(id);
+    assert.equal(sent, 0, `${id}: no reminder`);
+    assert.equal(row.status, 'CANCELLED', `${id}: cancelled`);
+    assert.equal(row.reminderSentAt, null);
+    assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === `event.end:${row.id}`), `${id}: the end job is removed`);
+  }
+  assert.equal((await run('OK')).sent, 1, 'a Discord event still scheduled');
+  assert.equal((await run('FLAKY')).sent, 1, 'a failed lookup still reminds');
+  assert.equal((await run(null)).sent, 1, 'no Discord event');
 });
 
 // ── Editing ───────────────────────────────────────────────────────────────────
@@ -1145,6 +1269,44 @@ test('channelDelete: open events posted there are cancelled (jobs, Discord event
   assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === `event.end:${doomed.id}`));
 });
 
+test('Discord event cancelled in Discord: its open event is cancelled before the start; others and the bot\'s own deletes are untouched', async () => {
+  reset();
+  await configure('G');
+  const guild = fakeGuild();
+  const channel = fakeChannel(guild);
+  const client = fakeClient(guild);
+  const doomed = await seedEvent({ discordEventId: 'DE7', roleId: 'R1' });
+  const started = await seedEvent({ discordEventId: 'DE8', startsAt: future(-HOUR) });
+  const elsewhere = await seedEvent({ guildId: 'OTHER', discordEventId: 'DE7' });
+  const unlinked = await seedEvent();
+  guild.members.cache.set('A', fakeMember('A', { roleIds: ['R1'] }));
+  await going(doomed.id, 'A', 'GOING', { roleGranted: true });
+
+  await svc.onDiscordEventCancelled({ client, guildId: 'G', scheduledEvent: { id: 'DE7' } });
+  assert.equal(events.get(doomed.id).status, 'CANCELLED');
+  assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === `event.remind:${doomed.id}`), 'the reminder is removed');
+  assert.equal(guild.members.cache.get('A').roles.cache.has('R1'), false, 'the role is taken back');
+  assert.equal(channel.edits.length, 1, 'the post shows the cancel');
+  assert.equal(events.get(elsewhere.id).status, 'SCHEDULED', 'guild-scoped');
+  assert.equal(events.get(unlinked.id).status, 'SCHEDULED');
+
+  await svc.onDiscordEventCancelled({ client, guildId: 'G', scheduledEvent: { id: 'DE8' } });
+  assert.equal(events.get(started.id).status, 'SCHEDULED', 'a started event is left to its end job');
+
+  // /event cancel deletes the Discord event after its status change: the echo finds nothing open.
+  const own = await seedEvent({ discordEventId: 'DE9' });
+  await svc.cancelEvent(client, own.id, { guildId: 'G' });
+  const edits = channel.edits.length;
+  await svc.onDiscordEventCancelled({ client, guild, scheduledEvent: { id: 'DE9' } });
+  assert.equal(channel.edits.length, edits, 'no second close');
+  await svc.onDiscordEventCancelled({ client, guildId: 'G', scheduledEvent: {} });
+
+  const update = plugin.hooks.find((h) => h.event === 'guildScheduledEventUpdate');
+  assert.equal(update.filter({ scheduledEvent: { status: GuildScheduledEventStatus.Canceled } }), true);
+  assert.equal(update.filter({ scheduledEvent: { status: GuildScheduledEventStatus.Scheduled } }), false);
+  assert.equal(update.filter({ scheduledEvent: { status: GuildScheduledEventStatus.Completed } }), false);
+});
+
 test('roleDelete: events stop giving the role', async () => {
   reset();
   const a = await seedEvent({ roleId: 'R1' });
@@ -1232,6 +1394,7 @@ test('plugin declaration: hooks (always), components, jobs match the registries'
   assert.equal(plugin.module, 'events');
   assert.deepEqual(plugin.hooks.map((h) => [h.event, h.id, h.always]), [
     ['messageDelete', 'events', true], ['channelDelete', 'events', true], ['roleDelete', 'events', true],
+    ['guildScheduledEventUpdate', 'events', true], ['guildScheduledEventDelete', 'events', true],
   ]);
   for (const h of plugin.hooks) {
     assert.ok(HOOK_ORDER[h.event].includes('events'), `${h.event} lists events`);

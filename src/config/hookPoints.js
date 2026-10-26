@@ -36,6 +36,8 @@ export const HOOK_ORDER = Object.freeze({
   "emojiDelete": Object.freeze(["logging"]),
   "inviteCreate": Object.freeze(["invites","logging"]),
   "inviteDelete": Object.freeze(["invites","logging"]),
+  "guildScheduledEventUpdate": Object.freeze(["events"]),
+  "guildScheduledEventDelete": Object.freeze(["events"]),
   "userUpdate": Object.freeze(["logging"]),
   "levelUp": Object.freeze(["achievements"]),
   "economyPurchase": Object.freeze(["achievements"]),

@@ -8,8 +8,8 @@
 // has passed is shown as "happening now".
 import { Prisma } from '@prisma/client';
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel,
-  ModalBuilder, TextInputBuilder, TextInputStyle, escapeMarkdown,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, GuildScheduledEventEntityType,
+  GuildScheduledEventPrivacyLevel, GuildScheduledEventStatus, ModalBuilder, TextInputBuilder, TextInputStyle, escapeMarkdown,
 } from 'discord.js';
 import prisma from '../database/client.js';
 import { COLORS, LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
@@ -18,6 +18,7 @@ import { cancelJobs, PermanentJobError, scheduleJob } from './scheduler.js';
 import { ensureGuildSettings, getSettingsSafe, isModuleEnabled, peekSettings } from './settingsService.js';
 import { getUserTimezone, resolveMemberTimezone } from './userTimezoneService.js';
 import { ackBudgetMs, createKeyedMutex, mapLimit, withTimeout } from '../utils/async.js';
+import { buildIcs, googleCalendarUrl, outlookCalendarUrl } from '../utils/calendar.js';
 import { applyGuildColor, errorEmbed, guildEmbed, successEmbed, warnEmbed } from '../utils/embedBuilder.js';
 import {
   checkAssignableRole, checkChannelUsable, missingBotPermissions, replyError, safeDefer, safeReply,
@@ -25,7 +26,7 @@ import {
 import logger from '../utils/logger.js';
 import { formatDuration, parseDuration } from '../utils/parseDuration.js';
 import { resolvePermissionLevel } from '../utils/permissionChecker.js';
-import { clampText } from '../utils/text.js';
+import { clampText, sanitizeName } from '../utils/text.js';
 import { discordTimestamp, parseWhen, zonedParts } from '../utils/time.js';
 import { zoneLabel, zoneSourceText } from '../utils/timezones.js';
 
@@ -60,6 +61,8 @@ const TX_OPTS = Object.freeze({ timeout: 10_000, maxWait: 10_000 });
 const WARN_EVERY_MS = 10 * 60_000;
 const RENDER_SWEEP_AT = 500;
 const RENDER_IDLE_MS = 10 * 60_000;
+const SEQUENCE_EPOCH = Date.UTC(2020, 0, 1);
+const CALENDAR_HINT = 'Add it to your calendar with the buttons below, or open the attached file in Apple Calendar or any other calendar app.';
 
 // Discord API error codes we react to.
 const UNKNOWN_CHANNEL = 10003;
@@ -194,7 +197,7 @@ export function buildEventEmbed(event, tally = emptyTally(), { settings = null, 
   return embed;
 }
 
-/** The three RSVP buttons: `event:{eventId}:going|maybe|declined`. */
+/** The three RSVP buttons and Add to calendar: `event:{eventId}:going|maybe|declined|calendar`. */
 export function buildEventComponents(event, tally = emptyTally(), { disabled = !isOpen(event) } = {}) {
   const full = Boolean(event.capacity) && tally.going >= event.capacity;
   return [new ActionRowBuilder().addComponents(
@@ -204,6 +207,8 @@ export function buildEventComponents(event, tally = emptyTally(), { disabled = !
       .setLabel('Maybe').setEmoji('❔').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
     new ButtonBuilder().setCustomId(buildCustomId('event', event.id, 'declined'))
       .setLabel("Can't go").setEmoji('❌').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+    new ButtonBuilder().setCustomId(buildCustomId('event', event.id, 'calendar'))
+      .setLabel('Add to calendar').setEmoji('📅').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
   )];
 }
 
@@ -268,6 +273,68 @@ export function rsvpReplyText(out, event, status) {
     ? `You are already marked as **${RSVP_LABELS[status]}** for **${title}**.`
     : `${RSVP_EMOJI[status]} You are marked as **${RSVP_LABELS[status]}** for **${title}**.`;
   return out.note ? `${base}\n⚠️ ${out.note}` : base;
+}
+
+// ── Add to calendar ───────────────────────────────────────────────────────────
+
+/** When a calendar shows the event ending: its end, else start + 1 h (the Discord event's end too). */
+export function shownEnd(event) {
+  return event.endsAt ? new Date(event.endsAt) : new Date(new Date(event.startsAt).getTime() + EVENT.DISCORD_END_MS);
+}
+
+/**
+ * Discord markup as plain text for a calendar: mentions by name from the guild's caches (no fetches, this runs inside the
+ * ack budget), custom emoji as `:name:`, command mentions as `/name`, timestamps as UTC times.
+ */
+export function plainDiscordText(text, guild = null) {
+  const userName = (id) => {
+    const member = guild?.members?.cache?.get(id);
+    return member?.displayName ?? member?.user?.username ?? guild?.client?.users?.cache?.get(id)?.username ?? 'someone';
+  };
+  return String(text ?? '')
+    .replace(/<a?:(\w{1,32}):\d{17,20}>/g, ':$1:')
+    .replace(/<@!?(\d{17,20})>/g, (_, id) => `@${userName(id)}`)
+    .replace(/<@&(\d{17,20})>/g, (_, id) => `@${guild?.roles?.cache?.get(id)?.name ?? 'role'}`)
+    .replace(/<#(\d{17,20})>/g, (_, id) => `#${guild?.channels?.cache?.get(id)?.name ?? 'channel'}`)
+    .replace(/<\/([^:>\n]{1,96}):\d{17,20}>/g, '/$1')
+    .replace(/<t:(-?\d{1,13})(?::[tTdDfFR])?>/g, (whole, s) => {
+      const d = new Date(Number(s) * 1000);
+      return Number.isNaN(d.getTime()) ? whole : `${d.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+    });
+}
+
+/** The event as a calendar entry (utils/calendar.js). */
+export function calendarEntry(event, guild = null) {
+  const updated = event.updatedAt ? new Date(event.updatedAt).getTime() : NaN;
+  return {
+    uid: `${event.id}@events.discord-bot`,
+    title: clampText(event.title, EVENT.TITLE_MAX),
+    description: clampText(plainDiscordText(event.description, guild), EVENT.DESCRIPTION_MAX),
+    location: event.location ? clampText(event.location, EVENT.LOCATION_MAX) : '',
+    start: new Date(event.startsAt),
+    end: shownEnd(event),
+    url: jumpUrl(event),
+    // Seconds since 2020: grows with every change to the row and stays well inside a 32-bit SEQUENCE.
+    sequence: Number.isFinite(updated) ? Math.max(0, Math.floor((updated - SEQUENCE_EPOCH) / 1000)) : 0,
+  };
+}
+
+/**
+ * The private reply of Add to calendar, also sent with a first Going or Maybe: Google Calendar and Outlook.com links, and
+ * an .ics file for every other calendar. A snapshot: a later edit or cancel does not reach the calendars it went into.
+ */
+export function buildCalendarPayload(event, { guild = null, now = Date.now(), content = null } = {}) {
+  const entry = calendarEntry(event, guild);
+  const name = `${sanitizeName(event.title, { max: 50, fallback: 'event' })}.ics`;
+  return {
+    content: content ?? `📅 **${clampText(event.title, 100)}**\n${CALENDAR_HINT}`,
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Google Calendar').setURL(googleCalendarUrl(entry)),
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Outlook').setURL(outlookCalendarUrl(entry)),
+    )],
+    files: [new AttachmentBuilder(Buffer.from(buildIcs(entry, { now }), 'utf8'), { name })],
+    allowedMentions: NO_MENTIONS,
+  };
 }
 
 // ── Time zone ─────────────────────────────────────────────────────────────────
@@ -396,7 +463,7 @@ export function discordEventOptions(event) {
     name: clampText(event.title, EVENT.TITLE_MAX),
     description: clampText(event.description ?? '', EVENT.DESCRIPTION_MAX) || undefined,
     scheduledStartTime: start,
-    scheduledEndTime: event.endsAt ? new Date(event.endsAt) : new Date(start.getTime() + EVENT.DISCORD_END_MS),
+    scheduledEndTime: shownEnd(event),
     privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
     entityType: GuildScheduledEventEntityType.External,
     entityMetadata: { location: clampText(event.location, EVENT.LOCATION_MAX) },
@@ -444,6 +511,22 @@ async function updateDiscordEvent(guild, event, { startChanged, endChanged }) {
     }
     logger.warn(`events: could not update the Discord event of ${event.id}`, err);
     return `I could not update the Discord event (${reasonOf(err)}).`;
+  }
+}
+
+/**
+ * Whether the linked Discord event was deleted or cancelled in Discord. A failed lookup counts as still there.
+ * @returns {Promise<boolean>}
+ */
+async function discordEventCancelled(client, event) {
+  if (!event.discordEventId) return false;
+  const guild = guildFor(client, event.guildId);
+  if (!guild) return false;
+  try {
+    const found = await guild.scheduledEvents.fetch(event.discordEventId);
+    return found?.status === GuildScheduledEventStatus.Canceled;
+  } catch (err) {
+    return err?.code === UNKNOWN_SCHEDULED_EVENT;
   }
 }
 
@@ -678,6 +761,8 @@ export async function createEvent({ client, guild, channel, settings, data }) {
       event = await prisma.guildEvent.update({ where: { id: event.id }, data: { discordEventId: discord.id } });
     } catch (err) {
       logger.error('events: could not store the Discord event id', err);
+      // Unlinked first: should the id have been stored after all, the delete would otherwise cancel this event.
+      await prisma.guildEvent.updateMany({ where: { id: event.id }, data: { discordEventId: null } }).catch(() => {});
       await guild.scheduledEvents.delete(discord.id).catch(() => {});
       notes.push('The Discord event could not be linked, so it was removed.');
     }
@@ -766,12 +851,38 @@ export async function syncRsvpRole({ guild, member, event, status }) {
 }
 
 /**
- * `event:{eventId}:going|maybe|declined`. Defers first; everything after may touch the database.
+ * `event:{eventId}:calendar`: the calendar links and file, privately. Defers first; the event is read from the database.
+ * @param {import('discord.js').ButtonInteraction} interaction
+ * @param {string} eventId
+ */
+async function handleCalendarButton(interaction, eventId) {
+  if (!(await safeDefer(interaction, { ephemeral: true }))) return;
+  const reply = (content) => safeReply(interaction, { content, allowedMentions: NO_MENTIONS });
+  try {
+    const event = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId: interaction.guildId } });
+    if (!event || !isOpen(event)) {
+      await reply(rsvpReplyText({ result: event ? 'closed' : 'gone' }, event));
+      return;
+    }
+    await safeReply(interaction, buildCalendarPayload(event, { guild: interaction.guild }));
+  } catch (err) {
+    logger.error('event calendar failed', err);
+    await reply('Something went wrong making the calendar entry. Please try again.');
+  }
+}
+
+/**
+ * `event:{eventId}:going|maybe|declined` (and `calendar`, see handleCalendarButton). Defers first; everything after may
+ * touch the database. A first Going or Maybe also gets the calendar links and file.
  * @param {import('discord.js').ButtonInteraction} interaction
  * @param {import('discord.js').Client} client
  */
 export async function handleRsvpButton(interaction, client) {
   const { params: [eventId, action] } = parseCustomId(interaction.customId);
+  if (eventId && action === 'calendar') {
+    await handleCalendarButton(interaction, eventId);
+    return;
+  }
   const status = Object.hasOwn(STATUS_BY_ACTION, action ?? '') ? STATUS_BY_ACTION[action] : null;
   if (!eventId || !status) {
     await safeReply(interaction, { content: 'This button is no longer active.', ephemeral: true });
@@ -798,7 +909,19 @@ export async function handleRsvpButton(interaction, client) {
         : null;
       return { ...res, note };
     });
-    await reply(rsvpReplyText(out, event, status));
+    const text = rsvpReplyText(out, event, status);
+    // Only on joining: moving between Going and Maybe would send the file again every time.
+    const joined = out.result === 'set' && status !== 'DECLINED' && out.previous !== 'GOING' && out.previous !== 'MAYBE';
+    let payload = null;
+    if (joined) {
+      try {
+        payload = buildCalendarPayload(event, { guild, content: `${text}\n${CALENDAR_HINT}` });
+      } catch (err) {
+        logger.warn(`events: no calendar entry for ${eventId}`, err);
+      }
+    }
+    // A refused calendar reply must not cost the member the confirmation of an RSVP that was saved.
+    if (!payload || !(await safeReply(interaction, payload))) await reply(text);
     if (out.result === 'set') requestRender(client, eventId);
   } catch (err) {
     logger.error('event rsvp failed', err);
@@ -814,7 +937,7 @@ export async function handleRsvpButton(interaction, client) {
  * cancel, deletes the Discord event. Every Discord step after the status change is caught here.
  * @param {import('discord.js').Client} client
  * @param {string} eventId
- * @param {{ status: 'ENDED'|'CANCELLED', reason: 'timer'|'manual'|'expired'|'channel-deleted', guildId?: string }} opts
+ * @param {{ status: 'ENDED'|'CANCELLED', reason: 'timer'|'manual'|'expired'|'channel-deleted'|'discord-cancelled', guildId?: string }} opts
  * @returns {Promise<{ ok: true, event: object|null, discordFailed: boolean }
  *   | { ok: false, code: 'NOT_FOUND'|'CLOSED', event: object|null }>} throws only when the status UPDATE fails
  */
@@ -1119,6 +1242,27 @@ export async function onChannelDelete(ctx) {
   }
 }
 
+/**
+ * guildScheduledEventDelete, and guildScheduledEventUpdate to Canceled: the linked Discord event was cancelled in Discord, so
+ * the event is cancelled too (post, jobs, roles). Only before the start; after it the end job closes the event. The bot's
+ * own deletes come after its status change (or after unlinking), so they find nothing open.
+ */
+export async function onDiscordEventCancelled(ctx) {
+  const discordEventId = ctx.scheduledEvent?.id;
+  const guildId = ctx.guildId ?? ctx.guild?.id;
+  if (!discordEventId || !guildId) return;
+  const rows = await prisma.guildEvent.findMany({
+    where: { guildId, discordEventId, status: { in: [...OPEN_STATUSES] }, startsAt: { gt: new Date() } }, select: { id: true },
+  });
+  for (const r of rows) {
+    try {
+      await cancelEvent(ctx.client, r.id, { guildId, reason: 'discord-cancelled' });
+    } catch (err) {
+      logger.error(`event ${r.id}: cancelling after its Discord event was cancelled failed`, err);
+    }
+  }
+}
+
 /** roleDelete: the event role is gone, so events stop giving it. */
 export async function onRoleDelete(ctx) {
   const roleId = ctx.role?.id;
@@ -1136,6 +1280,11 @@ export async function handleRemindJob(job, ctx) {
   if (new Date(event.startsAt).getTime() <= Date.now()) return; // too late to be a reminder
   const settings = await getSettingsSafe(job.guildId);
   if (settings && !isModuleEnabled(settings, 'events')) return;
+  // A Discord event cancelled while the bot was not listening (a restart) cancels the event instead of pinging.
+  if (await discordEventCancelled(ctx.client, event)) {
+    await cancelEvent(ctx.client, eventId, { guildId: job.guildId, reason: 'discord-cancelled' });
+    return;
+  }
 
   const { count } = await prisma.guildEvent.updateMany({
     where: { id: eventId, status: { in: [...OPEN_STATUSES] }, reminderSentAt: null }, data: { reminderSentAt: new Date() },

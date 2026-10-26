@@ -27,6 +27,7 @@ const client = new Client({
     GatewayIntentBits.GuildWebhooks,
     GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildScheduledEvents,  // events: a Discord event cancelled in the Events tab cancels its /event
     // Privileged; used by stat-channels (ONLINE) and liverole (R208). DISABLE_PRESENCES=1 drops it (the busiest event).
     ...(presencesEnabled() ? [GatewayIntentBits.GuildPresences] : []),
     GatewayIntentBits.GuildMessages,
@@ -53,6 +54,7 @@ const client = new Client({
     Partials.Reaction,
     Partials.GuildMember,
     Partials.User,
+    Partials.GuildScheduledEvent, // scheduled events are not cached: without it a delete is never emitted
   ],
   // Bot replies and logs can quote user text: never let it ping roles or @everyone (admin-configured
   // messages that must ping a role opt in per message), and don't ping the author on replies.
