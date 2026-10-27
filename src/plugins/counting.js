@@ -1,6 +1,7 @@
-// Plugin `counting`: the counting game in GuildSettings.countingChannelId. A message that is only a number counts: the
-// next number from a different member gets ✅, anything else gets ❌ and, once the count has started, resets it to 0 with
-// a note in the channel. Other messages are chat and are ignored. Rules and state: src/services/countingService.js.
+// Plugin `counting`: the counting game in GuildSettings.countingChannelId. A message that is only a number, or maths
+// that comes to one (`2+2`), counts: the next number from a different member gets ✅, anything else gets ❌ and, once
+// the count has started, resets it to 0 with a note in the channel. Other messages are chat and are ignored. Rules and
+// state: src/services/countingService.js.
 import { errorEmbed, infoEmbed } from '../utils/embedBuilder.js';
 import { missingBotPermissions } from '../utils/interactionHelpers.js';
 import { createThrottle } from '../utils/async.js';
@@ -23,15 +24,25 @@ const startHint = createThrottle(COUNTING.START_HINT_EVERY_MS);
 // Unknown channel or message, missing access or permission: the target is gone, nothing to retry.
 const GONE_CODES = new Set([10003, 10008, 50001, 50013]);
 
-/** Cheap, synchronous pre-filter: the message starts with a digit (the full parse happens later). */
+/** Cheap, synchronous pre-filter: the message starts with a digit or `(` (the full parse happens later). */
 export function looksLikeCount(message) {
   const c = message?.content;
-  return typeof c === 'string' && /^\s*\d/.test(c);
+  return typeof c === 'string' && /^\s*[\d(]/.test(c);
 }
 
-/** The note posted when a run ends. */
-export function ruinedText({ userId, count, reason, expected, best }) {
-  const why = reason === 'twice' ? "You can't count twice in a row." : `The next number was **${formatNumber(expected)}**.`;
+/** The maths a count was written as, on one line, or null when it was just the number. */
+export function countMath(content) {
+  const text = String(content ?? '').trim();
+  return /^\d+$/.test(text) ? null : text.replace(/\s+/g, ' ');
+}
+
+/**
+ * The note posted when a run ends. `math` (from countMath) and `got` say what a wrong count written as maths came to.
+ */
+export function ruinedText({ userId, count, reason, expected, best, math = null, got = null }) {
+  const next = `The next number was **${formatNumber(expected)}**.`;
+  const why = reason === 'twice' ? "You can't count twice in a row."
+    : math ? `\`${math}\` is **${formatNumber(got)}**. ${next}` : next;
   return `<@${userId}> ruined it at **${formatNumber(count)}**! ${why}\n`
     + `Start again from **1**. Best run: **${formatNumber(best)}**.`;
 }
@@ -110,6 +121,7 @@ export async function judgeMessage(ctx) {
     await react(message, COUNTING.FAIL_EMOJI);
     await postNote(message.channel, errorEmbed('Count Ruined', ruinedText({
       userId: message.author.id, count: state.count, reason: verdict.reason, expected: verdict.expected, best: state.best,
+      math: countMath(message.content), got: number,
     })));
   };
 }

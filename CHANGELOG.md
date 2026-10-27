@@ -2,6 +2,9 @@
 
 What changed in Frost.Byte, newest first. Each entry is dated by when it landed on `main`; there are no version numbers yet. The full history is in the [commit log](https://github.com/MasstarVT/discord-bot/commits/main).
 
+## 2026-10-27 · Maths in Counting
+- Counting accepts maths: `2+2`, `(3*4)-1` or `2^3` counts as the number it comes to. Sums that come to a fraction, such as `10/27`, are treated as chat and never reset the count.
+
 ## 2026-10-21 · Go-live posts for the Live Role
 - The Live Role can now post in a channel when a member goes live, with a link to their Twitch or YouTube stream. Set it up with `/liverole announce channel:#live-now`, or on the dashboard; the message can be customised with `{url}`, `{platform}`, `{title}` and `{game}`, and `ping_role` pings a role such as @Stream Alerts with each post.
 

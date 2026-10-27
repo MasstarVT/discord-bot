@@ -67,6 +67,7 @@ export const LIMITS = Object.freeze({
   AUTOPUBLISH_CHANNELS: 25,    // GuildSettings.autoPublishChannelIds
   VOICE_ROLE_LINKS: 50,        // GuildSettings.voiceRoleLinks
   VOICE_ROLE_ANY: 5,           // GuildSettings.voiceRoleAnyRoleIds
+  COUNTING_MATH_LENGTH: 100,   // characters of a counting message worked out as maths (`2+2`); longer is chat
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────

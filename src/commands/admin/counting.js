@@ -31,8 +31,8 @@ export const data = new SlashCommandBuilder()
       .setMinValue(0).setMaxValue(COUNT_MAX)))
   .addSubcommand((s) => s.setName('status').setDescription('Show the counting channel, the next number and the best run.'));
 
-const RULES = 'Count up from **1**, one number per message. Nobody counts twice in a row, '
-  + 'and a wrong number starts the count again from **1**.';
+const RULES = 'Count up from **1**, one number per message. Maths works too: `2+2` counts as **4** '
+  + '(`+ - * / % ^` and brackets). Nobody counts twice in a row, and a wrong number starts the count again from **1**.';
 
 const MSG = {
   SETTINGS_UNAVAILABLE: () => errorEmbed('Settings Unavailable', 'Server settings could not be loaded. Please try again in a moment.'),

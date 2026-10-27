@@ -23,7 +23,9 @@ const { PERMISSION_LEVELS } = await import('../src/config/constants.js');
 const { updateSettings } = await import('../src/services/settingsService.js');
 
 const { parseCount, currentState, judgeCount, COUNT_MAX } = svc;
-const { looksLikeCount, inCountingChannel, ruinedText, deletedText, handleCount, handleDelete, plugin, COUNTING } = counting;
+const {
+  looksLikeCount, countMath, inCountingChannel, ruinedText, deletedText, handleCount, handleDelete, plugin, COUNTING,
+} = counting;
 
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
 console.error = console.warn = console.log = console.debug = console.info = () => {};
@@ -92,6 +94,24 @@ test('parseCount: only a message that is just a number counts', () => {
   assert.ok(COUNT_MAX <= 2_147_483_647, 'fits the Int column');
 });
 
+test('parseCount: maths that comes to a whole number counts as it', () => {
+  const sums = {
+    '2+2': 4, '(3*4)-1': 11, ' 10 / 2 ': 5, '2^3': 8, '2^3^2': 512, '(-2)^2': 4, '10%3': 1, '5-(-1)': 6,
+    '2 x 3': 6, '2×3': 6, '6÷2': 3, '7−2': 5, '2\\*3': 6, '1/49*49': 1, '1-1': 0, '-0': 0, '\n2 +\n2': 4,
+    '999999998+1': COUNT_MAX, '(((((1)))))': 1,
+  };
+  for (const [math, n] of Object.entries(sums)) assert.equal(parseCount(math), n, math);
+  for (const chat of [
+    '10/3', '24/7', '10/27', '1/0', '0/0', '9^9^9', '-2^2', '1-2', '999999999+1', '2**3', '**5**', '2(3)', '()', '(1+1',
+    '1+1)', '^0', '(^0)', '1+', 'x', '5x', '٣+1', '1.5+1', '2+2 lol', `1+${'1'.repeat(16)}`, `${'1+'.repeat(60)}1`,
+    `${'('.repeat(60)}1${')'.repeat(60)}`,
+  ]) {
+    assert.equal(parseCount(chat), null, chat);
+  }
+  assert.equal(svc.evaluateMath('-2^2'), -4, 'a power binds tighter than the minus');
+  assert.equal(Object.is(parseCount('-0'), 0), true, 'never -0');
+});
+
 test('currentState: a missing row or one from another channel starts from 0 and keeps the best run', () => {
   assert.deepEqual(currentState(null, 'C'), { count: 0, lastUserId: null, lastMessageId: null, best: 0 });
   const row = { channelId: 'C', count: 7, lastUserId: 'U', lastMessageId: 'M', best: 30 };
@@ -112,6 +132,8 @@ test('looksLikeCount and the notes', () => {
   assert.equal(looksLikeCount({ content: '12' }), true);
   assert.equal(looksLikeCount({ content: '  3' }), true);
   assert.equal(looksLikeCount({ content: 'hi 3' }), false);
+  assert.equal(looksLikeCount({ content: ' (1+1)' }), true);
+  assert.equal(looksLikeCount({ content: '**5**' }), false);
   assert.equal(looksLikeCount({}), false);
   assert.equal(looksLikeCount(null), false);
   const wrong = ruinedText({ userId: 'U', count: 41, reason: 'wrong', expected: 42, best: 50 });
@@ -120,6 +142,10 @@ test('looksLikeCount and the notes', () => {
   assert.match(wrong, /from \*\*1\*\*/);
   assert.match(wrong, /Best run: \*\*50\*\*/);
   assert.match(ruinedText({ userId: 'U', count: 3, reason: 'twice', expected: 4, best: 3 }), /twice in a row/);
+  assert.match(ruinedText({ userId: 'U', count: 3, reason: 'wrong', expected: 4, best: 3, math: '2+3', got: 5 }),
+    /ruined it at \*\*3\*\*! `2\+3` is \*\*5\*\*\. The next number was \*\*4\*\*/);
+  assert.equal(countMath(' 2 +\n3 '), '2 + 3');
+  assert.equal(countMath('007'), null);
   assert.match(deletedText({ userId: 'U', count: 9 }), /<@U> deleted their number \*\*9\*\*\. The next number is \*\*10\*\*/);
   assert.match(deletedText({ userId: null, count: 9 }), /^Someone deleted/);
 });
@@ -183,6 +209,30 @@ test('a wrong number resets the run; at 0 it only gets ❌ and a throttled hint'
   assert.equal(rows.get('G2').count, 0);
   assert.equal(rows.get('G2').best, 2);
   assert.match(noteText(ch.sent.at(-1)), /<@A> ruined it at \*\*2\*\*! The next number was \*\*3\*\*/);
+});
+
+test('maths counts: the right sum gets ✅ and advances, a wrong one says what it came to', async () => {
+  const ch = fakeChannel('C9');
+  const settings = { countingEnabled: true, countingChannelId: 'C9' };
+  const send = async (user, content) => {
+    const m = fakeMessage(ch, user, content);
+    await handleCount(ctxFor('G9', m, settings));
+    return m;
+  };
+
+  assert.deepEqual((await send('A', '1')).reactions, [COUNTING.OK_EMOJI]);
+  const two = await send('B', '(3*4)/6');
+  assert.deepEqual(two.reactions, [COUNTING.OK_EMOJI]);
+  assert.equal(rows.get('G9').count, 2);
+  assert.equal(rows.get('G9').lastMessageId, two.id);
+  assert.deepEqual((await send('A', '10/27')).reactions, [], 'a fraction is chat');
+  assert.deepEqual((await send('A', '2^2 - 1')).reactions, [COUNTING.OK_EMOJI]);
+  assert.equal(rows.get('G9').best, 3);
+
+  const wrong = await send('B', '2 * 3');
+  assert.deepEqual(wrong.reactions, [COUNTING.FAIL_EMOJI]);
+  assert.equal(rows.get('G9').count, 0);
+  assert.match(noteText(ch.sent.at(-1)), /<@B> ruined it at \*\*3\*\*! `2 \* 3` is \*\*6\*\*\. The next number was \*\*4\*\*/);
 });
 
 test('other channels, no channel and missing permissions', async () => {
