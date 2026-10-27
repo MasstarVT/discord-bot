@@ -7,6 +7,7 @@ import { PERMISSION_LEVELS, LIMITS } from '../../config/constants.js';
 import { getSettingsSafe, isModuleEnabled } from '../../services/settingsService.js';
 import { isRewardAvailable } from '../../services/rewards.js';
 import * as auto from '../../services/automationService.js';
+import { effectivePrefix } from '../../services/tagService.js';
 import {
   respondAutocomplete, awaitConfirm, checkChannelUsable, checkAssignableRole, permissionNames, safeDefer, isInteractionGone,
 } from '../../utils/interactionHelpers.js';
@@ -43,6 +44,7 @@ const PRESET_CHOICES = [
   { name: 'Welcomer', value: 'welcomer' },
   { name: 'Starboard', value: 'starboard' },
   { name: 'Thread Joiner', value: 'thread-joiner' },
+  { name: 'Commands Only', value: 'commands-only' },
 ];
 const PRESET_CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildForum, ChannelType.GuildMedia];
 const TARGET_CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice,
@@ -60,10 +62,10 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('create').setDescription('Create from a preset')
     .addStringOption((o) => o.setName('preset').setDescription('Preset recipe').setRequired(true).addChoices(...PRESET_CHOICES))
     .addStringOption(newNameOpt)
-    .addChannelOption((o) => o.setName('channel').setDescription('Post/repost here (Thread Joiner: watch here)').addChannelTypes(...PRESET_CHANNEL_TYPES))
+    .addChannelOption((o) => o.setName('channel').setDescription('Post/repost here (Thread Joiner, Commands Only: watch here)').addChannelTypes(...PRESET_CHANNEL_TYPES))
     .addStringOption((o) => newChannelOption(o))
     .addStringOption((o) => o.setName('message').setDescription('Welcomer: message').setMaxLength(2000))
-    .addRoleOption((o) => o.setName('role').setDescription('Welcomer: role to give'))
+    .addRoleOption((o) => o.setName('role').setDescription('Welcomer: role to give (Commands Only: staff that may talk)'))
     .addStringOption((o) => newRoleOption(o))
     .addStringOption((o) => o.setName('emoji').setDescription('Starboard: emoji (default ⭐)').setMaxLength(64))
     .addIntegerOption((o) => o.setName('threshold').setDescription('Starboard: threshold (default 3)').setMinValue(1).setMaxValue(1000))
@@ -217,6 +219,14 @@ async function loadRow(ctx, name) {
 
 const optionNamesGiven = (o, names) => names.filter((n) => o.get(n) !== null && o.get(n) !== undefined);
 
+const commandsOnlyNote = (prefix, staffSkipped) => `${prefix === null
+  ? 'Every message there is deleted (prefix commands are off); slash commands still work.'
+  : `Messages there that do not start with \`${prefix}\` are deleted; slash commands still work.`} `
+  + `${staffSkipped
+    ? 'Members with the listed roles are skipped.'
+    : '⚠️ Nobody is skipped, staff included: pass `role` or set moderator roles with `/modconfig modroles`.'} `
+  + 'After changing the prefix or the moderator roles, create it again.';
+
 async function create(ctx) {
   const { interaction, guild, guildId, settings } = ctx;
   const o = interaction.options;
@@ -264,6 +274,17 @@ async function create(ctx) {
     if (!o.getMember('user')) return send(interaction, errorEmbed('Not A Member', 'That user is not in this server.'));
     if (user.bot) return send(interaction, errorEmbed('Not A Member', 'Pick a person, not a bot.'));
     Object.assign(opts, { userId: user.id, channelId: channel?.id ?? null });
+  } else if (preset === 'commands-only') {
+    if (!channel) return send(interaction, errorEmbed('Channel Needed', 'The Commands Only preset needs the channel to keep clean.'));
+    if (!textLike) return send(interaction, errorEmbed('Wrong Channel Type', 'Pick a text or announcement channel.'));
+    const check = checkChannelUsable(fullChannel, { needs: ['ViewChannel', 'ManageMessages'] });
+    if (!check.ok) return send(interaction, E.perms(check.missing, fullChannel, check.reason));
+    // Staff keep talking: the picked role plus the moderator roles (/modconfig modroles), as they are now.
+    Object.assign(opts, {
+      channelId: channel.id,
+      prefix: effectivePrefix(settings?.customPrefix),
+      exemptRoleIds: [...(role ? [role.id] : []), ...(settings?.modRoleIds ?? [])],
+    });
   } else {
     return send(interaction, errorEmbed('Unknown Preset', 'Pick a preset from the list.'));
   }
@@ -272,7 +293,9 @@ async function create(ctx) {
   const access = auto.actionChannelAccessProblem(guild, interaction.member, built.actions);
   if (access) return send(interaction, E.noAccess(access));
   const row = await auto.createAutomation(guildId, { name, ...built, enabled: true, cooldownSeconds: 0 }, interaction.user.id);
-  return send(interaction, successEmbed('Automation Created', `${summaryOf(row, { guild, settings })}${tail(ctx, { ignored })}`));
+  const note = preset === 'commands-only'
+    ? `\n\n${commandsOnlyNote(opts.prefix, built.conditions.some((c) => c.type === 'HAS_NOT_ANY_ROLE'))}` : '';
+  return send(interaction, successEmbed('Automation Created', `${summaryOf(row, { guild, settings })}${note}${tail(ctx, { ignored })}`));
 }
 
 async function createBlank(ctx) {

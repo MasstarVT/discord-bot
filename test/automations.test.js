@@ -475,6 +475,44 @@ test('presets are normalised and shape-valid', () => {
   assert.throws(() => svc.buildPresetAutomation('welcomer', {}), svc.AutomationError);   // no channel: the shape rule refuses
 });
 
+test('Commands Only preset: deletes non-prefix messages in the channel, skips staff roles', () => {
+  const ch = ID(10); const staff = ID(11); const mod = ID(12);
+  const shapeOk = (o) => {
+    assert.deepEqual(svc.normalizeList(o.conditions, 'condition').invalid, []);
+    assert.deepEqual(svc.normalizeList(o.actions, 'action').invalid, []);
+    assert.deepEqual(svc.validateAutomationShape({ ...o, cooldownSeconds: 0 }), []);
+  };
+  const o = svc.buildPresetAutomation('commands-only', { channelId: ch, prefix: '!', exemptRoleIds: [staff, mod, staff] });
+  shapeOk(o);
+  assert.equal(o.trigger, 'MESSAGE_SENT');
+  assert.deepEqual(o.actions, [{ type: 'DELETE' }]);
+  assert.deepEqual(o.conditions.map((c) => c.type), ['CHANNEL_IN', 'MATCHES_REGEX', 'HAS_NOT_ANY_ROLE']);
+  assert.deepEqual(o.conditions[2].roleIds, [staff, mod]);
+  const facts = (content, extra = {}) => ({ channelId: ch, parentId: null, content, memberRoleIds: [], ...extra });
+  const deletes = (cond, f) => svc.evaluateConditions(cond, f);
+  assert.equal(deletes(o.conditions, facts('hello')), true);
+  assert.equal(deletes(o.conditions, facts('')), true, 'an attachment-only message is deleted');
+  assert.equal(deletes(o.conditions, facts(' !rank')), true);
+  assert.equal(deletes(o.conditions, facts('!rank')), false, 'a prefix command stays');
+  assert.equal(deletes(o.conditions, facts('hello', { memberRoleIds: [mod] })), false, 'staff may talk');
+  assert.equal(deletes(o.conditions, facts('hello', { channelId: ID(13) })), false, 'other channels are untouched');
+  assert.equal(deletes(o.conditions, facts('hello', { channelId: ID(13), parentId: ch })), true, 'a thread counts as its channel');
+
+  // Regex characters in the prefix are escaped; with prefix commands off every message goes; no staff roles: no role condition.
+  const odd = svc.buildPresetAutomation('commands-only', { channelId: ch, prefix: '?.', exemptRoleIds: [] });
+  shapeOk(odd);
+  assert.deepEqual(odd.conditions.map((c) => c.type), ['CHANNEL_IN', 'MATCHES_REGEX']);
+  assert.equal(deletes(odd.conditions, facts('?.rank')), false);
+  assert.equal(deletes(odd.conditions, facts('?xrank')), true);
+  const off = svc.buildPresetAutomation('commands-only', { channelId: ch, prefix: null });
+  shapeOk(off);
+  assert.deepEqual(off.conditions.map((c) => c.type), ['CHANNEL_IN']);
+  assert.equal(svc.commandsOnlyPattern(''), null);
+  const many = svc.buildPresetAutomation('commands-only', { channelId: ch, prefix: '!', exemptRoleIds: Array.from({ length: 30 }, (_, i) => ID(100 + i)) });
+  assert.equal(many.conditions[2].roleIds.length, 25, 'capped at the condition list limit');
+  assert.throws(() => svc.buildPresetAutomation('commands-only', { prefix: '!' }), svc.AutomationError);   // no channel
+});
+
 // ── 16: JSON ─────────────────────────────────────────────────────────────────
 
 const everyActionRows = () => {
@@ -1552,6 +1590,19 @@ test('DB: /automation create presets validate their inputs; autocomplete answers
   assert.match(r.description, /Pick a person, not a bot/);
   r = await run(guild, { sub: 'create', opts: { preset: 'thread-joiner', name: 'joiner', user: { id: ID(524), bot: false }, __members: { user: { id: ID(524) } } } });
   assert.match(r.title, /Automation Created/);
+  r = await run(guild, { sub: 'create', opts: { preset: 'commands-only', name: 'clean' } });
+  assert.match(r.title, /Channel Needed/);
+  r = await run(guild, { sub: 'create', opts: { preset: 'commands-only', name: 'clean', channel: voice } });
+  assert.match(r.title, /Wrong Channel Type/);
+  const locked = fakeChannel(guild, ID(525), { name: 'locked', missing: ['ManageMessages'] });
+  r = await run(guild, { sub: 'create', opts: { preset: 'commands-only', name: 'clean', channel: locked } });
+  assert.match(r.description, /Manage Messages/);
+  r = await run(guild, { sub: 'create', opts: { preset: 'commands-only', name: 'clean', channel: text, role: high } });
+  assert.match(r.title, /Automation Created/, 'a staff role above the bot is fine: nothing is given');
+  assert.match(r.description, /do not start with `!` are deleted/);
+  const clean = await prisma.automation.findFirst({ where: { guildId: GUILD, name: 'clean' } });
+  assert.deepEqual(clean.conditions.map((c) => c.type), ['CHANNEL_IN', 'MATCHES_REGEX', 'HAS_NOT_ANY_ROLE']);
+  assert.deepEqual(clean.actions, [{ type: 'DELETE' }]);
 
   const complete = async (spec) => {
     const i = fakeInteraction(guild, spec);

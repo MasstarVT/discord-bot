@@ -19,7 +19,7 @@ import { COLORS, LIMITS } from '../config/constants.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { renderPlaceholders } from '../utils/placeholderParser.js';
 import { isHttpUrl, renderTemplate } from '../utils/customEmbed.js';
-import { compileSafeRegex, containsWord, safeRegexTest, validateRegex } from '../utils/safeRegex.js';
+import { compileSafeRegex, containsWord, escapeRegex, safeRegexTest, validateRegex } from '../utils/safeRegex.js';
 import {
   checkAssignableRole, checkChannelUsable, missingBotPermissions, pingableRoleIds, permissionNames,
 } from '../utils/interactionHelpers.js';
@@ -51,7 +51,7 @@ export const MAX_REWARD_AMOUNT = 1_000_000;
 export const THREAD_ARCHIVE_MINUTES = Object.freeze([60, 1440, 4320, 10080]);
 export const DEFAULT_THREAD_NAME = "{user.name}'s thread";
 export const WELCOMER_DEFAULT_TEXT = 'Hey {user}, welcome to **{server}**!';
-export const PRESETS = Object.freeze(['welcomer', 'starboard', 'thread-joiner']);
+export const PRESETS = Object.freeze(['welcomer', 'starboard', 'thread-joiner', 'commands-only']);
 
 export const MAX_BUTTON_INDEX = 99;
 const MEMO_MAX_GUILDS = 5_000;
@@ -1114,7 +1114,13 @@ export const PRESET_OPTIONS = Object.freeze({
   welcomer: Object.freeze(['channel', 'message', 'role']),
   starboard: Object.freeze(['channel', 'emoji', 'threshold']),
   'thread-joiner': Object.freeze(['user', 'channel']),
+  'commands-only': Object.freeze(['channel', 'role']),
 });
+
+/** Commands only: messages starting with the prefix are kept (prefix commands answer them); null prefix = prefix commands off. */
+export function commandsOnlyPattern(prefix) {
+  return typeof prefix === 'string' && prefix !== '' ? `^(?!${escapeRegex(prefix)})` : null;
+}
 
 function mustNormalize(list, kind) {
   return list.map((raw) => {
@@ -1125,8 +1131,9 @@ function mustNormalize(list, kind) {
 }
 
 /**
- * @param {'welcomer'|'starboard'|'thread-joiner'} preset
- * @param {{ channelId?: string|null, message?: string|null, roleId?: string|null, emoji?: string|null, threshold?: number|null, userId?: string|null }} opts
+ * @param {'welcomer'|'starboard'|'thread-joiner'|'commands-only'} preset
+ * @param {{ channelId?: string|null, message?: string|null, roleId?: string|null, emoji?: string|null, threshold?: number|null, userId?: string|null,
+ *   prefix?: string|null, exemptRoleIds?: string[] }} opts  prefix: the custom-command prefix (null = off); exemptRoleIds: staff roles that may still talk
  * @returns {{ trigger: string, conditions: object[], actions: object[] }} normalised and shape-valid
  * @throws {AutomationError}
  */
@@ -1153,6 +1160,13 @@ export function buildPresetAutomation(preset, opts = {}) {
       conditions: opts.channelId ? [{ type: 'CHANNEL_IN', channelIds: [opts.channelId] }] : [],
       actions: [{ type: 'ADD_TO_THREAD', userIds: [opts.userId] }],
     };
+  } else if (preset === 'commands-only') {
+    const conditions = [{ type: 'CHANNEL_IN', channelIds: [opts.channelId] }];
+    const pattern = commandsOnlyPattern(opts.prefix);
+    if (pattern) conditions.push({ type: 'MATCHES_REGEX', pattern, flags: '' });
+    const exempt = [...new Set(opts.exemptRoleIds ?? [])].slice(0, CONDITION_TYPES.HAS_NOT_ANY_ROLE.max);
+    if (exempt.length) conditions.push({ type: 'HAS_NOT_ANY_ROLE', roleIds: exempt });
+    built = { trigger: 'MESSAGE_SENT', conditions, actions: [{ type: 'DELETE' }] };
   } else {
     throw new AutomationError('Unknown preset.');
   }

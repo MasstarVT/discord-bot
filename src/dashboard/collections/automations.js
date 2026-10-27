@@ -128,11 +128,12 @@ export const ACTION_RULES = Object.freeze({
 });
 
 /** /automation create presets (PRESETS) and the options each one reads (PRESET_OPTIONS, in form field names). */
-export const PRESETS = Object.freeze(['welcomer', 'starboard', 'thread-joiner']);
+export const PRESETS = Object.freeze(['welcomer', 'starboard', 'thread-joiner', 'commands-only']);
 export const PRESET_FIELDS = Object.freeze({
   welcomer: Object.freeze(['presetChannelId', 'presetMessage', 'presetRoleId']),
   starboard: Object.freeze(['presetChannelId', 'presetEmoji', 'presetThreshold']),
   'thread-joiner': Object.freeze(['presetUserId', 'presetChannelId']),
+  'commands-only': Object.freeze(['presetChannelId', 'presetStaffRoleId']),
 });
 
 /** Variables automation texts support besides the built-in ones (automationService.buildVars). */
@@ -599,6 +600,7 @@ export const collection = Object.freeze({
         { value: 'welcomer', label: 'Welcomer', description: 'When a member joins: post a welcome message in a channel, and optionally give a role.' },
         { value: 'starboard', label: 'Starboard', description: 'When a message gets enough reactions with an emoji: repost it in a channel.' },
         { value: 'thread-joiner', label: 'Thread Joiner', description: 'When a thread is created (optionally only in one channel): add a member to it.' },
+        { value: 'commands-only', label: 'Commands Only', description: 'Keep a channel for commands: delete every message there that does not start with the prefix, except from staff.' },
       ],
       default: 'none',
     },
@@ -607,7 +609,8 @@ export const collection = Object.freeze({
       type: 'channel',
       label: 'Channel',
       description: 'Welcomer: where the welcome message is posted. Starboard: where popular messages are reposted (both: a '
-        + 'text or announcement channel). Thread Joiner: only threads created in this channel (empty: every channel).',
+        + 'text or announcement channel). Thread Joiner: only threads created in this channel (empty: every channel). '
+        + 'Commands Only: the text or announcement channel to keep clean (the bot needs Manage Messages there).',
       channelTypes: [...PRESET_CHANNEL_KINDS],
       nullable: true,
       default: null,
@@ -664,6 +667,16 @@ export const collection = Object.freeze({
       showWhen: PRESET_SHOWN(['thread-joiner']),
     },
     {
+      field: 'presetStaffRoleId',
+      type: 'role',
+      label: 'Staff role',
+      description: 'Optional. Members with it may still talk there, as do the moderator roles; with neither, staff messages '
+        + 'are deleted too. The prefix and the moderator roles are read once: after changing them, create it again.',
+      nullable: true,
+      default: null,
+      showWhen: PRESET_SHOWN(['commands-only']),
+    },
+    {
       field: 'trigger',
       type: 'enum',
       label: 'When',
@@ -711,7 +724,7 @@ export const collection = Object.freeze({
     { field: 'enabled', type: 'boolean', label: 'Enabled', description: 'Off: it never runs.', default: true },
   ]),
   createOnly: Object.freeze([
-    'preset', 'presetChannelId', 'presetMessage', 'presetRoleId', 'presetEmoji', 'presetThreshold', 'presetUserId',
+    'preset', 'presetChannelId', 'presetMessage', 'presetRoleId', 'presetEmoji', 'presetThreshold', 'presetUserId', 'presetStaffRoleId',
   ]),
   readOnly: Object.freeze([
     { field: 'summary', type: 'text', label: 'Summary', maxLength: 200, default: '' },
@@ -1121,6 +1134,8 @@ function checkPreset(data) {
       return data.presetChannelId ? null : { path: 'presetChannelId', message: 'The Starboard preset needs a channel to repost to.' };
     case 'thread-joiner':
       return data.presetUserId ? null : { path: 'presetUserId', message: 'The Thread Joiner preset needs a member to add to new threads.' };
+    case 'commands-only':
+      return data.presetChannelId ? null : { path: 'presetChannelId', message: 'The Commands Only preset needs the channel to keep clean.' };
     default:
       return { path: 'preset', message: 'Pick a preset from the list.' };
   }
@@ -1156,6 +1171,7 @@ export function automationItem(row, { nameOf = () => null, problems = [], creato
     presetEmoji: null,
     presetThreshold: DEFAULT_THRESHOLD,
     presetUserId: null,
+    presetStaffRoleId: null,
     trigger: row.trigger,
     conditions: asList(row.conditions).map((c) => conditionToForm(c, nameOf)),
     actions: asList(row.actions).map(actionToForm),

@@ -13,6 +13,7 @@ import { cache } from '../../services/redis.js';
 import { getSettings, getSettingsSafe, isModuleEnabled } from '../../services/settingsService.js';
 import { REWARD_MODULES } from '../../services/rewards.js';
 import { extractRoleMentionIds, getSavedEmbedTemplate } from '../../services/embedService.js';
+import { effectivePrefix } from '../../services/tagService.js';
 import {
   AutomationError, buildPresetAutomation, createAutomation, deleteAutomation, isUniqueViolation, mutateAutomation,
   normalizeAction, normalizeAutomationName, normalizeCondition, normalizeList,
@@ -314,7 +315,7 @@ function normalizeEach(list, kind) {
 /** The trigger, conditions and actions of a /automation create preset, with the command's checks. */
 async function presetShape(guildId, data, ctx) {
   const opts = {};
-  if (data.preset === 'welcomer' || data.preset === 'starboard') {
+  if (data.preset === 'welcomer' || data.preset === 'starboard' || data.preset === 'commands-only') {
     const discord = needDiscord(ctx, 'getGuildResources');
     const res = await discordCall(() => discord.getGuildResources(guildId), 'The channel');
     const channel = res.channels.find((c) => c.id === data.presetChannelId);
@@ -324,8 +325,16 @@ async function presetShape(guildId, data, ctx) {
     if (data.preset === 'welcomer') {
       await checkRolePings(guildId, ctx, [{ path: 'presetMessage', text: data.presetMessage }], { resources: res });
       Object.assign(opts, { channelId: data.presetChannelId, message: data.presetMessage?.trim() || null, roleId: data.presetRoleId ?? null });
-    } else {
+    } else if (data.preset === 'starboard') {
       Object.assign(opts, { channelId: data.presetChannelId, emoji: data.presetEmoji ?? null, threshold: data.presetThreshold });
+    } else {
+      // As /automation create: the prefix and moderator roles as they are now.
+      const settings = await getSettings(guildId);
+      Object.assign(opts, {
+        channelId: data.presetChannelId,
+        prefix: effectivePrefix(settings?.customPrefix),
+        exemptRoleIds: [...(data.presetStaffRoleId ? [data.presetStaffRoleId] : []), ...(settings?.modRoleIds ?? [])],
+      });
     }
   } else {
     await checkMember(guildId, ctx, data.presetUserId, 'presetUserId', { people: 'Pick a person, not a bot.' });

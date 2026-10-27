@@ -162,6 +162,7 @@ test('drift: constants, texts, presets and the problem key match automationServi
   assert.deepEqual([...A.PRESETS], [...svc.PRESETS]);
   const OPTION = {
     presetChannelId: 'channel', presetMessage: 'message', presetRoleId: 'role', presetEmoji: 'emoji', presetThreshold: 'threshold', presetUserId: 'user',
+    presetStaffRoleId: 'role',   // the command's `role` option; its own field because a staff role need not be one the bot can give
   };
   for (const p of svc.PRESETS) assert.deepEqual(A.PRESET_FIELDS[p].map((f) => OPTION[f]).sort(), [...svc.PRESET_OPTIONS[p]].sort(), p);
   // The preset form offers the presets plus "build my own".
@@ -428,6 +429,8 @@ test('validate: presets need what /automation create needs', () => {
   assert.doesNotThrow(() => create({ preset: 'welcomer', presetChannelId: CH }));
   assert.doesNotThrow(() => create({ preset: 'starboard', presetChannelId: CH, presetEmoji: '🔥', presetThreshold: 5 }));
   assert.doesNotThrow(() => create({ preset: 'thread-joiner', presetUserId: USER }));
+  assert.doesNotThrow(() => create({ preset: 'commands-only', presetChannelId: CH }));
+  assert.doesNotThrow(() => create({ preset: 'commands-only', presetChannelId: CH, presetStaffRoleId: ROLE }));
   // With a preset the builder is ignored, so an empty one is fine.
   assert.doesNotThrow(() => create({ preset: 'welcomer', presetChannelId: CH, actions: [] }));
   const e1 = invalid({ name: 'x', preset: 'welcomer' });
@@ -435,6 +438,7 @@ test('validate: presets need what /automation create needs', () => {
   assert.match(e1.message, /Welcomer preset needs a channel/);
   assert.equal(invalid({ name: 'x', preset: 'starboard' }).path, 'presetChannelId');
   assert.equal(invalid({ name: 'x', preset: 'thread-joiner' }).path, 'presetUserId');
+  assert.match(invalid({ name: 'x', preset: 'commands-only' }).message, /Commands Only preset needs the channel/);
   assert.equal(invalid({ name: 'x', preset: 'starboard', presetChannelId: CH, presetThreshold: 0 }).path, 'presetThreshold');
   // Presets are create-only.
   const current = A.automationItem({ id: 'clx', name: 'x', trigger: 'MESSAGE_SENT', conditions: [], actions: [] });
@@ -801,6 +805,22 @@ test('db: presets, and the per-server cap', { skip: skipDb }, async () => {
   assert.deepEqual(joiner.actions[0].users, [{ userId: OTHER }]);
   await expectRecordError(storeCreate(store, { name: 'j2', preset: 'thread-joiner', presetUserId: BOT_USER }), 'invalid', 'presetUserId');
   await expectRecordError(storeCreate(store, { name: 'j2', preset: 'thread-joiner', presetUserId: '955030000000000088' }), 'invalid', 'presetUserId');
+
+  // Commands Only reads the prefix and the moderator roles from the server's settings.
+  const { updateSettings, updateSettingsWith } = await import('../src/services/settingsService.js');
+  await updateSettings(GUILD, { customPrefix: '?' });
+  await updateSettingsWith(GUILD, () => ({ modRoleIds: [ROLE2] }));
+  const clean = await storeCreate(store, { name: 'clean', preset: 'commands-only', presetChannelId: CH, presetStaffRoleId: ROLE });
+  assert.equal(clean.trigger, 'MESSAGE_SENT');
+  assert.deepEqual(clean.actions.map((a) => a.type), ['DELETE']);
+  const stored = await prisma.automation.findFirst({ where: { guildId: GUILD, name: 'clean' } });
+  assert.deepEqual(stored.conditions.map((c) => c.type), ['CHANNEL_IN', 'MATCHES_REGEX', 'HAS_NOT_ANY_ROLE']);
+  assert.deepEqual(stored.conditions[0].channelIds, [CH]);
+  assert.equal(stored.conditions[1].pattern, '^(?!\\?)');
+  assert.deepEqual(stored.conditions[2].roleIds, [ROLE, ROLE2]);
+  await expectRecordError(storeCreate(store, { name: 'c2', preset: 'commands-only', presetChannelId: FORUM }), 'invalid', 'presetChannelId');
+  await updateSettings(GUILD, { customPrefix: '!' });
+  await updateSettingsWith(GUILD, () => ({ modRoleIds: [] }));
 
   // The cap, under the guild lock.
   const room = LIMITS.AUTOMATIONS - (await prisma.automation.count({ where: { guildId: GUILD } }));

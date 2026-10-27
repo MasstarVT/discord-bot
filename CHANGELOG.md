@@ -2,7 +2,8 @@
 
 What changed in Frost.Byte, newest first. Each entry is dated by when it landed on `main`; there are no version numbers yet. The full history is in the [commit log](https://github.com/MasstarVT/discord-bot/commits/main).
 
-## 2026-10-27 · Maths in Counting
+## 2026-10-27 · Commands-only channels and maths in Counting
+- New Automations preset **Commands Only**: `/automation create preset:Commands Only channel:#bot-commands` deletes every message in that channel that does not start with your custom-command prefix, so only commands are used there. Slash commands keep working, and members with the moderator roles (or the `role` you pick) can still talk. Also on the dashboard's Automations page.
 - Counting accepts maths: `2+2`, `(3*4)-1` or `2^3` counts as the number it comes to. Sums that come to a fraction, such as `10/27`, are treated as chat and never reset the count.
 
 ## 2026-10-21 · Go-live posts for the Live Role

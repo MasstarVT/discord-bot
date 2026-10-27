@@ -14,7 +14,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 - 🎭 **Reaction Roles** (MEE6: Reaction Roles) — role panels as buttons, a dropdown or plain emoji reactions, on bot posts or on an existing message.
 - ⭐ **Levels** (MEE6: Levels) — *off by default.* Message and voice XP (15 to 25 per message by default), level-up announcements, reward roles, XP boost roles, `/rank` card, `/leaderboard`, `/levelconfig xp` management.
 - 🏷️ **Custom Commands** (MEE6: Custom Commands) — *off by default.* `/tag` commands (also run as `!name`), multi-action responses, random replies, argument placeholders, plus `/tag trigger` auto-responders.
-- ⚙️ **Automations** (MEE6: Automations) — *off by default.* When → If → Do rules over messages, reactions, voice, joins and threads, with presets and JSON export and import.
+- ⚙️ **Automations** (MEE6: Automations) — *off by default.* When → If → Do rules over messages, reactions, voice, joins and threads, with presets (including a commands-only channel) and JSON export and import.
 - 🌐 **Auto-Translate** (beyond MEE6) — *off by default; beyond MEE6.* Translate a channel's messages into up to five languages; `/translate text`, `/translate detect` and `/translate languages` work everywhere. The dashboard shows per channel which languages members write in and get translated into.
 - 📨 **Invite Tracker** (MEE6: Invite Tracker) — who invited whom, `/invites` leaderboard and personal invite links.
 - 🧱 **Embed Messages** (MEE6: Embed Messages) — build, save, publish and edit embeds with fields and link buttons; presets for welcome channels.
