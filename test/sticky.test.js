@@ -14,7 +14,7 @@ process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:1/test';
 const svc = await import('../src/services/stickyService.js');
 const sticky = await import('../src/plugins/sticky.js');
 const cmd = await import('../src/commands/admin/sticky.js');
-const { PermissionFlagsBits } = await import('discord.js');
+const { MessageFlags, MessageFlagsBitField, PermissionFlagsBits } = await import('discord.js');
 const { Prisma } = await import('@prisma/client');
 const { default: redis } = await import('../src/services/redis.js');
 const { default: prisma } = await import('../src/database/client.js');
@@ -29,7 +29,9 @@ const {
   STICKY, StickyError, createScheduler, getChannels, peekChannels, invalidate, renderSticky, embedPart, resendSticky,
   setSticky, removeSticky, setStickyEnabled, clearLastMessage, dropChannel, noteMessage, cancelPending, _scheduler,
 } = svc;
-const { plugin, mayStick, mayBeSticky, mayHaveSticky, onMessage, onMessageDelete, onChannelDelete, buildStickyModal, handleStickyModal } = sticky;
+const {
+  plugin, mayStick, mayStickOwn, mayBeSticky, mayHaveSticky, onMessage, onMessageDelete, onChannelDelete, buildStickyModal, handleStickyModal,
+} = sticky;
 
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
 console.error = console.warn = console.log = console.debug = console.info = () => {};
@@ -582,6 +584,36 @@ test('onMessage: schedules a re-send for a sticky channel only, and ordinary cha
   cancelPending('C1');
 });
 
+test('ownMessage: the bot\'s own messages move the sticky too; ephemeral answers and the re-sent sticky do not', async () => {
+  rows.clear();
+  await seed('H8');
+  const { client, channel } = world('H8', ['C1']);
+  addRow('H8', 'C1');
+  invalidate('H8');
+  await getChannels('H8');
+  const ctx = (extra = {}) => ({ guildId: 'H8', client, message: { channelId: 'C1', author: { id: 'BOT' }, flags: new MessageFlagsBitField(0), ...extra } });
+  assert.equal(mayStickOwn(ctx()), true, 'a command answer or level-up');
+  assert.equal(mayStickOwn(ctx({ flags: new MessageFlagsBitField(MessageFlags.Ephemeral) })), false, 'nobody else sees it');
+  assert.equal(mayStickOwn(ctx({ channelId: 'C2' })), false, 'not a sticky channel');
+
+  // The re-sent sticky comes back through the hook as well, usually while its re-send is still running: the rerun it
+  // causes finds the sticky already last and posts nothing.
+  const statuses = [];
+  const s = createScheduler({ quietMs: 20, maxWaitMs: 100, run: async (id) => { statuses.push(await resendSticky(client, 'H8', id)); } });
+  const send = channel.send;
+  channel.send = async (payload) => {
+    const message = await send(payload);
+    s.touch('C1');
+    return message;
+  };
+  channel.lastMessageId = '4242'; // the bot's answer
+  s.touch('C1');
+  await sleep(120);
+  assert.deepEqual(statuses, ['sent', 'current']);
+  assert.equal(channel.sent.length, 1, 'posted once');
+  assert.equal(s.size, 0, 'and it settles');
+});
+
 test('messageDelete: only the sticky message clears its id; our own deletes cost nothing', async () => {
   rows.clear();
   addRow('H3', 'C1', { lastMessageId: '100' });
@@ -643,10 +675,12 @@ test('plugin declaration, hook order and the modal component', async () => {
   assert.equal(plugin.module, 'sticky');
   assert.deepEqual(plugin.hooks.map((h) => [h.event, h.id, h.always === true]), [
     ['messageCreate', 'sticky', false],
+    ['ownMessage', 'sticky', false],
     ['messageDelete', 'sticky', true],
     ['channelDelete', 'sticky', true],
   ]);
   assert.equal(HOOK_ORDER.messageCreate.at(-1), 'sticky', 'last, after automod');
+  assert.ok(HOOK_ORDER.ownMessage.includes('sticky'));
   assert.ok(HOOK_ORDER.messageDelete.includes('sticky'));
   assert.ok(HOOK_ORDER.channelDelete.includes('sticky'));
   for (const h of plugin.hooks) assert.equal(typeof h.run, 'function');

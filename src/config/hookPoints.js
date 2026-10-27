@@ -7,6 +7,7 @@ export const HOOK_ORDER = Object.freeze({
   "messageCreate": Object.freeze(["automod","counting","logging","custom-commands","levels","achievements","automations","custom-commands:triggers","translation-fixes","autotime","modmail","afk","auto-threads","sticky"]),
   "directMessage": Object.freeze(["modmail"]),
   "botMessage": Object.freeze(["bumps","auto-threads"]),
+  "ownMessage": Object.freeze(["sticky"]),
   "messageUpdate": Object.freeze(["logging","automod","automations","starboard"]),
   "messageDelete": Object.freeze(["logging","automations","starboard","giveaways","polls","reaction-roles","embeds","counting","suggestions","applications","sticky","events","confessions"]),
   "messageDeleteBulk": Object.freeze(["logging","starboard","polls","giveaways"]),

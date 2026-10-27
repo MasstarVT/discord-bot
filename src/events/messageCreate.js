@@ -12,8 +12,11 @@ export async function execute(message, client) {
   if (message.author.bot || message.webhookId) {
     // Other bots, webhooks and their interaction replies (such as Disboard's /bump answer, a
     // ChatInputCommand message with a webhookId) reach only the botMessage hooks, before the type filter.
-    if (message.inGuild() && message.author.id !== client.user?.id) {
-      await runHooks('botMessage', { client, guild: message.guild, message, channel: message.channel });
+    // The bot's own messages, its command answers included, reach only the ownMessage hooks.
+    if (message.inGuild()) {
+      const fields = { client, guild: message.guild, message, channel: message.channel };
+      if (client.user != null && message.author.id === client.user.id) await runHooks('ownMessage', fields);
+      else await runHooks('botMessage', fields);
     }
     return;
   }

@@ -460,6 +460,27 @@ test('messageCreate only dispatches user messages (R262, R263)', async () => {
   assert.equal(calls[0].guildId, 'g1');
 });
 
+test('messageCreate sends the bot\'s own messages to ownMessage, other bots and webhooks to botMessage', async () => {
+  const { execute } = await load(join(SRC, 'events', 'messageCreate.js'));
+  const own = recordHook('ownMessage');
+  const other = recordHook('botMessage');
+  const client = { user: { id: 'BOT' } };
+  const guild = { id: 'g1' };
+  const msg = (over) => ({
+    inGuild: () => true, guild, channel: {}, author: { id: 'BOT', bot: true }, webhookId: null, type: MessageType.Default, ...over,
+  });
+  await execute(msg(), client);
+  await execute(msg({ webhookId: 'APP', type: MessageType.ChatInputCommand }), client); // its command answer
+  await execute(msg({ inGuild: () => false }), client);
+  assert.equal(own.length, 2);
+  assert.equal(own[0].guildId, 'g1');
+  assert.equal(other.length, 0);
+  await execute(msg({ author: { id: 'DISBOARD', bot: true }, type: MessageType.ChatInputCommand, webhookId: 'D' }), client);
+  await execute(msg({ author: { id: 'HOOK', bot: true }, webhookId: 'W' }), client);
+  assert.equal(other.length, 2);
+  assert.equal(own.length, 2, 'never both');
+});
+
 test('messageUpdate only dispatches real edits (R120, R121)', async () => {
   const { execute } = await load(join(SRC, 'events', 'messageUpdate.js'));
   const calls = recordHook('messageUpdate');

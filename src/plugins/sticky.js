@@ -1,7 +1,8 @@
-// Plugin `sticky`: keeps a message at the bottom of a channel. A member message in a sticky channel schedules a re-send
-// (it runs once the channel has been quiet for a few seconds); deleting the sticky message or its channel cleans up even
-// while the module is off. Also the `sticky-modal` text form of `/sticky set`. Rules and state: src/services/stickyService.js.
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+// Plugin `sticky`: keeps a message at the bottom of a channel. A member message or one of the bot's own (its command
+// answers, level-ups ...) in a sticky channel schedules a re-send (it runs once the channel has been quiet for a few
+// seconds); deleting the sticky message or its channel cleans up even while the module is off. Also the `sticky-modal`
+// text form of `/sticky set`. Rules and state: src/services/stickyService.js.
+import { ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { PERMISSION_LEVELS } from '../config/constants.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { isModuleEnabled } from '../config/modules.js';
@@ -31,6 +32,16 @@ export function mayStick(ctx) {
   if (settings && !isModuleEnabled(settings, 'sticky')) return false;
   const channels = peekChannels(ctx.guildId);
   return !channels || channels.get(ctx.message?.channelId) === true;
+}
+
+/**
+ * One of the bot's own messages that may need a re-send: as `mayStick`, minus ephemeral answers (nobody else sees them).
+ * The re-sent sticky itself passes too; its re-send ends as 'current', since it already is the last message.
+ * @param {object} ctx HookContext with `message`
+ */
+export function mayStickOwn(ctx) {
+  if (ctx.message?.flags?.has?.(MessageFlags.Ephemeral)) return false;
+  return mayStick(ctx);
 }
 
 const hasStickyIn = (ctx, channelId) => {
@@ -183,6 +194,8 @@ export const plugin = {
       filter: mayStick,
       run: onMessage,
     },
+    // The bot's own messages, its command answers included (messageCreate carries members' messages only).
+    { event: 'ownMessage', id: 'sticky', filter: mayStickOwn, run: onMessage },
     // Cleanup runs while the module is off too: a row must not keep pointing at a message or channel that is gone.
     { event: 'messageDelete', id: 'sticky', always: true, filter: mayBeSticky, run: onMessageDelete },
     { event: 'channelDelete', id: 'sticky', always: true, filter: mayHaveSticky, run: onChannelDelete },
