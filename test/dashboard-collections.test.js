@@ -512,8 +512,10 @@ function fakeDiscord(resources = RES) {
   };
 }
 const silentLogger = { error() {}, warn() {}, info() {}, debug() {} };
+// runTask: the bot's channel access check (access.channels) finds no problem; test/sec-dashboard.test.js covers refusals.
 const ctxFor = (discord, member = { owner: false, permissions: '0' }) => ({
   userId: USER, user: { id: USER, username: 'alice', globalName: 'Alice', avatar: null }, member, discord, logger: silentLogger,
+  runTask: async () => ({ status: 'done', message: 'ok', data: { problems: [] } }),
 });
 const rejectsWith = (promise, code, extra = {}) => assert.rejects(promise, (err) => {
   assert.ok(err instanceof RecordError, `expected a RecordError, got ${err?.name}: ${err?.message}`);

@@ -67,6 +67,7 @@ function fakeInteraction(guild, sub, opts, { memberPerms = ALL } = {}) {
   return {
     commandName: 'demo', guildId: guild.id, guild,
     user: { id: 'U', username: 'admin' },
+    member: { id: 'U', permissions: new PermissionsBitField(memberPerms) }, // memberPerms hold Administrator by default
     memberPermissions: new PermissionsBitField(memberPerms),
     options: new CommandInteractionOptionResolver({}, [{ name: sub, type: T.Subcommand, options: opts }], null),
     deferred: true, replied: false, ephemeral: false,

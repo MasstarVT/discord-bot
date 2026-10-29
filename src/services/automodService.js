@@ -25,7 +25,7 @@ import { PERMISSION_LEVELS, LIMITS } from '../config/constants.js';
 import { createThrottle } from '../utils/async.js';
 import { escapeRegex, compileSafeRegex, safeRegexFirstMatch, containsWord } from '../utils/safeRegex.js';
 import { markBotDeletion } from '../utils/deletionTracker.js';
-import { clampText } from '../utils/text.js';
+import { clampText, effectiveText, forwardedSnapshots } from '../utils/text.js';
 import { checkChannelUsable } from '../utils/interactionHelpers.js';
 import { warnEmbed, errorEmbed } from '../utils/embedBuilder.js';
 import { formatDurationLong } from '../utils/parseDuration.js';
@@ -765,22 +765,25 @@ function checkLinks(content, config) {
   return null;
 }
 
+// A forward has no content of its own: every text rule reads effectiveText (own content plus forwarded snapshots).
 const CONTENT_DETECTORS = Object.freeze({
-  badWords: (message, config, matchers) => checkBadWords(message.content, config, matchers),
-  invites: (message, config, _matchers, guild) => checkInvites(message.content, config, guild),
-  links: (message, config) => checkLinks(message.content, config),
+  badWords: (message, config, matchers) => checkBadWords(effectiveText(message), config, matchers),
+  invites: (message, config, _matchers, guild) => checkInvites(effectiveText(message), config, guild),
+  links: (message, config) => checkLinks(effectiveText(message), config),
   caps: (message, config) => {
-    const { letters, percent } = capsStats(message.content);
+    const { letters, percent } = capsStats(effectiveText(message));
     return letters >= CAPS_MIN_LETTERS && percent >= config.rules.caps.threshold
       ? makeMatch(config, 'caps', `${percent}% capitals`) : null;
   },
   emojis: (message, config) => {
-    const n = countEmojis(message.content);
+    const n = countEmojis(effectiveText(message));
     const limit = config.rules.emojis.threshold;
     return n >= limit ? makeMatch(config, 'emojis', `${n} emojis (limit ${limit})`) : null;
   },
   spoilers: (message, config) => {
-    const n = countSpoilers(message.content, message.attachments);
+    // Each snapshot is counted on its own, so a "||" opened in one part never pairs with one in another.
+    let n = countSpoilers(message.content, message.attachments);
+    for (const s of forwardedSnapshots(message)) n += countSpoilers(s.content, s.attachments);
     const limit = config.rules.spoilers.threshold;
     return n >= limit ? makeMatch(config, 'spoilers', `${n} spoilers (limit ${limit})`) : null;
   },
@@ -790,19 +793,20 @@ const CONTENT_DETECTORS = Object.freeze({
     return n >= limit ? makeMatch(config, 'mentions', `${n} mentions (limit ${limit})`) : null;
   },
   zalgo: (message, config) => {
-    const n = maxCombiningRun(message.content);
+    const n = maxCombiningRun(effectiveText(message));
     return n >= config.rules.zalgo.threshold ? makeMatch(config, 'zalgo', `zalgo text (${n} stacked marks)`) : null;
   },
 });
 
 /**
  * Runs the content rules in `activeKeys`, in RULE_KEYS order. Synchronous, no I/O (patterns run in a
- * bounded vm call). Empty content skips every rule except spoilers (spoiler attachments).
+ * bounded vm call). No text skips every rule except spoilers (spoiler attachments). The text is the content plus
+ * every forwarded snapshot's content (effectiveText), so a forward is judged like the same text pasted.
  * @returns {Array<{ rule: string, action: string, detail: string, timeoutSeconds: number }>}
  */
 export function evaluateContentRules(message, activeKeys, config, matchers, guild) {
   const out = [];
-  const hasText = String(message?.content ?? '').length > 0;
+  const hasText = effectiveText(message).length > 0;
   for (const key of RULE_KEYS) {
     if (!activeKeys.includes(key) || !Object.hasOwn(CONTENT_DETECTORS, key)) continue;
     if (!hasText && key !== 'spoilers') continue;
@@ -820,7 +824,7 @@ const sha16 = (text) => createHash('sha1').update(text).digest('hex').slice(0, 1
 
 /** Repeated text over a Redis sliding window. null count (Redis down) skips the rule: fail open. */
 async function checkRepeatedText(message, config, guildId) {
-  const fp = duplicateFingerprint(message.content);
+  const fp = duplicateFingerprint(effectiveText(message));
   if (!fp || !cache.available()) return null;
   const key = `automod:dup:${guildId}:${message.author.id}:${sha16(fp)}`;
   const count = await cache.slidingWindow(key, REPEAT_WINDOW_MS, message.id);
@@ -946,8 +950,8 @@ export async function postModLog(guild, settings, embed) {
 
 function buildLogEmbed(kind, { title, message, isEdit, outcome, problem, footerExtra = '' }) {
   const author = message.author;
-  const content = String(message.content ?? '');
-  const attachments = message.attachments?.size ?? 0;
+  const content = effectiveText(message);
+  const attachments = forwardedSnapshots(message).reduce((n, s) => n + (s.attachments?.size ?? 0), message.attachments?.size ?? 0);
   const primary = metaOf(outcome.primary.rule);
   const embed = (kind === 'warn' ? warnEmbed : errorEmbed)(
     title,
@@ -1065,7 +1069,7 @@ async function applyOutcome(ctx, { message, guild, member, settings, outcome, is
           logFields: buildPunishmentLogFields(
             `${metaOf(outcome.primary.rule)?.emoji ?? ''} ${ruleLabel(outcome.primary.rule)}${outcome.others.length ? ` (also: ${outcome.others.map((m) => ruleLabel(m.rule)).join(', ')})` : ''}`.trim(),
             outcome.primary.detail,
-            message.content,
+            effectiveText(message),
             channel,
           ),
         });

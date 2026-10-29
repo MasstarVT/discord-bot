@@ -803,7 +803,7 @@ export async function applyRsvp({ eventId, guildId, userId, status }) {
   }, TX_OPTS);
 }
 
-/** Sets `EventRsvp.roleGranted`: true only once the bot really added the role, false once it took it back. */
+/** Sets `EventRsvp.roleGranted`: true only once the bot really added the role, false once it took it back (or Role Persistence skipped it for a member who left holding it). */
 const markRoleGranted = (eventId, userId, roleGranted) => prisma.eventRsvp.updateMany({ where: { eventId, userId }, data: { roleGranted } });
 
 /**
@@ -993,7 +993,9 @@ export async function stripRoles(client, event, { after = null, run = 0 } = {}) 
     logger.warn(`event ${event.id}: cannot take the event role back, Manage Roles is missing`);
     return { more: null };
   }
-  // Only members the bot gave the role to: one who already held it keeps it. A flag stays set when the removal failed.
+  // Only members the bot gave the role to: one who already held it keeps it. A flag stays set when the removal failed, and
+  // for a member who is not in the server: that is Role Persistence's marker that this member's saved copy of the role
+  // came from this event (it skips the role on their return and clears the flag; src/services/rolePersistService.js).
   const rows = await prisma.eventRsvp.findMany({
     where: { eventId: event.id, roleGranted: true, ...(after && { userId: { gt: after } }) },
     orderBy: { userId: 'asc' },
@@ -1007,7 +1009,8 @@ export async function stripRoles(client, event, { after = null, run = 0 } = {}) 
         const member = guild.members.cache.get(userId) ?? await guild.members.fetch(userId);
         if (member?.roles?.cache?.has(event.roleId)) await member.roles.remove(event.roleId, 'Event is over');
       } catch (err) {
-        if (err?.code !== UNKNOWN_MEMBER) throw err; // a member who left holds nothing
+        if (err?.code !== UNKNOWN_MEMBER) throw err;
+        return; // a member who left holds nothing; the flag stays as the marker (a cursor run never revisits the row)
       }
       await markRoleGranted(event.id, userId, false);
     } catch (err) {

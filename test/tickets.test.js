@@ -690,7 +690,7 @@ test('plugin declaration', async () => {
   assert.equal(plugin.components.find((c) => c.prefix === 'ticket-modal').module, null);
   assert.equal(plugin.components.find((c) => c.prefix === 'ticket').module, undefined, 'buttons and selects use the plugin module gate');
   for (const c of plugin.components) assert.equal(typeof c.handler, 'function');
-  assert.deepEqual(plugin.jobs, []);
+  assert.deepEqual(plugin.jobs.map((j) => j.type), ['ticket.managersync']);
 });
 
 // ── 17. Command payloads ──────────────────────────────────────────────────────

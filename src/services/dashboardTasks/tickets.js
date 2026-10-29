@@ -4,7 +4,8 @@
 //   ticket.check    { categoryIds, transcriptChannelId? }          the bot's permissions in categories and a transcript channel
 //   ticket.publish  { panelId, channelId }                          post the panel message, or move / update it (publishPanel)
 //   ticket.refresh  { panelId, message?, managersAdded?, managersRemoved? }
-//                   update the posted message (refreshPanelMessage) and back-fill manager roles into existing tickets
+//                   update the posted message (refreshPanelMessage) and merge the changed manager roles into the guild's one
+//                   ticket.managersync job, which back-fills existing tickets (ticketService.runManagerSyncJob), so the task stays short
 //   ticket.delete   { panelId }                                     delete the panel and its message (deletePanel)
 // Every task re-checks that the dashboard user is still an admin (the level /ticket-panel needs) and re-validates its payload.
 import { ChannelType } from 'discord.js';
@@ -12,10 +13,12 @@ import { LIMITS, PERMISSION_LEVELS } from '../../config/constants.js';
 import { checkChannelUsable, missingBotPermissions, permissionNames } from '../../utils/interactionHelpers.js';
 import { resolvePermissionLevel } from '../../utils/permissionChecker.js';
 import { clampText } from '../../utils/text.js';
+import logger from '../../utils/logger.js';
+import { scheduleJob } from '../scheduler.js';
 import { getSettingsSafe } from '../settingsService.js';
 import {
-  OPEN_REQUIRED_PERMS, deletePanel, describeDiscordError, findPanel, invalidatePanel, liveManagerRoleIds, publishPanel,
-  refreshPanelMessage, syncManagerOverwrites,
+  OPEN_REQUIRED_PERMS, deletePanel, describeDiscordError, findPanel, invalidatePanel, liveManagerRoleIds, managerSyncPayload,
+  mergeManagerSync, publishPanel, refreshPanelMessage,
 } from '../ticketService.js';
 import { TaskError } from './shared.js';
 
@@ -165,20 +168,21 @@ async function refresh({ guild, actor, payload }) {
     } else parts.push('Updated the published panel message.');
   }
 
-  // Existing tickets get the manager roles too (the newest 50), like /ticket-panel managers add | remove.
-  const sync = { updated: 0, failed: 0, skipped: 0 };
-  for (const [roleIds, mode] of [[added, 'add'], [removed, 'remove']]) {
-    for (const roleId of roleIds) {
-      const s = await syncManagerOverwrites({ guild, panelId: panel.id, roleId, mode });
-      sync.updated += s.updated;
-      sync.failed += s.failed;
-      sync.skipped += s.skipped;
-    }
-  }
+  // Existing tickets get the manager roles too (the newest 50), like /ticket-panel managers add | remove. That is up to 50
+  // sequential REST calls per role, so the guild's one ticket.managersync job does it: a task holds an interactive scheduler
+  // slot and the dashboard waits only TASK_WAIT_MS for it. The change is merged into that job (never a second copy, and a
+  // running one is not reset); the job decides add or remove per role from the panel's managers when it runs.
   if (added.length + removed.length > 0) {
-    const failed = sync.failed ? `, ${sync.failed} failed (missing permissions)` : '';
-    const skipped = sync.skipped ? `, ${sync.skipped} not updated (only the 50 newest are changed)` : '';
-    parts.push(`Updated ${sync.updated} existing ticket(s)${failed}${skipped}.`);
+    try {
+      await scheduleJob({
+        guildId: guild.id, type: 'ticket.managersync', runAt: new Date(), dedupeKey: `ticket.managersync:${guild.id}`,
+        payload: managerSyncPayload(panel.id, [...added, ...removed]), maxAttempts: 3, onConflict: 'merge', merge: mergeManagerSync,
+      });
+      parts.push('Existing tickets are being updated in the background (the 50 newest).');
+    } catch (err) {
+      logger.error(`Dashboard: could not queue the manager sync of panel ${panel.id}`, err);
+      parts.push("I couldn't queue the update of existing tickets. Try saving the managers again.");
+    }
   }
   if (failure) throw new TaskError([failure, ...parts].join(' '));
   return { message: parts.join(' ') || 'Done.', data: { panelId: panel.id } };

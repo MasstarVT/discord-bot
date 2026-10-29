@@ -14,6 +14,7 @@ import {
 import { normalizeTemplate } from '../../utils/customEmbed.js';
 import { sanitizeName } from '../../utils/text.js';
 import { RecordError } from './errors.js';
+import { SEND_NEEDS, requireChannelAccess } from './channelAccess.js';
 import {
   SLUG_MESSAGE, discordFailure, isDiscordApiError, memberFor, pingRoleProblem, renderContextFor, restAllowedMentions,
   toRestMessage,
@@ -215,6 +216,8 @@ export const store = Object.freeze({
       const channelId = data.channelId ?? row.channelId;
       const channel = (resources.channels ?? []).find((c) => c.id === channelId);
       if (!channel) throw new RecordError('invalid', 'That channel no longer exists. Pick another one.', { path: 'channelId' });
+      // The bot posts now, in any channel the form names: the user needs to be able to post there themselves.
+      await requireChannelAccess(ctx, [{ channelId, needs: SEND_NEEDS, path: 'channelId' }]);
       const settings = await getSettingsSafe(guildId);
       const { guild, channel: renderChannel } = renderContextFor(resources, { channelId });
       const payload = buildSendPayload(row, { guild, channel: renderChannel, settings, ping: false });

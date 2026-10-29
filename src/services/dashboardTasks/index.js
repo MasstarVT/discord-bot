@@ -11,6 +11,7 @@ import { tasks as giveaways } from './giveaways.js';
 import { tasks as polls } from './polls.js';
 import { tasks as reactionRoles } from './reactionRoles.js';
 import { tasks as tickets } from './tickets.js';
+import { tasks as channelAccess } from './channelAccess.js';
 
 /**
  * A task: `run({ guild, client, actor, payload, taskId })` → `{ message, data? }` or a thrown TaskError.
@@ -21,7 +22,7 @@ import { tasks as tickets } from './tickets.js';
 /** kind -> task. A kind is claimed by exactly one module. */
 export const TASKS = (() => {
   const out = {};
-  for (const group of [moderation, members, giveaways, polls, reactionRoles, tickets]) {
+  for (const group of [moderation, members, giveaways, polls, reactionRoles, tickets, channelAccess]) {
     for (const [kind, task] of Object.entries(group)) {
       if (Object.hasOwn(out, kind)) throw new Error(`dashboard task ${kind} is declared twice`);
       out[kind] = Object.freeze(task);

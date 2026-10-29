@@ -19,13 +19,22 @@ function shardPrefix() {
   return id !== undefined && id !== '' ? chalk.gray(`[Shard ${id}] `) : '';
 }
 
-// Errors print their message (the stack follows in error()); strings print as-is;
-// other objects are inspected, so context objects never show up as "[object Object]" (R302).
+const CONTROL_ESCAPES = { '\n': '\\n', '\r': '\\r' };
+
+// A log record is one line: C0 controls and DEL in a string (a feed title, a user name) become
+// escapes, so an interpolated value can neither start a forged line nor inject terminal codes.
+function escapeControls(s) {
+  return s.replace(/[\x00-\x1f\x7f]/g, (c) => CONTROL_ESCAPES[c] ?? `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}`);
+}
+
+// Errors print their message (the stack follows in error()); strings print as-is but for the
+// escapes above; other objects are inspected, so context objects never show up as
+// "[object Object]" (R302) and inspect() already quotes and escapes the strings inside them.
 function formatArg(a) {
-  if (a instanceof Error) return a.message;
-  if (typeof a === 'string') return a;
+  if (a instanceof Error) return escapeControls(String(a.message));
+  if (typeof a === 'string') return escapeControls(a);
   if (a !== null && typeof a === 'object') return inspect(a, { depth: 3, breakLength: Infinity });
-  return String(a);
+  return escapeControls(String(a));
 }
 
 function format(level, color, ...args) {

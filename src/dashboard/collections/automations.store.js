@@ -15,13 +15,14 @@ import { REWARD_MODULES } from '../../services/rewards.js';
 import { extractRoleMentionIds, getSavedEmbedTemplate } from '../../services/embedService.js';
 import { effectivePrefix } from '../../services/tagService.js';
 import {
-  AutomationError, buildPresetAutomation, createAutomation, deleteAutomation, isUniqueViolation, mutateAutomation,
+  AutomationError, EXECUTOR_CHANNEL_NEEDS, buildPresetAutomation, createAutomation, deleteAutomation, isUniqueViolation, mutateAutomation,
   normalizeAction, normalizeAutomationName, normalizeCondition, normalizeList,
 } from '../../services/automationService.js';
 import { RecordError } from './errors.js';
+import { requireChannelAccess } from './channelAccess.js';
 import { isDiscordApiError, memberFor, pingRoleProblem } from './embeds.js';
 import {
-  ACTION_RULES, NEEDS_ACTIONS, SELF_REF_ID, actionToStored, automationItem, conditionToStored, planButtons,
+  ACTION_RULES, NEEDS_ACTIONS, SELF_REF_ID, actionToForm, actionToStored, automationItem, conditionToStored, planButtons,
   problemKey,
 } from './automations.js';
 
@@ -263,6 +264,39 @@ export async function checkAgainstServer(guildId, ctx, { conditions, actions, be
 }
 
 /**
+ * automationService.actionChannelAccessProblem for the dashboard user: an automation must not post into (or open threads in) a
+ * channel its author cannot use. Looks at the actions the request adds (form shape: "Create a thread" keeps its channel in
+ * `threadChannelId`) or, for a preset, builds (stored shape; `path` names the preset's channel field). Only an action the
+ * stored automation already had, exactly as it is, is kept without a check; a new one, or a changed one (new text, another
+ * type), is checked even when its channel is not new, so a hidden channel the row already targets cannot be written to.
+ * @param {object[]|null} actions
+ * @param {object} before the stored row (hydrated), or empty lists on create
+ * @param {{ path?: string }} [opts]
+ */
+async function checkChannelAccess(ctx, actions, before, { path = null } = {}) {
+  // Form and stored actions compared through the same projection (actionToStored), so only real changes count; each stored
+  // action keeps one form action (a copy added next to it is new).
+  const kept = new Map();
+  for (const a of asList(before.actions)) {
+    const key = JSON.stringify(actionToStored(actionToForm(a)));
+    kept.set(key, (kept.get(key) ?? 0) + 1);
+  }
+  const isKept = (a) => {
+    const key = JSON.stringify(actionToStored(a));
+    if (path !== null || !kept.get(key)) return false;
+    kept.set(key, kept.get(key) - 1);
+    return true;
+  };
+  await requireChannelAccess(ctx, asList(actions).flatMap((a, i) => {
+    const needs = Object.hasOwn(EXECUTOR_CHANNEL_NEEDS, a?.type) ? EXECUTOR_CHANNEL_NEEDS[a.type] : null;
+    const thread = a?.type === 'CREATE_THREAD' && path === null;
+    const channelId = thread ? a.threadChannelId : a?.channelId;
+    if (!needs || !channelId || isKept(a)) return [];
+    return [{ channelId, needs, path: path ?? `actions.${i}.${thread ? 'threadChannelId' : 'channelId'}` }];
+  }));
+}
+
+/**
  * Resolves the "Clicked this button" references of the form: an automation name (this automation's own name, old or
  * new, means itself) or an id the stored condition already had. Buttons of other automations must exist.
  * @returns {object[]} the conditions in the stored shape (not normalised yet); self references carry `selfId`
@@ -382,9 +416,11 @@ export const store = Object.freeze({
     let shape;
     if (data.preset && data.preset !== 'none') {
       shape = await presetShape(guildId, data, ctx);
+      await checkChannelAccess(ctx, shape.actions, EMPTY, { path: 'presetChannelId' });
     } else {
       const refs = await loadRefs(guildId);
       await checkAgainstServer(guildId, ctx, { conditions: data.conditions, actions: data.actions, before: EMPTY });
+      await checkChannelAccess(ctx, data.actions, EMPTY);
       const plan = planButtons(data.actions, { existing: [], buttonSeq: 0 });
       if (plan.error) throw new RecordError('invalid', plan.error.message, { path: plan.error.path });
       const conditions = normalizeEach(resolveConditions(data.conditions, { refs, selfNames: [name], selfId: SELF_REF_ID, before: EMPTY }), 'condition');
@@ -416,6 +452,7 @@ export const store = Object.freeze({
       await checkAgainstServer(guildId, ctx, {
         conditions: hasConditions ? data.conditions : null, actions: hasActions ? data.actions : null, before,
       });
+      if (hasActions) await checkChannelAccess(ctx, data.actions, before);
     }
     if (hasConditions) {
       const refs = await loadRefs(guildId);

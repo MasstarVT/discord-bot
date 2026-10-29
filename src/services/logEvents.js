@@ -16,7 +16,7 @@ import { COLORS } from '../config/constants.js';
 import { neutralEmbed } from '../utils/embedBuilder.js';
 import { permissionNames } from '../utils/interactionHelpers.js';
 import { formatDurationLong } from '../utils/parseDuration.js';
-import { clampText, formatNumber, joinWithLimit } from '../utils/text.js';
+import { clampText, effectiveText, formatNumber, joinWithLimit } from '../utils/text.js';
 import { discordTimestamp } from '../utils/time.js';
 import { channelTypeLabel, extractMentions, fitEmbedData } from './loggingService.js';
 
@@ -181,15 +181,17 @@ export function buildMessageDeleteEmbed({ message, botReason = null, botId = nul
   fields.push(field('Channel', channelRef(message.guild, channelId), true));
   if (botReason) fields.push(field('Deleted By', deletedByBot(botId, botReason), true));
 
+  // A forward has no content of its own: its text comes from the forwarded snapshots.
+  const text = effectiveText(message);
   if (message.partial) setDescription(embed, '*Message was not cached — content unavailable.*');
-  else if (message.content) setDescription(embed, clampText(message.content, 4000));
+  else if (text) setDescription(embed, clampText(text, 4000));
   else setDescription(embed, NO_TEXT);
 
   if (message.attachments?.size) {
     const list = values(message.attachments).map((a) => `${clampText(a.name ?? 'file', 100)} (${formatBytes(a.size)})`);
     fields.push(field(`Attachments (${message.attachments.size})`, joinWithLimit(list, { sep: '\n', max: 1024 })));
   }
-  if (message.embeds?.length && !message.content) fields.push(field('Embeds', `${message.embeds.length} embed(s)`));
+  if (message.embeds?.length && !text) fields.push(field('Embeds', `${message.embeds.length} embed(s)`));
   if (ghost.ghost) fields.push(field('⚠️ Ghost Pinged', joinWithLimit(ghost.mentions, { sep: '\n', max: 1024 })));
   if (message.createdAt) fields.push(field('Sent', discordTimestamp(message.createdAt, 'R'), true));
 
@@ -258,7 +260,7 @@ export function buildBulkDeleteTranscript(messages, channel = null) {
       line = `[unknown time] (not cached) message ${m.id}`;
     } else {
       const ts = Number.isFinite(m.createdTimestamp) ? new Date(m.createdTimestamp).toISOString() : 'unknown time';
-      const content = String(m.content ?? '').replace(/\r?\n/g, ' ⏎ ');
+      const content = effectiveText(m).replace(/\r?\n/g, ' ⏎ ');
       const urls = values(m.attachments).map((a) => a.url).filter(Boolean);
       line = `[${ts}] ${userTag(m.author)} (${m.author.id})${m.author.bot ? ' [BOT]' : ''}: ${content}${urls.length ? ` [attachments: ${urls.join(' ')}]` : ''}`;
     }
@@ -337,7 +339,7 @@ export function buildInvitePostedEmbed({ message, codes, vanityCode = null }) {
     { sep: '\n', max: 1024 },
   )));
   if (message.url) fields.push(field('Jump', `[View Message](${message.url})`, true));
-  setDescription(embed, clampText(message.content, 4000));
+  setDescription(embed, clampText(effectiveText(message), 4000));
   setFooter(embed, msgFooter(message));
   setFields(embed, fields);
   return fitEmbed(embed);

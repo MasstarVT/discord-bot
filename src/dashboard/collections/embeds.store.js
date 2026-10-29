@@ -14,6 +14,7 @@ import {
 } from '../../services/embedService.js';
 import { normalizeTemplate, renderTemplate } from '../../utils/customEmbed.js';
 import { RecordError } from './errors.js';
+import { SEND_NEEDS, VIEW_NEEDS, isChannelExempt, requireChannelAccess } from './channelAccess.js';
 import {
   DISCORD_CODES, SLUG_MESSAGE, discordFailure, embedItem, isDiscordApiError, memberFor, renderContextFor,
   restAllowedMentions, splitPingableRoles, toRestMessage,
@@ -63,6 +64,28 @@ async function loadResources(ctx, guildId) {
 
 const channelIn = (resources, id) => (resources?.channels ?? []).find((c) => c.id === id) ?? null;
 
+/** What /embed asks of the member before touching a posted copy: View Channel in the channel it was posted in. */
+const requireStoredChannelAccess = (ctx, row, path) => requireChannelAccess(ctx, [
+  { channelId: row.channelId, needs: VIEW_NEEDS, path, optional: true },
+]);
+
+/**
+ * Changing a saved embed changes what the automations that send it by name post, so the user needs the same access to every
+ * channel such an automation posts it in (an unposted embed is not safe to edit when one posts it in a hidden channel). An
+ * automation that sends it to the channel where it triggers has no fixed channel to check. Nothing is read for an owner or
+ * an Administrator.
+ */
+async function requireAutomationChannelAccess(ctx, guildId, name) {
+  if (isChannelExempt(ctx?.member)) return;
+  const rows = await prisma.automation.findMany({ where: { guildId }, select: { actions: true }, take: LIMITS.AUTOMATIONS });
+  const channels = new Set(rows.flatMap((r) => (Array.isArray(r.actions) ? r.actions : [])
+    .filter((a) => a?.type === 'SEND_EMBED' && a.channelId && (a.embedName === name || normalizeEmbedName(a.embedName) === name))
+    .map((a) => a.channelId)));
+  await requireChannelAccess(ctx, [...channels].map((channelId) => ({ channelId, needs: SEND_NEEDS, path: 'template', optional: true })), {
+    lead: 'An automation posts this embed there, so editing it needs access to that channel. ',
+  });
+}
+
 /**
  * Renders a template into a REST message body. 'publish' lets `<@&id>` role mentions in the text ping only when the
  * role is mentionable or the dashboard user may mention every role (resolvePublishMentions of /embed publish); any
@@ -77,7 +100,10 @@ export function renderForDiscord(template, resources, { channelId, ctx, settings
   if (mode !== 'publish') {
     return { body: toRestMessage(rendered, { edit: mode === 'edit', allowedMentions: restAllowedMentions({ users: false }) }), refused: [] };
   }
-  const { allowed, refused } = splitPingableRoles(extractRoleMentionIds(rendered.content), resources, memberFor(ctx, resources));
+  // The role ids come from the text the admin wrote, not from the rendered text (a variable such as {channel.name} can hold
+  // text a member chose), as automationService.allowedMentionsFor does.
+  const authored = extractRoleMentionIds(normalizeTemplate(template).content);
+  const { allowed, refused } = splitPingableRoles(authored, resources, memberFor(ctx, resources));
   return { body: toRestMessage(rendered, { allowedMentions: restAllowedMentions({ users: true, roles: allowed }) }), refused };
 }
 
@@ -159,7 +185,9 @@ export const store = Object.freeze({
     if (!Object.hasOwn(data, 'template')) return embedItem(row);
     const template = checkTemplate(data.template);
     const patch = { template };
+    await requireAutomationChannelAccess(ctx, guildId, row.name);
     if (row.messageId && row.channelId) {
+      await requireStoredChannelAccess(ctx, row, 'template');
       // Discord first: a refused edit (missing permission, outage) saves nothing and says why.
       const outcome = await editPosted(guildId, row, template, ctx);
       if (outcome !== 'edited') Object.assign(patch, GONE_PATCH[outcome]);
@@ -170,8 +198,10 @@ export const store = Object.freeze({
     return embedItem(await refetch(guildId, id));
   },
 
-  async remove(guildId, id) {
+  async remove(guildId, id, ctx) {
     const row = await findRow(guildId, id);
+    // As /embed delete: a saved embed that points at a channel needs access to it, even when only kept as a hint.
+    await requireStoredChannelAccess(ctx, row);
     const { count } = await prisma.savedEmbed.deleteMany({ where: { id, guildId } });
     if (!count) throw notFound();
     // A short negative entry, like deleteSavedEmbedAndMessage. The posted message stays (no longer tracked).
@@ -188,6 +218,13 @@ export const store = Object.freeze({
       if (!channel) {
         throw new RecordError('invalid', 'That channel does not exist in this server any more. Pick another one.', { path: 'channelId' });
       }
+      // As /embed publish: View + Send in the target, and View where the previous copy is deleted.
+      const previous = row.messageId && row.channelId ? { channelId: row.channelId, messageId: row.messageId } : null;
+      await requireChannelAccess(ctx, [
+        { channelId: channel.id, needs: SEND_NEEDS, path: 'channelId' },
+        ...(previous && data.deletePrevious !== false && previous.channelId !== channel.id
+          ? [{ channelId: previous.channelId, needs: VIEW_NEEDS, path: 'deletePrevious', optional: true }] : []),
+      ]);
       const settings = await getSettingsSafe(guildId);
       const { body, refused } = renderForDiscord(row.template, resources, { channelId: channel.id, ctx, settings, mode: 'publish' });
 
@@ -197,7 +234,6 @@ export const store = Object.freeze({
       } catch (err) {
         throw discordFailure(err, { op: 'send', channel, embeds: body.embeds.length > 0 });
       }
-      const previous = row.messageId && row.channelId ? { channelId: row.channelId, messageId: row.messageId } : null;
       const { count } = await prisma.savedEmbed.updateMany({ where: { id, guildId }, data: { channelId: channel.id, messageId: sent.id } });
       if (!count) {
         // Deleted while posting: take the untracked copy down again.
@@ -236,6 +272,7 @@ export const store = Object.freeze({
     async refresh(guildId, id, data, ctx) {
       const row = await findRow(guildId, id);
       if (!row.messageId || !row.channelId) throw new RecordError('invalid', 'This embed is not posted anywhere. Post it with "Post in a channel".');
+      await requireStoredChannelAccess(ctx, row);
       const outcome = await editPosted(guildId, row, normalizeTemplate(row.template), ctx);
       if (outcome !== 'edited') {
         await prisma.savedEmbed.updateMany({ where: { id, guildId, messageId: row.messageId }, data: GONE_PATCH[outcome] });
@@ -249,6 +286,7 @@ export const store = Object.freeze({
       requireDiscord(ctx, 'deleteMessage');
       const row = await findRow(guildId, id);
       if (!row.messageId || !row.channelId) throw new RecordError('invalid', 'This embed is not posted anywhere.');
+      await requireStoredChannelAccess(ctx, row);
       try {
         await ctx.discord.deleteMessage(row.channelId, row.messageId);
       } catch (err) {

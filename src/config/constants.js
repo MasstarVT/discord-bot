@@ -68,6 +68,8 @@ export const LIMITS = Object.freeze({
   VOICE_ROLE_LINKS: 50,        // GuildSettings.voiceRoleLinks
   VOICE_ROLE_ANY: 5,           // GuildSettings.voiceRoleAnyRoleIds
   COUNTING_MATH_LENGTH: 100,   // characters of a counting message worked out as maths (`2+2`); longer is chat
+  SEARCH_USER_PER_MINUTE: 6,   // uncached /search lookups one member may send upstream per source per minute
+  SEARCH_GUILD_BUDGET_DIVISOR: 3, // one server may use 1/n of a source's bot-wide per-minute budget (BUDGET_PER_MINUTE)
 });
 
 // ── Module defaults ───────────────────────────────────────────────────────────

@@ -7,17 +7,22 @@
 // Builders add the companion right after the picker with newRoleOption / newChannelOption (a picker that
 // was required becomes optional). The command calls resolveNewOptions right after its own defer and
 // before it reads the picker; from then on getRole/getChannel return the created role or channel.
+// A private option (log or transcript channel) reuses an existing channel of that name only when its audience is no wider
+// than a channel made here would have; otherwise it refuses, so a typed name never routes private logs into a channel
+// someone else can read. reuseNote() tells the command to say so in its reply when one was reused.
 // Nothing here throws: failures answer the interaction with an error and resolve to false.
-import { ApplicationCommandOptionType, ChannelType, PermissionFlagsBits, escapeMarkdown } from 'discord.js';
+import { ApplicationCommandOptionType, ChannelType, OverwriteType, PermissionFlagsBits, escapeMarkdown } from 'discord.js';
 import logger from './logger.js';
 import { errorEmbed } from './embedBuilder.js';
 import { createKeyedMutex, withTimeout, TimeoutError } from './async.js';
 import { safeReply, missingBotPermissions, permissionNames, DANGEROUS_PERMISSIONS } from './interactionHelpers.js';
+import { memberChannelProblem } from './privacyGuards.js';
 import { clampText } from './text.js';
 
 export const NEW_PREFIX = 'new_';
 const NAME_MAX = 100;
 const CREATE_TIMEOUT_MS = 15_000;
+const MEMBER_LOOKUP_MS = 3_000;
 
 const { Role: ROLE, Channel: CHANNEL, String: STRING, Subcommand, SubcommandGroup } = ApplicationCommandOptionType;
 
@@ -208,6 +213,55 @@ function privateOverwrites(interaction) {
   return out;
 }
 
+const WIDER_REASONS = Object.freeze({
+  everyone: 'everyone can see it',
+  invoker: 'you cannot see it',
+  others: 'roles or members besides you, me and server admins can see it',
+});
+
+/** Whether a member holds Manage Server (or Administrator); false when that cannot be told (not cached and the fetch failed). */
+async function isServerAdmin(guild, id) {
+  let member = guild.members.cache?.get?.(id) ?? null;
+  if (!member && typeof guild.members.fetch === 'function') {
+    member = await withTimeout(Promise.resolve().then(() => guild.members.fetch(id)), MEMBER_LOOKUP_MS, 'fetch member').catch(() => null);
+  }
+  return member?.permissions?.has?.(PermissionFlagsBits.ManageGuild) === true;
+}
+
+/**
+ * Why an existing channel may not stand in for a private one (see privateOverwrites): 'everyone' (@everyone can view it, or
+ * that cannot be told), 'invoker' (the admin typing the name cannot view it, so could not tell where logs go), 'others' (a
+ * role or member overwrite other than @everyone, the bot, the invoker and Manage Server / Administrator roles or members
+ * allows ViewChannel), or null when it is no wider than a channel made here.
+ */
+async function privateReuseProblem(interaction, channel) {
+  const { guild } = interaction;
+  if (channel.permissionsFor?.(guild.id)?.has(PermissionFlagsBits.ViewChannel) ?? true) return 'everyone';
+  const member = interaction.member ?? guild.members.cache?.get?.(interaction.user.id) ?? null;
+  if (!member || memberChannelProblem(channel, member, ['ViewChannel'])) return 'invoker';
+  const me = guild.members.me;
+  const botRoleId = me?.roles?.botRole?.id;
+  for (const ow of channel.permissionOverwrites?.cache?.values?.() ?? []) {
+    if (!ow.allow?.has?.(PermissionFlagsBits.ViewChannel)) continue;
+    if (ow.id === guild.id || ow.id === me?.id || ow.id === interaction.user.id || ow.id === botRoleId) continue;
+    // has() counts Administrator too. A member that cannot be told (not cached, fetch failed) counts as wider.
+    if (ow.type === OverwriteType.Role) {
+      if (guild.roles.cache.get(ow.id)?.permissions?.has?.(PermissionFlagsBits.ManageGuild)) continue;
+    } else if (await isServerAdmin(guild, ow.id)) continue; // e.g. another admin the bot made this channel for earlier
+    return 'others';
+  }
+  return null;
+}
+
+/** interaction -> existing private channels used instead of creating one (see reuseNote). */
+const reusedPrivate = new WeakMap();
+
+/** The reply line for a command whose private option typed by name used an existing channel instead of creating one, else null. */
+export function reuseNote(interaction) {
+  const ids = reusedPrivate.get(interaction);
+  return ids?.length ? `ℹ️ Reused the existing ${ids.map((id) => `<#${id}>`).join(', ')} instead of creating a new private channel.` : null;
+}
+
 async function obtainChannel(interaction, name, base, { hidden }) {
   const { guild } = interaction;
   const type = channelTypeFor(base.channel_types);
@@ -219,12 +273,15 @@ async function obtainChannel(interaction, name, base, { hidden }) {
   return createLock.run(`${guild.id}:channel:${type}:${key}`, async () => {
     const existing = findByName(guild.channels.cache.filter((c) => allowed.includes(c.type)).values(), name, { slugged });
     if (existing) {
-      // A private (log) channel must not quietly become an existing public one; unknown visibility counts as public.
-      if (hidden && (existing.permissionsFor?.(guild.id)?.has(PermissionFlagsBits.ViewChannel) ?? true)) {
+      // A private (log) channel must not quietly become an existing one that more people can read than a new one would;
+      // unknown visibility counts as public. Picking it in the picker stays possible (the admin sees it there).
+      const wider = hidden ? await privateReuseProblem(interaction, existing) : null;
+      if (wider) {
+        const pickable = wider !== 'invoker'; // a channel the admin cannot view is not in the picker
         return {
           ok: false, title: 'Channel Name Taken',
-          message: `<#${existing.id}> already exists and everyone can see it, but this ${noun} is created private. `
-            + `Pick it in \`${base.name}\` if you really mean it, or type another name.`,
+          message: `${pickable ? `<#${existing.id}>` : `A ${noun} with that name`} already exists and ${WIDER_REASONS[wider]}, but this ${noun} is created private. `
+            + (pickable ? `Pick it in \`${base.name}\` if you really mean it, or type another name.` : 'Type another name.'),
         };
       }
       return { ok: true, entity: existing, created: false };
@@ -259,7 +316,8 @@ async function fail(interaction, title, message) {
  * @param {import('discord.js').SlashCommandBuilder|object} data the command's builder (or its JSON)
  * @param {{ required?: string[], private?: string[] }} [opts]
  *   required: pickers that need a value from either the picker or its companion;
- *   private: channel pickers whose new channel is hidden from @everyone (logs, transcripts)
+ *   private: channel pickers whose new channel is hidden from @everyone (logs, transcripts); an existing channel of the typed
+ *     name is reused only when no more people can see it than a new one (otherwise "Channel Name Taken"), see reuseNote()
  * @returns {Promise<boolean>} true to continue; false when an error was already shown
  */
 export async function resolveNewOptions(interaction, data, { required = [], private: hidden = [] } = {}) {
@@ -286,6 +344,7 @@ export async function resolveNewOptions(interaction, data, { required = [], priv
         : await obtainChannel(interaction, name, base, { hidden: hidden.includes(base.name) });
       if (!res.ok) return fail(interaction, res.title ?? `Could Not Create ${kind === 'role' ? 'Role' : 'Channel'}`, res.message);
       if (res.created) logger.info(`[newTargets] ${interaction.guildId}: created ${kind} ${res.entity.id} "${name}" for ${auditReason(interaction)}`);
+      else if (kind === 'channel' && hidden.includes(base.name)) reusedPrivate.set(interaction, [...(reusedPrivate.get(interaction) ?? []), res.entity.id]);
       substituteOption(interaction, newName, base.name, kind, res.entity);
     }
     return true;

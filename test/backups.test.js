@@ -14,7 +14,7 @@ process.env.CLIENT_ID ??= '000000000000000000';
 process.env.REDIS_URL = 'redis://127.0.0.1:1';
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:1/test';
 
-const { ChannelType, OverwriteType, PermissionFlagsBits: P, PermissionsBitField } = await import('discord.js');
+const { AuditLogEvent, ChannelType, OverwriteType, PermissionFlagsBits: P, PermissionsBitField } = await import('discord.js');
 const svc = await import('../src/services/backupService.js');
 const snap = await import('../src/utils/guildSnapshot.js');
 const backups = await import('../src/plugins/backups.js');
@@ -119,6 +119,7 @@ after(async () => {
 const bigPerms = (...flags) => flags.reduce((a, f) => a | f, 0n);
 const BOT_PERMS = [P.ViewChannel, P.SendMessages, P.EmbedLinks, P.ManageRoles, P.ManageChannels, P.KickMembers, P.BanMembers, P.ManageMessages, P.ReadMessageHistory];
 const BOT_TOP = 10;
+const BOT_ID = '9999';
 let nextId = 5000;
 const newId = () => String(nextId++);
 
@@ -160,11 +161,13 @@ function fakeChannel(spec) {
 function makeGuild({ id = '900', ownerId = 'OWNER', roles = [], channels = [], botPerms = BOT_PERMS, botTop = BOT_TOP, members = [], everyonePerms = 0n,
   features = [], fail = {} } = {}) {
   const log = { create: [], edit: [], put: [], rolePositions: [], channelPositions: [], fetches: [] };
+  const audit = []; // the audit log: one CREATE entry per role or channel the bot made (a stranger's are not listed, as nothing here makes them)
   const roleCache = mapOf(roles.map(fakeRole));
   const everyone = fakeRole({ id, name: '@everyone', perms: everyonePerms, pos: 0 });
   roleCache.set(id, everyone);
   const channelCache = mapOf(channels.map(fakeChannel));
   const me = {
+    id: BOT_ID,
     permissions: new PermissionsBitField(botPerms),
     roles: { highest: { rawPosition: botTop } },
   };
@@ -180,6 +183,7 @@ function makeGuild({ id = '900', ownerId = 'OWNER', roles = [], channels = [], b
           emoji: data.unicodeEmoji, pos: 1, created: Date.now(),
         });
         roleCache.set(role.id, role);
+        audit.push({ event: AuditLogEvent.RoleCreate, targetId: role.id, executorId: BOT_ID, reason: data.reason, createdTimestamp: Date.now() });
         return role;
       },
       async edit(role, data) {
@@ -209,6 +213,7 @@ function makeGuild({ id = '900', ownerId = 'OWNER', roles = [], channels = [], b
         });
         ch.guild = guild;
         channelCache.set(ch.id, ch);
+        audit.push({ event: AuditLogEvent.ChannelCreate, targetId: ch.id, executorId: BOT_ID, reason: data.reason, createdTimestamp: Date.now() });
         return ch;
       },
       async edit(ch, data) {
@@ -249,6 +254,7 @@ function makeGuild({ id = '900', ownerId = 'OWNER', roles = [], channels = [], b
   for (const ch of channelCache.values()) ch.guild = guild;
   guild.me = me;
   guild.log = log;
+  guild.fetchAuditLogs = async ({ type }) => ({ entries: mapOf(audit.filter((e) => e.event === type).map((e) => ({ ...e, id: e.targetId }))) });
   return guild;
 }
 
@@ -292,14 +298,16 @@ const SNAPSHOT = snap.captureGuild(original(), new Date('2026-10-21T10:00:00Z'))
 const roundTrip = (v) => JSON.parse(JSON.stringify(v));
 
 /** Runs restore batches like the job does (state through JSON between batches) until 'finish'. */
-async function restoreAll(guild, { mode = 'missing', snapshot = SNAPSHOT, idMap = {}, startedAt = Date.now() - 1000, maxBatches = 40 } = {}) {
+async function restoreAll(guild, { mode = 'missing', snapshot = SNAPSHOT, idMap = {}, startedAt = Date.now() - 1000, maxBatches = 40, retry = false } = {}) {
   let state = snap.newRestoreState({ backupId: 'bk000001', mode, startedById: 'OWNER', channelId: 'CH', idMap, now: startedAt });
+  state.retry = retry; // the job sets it on attempt 2 or later; only the first batch is a repeat
   let batches = 0;
   let calls = [];
   for (;;) {
     state = snap.normaliseRestoreState(roundTrip(state));
     const env = snap.makeEnv({ guild, snapshot: snap.parseSnapshot(roundTrip(snapshot)), state, reason: 'test' });
     const result = await snap.runRestoreBatch(env);
+    state.retry = false;
     calls.push(env.budget.calls);
     batches += 1;
     if (result === 'finish') return { state, batches, calls };
@@ -578,8 +586,8 @@ test('a crash in the middle of a batch (progress lost) adopts what was made inst
   assert.ok(made >= 5, `the first batch made ${made} things`);
   const rolesNow = nameOf(guild);
 
-  // The retry starts from the old payload.
-  const retry = await restoreAll(guild, { startedAt });
+  // The retry starts from the old payload; the job marks it `retry` (attempt 2), so it may adopt what the bot made.
+  const retry = await restoreAll(guild, { startedAt, retry: true });
   void saved;
   assert.deepEqual(nameOf(guild).filter((n) => n === 'Mod' || n === 'Member'), ['Member', 'Mod'], 'no second Mod or Member');
   assert.equal(chanNames(guild).filter((n) => n === 'Info').length, 1);
@@ -937,7 +945,7 @@ test('the restore job: a batch already in flight in this process makes a retry w
   await new Promise((r) => setTimeout(r, 20));
   const retry = await svc.handleRestoreJob({ guildId: '932', payload, attempts: 2, maxAttempts: 5 }, ctx);
   assert.ok(retry.nextRunAt instanceof Date);
-  assert.equal('payload' in retry, false, 'the saved payload stays as it was');
+  assert.deepEqual(retry.payload, { ...payload, retry: true }, 'the saved payload stays as it was, marked so the next batch may adopt what the lost one made');
   release();
   const out = await running;
   assert.ok(out === undefined || out.nextRunAt instanceof Date);

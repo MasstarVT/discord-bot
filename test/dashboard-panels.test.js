@@ -1641,11 +1641,20 @@ describe('stores and tasks (TEST_DATABASE_URL)', { skip: skipDb }, () => {
       let item = await tkStore.update(w.id, made.id, valid('ticketPanels', { managerRoleIds: [r1.id, r2.id] }, update(made)), w.ctx());
       assert.deepEqual(item.managerRoleIds, [r1.id, r2.id]);
       assert.deepEqual(w.runs.map((r) => [r[0], r[1].managersAdded, r[1].managersRemoved, r[1].message]), [['ticket.refresh', [r2.id], [], false]]);
+      // The task only merges the change into the guild's one ticket.managersync job; the bot's job runs it.
+      const runSyncJobs = async () => {
+        const rows = await prisma.scheduledJob.findMany({ where: { guildId: w.id, type: 'ticket.managersync' } });
+        for (const row of rows) await tkSvc.runManagerSyncJob({ id: row.id, guildId: row.guildId, version: row.version, payload: row.payload }, { guild: w.guild });
+        return rows.flatMap((row) => Object.values(row.payload.panels).flatMap((p) => p.roles));
+      };
+      for (const t of [t1, t2]) assert.deepEqual(t.calls, [], 'the task itself touches no ticket channel');
+      assert.deepEqual(await runSyncJobs(), [r2.id]);
       for (const t of [t1, t2]) assert.deepEqual(t.calls.map((c) => [c[0], c[1]]), [['overwrite.edit', r2.id]]);
 
       w.runs.length = 0;
       item = await tkStore.update(w.id, made.id, valid('ticketPanels', { managerRoleIds: [r2.id] }, update(item)), w.ctx());
       assert.deepEqual(item.managerRoleIds, [r2.id]);
+      assert.deepEqual(await runSyncJobs(), [r1.id], 'the removed role is still removed from the tickets');
       assert.deepEqual(t1.calls.at(-1), ['overwrite.delete', r1.id]);
       assert.deepEqual((await rowOf(made.id)).managerRoleIds, [r2.id]);
 

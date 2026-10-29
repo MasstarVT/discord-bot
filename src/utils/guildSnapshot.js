@@ -4,11 +4,11 @@
 // The restore NEVER deletes anything: it creates roles and channels, edits the ones that still exist (mode `full`
 // only), moves them and upserts one permission overwrite at a time. Every decision is made from the snapshot and the
 // guild's CURRENT state, so a batch that is repeated after a crash only does what is still undone (and adopts what the
-// crashed run created before it could write down its id).
+// crashed run created before it could write down its id, but only after the audit log shows the bot made it for this restore).
 //
 // The restore engine takes a plain `env` ({ guild, snapshot, state, ... }) so tests drive it with fakes. All Discord
 // calls go through `api()`: bounded in number and time, errors recorded in `state`, never thrown.
-import { ChannelType, OverwriteType, PermissionFlagsBits, PermissionsBitField, Routes } from 'discord.js';
+import { AuditLogEvent, ChannelType, OverwriteType, PermissionFlagsBits, PermissionsBitField, Routes } from 'discord.js';
 import { withTimeout } from './async.js';
 import { clampText } from './text.js';
 
@@ -24,8 +24,8 @@ export const RESTORE_BUDGET = Object.freeze({
   ERRORS_KEPT: 20,         // error lines kept in the payload
   ERROR_CHARS: 200,
   POSITION_CHUNK: 50,      // channels per position call
-  SKEW_MS: 60_000,         // clock slack when judging "created by this restore"
-  ID_MAP_MAX: 4000,        // entries accepted from a payload or a stored map
+  AUDIT_LIMIT: 100,        // audit log entries read to confirm that the bot made a role or channel (Discord's maximum)
+  ID_MAP_MAX: 4000,       // entries accepted from a payload or a stored map
   LIST_MAX: 1500,          // roles / channels read from a stored snapshot
   OVERWRITES_MAX: 200,     // overwrites per channel read from a stored snapshot
 });
@@ -318,7 +318,7 @@ const COUNT_KEYS = Object.freeze([
  */
 export function newRestoreState({ backupId, mode, startedById = null, channelId = null, idMap = {}, now = Date.now() }) {
   return {
-    backupId, mode, phase: 'roles', cursor: 0, stalls: 0,
+    backupId, mode, phase: 'roles', cursor: 0, stalls: 0, retry: false,
     idMap: parseIdMap(idMap), made: [], counts: {}, errors: [], dropped: '0',
     startedById, channelId, startedAt: now,
   };
@@ -341,6 +341,7 @@ export function normaliseRestoreState(raw) {
     phase: raw.phase,
     cursor: int(raw.cursor, 0, 1e9, 0),
     stalls: int(raw.stalls, 0, 1000, 0),
+    retry: raw.retry === true, // set by the job when this batch repeats one whose progress was lost (see adoptRole)
     idMap: parseIdMap(raw.idMap),
     made: (Array.isArray(raw.made) ? raw.made : []).filter((id) => typeof id === 'string' && DIGITS.test(id)).slice(0, RESTORE_BUDGET.ID_MAP_MAX),
     counts,
@@ -381,6 +382,7 @@ export function makeEnv({ guild, snapshot, state, me = null, reason = 'Server ba
     canManageChannels: Boolean(member?.permissions?.has?.(PermissionFlagsBits.ManageChannels)),
     roleIcons: Boolean(guild.features?.includes?.('ROLE_ICONS')),
     madeSet: new Set(state.made),
+    audit: new Map(), // audit log event -> ids the bot made for this restore (read once per batch, see madeByRestore)
     originalRoleIds: new Set(snapshot.roles.map((r) => r.id)),
     originalChannelIds: new Set([...snapshot.categories, ...snapshot.channels].map((c) => c.id)),
     budget: { calls: 0, max: RESTORE_BUDGET.CALLS, deadline: Date.now() + RESTORE_BUDGET.BATCH_MS },
@@ -418,7 +420,7 @@ async function api(env, label, fn, { quiet = false } = {}) {
     return { ok: true, value: await withTimeout(Promise.resolve().then(fn), ms, label) };
   } catch (err) {
     if (err?.name === 'TimeoutError') {
-      // The call may still go through later. The item is tried again in the next batch (see stalled) and adopts what appeared.
+      // The call may still go through later. The item is tried again in the next batch (see stalled) and may adopt what appeared.
       env.timedOut = true;
       return { ok: false, error: err, timeout: true };
     }
@@ -706,31 +708,59 @@ export function previewRestore({ guild, snapshot, mode, idMap = {} }) {
 }
 
 // ── Adopting what a crashed run made ──────────────────────────────────────────
+// A role or channel that an earlier try of THIS restore made, but whose id was never saved (a create that timed out, or a
+// batch whose progress was lost in a crash), is used instead of being made twice. Never by name alone: a same-named role or
+// channel made by someone else (a member with Manage Roles, say) would be raised, ordered and given the overwrites of the
+// original. So it takes an earlier try (mayAdopt, never the first one), an audit log entry that shows the bot made it for this
+// restore, and then the name (and type and parent) of the snapshot item. Anything unconfirmed is made again: a rare duplicate
+// after a crash is safer than adopting a stranger's.
 
-/** A role made after the restore started, with the wanted name, that no snapshot role has claimed. */
-function adoptRole(env, r) {
-  const since = env.state.startedAt - RESTORE_BUDGET.SKEW_MS;
-  const taken = new Set(Object.values(env.state.idMap));
-  for (const role of env.guild.roles.cache.values()) {
-    if (role.id === env.guild.id || role.managed || taken.has(role.id) || env.originalRoleIds.has(role.id)) continue;
-    if (role.name !== r.name || !(role.createdTimestamp >= since)) continue;
-    return role;
+/** True while the item at the cursor may exist already from an earlier try: its create timed out (`stalls`), or this batch repeats one whose progress was lost (`retry`). */
+const mayAdopt = (env) => env.state.stalls > 0 || env.state.retry === true;
+
+/**
+ * Ids of what the bot made for this restore since it started, from the audit log (CREATE entries of `event`, executed by the
+ * bot with this restore's reason). Read at most once per event per batch; empty when the log cannot be read, which means
+ * nothing is adopted.
+ */
+async function madeByRestore(env, event) {
+  const known = env.audit.get(event);
+  if (known) return known;
+  const ids = new Set();
+  env.audit.set(event, ids); // a failed or timed-out read is not repeated inside the batch
+  const meId = env.me?.id ?? env.guild.client?.user?.id;
+  if (!meId) return ids;
+  const res = await api(env, 'Audit log', () => env.guild.fetchAuditLogs({ type: event, limit: RESTORE_BUDGET.AUDIT_LIMIT }), { quiet: true });
+  if (!res.ok) return ids;
+  for (const entry of res.value?.entries?.values?.() ?? []) {
+    if (entry?.targetId && entry.executorId === meId && entry.reason === env.reason && entry.createdTimestamp >= env.state.startedAt) {
+      ids.add(String(entry.targetId));
+    }
   }
-  return null;
+  return ids;
 }
 
-/** A channel made after the restore started, with the wanted name, type and parent, that no snapshot channel has claimed. */
-function adoptChannel(env, c) {
-  const since = env.state.startedAt - RESTORE_BUDGET.SKEW_MS;
+/** A role the bot made for this restore, with the wanted name, that no snapshot role has claimed. */
+async function adoptRole(env, r) {
+  if (!mayAdopt(env)) return null;
+  const taken = new Set(Object.values(env.state.idMap));
+  const named = [...env.guild.roles.cache.values()].filter((role) => role.id !== env.guild.id && !role.managed
+    && !taken.has(role.id) && !env.originalRoleIds.has(role.id) && role.name === r.name);
+  if (!named.length) return null;
+  const made = await madeByRestore(env, AuditLogEvent.RoleCreate);
+  return named.find((role) => made.has(role.id)) ?? null;
+}
+
+/** A channel the bot made for this restore, with the wanted name, type and parent, that no snapshot channel has claimed. */
+async function adoptChannel(env, c) {
+  if (!mayAdopt(env)) return null;
   const taken = new Set(Object.values(env.state.idMap));
   const parent = mappedParent(env, c);
-  for (const ch of env.guild.channels.cache.values()) {
-    if (taken.has(ch.id) || env.originalChannelIds.has(ch.id) || ch.isThread?.()) continue;
-    if (ch.type !== c.type || ch.name !== c.name || (ch.parentId ?? null) !== parent) continue;
-    if (!(ch.createdTimestamp >= since)) continue;
-    return ch;
-  }
-  return null;
+  const named = [...env.guild.channels.cache.values()].filter((ch) => !taken.has(ch.id) && !env.originalChannelIds.has(ch.id)
+    && !ch.isThread?.() && ch.type === c.type && ch.name === c.name && (ch.parentId ?? null) === parent);
+  if (!named.length) return null;
+  const made = await madeByRestore(env, AuditLogEvent.ChannelCreate);
+  return named.find((ch) => made.has(ch.id)) ?? null;
 }
 
 function remember(env, oldId, created) {
@@ -785,7 +815,7 @@ async function restoreRole(env, r) {
     if (res.ok) { noteDropped(state, d.dropped); bump(state, 'rolesUpdated'); }
     return;
   }
-  const adopted = adoptRole(env, r);
+  const adopted = await adoptRole(env, r);
   if (adopted) {
     remember(env, r.id, adopted);
     return void bump(state, 'rolesCreated');
@@ -862,7 +892,7 @@ async function stepChannels(env, list, bucket) {
       const res = await api(env, `#${c.name}`, () => env.guild.channels.edit(d.existing, d.data));
       if (res.ok) bump(state, `${bucket}Updated`);
     } else {
-      const adopted = adoptChannel(env, c);
+      const adopted = await adoptChannel(env, c);
       if (adopted) {
         remember(env, c.id, adopted);
         bump(state, `${bucket}Created`);

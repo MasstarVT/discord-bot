@@ -582,6 +582,9 @@ model Infraction {
   active       Boolean        @default(true)
   // null = permanent; set for timed mutes/bans (temp-ban expiry job reads it)
   expiresAt    DateTime?
+  // Set only by runEscalation on the case it creates: the tier that fired. The "[Escalation T…]" reason text is
+  // display only; "this tier already fired" is read from this column, never from reason text a person can type or edit.
+  escalationTierId Int?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -1939,7 +1942,9 @@ model EventRsvp {
   eventId     String
   userId      String
   status      RsvpStatus
-  // The bot gave this member the event role (only these members get it taken back).
+  // The bot gave this member the event role (only these members get it taken back). After the event closes it stays true
+  // for a member who had left (stripRoles could not reach them): Role Persistence reads that as "the saved role came from
+  // this event", skips it on their return and clears it.
   roleGranted Boolean    @default(false)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

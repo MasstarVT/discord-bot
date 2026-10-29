@@ -30,6 +30,8 @@ export const INTERACTIVE_IDLE_POLL_INTERVAL_MS = 5_000;
 export const INTERACTIVE_MAX_LATE_MS = 60_000;
 export const CLAIM_BATCH = 25;
 export const JOB_CONCURRENCY = 5;
+/** Interactive jobs one shard runs at once, at most one per guild (see fillInteractiveSlots). */
+export const INTERACTIVE_CONCURRENCY = 10;
 export const JOB_TIMEOUT_MS = 60_000;
 export const LOCK_MS = 5 * 60_000;
 export const LIVE_STATUSES = Object.freeze(['PENDING', 'RUNNING']);
@@ -39,7 +41,14 @@ const NO_HANDLER_BACKOFF_MS = 10 * 60_000;
 const RETRY_BASE_MS = 30_000;
 const RETRY_MAX_MS = 60 * 60_000;
 const LAST_ERROR_MAX = 2000;
-const CONFLICT_MODES = Object.freeze(['replace', 'keep', 'earliest']);
+const CONFLICT_MODES = Object.freeze(['replace', 'keep', 'earliest', 'merge']);
+
+/** A JSON round trip of `value` (a payload), so what is stored is exactly what a later claim reads. */
+function serialisable(value) {
+  const text = JSON.stringify(value ?? {});
+  if (text === undefined) throw new Error('payload serialises to undefined');
+  return JSON.parse(text);
+}
 
 /** @type {Map<string, Function>} */
 const handlers = new Map();
@@ -53,6 +62,11 @@ let filling = null;
 let refillAsked = false;
 /** The last claim filled every free slot, so more jobs may be due: finished jobs refill at once until one comes back short. */
 let backlog = false;
+/** The same for the interactive loop: jobs it runs now, the claim in progress, and when it last claimed one. */
+let interactiveRunning = 0;
+let interactiveFilling = null;
+let interactiveRefillAsked = false;
+let lastInteractiveClaim = -Infinity;
 let started = false;
 let pollTimer = null;
 let interactiveTimer = null;
@@ -69,15 +83,32 @@ const ownedSql = ({ guildIds, shards }) => {
   return Prisma.sql`(CASE WHEN "guildId" ~ '^[0-9]{1,19}$' THEN ("guildId"::bigint >> 22) % ${shards.count}::bigint END) = ANY(${shards.ids}::bigint[])`;
 };
 
-// `interactive`: only the interactive job types (their own loop), otherwise every other type. `limit`: at most this
-// many rows (the slot loop claims only as many jobs as it has free slots).
+// Interactive claims keep one job per guild in flight, so one guild's slow task never fills the interactive slots that every
+// other guild's dashboard tasks wait for: a guild that already has one running (lock not expired) is skipped, and one claim
+// takes only a guild's earliest due job. The rule is part of the same FOR UPDATE SKIP LOCKED statement as the claim, so every
+// shard and process sees the same rows (a guild's interactive jobs go to one shard anyway); subselects lock nothing. A
+// running row counts only for 90 s after its claim (JOB_TIMEOUT_MS plus slack): a handler cannot outlive that, so a row a
+// crashed process left RUNNING does not hold its guild's dashboard tasks back for the whole 5 min lock.
+const onePerGuildSql = () => Prisma.sql`
+      AND NOT EXISTS (
+        SELECT 1 FROM "ScheduledJob" r
+        WHERE r."guildId" = j."guildId" AND r.type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[])
+          AND r.status = 'RUNNING' AND r."lockedUntil" >= ${SQL_NOW} AND r."updatedAt" > ${SQL_NOW} - interval '90 seconds')
+      AND NOT EXISTS (
+        SELECT 1 FROM "ScheduledJob" e
+        WHERE e."guildId" = j."guildId" AND e.type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[]) AND e.id <> j.id
+          AND e."runAt" <= ${SQL_NOW} AND (e.status = 'PENDING' OR (e.status = 'RUNNING' AND e."lockedUntil" < ${SQL_NOW}))
+          AND (e."runAt", e.id) < (j."runAt", j.id))`;
+
+// `interactive`: only the interactive job types (their own loop, one per guild), otherwise every other type. `limit`: at
+// most this many rows (both slot loops claim only as many jobs as they have free slots).
 const claimSql = (owned, owner, { interactive = false, limit = CLAIM_BATCH } = {}) => Prisma.sql`
   WITH due AS (
-    SELECT id FROM "ScheduledJob"
+    SELECT j.id FROM "ScheduledJob" j
     WHERE ${ownedSql(owned)}
       AND ${interactive ? Prisma.sql`type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[])` : Prisma.sql`NOT (type = ANY(${[...INTERACTIVE_JOB_TYPES]}::text[]))`}
       AND "runAt" <= ${SQL_NOW}
-      AND (status = 'PENDING' OR (status = 'RUNNING' AND "lockedUntil" < ${SQL_NOW}))
+      AND (status = 'PENDING' OR (status = 'RUNNING' AND "lockedUntil" < ${SQL_NOW}))${interactive ? onePerGuildSql() : Prisma.empty}
     ORDER BY "runAt" ASC
     LIMIT ${limit}
     FOR UPDATE SKIP LOCKED
@@ -89,7 +120,10 @@ const claimSql = (owned, owner, { interactive = false, limit = CLAIM_BATCH } = {
   RETURNING j.*`;
 
 const lockDedupeSql = (dedupeKey) => Prisma.sql`
-  SELECT id, "runAt", status FROM "ScheduledJob" WHERE "dedupeKey" = ${dedupeKey} FOR UPDATE`;
+  SELECT id, "runAt", status, payload FROM "ScheduledJob" WHERE "dedupeKey" = ${dedupeKey} FOR UPDATE`;
+
+const lockJobSql = (id) => Prisma.sql`
+  SELECT id, version, payload FROM "ScheduledJob" WHERE id = ${id} FOR UPDATE`;
 
 const gcSql = () => Prisma.sql`
   DELETE FROM "ScheduledJob"
@@ -101,6 +135,7 @@ export const RAW_SQL = Object.freeze([
   { name: 'scheduler.claimInteractive', build: () => claimSql({ shards: { count: 2, ids: [0] } }, '0:0:0', { interactive: true }) },
   { name: 'scheduler.claimInteractiveUnsharded', build: () => claimSql({ shards: null }, '0:0:0', { interactive: true }) },
   { name: 'scheduler.lockDedupe', build: () => lockDedupeSql('sample') },
+  { name: 'scheduler.lockJob', build: () => lockJobSql('sample') },
   { name: 'scheduler.gc', build: () => gcSql() },
 ]);
 
@@ -132,14 +167,15 @@ export function registerJobHandler(type, handler) {
  * A row that is not live (DONE, FAILED, CANCELLED) counts as absent and is replaced.
  * @param {{ status: string, runAt: Date }|null} existing
  * @param {{ runAt: Date }} incoming
- * @param {'replace'|'keep'|'earliest'} mode
- * @returns {'insert'|'replace'|'keep'}
+ * @param {'replace'|'keep'|'earliest'|'merge'} mode
+ * @returns {'insert'|'replace'|'keep'|'merge'}
  */
 export function resolveConflict(existing, incoming, mode) {
   if (!existing) return 'insert';
   if (!LIVE_STATUSES.includes(existing.status)) return 'replace';
   if (mode === 'replace') return 'replace';
   if (mode === 'keep') return 'keep';
+  if (mode === 'merge') return 'merge';
   if (mode === 'earliest') return incoming.runAt < existing.runAt ? 'replace' : 'keep';
   return 'replace';
 }
@@ -153,22 +189,24 @@ export function resolveConflict(existing, incoming, mode) {
  * @param {object} [opts.payload] JSON-serialisable
  * @param {string|null} [opts.dedupeKey]
  * @param {number} [opts.maxAttempts=5]
- * @param {'replace'|'keep'|'earliest'} [opts.onConflict='replace']
+ * @param {'replace'|'keep'|'earliest'|'merge'} [opts.onConflict='replace'] merge: a live row (PENDING or RUNNING) keeps its
+ *   status, schedule and version and only its payload becomes `merge(existingPayload, payload)`, under the row lock, so a
+ *   running job is never reset or started twice; a handler that settles itself with settleMergedJob picks the change up
+ * @param {(existing: object, incoming: object) => object} [opts.merge] required with onConflict 'merge'
  * @returns {Promise<{ id: string, runAt: Date }>}
  * @throws {Error} on an unknown type, an invalid runAt, a payload that is not JSON-serialisable, or a DB failure
  */
-export async function scheduleJob({ guildId, type, runAt, payload = {}, dedupeKey = null, maxAttempts = 5, onConflict = 'replace' }) {
+export async function scheduleJob({ guildId, type, runAt, payload = {}, dedupeKey = null, maxAttempts = 5, onConflict = 'replace', merge = null }) {
   if (!isJobType(type)) throw new Error(`Unknown job type "${type}"`);
   if (!guildId || typeof guildId !== 'string') throw new Error('scheduleJob needs a guildId');
   const when = runAt instanceof Date ? runAt : new Date(runAt);
   if (Number.isNaN(when.getTime())) throw new Error(`Invalid runAt for job "${type}"`);
   if (!CONFLICT_MODES.includes(onConflict)) throw new Error(`Invalid onConflict "${onConflict}"`);
+  if (onConflict === 'merge' && (typeof merge !== 'function' || !dedupeKey)) throw new Error("onConflict 'merge' needs a dedupeKey and a merge function");
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) throw new Error('maxAttempts must be a positive integer');
   let body;
   try {
-    const text = JSON.stringify(payload ?? {});
-    if (text === undefined) throw new Error('payload serialises to undefined');
-    body = JSON.parse(text);
+    body = serialisable(payload);
   } catch (err) {
     throw new Error(`Job payload is not JSON-serialisable: ${err.message}`);
   }
@@ -188,6 +226,10 @@ export async function scheduleJob({ guildId, type, runAt, payload = {}, dedupeKe
         const [existing = null] = await tx.$queryRaw(lockDedupeSql(dedupeKey));
         const action = resolveConflict(existing, { runAt: when }, onConflict);
         if (action === 'keep') return { id: existing.id, runAt: existing.runAt };
+        if (action === 'merge') {
+          const row = await tx.scheduledJob.update({ where: { id: existing.id }, data: { payload: serialisable(merge(existing.payload ?? {}, body)) } });
+          return { id: row.id, runAt: row.runAt };
+        }
         if (action === 'replace') {
           const row = await tx.scheduledJob.update({
             where: { id: existing.id },
@@ -278,6 +320,38 @@ export async function getJobsByKeys(dedupeKeys) {
     logger.error('getJobsByKeys failed', err);
     return null;
   }
+}
+
+/**
+ * The last step of a handler whose job takes scheduleJob 'merge' changes while it runs: under the row lock (so no merge can
+ * slip in between the read and the write), hands the live payload to `next` and settles the job itself. `next` returns null
+ * when nothing is left (the row is deleted), or the payload to run again with (the row goes back to PENDING at `runAt`, a
+ * fresh claim). The handler then just returns: the scheduler's own settle finds the row gone or changed and does nothing.
+ * Does nothing when the job was replaced or cancelled meanwhile.
+ * @param {{ id: string, version: number }} job the job the handler was given
+ * @param {(livePayload: object) => object|null} next
+ * @param {Date} [runAt] when to run again
+ * @returns {Promise<'done'|'again'|'gone'>}
+ * @throws on a database failure (the scheduler then retries the job with its payload intact)
+ */
+export async function settleMergedJob(job, next, runAt = new Date()) {
+  return prisma.$transaction(async (tx) => {
+    const [live = null] = await tx.$queryRaw(lockJobSql(job.id));
+    if (!live || live.version !== job.version) return 'gone';
+    const payload = next(live.payload ?? {});
+    if (payload === null) {
+      await tx.scheduledJob.delete({ where: { id: job.id } });
+      return 'done';
+    }
+    await tx.scheduledJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'PENDING', runAt, attempts: 0, lastError: null, lockedBy: null, lockedUntil: null,
+        payload: serialisable(payload), version: { increment: 1 },
+      },
+    });
+    return 'again';
+  }, { timeout: 10_000 });
 }
 
 // ── Claim and execute ─────────────────────────────────────────────────────────
@@ -500,6 +574,59 @@ function requestFill(client) {
   inflight.add(run);
 }
 
+/**
+ * The interactive jobs' loop, built like fillSlots: claims only as many due interactive jobs as there are free interactive
+ * slots (INTERACTIVE_CONCURRENCY) and starts them without waiting for them, so a slow dashboard task occupies one slot and
+ * never the whole loop. The claim takes at most one job per guild and none for a guild that already has one running, so one
+ * guild cannot fill the slots (claimSql). Every finished job refills at once, so a guild's next queued task starts as soon as
+ * its last one is done. Exported for tests. Never throws.
+ * @param {import('discord.js').Client} client
+ * @returns {Promise<number>} jobs claimed
+ */
+export async function fillInteractiveSlots(client) {
+  const free = INTERACTIVE_CONCURRENCY - interactiveRunning;
+  if (!started || free <= 0) return 0;
+  try {
+    const rows = await prisma.$queryRaw(claimSql({ shards: shardScope(client) }, ownerOf(client), { interactive: true, limit: free }));
+    if (rows.length) lastInteractiveClaim = Date.now();
+    for (const row of rows) {
+      interactiveRunning++;
+      const run = runJob(client, row)
+        .catch((err) => logger.error(`Job ${row.type} ${row.id} failed outside its handler`, err))
+        .finally(() => {
+          interactiveRunning--;
+          inflight.delete(run);
+          requestInteractiveFill(client);
+        });
+      inflight.add(run);
+    }
+    return rows.length;
+  } catch (err) {
+    logger.error('Scheduler tick failed', err);
+    return 0;
+  }
+}
+
+// One interactive claim at a time, like requestFill; resolves when that claim has been made (not when its jobs are done).
+function requestInteractiveFill(client) {
+  if (!started) return Promise.resolve(0);
+  if (interactiveFilling) {
+    interactiveRefillAsked = true;
+    return interactiveFilling;
+  }
+  const run = fillInteractiveSlots(client).finally(() => {
+    inflight.delete(run);
+    interactiveFilling = null;
+    if (interactiveRefillAsked) {
+      interactiveRefillAsked = false;
+      requestInteractiveFill(client);
+    }
+  });
+  interactiveFilling = run;
+  inflight.add(run);
+  return run;
+}
+
 /** Hourly cleanup of finished jobs older than 7 days (shard 0 only). Never throws. @returns {Promise<number>} */
 export async function gc() {
   try {
@@ -544,13 +671,14 @@ export function start(client) {
   };
   poll();
 
-  // Interactive jobs (someone waits for them) are claimed by their own, faster loop, never behind a slow batch.
-  let lastInteractiveClaim = -Infinity;
+  // Interactive jobs (someone waits for them) are claimed by their own, faster loop, never behind a slow job: it waits only
+  // for the claim, and each job takes one interactive slot (fillInteractiveSlots).
+  lastInteractiveClaim = -Infinity;
   const pollInteractive = () => {
     if (!started) return;
     interactiveTimer = setTimeout(async () => {
       try {
-        if (await tick(client, { interactive: true }) > 0) lastInteractiveClaim = Date.now();
+        await requestInteractiveFill(client);
       } catch (err) {
         logger.error('Scheduler poll failed', err);
       } finally {

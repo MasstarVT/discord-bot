@@ -47,7 +47,6 @@ export const TIMED_ACTION_MAX_MS = 31_536_000_000; // 365 days
 export const DELETE_MESSAGES_MAX_S = 604_800; // 7 days
 export const REASON_MAX = 1000; // stored reason / proof
 export const AUDIT_REASON_MAX = 512; // Discord audit-log reason limit
-export const ESCALATION_TAG_RE = /^\[Escalation T(\d+)\]/;
 /** Fallback `countFrom` for a legacy escalation tier without one (the migration normally stamps the real time). */
 export const LEGACY_ESCALATION_SINCE = '2026-10-10T12:00:00.000Z';
 /** Temp bans overdue by more than this are not lifted automatically (00-overview §15.4). */
@@ -392,11 +391,12 @@ const TX_OPTS = { maxWait: 10_000, timeout: 15_000 };
 
 /**
  * Inserts one infraction with the next per-guild caseId (advisory lock, no Discord call inside the transaction).
+ * `escalationTierId` marks the case runEscalation creates for a tier; no other caller passes it.
  * @param {object} row
  * @returns {Promise<import('@prisma/client').Infraction>}
  * @throws on DB failure
  */
-export async function recordInfraction({ guildId, targetUserId, moderatorId, type, reason = null, proofUrl = null, expiresAt = null, active = undefined }) {
+export async function recordInfraction({ guildId, targetUserId, moderatorId, type, reason = null, proofUrl = null, expiresAt = null, active = undefined, escalationTierId = null }) {
   const meta = ACTION_META[type];
   if (!meta) throw new Error(`Unknown infraction type "${type}"`);
   await ensureGuildSettings(guildId);
@@ -414,6 +414,7 @@ export async function recordInfraction({ guildId, targetUserId, moderatorId, typ
         proofUrl: proofUrl ? clampText(proofUrl, REASON_MAX) : null,
         active: active ?? meta.active,
         expiresAt,
+        escalationTierId: Number.isInteger(escalationTierId) && escalationTierId >= 1 ? escalationTierId : null,
       },
     });
   }, TX_OPTS)));
@@ -839,18 +840,18 @@ export async function runEscalation(guild, userId) {
       const starts = tiers.map((t) => tierWindowStart(t, sorted, now)).filter((s) => s !== null);
       if (!starts.length) return null;
       const minStart = Math.min(...starts);
+      // Which tiers already fired comes from the column runEscalation sets, never from reason text (a person can type or
+      // edit "[Escalation T1]" into a reason).
       const rows = await prisma.infraction.findMany({
         where: {
           guildId: guild.id,
           targetUserId: userId,
-          reason: { startsWith: '[Escalation T' },
+          escalationTierId: { not: null },
           createdAt: { gte: new Date(minStart) },
         },
-        select: { reason: true, createdAt: true },
+        select: { escalationTierId: true, createdAt: true },
       });
-      const prior = rows
-        .map((r) => ({ tierId: Number(ESCALATION_TAG_RE.exec(r.reason ?? '')?.[1]), at: r.createdAt.getTime() }))
-        .filter((p) => Number.isInteger(p.tierId));
+      const prior = rows.map((r) => ({ tierId: r.escalationTierId, at: r.createdAt.getTime() }));
       const pick = selectEscalationTier(tiers, warnTimes, prior, now);
       if (!pick) return null;
       const { tier, count } = pick;
@@ -867,6 +868,7 @@ export async function runEscalation(guild, userId) {
         reason,
         source: 'escalation',
         skipEscalation: true,
+        escalationTierId: tier.id,
       });
       if (res.ok) logger.info(`Escalation T${tier.id} applied ${tier.action} to ${userId} in ${guild.id}`);
       else logger.info(`Escalation T${tier.id} (${tier.action}) not applied for ${userId} in ${guild.id}: ${res.code} ${res.error}`);
@@ -922,6 +924,8 @@ async function getMemberOrNull(guild, id) {
  *   its user (`moderator`), checked like a command
  * @param {boolean} [input.silent] no DMs
  * @param {boolean} [input.skipEscalation]
+ * @param {number} [input.escalationTierId] runEscalation only: stored on the case so the tier counts as fired; ignored
+ *   unless `source` is 'escalation' and the moderator is the bot
  * @param {Array<{ name: string, value: string }>} [input.logFields] at most 3, appended to the case embed
  * @returns {Promise<{ ok: true, infraction: object, action: string, dm: 'sent'|'failed'|'skipped', warnings: string[],
  *   escalation: null|{ tierId: number, action: string, ok: boolean, caseId: number|null, error: string|null } }
@@ -934,6 +938,7 @@ export async function executeModAction(input = {}) {
       proofUrl = null, source = 'command', silent = false, skipEscalation = false, logFields = null,
     } = input;
     const invalid = (error) => ({ ok: false, code: 'INVALID', error });
+    const tierId = source === 'escalation' && moderator?.id === guild?.client?.user?.id ? input.escalationTierId : null;
 
     // Step 0: validate input.
     if (!guild) return invalid('Missing guild.');
@@ -1068,6 +1073,7 @@ export async function executeModAction(input = {}) {
           reason: recReason,
           proofUrl,
           expiresAt: type === 'BAN' && eff.action !== 'TEMPBAN' ? null : expiresAt,
+          escalationTierId: tierId,
         });
       } catch (e) {
         logger.error(`Could not record ${eff.action} of ${target.id} in ${guild.id}`, e);

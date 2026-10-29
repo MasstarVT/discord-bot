@@ -66,6 +66,7 @@ import { isModuleEnabled, updateSettingsWith } from '../services/settingsService
 import { sleep } from '../utils/async.js';
 import { wasDeletedByBot } from '../utils/deletionTracker.js';
 import logger from '../utils/logger.js';
+import { effectiveText } from '../utils/text.js';
 
 export const INVITE_HINT_RE = /discord(?:app)?\.com\/invite\/|discord\.gg\//i;
 
@@ -134,7 +135,7 @@ async function onBulkDelete(ctx) {
 async function onInvitePosted(ctx) {
   const { message } = ctx;
   if (!(await ready(ctx, 'invitePosted', message.channel))) return;
-  const codes = findInviteCodes(message.content);
+  const codes = findInviteCodes(effectiveText(message)); // a forward carries its text in messageSnapshots
   if (!codes.length) return;
   await emit(ctx, 'invitePosted', buildInvitePostedEmbed({ message, codes, vanityCode: ctx.guild.vanityURLCode }));
 }
@@ -426,7 +427,7 @@ export const plugin = {
   id: 'logging',
   module: 'logging',
   hooks: [
-    { event: 'messageCreate',     id: 'logging', filter: (ctx) => typeof ctx.message?.content === 'string' && INVITE_HINT_RE.test(ctx.message.content), run: onInvitePosted },
+    { event: 'messageCreate',     id: 'logging', filter: (ctx) => ctx.message != null && INVITE_HINT_RE.test(effectiveText(ctx.message)), run: onInvitePosted },
     { event: 'messageUpdate',     id: 'logging', run: onMessageEdit },
     { event: 'messageDelete',     id: 'logging', run: onMessageDelete },
     { event: 'messageDeleteBulk', id: 'logging', run: onBulkDelete, timeoutMs: 15_000 },

@@ -5,7 +5,8 @@
 // Outbound traffic is deliberately polite. Every request goes through safeFetch / safeFetchJson (SSRF guard, 8 s
 // timeout, size cap) and passes, in this order:
 //   Redis cache (projected objects only) -> single-flight per query -> per-source pause (429 / Retry-After /
-//   X-RateLimit-Remaining) -> 3 s per-user fetch cooldown -> per-source requests-per-minute budget -> the request.
+//   X-RateLimit-Remaining) -> 3 s per-user fetch cooldown -> per-source requests-per-minute budget (a per-user and a
+//   per-server slice first, so a few accounts cannot use up the bot-wide count) -> the request.
 // Cache hits and single-flight followers consume nothing. Errors are never cached. Autocomplete never touches the network.
 //
 // Redis is fail-open everywhere: `cache` never throws, a miss falls through to the network, a failed write is ignored, and
@@ -15,6 +16,7 @@
 // tokens), then clamped, before it is cached or rendered. Replies carry only embeds, so nothing can ping.
 import { createHash } from 'node:crypto';
 import { escapeMarkdown } from 'discord.js';
+import { LIMITS } from '../config/constants.js';
 import { cache } from './redis.js';
 import { getSettingsSafe, peekSettings, isModuleEnabled } from './settingsService.js';
 import { safeFetch, safeFetchJson, SafeFetchError } from '../utils/safeFetch.js';
@@ -569,8 +571,10 @@ export function searchErrorEmbed(err, label) {
         const when = Number.isFinite(err.retryAt) ? discordTimestamp(new Date(err.retryAt), 'R') : 'in a minute';
         return warnEmbed('Slow Down', `${label} is limiting how often we can search. Try again ${when}.`);
       }
-      case 'COOLDOWN':
-        return warnEmbed('Slow Down', 'You are searching too fast. Wait a few seconds and try again.');
+      case 'COOLDOWN': // the 3 s cooldown has no retryAt; a per-user or per-server minute slice does
+        return warnEmbed('Slow Down', Number.isFinite(err.retryAt)
+          ? `Searches from you or this server are arriving too fast. Try again ${discordTimestamp(new Date(err.retryAt), 'R')}.`
+          : 'You are searching too fast. Wait a few seconds and try again.');
       case 'TIMEOUT':
         return errorEmbed('Search Timed Out', `${label} did not answer within 8 seconds. Please try again later.`);
       case 'UNAVAILABLE':
@@ -610,18 +614,34 @@ function setPause(api, untilMs) {
   Promise.resolve(deps.cache.set(pauseKey(api), clamped, ttl)).catch(() => {}); // fail-open; cache never rejects
 }
 
-/** Per-source requests-per-minute budget, shared through Redis. Fail-open to an in-process counter. */
-async function consumeBudget(api, now = Date.now()) {
+/**
+ * Per-source requests-per-minute budget, shared through Redis. Fail-open to an in-process counter.
+ * A per-user and a per-server slice come first and are checked BEFORE the bot-wide count, so a request a slice refuses never
+ * uses a bot-wide slot: a few accounts (or one server) cannot use up the budget every other server shares. A slice refusal is a
+ * COOLDOWN; only the bot-wide count says RATE_LIMITED. The slices are Redis-only (null from `incr` skips them: no
+ * unbounded in-process map); the bot-wide count still caps the shard then.
+ */
+async function consumeBudget(api, { userId = null, guildId = null, now = Date.now() } = {}) {
   const limit = BUDGET_PER_MINUTE[api];
   if (!limit) return;
   const bucket = Math.floor(now / 60_000);
+  const retryAt = (bucket + 1) * 60_000;
+  const slices = [
+    [userId && `u:${userId}`, LIMITS.SEARCH_USER_PER_MINUTE],
+    [guildId && `g:${guildId}`, Math.max(1, Math.floor(limit / LIMITS.SEARCH_GUILD_BUDGET_DIVISOR))],
+  ];
+  for (const [slice, max] of slices) {
+    if (!slice) continue;
+    const used = await deps.cache.incr(`search:budget:${api}:${slice}:${bucket}`, 120); // TTL set by incr; null: Redis down
+    if (Number.isFinite(used) && used > max) throw new SearchError('COOLDOWN', { api, retryAt });
+  }
   let n = await deps.cache.incr(`search:budget:${api}:${bucket}`, 120);
   if (n === null || n === undefined) {
     const cur = localBudgets.get(api);
     n = cur && cur.bucket === bucket ? cur.n + 1 : 1;
     localBudgets.set(api, { bucket, n });
   }
-  if (n > limit) throw new SearchError('RATE_LIMITED', { api, retryAt: (bucket + 1) * 60_000 });
+  if (n > limit) throw new SearchError('RATE_LIMITED', { api, retryAt });
 }
 
 /** Maps anything thrown by a fetch to a SearchError. A 429 also pauses the source (Retry-After when sent, else 60 s). */
@@ -649,7 +669,7 @@ function toSearchError(err, api) {
  * Cache -> single-flight -> pause -> user cooldown -> budget -> fetch. Redis is fail-open at every step.
  * Errors are never cached; empty results are cached for an hour.
  */
-async function cachedLookup({ api, source, ttl, userId, fetcher }) {
+async function cachedLookup({ api, source, ttl, userId, guildId, fetcher }) {
   const key = cacheKey(api, source);
   const hit = readEnvelope(await deps.cache.get(key)); // fail-open: null (miss or Redis down) -> fetch
   if (hit) return { results: hit.results, cached: true };
@@ -661,7 +681,7 @@ async function cachedLookup({ api, source, ttl, userId, fetcher }) {
     const ok = await deps.cache.setNX(`search:cd:${userId}`, 1, FETCH_COOLDOWN_SECONDS); // fail-open: null -> proceed
     if (ok === false) throw new SearchError('COOLDOWN', { api });
   }
-  await consumeBudget(api);
+  await consumeBudget(api, { userId, guildId });
 
   // The awaits above let another user start the same lookup; join it instead of fetching twice. From here to
   // inflight.set() nothing yields, so exactly one flight exists per key.
@@ -685,11 +705,11 @@ async function cachedLookup({ api, source, ttl, userId, fetcher }) {
 /**
  * @param {'ANIME'|'MANGA'} type
  * @param {string} query
- * @param {{ allowAdult?: boolean, userId?: string|null }} [opts]
+ * @param {{ allowAdult?: boolean, userId?: string|null, guildId?: string|null }} [opts]
  * @returns {Promise<{ results: object[], cached: boolean }>}
  * @throws {SearchError}
  */
-export async function searchAniList(type, query, { allowAdult = false, userId = null } = {}) {
+export async function searchAniList(type, query, { allowAdult = false, userId = null, guildId = null } = {}) {
   if (type !== 'ANIME' && type !== 'MANGA') throw new TypeError(`searchAniList: bad type ${type}`);
   const q = cleanQuery(query);
   if (!q) return { results: [], cached: false };
@@ -701,6 +721,7 @@ export async function searchAniList(type, query, { allowAdult = false, userId = 
     source: `${type.toLowerCase()}|${allowAdult ? 'nsfw' : 'sfw'}|${keyForm(q)}`,
     ttl: CACHE_TTL.anilist,
     userId,
+    guildId,
     async fetcher() {
       let res;
       try {
@@ -758,17 +779,18 @@ async function pokeGet(path) {
 
 /**
  * @param {{ kind: 'id', id: number } | { kind: 'name', slug: string }} parsed - from pokemonSlug
- * @param {{ userId?: string|null }} [opts]
+ * @param {{ userId?: string|null, guildId?: string|null }} [opts]
  * @returns {Promise<{ results: object[], cached: boolean }>} results is [] when nothing matches
  * @throws {SearchError}
  */
-export async function getPokemon(parsed, { userId = null } = {}) {
+export async function getPokemon(parsed, { userId = null, guildId = null } = {}) {
   const x = parsed.kind === 'id' ? String(parsed.id) : parsed.slug;
   return cachedLookup({
     api: 'pokeapi',
     source: parsed.kind === 'id' ? `pokemon|#${parsed.id}` : `pokemon|${parsed.slug}`,
     ttl: CACHE_TTL.pokeapi,
     userId,
+    guildId,
     async fetcher() {
       let species = await pokeGet(`/pokemon-species/${encodeURIComponent(x)}`);
       let pokemon = null;
@@ -844,11 +866,11 @@ export async function getPokemonIndex() {
 
 /**
  * @param {string} term
- * @param {{ userId?: string|null }} [opts]
+ * @param {{ userId?: string|null, guildId?: string|null }} [opts]
  * @returns {Promise<{ results: object[], cached: boolean }>}
  * @throws {SearchError}
  */
-export async function defineUrban(term, { userId = null } = {}) {
+export async function defineUrban(term, { userId = null, guildId = null } = {}) {
   const t = cleanQuery(term);
   if (!t) return { results: [], cached: false };
   return cachedLookup({
@@ -856,6 +878,7 @@ export async function defineUrban(term, { userId = null } = {}) {
     source: `define|${keyForm(t)}`,
     ttl: CACHE_TTL.urban,
     userId,
+    guildId,
     async fetcher() {
       let body;
       try {
@@ -933,7 +956,7 @@ export async function executeAniList(interaction, type) {
 
   let results;
   try {
-    ({ results } = await searchAniList(type, query, { allowAdult, userId: interaction.user.id }));
+    ({ results } = await searchAniList(type, query, { allowAdult, userId: interaction.user.id, guildId: interaction.guildId }));
   } catch (err) {
     await failWith(interaction, err, { api: 'anilist', label: 'AniList', command });
     return;
@@ -965,7 +988,7 @@ export async function executePokemon(interaction) {
 
   let results;
   try {
-    ({ results } = await getPokemon(parsed, { userId: interaction.user.id }));
+    ({ results } = await getPokemon(parsed, { userId: interaction.user.id, guildId: interaction.guildId }));
   } catch (err) {
     await failWith(interaction, err, { api: 'pokeapi', label: 'PokeAPI', command: 'pokemon' });
     return;
@@ -1021,7 +1044,7 @@ export async function executeUrban(interaction) {
 
   let results;
   try {
-    ({ results } = await defineUrban(term, { userId: interaction.user.id }));
+    ({ results } = await defineUrban(term, { userId: interaction.user.id, guildId: interaction.guildId }));
   } catch (err) {
     await failWith(interaction, err, { api: 'urban', label: 'Urban Dictionary', command: 'urban' });
     return;

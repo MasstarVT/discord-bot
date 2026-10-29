@@ -5,6 +5,7 @@
 // or Postgres connections itself.
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
+import { isIP } from 'node:net';
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -37,11 +38,19 @@ export const WRITE_RATE_LIMIT = Object.freeze({ max: 20, windowMs: 10_000 });
 export const SEARCH_RATE_LIMIT = Object.freeze({ max: 30, windowMs: 10_000 });
 /**
  * Login callbacks that get as far as Discord's token endpoint (a matching state and a well-formed code; every one costs a
- * POST with the app credentials): at most 10 per client address and 60 for the whole dashboard per minute. A real login
- * is one request, so this only bites a flood of junk that would otherwise get the app or the address rate limited.
+ * POST with the app credentials): at most 10 per client (an IPv6 /64 counts as one, see loginSourceKey) per minute, and 60 a
+ * minute for the whole dashboard once a client's earlier callback has not (yet) succeeded: a client's first callback in a
+ * window never spends the overall allowance, so a handful of sources cannot use it up and lock everyone else out. A real
+ * login is one request, so this only bites a flood of junk that would otherwise get the app or the address rate limited.
  */
 export const LOGIN_RATE_LIMIT = Object.freeze({ max: 10, windowMs: 60_000 });
 export const LOGIN_GLOBAL_RATE_LIMIT = Object.freeze({ max: 60, windowMs: 60_000 });
+/**
+ * The hard ceiling on those token exchanges: the first callback of every source is free of the 60 above, so many sources
+ * (every /64 of a large IPv6 block is one) would otherwise have no overall bound. At most 600 first callbacks a minute for the
+ * whole dashboard; past that even a clean source gets 429, which keeps the app's credentials from being flooded at Discord.
+ */
+export const LOGIN_FIRST_ATTEMPT_RATE_LIMIT = Object.freeze({ max: 600, windowMs: 60_000 });
 const RATE_LIMIT_KEYS_MAX = 10_000;
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const SNOWFLAKE_RE = /^\d{17,20}$/;
@@ -197,6 +206,38 @@ export function clientAddress(req, trusted = new Set()) {
   return last !== '' && last.length <= 64 ? last : peer;
 }
 
+/**
+ * The key a login callback is counted under. An IPv6 address stands for its whole /64: a host or subscriber is handed a /64 and
+ * can send from any address in it, so counting per address would make one machine look like thousands of clients. A port
+ * (`203.0.113.9:5000`, `[2001:db8::1]:443`, which some proxies put in X-Forwarded-For, a new one per connection) and a zone id
+ * (`%eth0`) are dropped, and an IPv4-mapped IPv6 address counts as its IPv4 address; anything that is not an IP address
+ * ('unknown') is used as it is.
+ * @param {string} address clientAddress()'s answer (the socket's, or the forwarded one behind a trusted proxy)
+ * @returns {string}
+ */
+export function loginSourceKey(address) {
+  const bare = String(address ?? '').trim()
+    .replace(/^\[([^\]]*)\](?::\d{1,5})?$/, '$1')
+    .replace(/^(\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}$/, '$1')
+    .replace(/%.*$/, '');
+  const ip = normalizeIp(bare);
+  if (isIP(ip) !== 6) return ip;
+  let host;
+  try {
+    host = new URL(`http://[${ip}]/`).hostname.slice(1, -1); // the URL parser writes every form as compressed hex groups
+  } catch {
+    return ip;
+  }
+  const [head, tail] = host.split('::');
+  const before = head === '' ? [] : head.split(':');
+  const after = !tail ? [] : tail.split(':');
+  const groups = tail === undefined ? before : [...before, ...Array(Math.max(0, 8 - before.length - after.length)).fill('0'), ...after];
+  if (groups.length !== 8) return ip;
+  const n = groups.map((g) => parseInt(g, 16));
+  if (n.slice(0, 5).every((x) => x === 0) && n[5] === 0xffff) return `${n[6] >> 8}.${n[6] & 255}.${n[7] >> 8}.${n[7] & 255}`;
+  return `${groups.slice(0, 4).map((g) => g.padStart(4, '0')).join(':')}::/64`;
+}
+
 const formatColor = (n) => (Number.isInteger(n) && n >= 0 && n <= 0xffffff
   ? `#${n.toString(16).padStart(6, '0').toUpperCase()}`
   : null);
@@ -307,7 +348,24 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   const limitSearches = createRateLimiter({ ...SEARCH_RATE_LIMIT, now });
   const limitLoginsByAddress = createRateLimiter({ ...LOGIN_RATE_LIMIT, now });
   const limitLoginsOverall = createRateLimiter({ ...LOGIN_GLOBAL_RATE_LIMIT, now });
+  const limitFirstLogins = createRateLimiter({ ...LOGIN_FIRST_ATTEMPT_RATE_LIMIT, now });
   const trustedProxies = new Set((config.trustedProxies ?? []).map(normalizeIp));
+  // Login sources whose counted callback has not succeeded (yet): source key -> when it was marked. Only such a source
+  // spends the overall allowance, and the mark is set before the exchange is awaited, so concurrent requests of one fresh
+  // source cannot all skip it. Bounded like the rate limiters (oldest first).
+  const unresolvedLogins = new Map();
+  const hasUnresolvedLogin = (key) => {
+    const at = unresolvedLogins.get(key);
+    if (at === undefined) return false;
+    if (at > now() - LOGIN_RATE_LIMIT.windowMs) return true;
+    unresolvedLogins.delete(key);
+    return false;
+  };
+  const markUnresolvedLogin = (key) => {
+    unresolvedLogins.delete(key);
+    unresolvedLogins.set(key, now());
+    while (unresolvedLogins.size > RATE_LIMIT_KEYS_MAX) unresolvedLogins.delete(unresolvedLogins.keys().next().value);
+  };
 
   // ── Response helpers ────────────────────────────────────────────────────────
 
@@ -457,16 +515,22 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     const code = q.get('code');
     if (!code || code.length > 512 || !/^[\w.~-]+$/.test(code)) return failed('missing or malformed code');
 
-    // From here on the request costs a POST to Discord, so it is counted (per address first: a flood from one address
-    // must not use up the overall allowance of everyone else).
+    // From here on the request costs a POST to Discord, so it is counted (per source first: a flood from one source must
+    // not use up the overall allowance of everyone else). The overall allowance is spent only by a source that already
+    // has a callback in the window that has not succeeded; a source's first one is free of it, so a few sources sending
+    // junk cannot lock out a clean one, but counts against the larger ceiling for first callbacks, so many sources cannot
+    // flood Discord either. The mark is set here, before the awaits, so concurrent requests cannot all be "first".
     const address = clientAddress(ctx.req, trustedProxies);
-    const limited = limitLoginsByAddress(address);
-    const limitedOverall = limited.ok ? limitLoginsOverall('all') : limited;
+    const source = loginSourceKey(address);
+    const limited = limitLoginsByAddress(source);
+    const marked = limited.ok && hasUnresolvedLogin(source);
+    const limitedOverall = !limited.ok ? limited : marked ? limitLoginsOverall('all') : limitFirstLogins('first');
     if (!limitedOverall.ok) {
       logger.warn(`Dashboard login rate limited: ${limited.ok ? 'overall limit' : forLog(address)}`);
       return fail(ctx, 429, 'rate_limited', `Too many login attempts. Try again in ${limitedOverall.retryAfter} s.`,
         { retryAfter: limitedOverall.retryAfter }, { 'Retry-After': String(limitedOverall.retryAfter) });
     }
+    if (!marked) markUnresolvedLogin(source);
 
     let token;
     let user;
@@ -476,6 +540,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     } catch (err) {
       return failed(forLog(err?.message ?? err));
     }
+    unresolvedLogins.delete(source);
     const issued = now();
     const exp = issued + Math.min(token.expiresIn, SESSION_MAX_AGE_SECONDS) * 1000;
     const sealed = sealSession({

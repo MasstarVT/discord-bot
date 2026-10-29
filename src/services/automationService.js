@@ -1957,7 +1957,7 @@ export function importRoleHierarchyProblem(guild, member, actions) {
 // ── Configuration-time checks of the admin who writes an automation ───────────
 
 /** What the member who sets a target channel needs there, by action type (the guild owner and Administrators are exempt). */
-const EXECUTOR_CHANNEL_NEEDS = Object.freeze({
+export const EXECUTOR_CHANNEL_NEEDS = Object.freeze({
   SEND_MESSAGE: ['ViewChannel', 'SendMessages'],
   SEND_EMBED: ['ViewChannel', 'SendMessages'],
   REPOST: ['ViewChannel', 'SendMessages'],

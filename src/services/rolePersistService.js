@@ -3,8 +3,9 @@
 // and the rules (what to save, what to give back, which gates hold a restore); the hooks and the restore itself are in
 // src/plugins/role-persist.js, the admin command is src/commands/admin/rolepersist.js.
 import prisma from '../database/client.js';
-import { ensureGuildSettings } from './settingsService.js';
+import { ensureGuildSettings, isModuleEnabled } from './settingsService.js';
 import { isCaptchaGated } from './welcomeService.js';
+import { OPEN_STATUSES } from './eventService.js';
 import { checkAssignableRole } from '../utils/interactionHelpers.js';
 import { createKeyedMutex } from '../utils/async.js';
 import { clampText } from '../utils/text.js';
@@ -23,6 +24,8 @@ export const ROLEPERSIST = Object.freeze({
   WAIT_TTL_MS: 7 * 86_400_000,
   // A member update with an uncached old member is only looked at for members who joined this recently.
   RECENT_JOIN_MS: 86_400_000,
+  // The most events one restore looks at when checking which saved roles the member got from an ended event.
+  EVENT_MARKERS_MAX: 200,
 });
 
 // One member's save / restore / clear run one at a time, so a join and a gate-clearing update never restore twice.
@@ -152,9 +155,25 @@ export function skippedRoleIds(settings) {
 }
 
 /**
+ * Roles another module gives and takes back on its own schedule, so wearing one when leaving says nothing about whether it
+ * is still due on return: the birthday role, and the mute role while Moderation is on (its join hook re-applies it while
+ * a mute is active). Never saved, never given back. Returns role id -> why.
+ * @param {object} settings
+ * @returns {Map<string, string>}
+ */
+export function moduleRoleReasons(settings) {
+  const out = new Map();
+  if (settings?.birthdayRoleId) out.set(settings.birthdayRoleId, 'The birthday role is given and taken back by Birthdays.');
+  if (settings?.muteRoleId && isModuleEnabled(settings, 'moderation')) {
+    out.set(settings.muteRoleId, 'The mute role is re-applied by Moderation while a mute is active.');
+  }
+  return out;
+}
+
+/**
  * The roles and nickname to save for a member who left, or null when there is nothing worth saving (so an older row is
  * kept). A partial member (not cached, roles unknown) is never saved. @everyone, managed roles, roles that no longer
- * exist and ignored roles are left out.
+ * exist, ignored roles and roles another module owns (moduleRoleReasons) are left out.
  * @param {import('discord.js').GuildMember} member
  * @param {import('discord.js').Guild} guild
  * @param {object} settings
@@ -165,9 +184,10 @@ export function snapshotMember(member, guild, settings) {
   if (!held) return null;
   if (member.partial === true && ![...held.keys()].some((id) => id !== guild.id)) return null;
   const ignored = skippedRoleIds(settings);
+  const owned = moduleRoleReasons(settings);
   const roleIds = [];
   for (const id of held.keys()) {
-    if (id === guild.id || ignored.has(id)) continue;
+    if (id === guild.id || ignored.has(id) || owned.has(id)) continue;
     const role = guild.roles.cache.get(id);
     if (!role || role.managed) continue;
     roleIds.push(id);
@@ -182,16 +202,18 @@ export function snapshotMember(member, guild, settings) {
 
 /**
  * Splits saved role ids into the roles to give back and the ones skipped (with a reason). A role is given back when it
- * still exists, is not ignored, is not the captcha role (never a way around the captcha), is not already held and
- * passes checkAssignableRole (not managed, below the bot's highest role, no dangerous permission).
+ * still exists, is not ignored, is not owned by another module (moduleRoleReasons, and `skips` from lifecycleSkips), is
+ * not the captcha role (never a way around the captcha), is not already held and passes checkAssignableRole (not
+ * managed, below the bot's highest role, no dangerous permission).
  * @param {import('discord.js').Guild} guild
  * @param {string[]} roleIds
  * @param {object} settings
- * @param {{ held?: { has(id: string): boolean }|null }} [opts]
+ * @param {{ held?: { has(id: string): boolean }|null, skips?: Map<string, string>|null }} [opts]
  * @returns {{ give: import('discord.js').Role[], skipped: { roleId: string, reason: string, deleted?: boolean }[] }}
  */
-export function planRoles(guild, roleIds, settings, { held = null } = {}) {
+export function planRoles(guild, roleIds, settings, { held = null, skips = null } = {}) {
   const ignored = skippedRoleIds(settings);
+  const owned = moduleRoleReasons(settings);
   const gateRoleId = settings?.captchaEnabled === true ? settings?.captchaRoleId ?? null : null;
   const give = [];
   const skipped = [];
@@ -206,6 +228,11 @@ export function planRoles(guild, roleIds, settings, { held = null } = {}) {
       skipped.push({ roleId: id, reason: 'The role is on the never-give-back list.' });
       continue;
     }
+    const ownedReason = owned.get(id) ?? skips?.get(id);
+    if (ownedReason) {
+      skipped.push({ roleId: id, reason: ownedReason });
+      continue;
+    }
     if (gateRoleId && id === gateRoleId) {
       skipped.push({ roleId: id, reason: 'The captcha role is only given by the captcha.' });
       continue;
@@ -216,6 +243,74 @@ export function planRoles(guild, roleIds, settings, { held = null } = {}) {
     else skipped.push({ roleId: id, reason: chk.reason ?? 'The role cannot be given.' });
   }
   return { give, skipped };
+}
+
+/**
+ * Of the roles about to be given back, the ones whose lifecycle is kept by the database and may have ended while the
+ * member was away (planRoles' `skips`). At most two bounded queries, each only when it can apply:
+ * - an event role is skipped only for a member the event gave it to: Events strips an ended event's role from the
+ *   members it can reach, and leaves EventRsvp.roleGranted set for one who had left, so a closed event with that flag on
+ *   this member's RSVP means the saved role came from it (unless an open event still has a live grant of the same role).
+ *   A member who held the role on their own has no flag and gets it back. The ids of the closed events behind a skip are
+ *   returned as `markers`, for clearEventMarkers once the restore is done;
+ * - the mute role, while Moderation is off (with it on, moduleRoleReasons leaves it to the Moderation join hook), is
+ *   given back only while the member has an active, unexpired mute.
+ * @param {string} guildId
+ * @param {string} userId
+ * @param {string[]} roleIds
+ * @param {object} settings
+ * @param {Date} [now]
+ * @returns {Promise<{ skips: Map<string, string>, markers: string[] }>} skips: role id -> why it is not given back
+ * @throws on DB failure (restoreMember turns that into a failed restore, the row is kept)
+ */
+export async function lifecycleSkips(guildId, userId, roleIds, settings, now = new Date()) {
+  const out = new Map();
+  const markers = [];
+  const ids = [...new Set(roleIds ?? [])].filter((id) => id !== guildId);
+  if (!ids.length) return { skips: out, markers };
+
+  const muteId = settings?.muteRoleId;
+  if (muteId && ids.includes(muteId) && !isModuleEnabled(settings, 'moderation')) {
+    const active = await prisma.infraction.findFirst({
+      where: {
+        guildId,
+        targetUserId: userId,
+        type: 'MUTE',
+        active: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      select: { id: true },
+    });
+    if (!active) out.set(muteId, 'The mute has ended.');
+  }
+
+  const granted = await prisma.guildEvent.findMany({
+    where: { guildId, roleId: { in: ids }, rsvps: { some: { userId, roleGranted: true } } },
+    select: { id: true, roleId: true, status: true },
+    take: ROLEPERSIST.EVENT_MARKERS_MAX,
+  });
+  const live = new Set(granted.filter((e) => OPEN_STATUSES.includes(e.status)).map((e) => e.roleId));
+  for (const e of granted) {
+    if (OPEN_STATUSES.includes(e.status) || live.has(e.roleId)) continue;
+    out.set(e.roleId, 'The event this role was for is over.');
+    markers.push(e.id);
+  }
+  return { skips: out, markers };
+}
+
+/**
+ * Clears the roleGranted flag lifecycleSkips found on the member's RSVPs to ended events, once the restore has acted on
+ * it (the role was not given back, so the flag has done its job). Best-effort, never throws.
+ * @param {string} userId
+ * @param {string[]} eventIds `markers` from lifecycleSkips
+ */
+export async function clearEventMarkers(userId, eventIds) {
+  if (!eventIds?.length) return;
+  try {
+    await prisma.eventRsvp.updateMany({ where: { userId, eventId: { in: eventIds }, roleGranted: true }, data: { roleGranted: false } });
+  } catch (err) {
+    logger.warn(`[role-persist] could not clear the event markers of ${userId}: ${err?.message}`);
+  }
 }
 
 // ── Gates ─────────────────────────────────────────────────────────────────────

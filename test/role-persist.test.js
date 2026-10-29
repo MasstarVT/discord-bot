@@ -82,8 +82,12 @@ const settingsStub = {
 };
 prisma.guildSettings = settingsStub;
 prisma.$transaction = async (fn) => fn({ $executeRaw: async () => 0, $queryRaw: async () => [], guildSettings: settingsStub });
+// The restore looks up which ended events gave the member a saved role (test/sec-moderation.test.js covers that case).
+const realGuildEvent = prisma.guildEvent;
+prisma.guildEvent = { findMany: async () => [] };
 
 after(async () => {
+  prisma.guildEvent = realGuildEvent;
   prisma.persistedMember = realPersisted;
   prisma.guildSettings = realGuildSettings;
   prisma.$transaction = realTransaction;

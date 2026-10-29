@@ -18,7 +18,7 @@ import { getSettings, getSettingsSafe, peekSettings, updateSettings, updateSetti
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { errorEmbed, guildEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import { checkChannelUsable, permissionNames, respondAutocomplete } from '../../utils/interactionHelpers.js';
-import { newChannelOption, resolveNewOptions } from '../../utils/newTargets.js';
+import { newChannelOption, resolveNewOptions, reuseNote } from '../../utils/newTargets.js';
 import logger from '../../utils/logger.js';
 import { joinWithLimit } from '../../utils/text.js';
 
@@ -138,6 +138,8 @@ async function subEnable(interaction) {
     const health = getLogChannelHealth(interaction.guild, settings[LOG_TYPES[k]]);
     if (health.state !== 'ok') lines.push(`⚠️ **${LOG_TYPE_LABELS[k]}**: ${health.text}`);
   }
+  const reused = reuseNote(interaction); // a typed new_channel name that matched an existing private channel
+  if (reused) lines.push(reused);
   if (channel && lacksAttach(channel)) lines.push(ATTACH_HINT);
   return reply(interaction, successEmbed('Audit Logs Enabled', lines.join('\n')));
 }
@@ -206,6 +208,8 @@ async function subChannel(interaction) {
   forgetDeadChannels(guildId, channel.id);
 
   const lines = [`**${labels}** logs will be posted in <#${channel.id}>.`];
+  const reused = reuseNote(interaction);
+  if (reused) lines.push(reused);
   if (keys.includes('MESSAGE') && lacksAttach(channel)) lines.push(ATTACH_HINT);
   if (!settings.loggingEnabled) lines.push(OFF_HINT);
   return reply(interaction, successEmbed('Log Channel Set', lines.join('\n')));

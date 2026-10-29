@@ -42,6 +42,12 @@ export const XML_PARSER_OPTIONS = Object.freeze({
   ignoreDeclaration: true,
   ignorePiTags: true,
   allowBooleanAttributes: true,
+  // No isArray/updateTag/value-processor callback reads the path, so this changes no output. With the
+  // default (true) every node rebuilt its whole ancestor path: a deep chain of long tag names inside
+  // the byte cap cost tens of seconds of CPU on the shard thread.
+  jPath: false,
+  // Feeds nest about six levels; a deeper document throws and becomes INVALID_XML below.
+  maxNestedTags: 40,
 });
 const parser = new XMLParser(XML_PARSER_OPTIONS); // allocation only; no I/O
 
@@ -164,6 +170,16 @@ export function stripHtml(input) {
   s = s.replace(/<[^<>]+>/g, ''); // `[^<>]` keeps the scan linear on `<<<<`
   s = decodeEntities(s);
   return s.replace(/[ \t]+/g, ' ').replace(/[ \t]*\n[ \t]*/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/**
+ * One line of plain text: control characters and whitespace runs become single spaces. For names
+ * that are stored and logged, so a feed or podcast title can never span lines.
+ * @param {unknown} input
+ * @returns {string}
+ */
+export function oneLine(input) {
+  return String(input ?? '').replace(/[\p{Cc}\s]+/gu, ' ').trim();
 }
 
 // ── Decoding, HTML detection and autodiscovery ─────────────────────────────────

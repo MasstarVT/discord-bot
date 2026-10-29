@@ -5,7 +5,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { peekSettings, updateSettingsWith } from '../services/settingsService.js';
 import {
-  ROLEPERSIST, runLocked, loadRow, saveRow, deleteRow, pruneExpired, snapshotMember, planRoles, gateOf,
+  ROLEPERSIST, runLocked, loadRow, saveRow, deleteRow, pruneExpired, snapshotMember, planRoles, lifecycleSkips, clearEventMarkers, gateOf,
   isStale, isWaiting, markWaiting, clearWaiting,
 } from '../services/rolePersistService.js';
 import { createThrottle } from '../utils/async.js';
@@ -132,12 +132,14 @@ async function restoreLocked(member, settings, { captchaPending, now }) {
     return { status: 'waiting', gate };
   }
 
-  const plan = planRoles(guild, row.roleIds, settings, { held: member.roles.cache });
   if (row.roleIds.length && !guild.members?.me?.permissions?.has(PermissionFlagsBits.ManageRoles)) {
     // Fixable by an admin: keep the row (it still expires on its own).
     if (warnBlocked(guildId)) logger.warn(`[role-persist] ${guildId}: cannot restore roles, the bot lacks Manage Roles`);
     return { status: 'blocked' };
   }
+  // A mute, event or birthday role may have been closed while the member was away: those are not given back.
+  const { skips, markers } = await lifecycleSkips(guildId, userId, row.roleIds.filter((id) => !member.roles.cache.has(id)), settings, new Date(now));
+  const plan = planRoles(guild, row.roleIds, settings, { held: member.roles.cache, skips });
 
   let given = [];
   if (plan.give.length) {
@@ -159,6 +161,7 @@ async function restoreLocked(member, settings, { captchaPending, now }) {
   }
 
   await deleteRow(guildId, userId);
+  await clearEventMarkers(userId, markers); // after the row is gone: a failed delete keeps the flag, so the retry still skips
   clearWaiting(guildId, userId);
   if (given.length || nickname) {
     logger.info(`[role-persist] ${guildId}: restored ${given.length} role(s)${nickname ? ' and the nickname' : ''} for ${userId}`);

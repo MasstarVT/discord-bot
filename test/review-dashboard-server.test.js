@@ -163,17 +163,22 @@ describe('GET /auth/callback rate limit', () => {
     assert.equal(exchanges.length, before + 1);
   });
 
-  test('all addresses together get 60 token exchanges a minute', async () => {
+  test('all addresses together get 60 token exchanges a minute once their first one has failed', async () => {
     advance(LOGIN_RATE_LIMIT.windowMs + 1);
     const before = exchanges.length;
-    for (let i = 0; i < LOGIN_GLOBAL_RATE_LIMIT.max; i += 1) {
+    // An address's first callback in a window does not spend the overall allowance (test/sec-dashboard.test.js) ...
+    for (let i = 0; i <= LOGIN_GLOBAL_RATE_LIMIT.max; i += 1) {
       assert.equal((await callback(`203.0.113.${i}`)).status, 302, `address ${i + 1}`);
     }
-    assert.equal(exchanges.length - before, LOGIN_GLOBAL_RATE_LIMIT.max);
-    const limited = await callback('203.0.113.200');
+    // ... its next one, while the first has not succeeded, does.
+    for (let i = 0; i < LOGIN_GLOBAL_RATE_LIMIT.max; i += 1) {
+      assert.equal((await callback(`203.0.113.${i}`)).status, 302, `address ${i + 1} again`);
+    }
+    assert.equal(exchanges.length - before, 2 * LOGIN_GLOBAL_RATE_LIMIT.max + 1);
+    const limited = await callback(`203.0.113.${LOGIN_GLOBAL_RATE_LIMIT.max}`);
     assert.equal(limited.status, 429);
     assert.equal(limited.json.error, 'rate_limited');
-    assert.equal(exchanges.length - before, LOGIN_GLOBAL_RATE_LIMIT.max, 'no Discord call past the ceiling');
+    assert.equal(exchanges.length - before, 2 * LOGIN_GLOBAL_RATE_LIMIT.max + 1, 'no Discord call past the ceiling');
     advance(LOGIN_GLOBAL_RATE_LIMIT.windowMs + 1);
     assert.equal((await callback('203.0.113.200')).status, 302);
   });

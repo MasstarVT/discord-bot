@@ -9,8 +9,9 @@ import {
   TagError, clearTagCooldowns, createTagRow, getEffectiveActions, syncLegacyColumns, validateNewTagName,
 } from '../../services/tagService.js';
 import { RecordError } from './errors.js';
+import { SEND_NEEDS, requireChannelAccess } from './channelAccess.js';
 import { assignRoleProblem, isDiscordApiError, memberFor, pingRoleProblem } from './embeds.js';
-import { actionToStored, tagItem } from './tags.js';
+import { actionToForm, actionToStored, tagItem } from './tags.js';
 import { LIMITS } from '../../config/constants.js';
 
 const notFound = () => new RecordError('not_found', 'That custom command no longer exists.');
@@ -64,6 +65,30 @@ async function checkRoles(guildId, actions, before, ctx) {
   }
 }
 
+/**
+ * The /tag action add rule for a send action: the dashboard user must be able to view and post in the channel (a command is
+ * not a way into a channel they cannot use). Only a send action the stored command already had, exactly as it is, is kept
+ * without a check: a new or changed one (new text, an added embed) is checked even when its channel is not new.
+ */
+async function checkChannels(actions, before, ctx) {
+  // Form and stored actions compared through the same projection (actionToStored), so only real changes count; each stored
+  // action keeps one form action (a copy added next to it is new).
+  const kept = new Map();
+  for (const a of before) {
+    const key = JSON.stringify(actionToStored(actionToForm(a)));
+    kept.set(key, (kept.get(key) ?? 0) + 1);
+  }
+  const isKept = (a) => {
+    const key = JSON.stringify(actionToStored(a));
+    if (!kept.get(key)) return false;
+    kept.set(key, kept.get(key) - 1);
+    return true;
+  };
+  await requireChannelAccess(ctx, actions.flatMap((a, i) => (
+    !isKept(a) && a.type === 'send' && a.channelId
+      ? [{ channelId: a.channelId, needs: SEND_NEEDS, path: `actions.${i}.channelId` }] : [])));
+}
+
 /** The columns written for a form action list: the actions JSON plus the legacy mirror columns. */
 function actionColumns(formActions) {
   const stored = formActions.map(actionToStored);
@@ -90,6 +115,7 @@ export const store = Object.freeze({
     const v = validateNewTagName(data.name);
     if (!v.ok || v.name !== data.name) throw new RecordError('invalid', v.reason ?? 'That name is not valid.', { path: 'name' });
     await checkRoles(guildId, data.actions, [], ctx);
+    await checkChannels(data.actions, [], ctx);
     const row = {
       guildId,
       name: v.name,
@@ -117,6 +143,7 @@ export const store = Object.freeze({
     for (const k of COLUMNS) if (Object.hasOwn(data, k)) patch[k] = data[k];
     if (Object.hasOwn(data, 'actions')) {
       await checkRoles(guildId, data.actions, getEffectiveActions(row), ctx);
+      await checkChannels(data.actions, getEffectiveActions(row), ctx);
       Object.assign(patch, actionColumns(data.actions));
     }
     const scopeChanged = Object.hasOwn(data, 'cooldownScope') || Object.hasOwn(data, 'cooldownSeconds');

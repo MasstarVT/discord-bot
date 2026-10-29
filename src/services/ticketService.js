@@ -11,6 +11,7 @@ import {
 import { Prisma } from '@prisma/client';
 import prisma from '../database/client.js';
 import { ensureGuildSettings, getSettingsSafe, isModuleEnabled, peekSettings } from './settingsService.js';
+import { settleMergedJob } from './scheduler.js';
 import { COLORS, LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { resolvePermissionLevel } from '../utils/permissionChecker.js';
@@ -1233,6 +1234,22 @@ export async function updateManagers(panelId, guild, mutate) {
   }
 }
 
+/** Writes (add) or removes (remove) one manager role's overwrite on a ticket channel; false when Discord refused. */
+async function writeManagerOverwrite(channel, roleId, mode) {
+  try {
+    if (mode === 'add') {
+      await channel.permissionOverwrites.edit(roleId, { ...STAFF_ALLOW_OBJ }, { type: OverwriteType.Role, reason: 'Ticket manager role added' });
+    } else {
+      await channel.permissionOverwrites.delete(roleId, 'Ticket manager role removed');
+    }
+    return true;
+  } catch (err) {
+    if (mode === 'remove' && err?.code === 10009) return true;
+    logger.debug(`tickets: manager overwrite sync failed in ${channel.id}: ${err?.message}`);
+    return false;
+  }
+}
+
 /**
  * Back-fills a manager role change into the panel's existing ticket channels (newest 50, sequentially, 60 s).
  * @returns {Promise<{ updated: number, failed: number, skipped: number }>}
@@ -1251,20 +1268,118 @@ export async function syncManagerOverwrites({ guild, panelId, roleId, mode }) {
     if (Date.now() > deadline) { skipped++; return; }
     const channel = guild.channels.cache.get(t.channelId);
     if (!channel) { skipped++; return; }
-    try {
-      if (mode === 'add') {
-        await channel.permissionOverwrites.edit(roleId, { ...STAFF_ALLOW_OBJ }, { type: OverwriteType.Role, reason: 'Ticket manager role added' });
-      } else {
-        await channel.permissionOverwrites.delete(roleId, 'Ticket manager role removed');
-      }
-      updated++;
-    } catch (err) {
-      if (mode === 'remove' && err?.code === 10009) { updated++; return; }
-      failed++;
-      logger.debug(`tickets: manager overwrite sync failed in ${t.channelId}: ${err?.message}`);
-    }
+    if (await writeManagerOverwrite(channel, roleId, mode)) updated++; else failed++;
   });
   return { updated, failed, skipped };
+}
+
+// ── Manager back-fill job (ticket.managersync) ────────────────────────────────
+
+/** Time one run of the job works before it hands the rest to a follow-up run: under the scheduler's 60 s job timeout. */
+export const MANAGER_SYNC_JOB_BUDGET_MS = 40_000;
+const SYNC_PANEL_ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+const SYNC_ROLE_ID_RE = /^\d{17,20}$/;
+const SYNC_ROLES_MAX = 250; // Discord's role limit: a panel cannot have more distinct roles to touch
+
+/** The valid part of a job payload, `{ [panelId]: { roles, done, rev } }`; a panel with no valid role is dropped. */
+function readManagerSync(payload) {
+  const out = {};
+  const panels = payload && typeof payload === 'object' && payload.panels && typeof payload.panels === 'object' ? payload.panels : {};
+  for (const [panelId, entry] of Object.entries(panels)) {
+    if (!SYNC_PANEL_ID_RE.test(panelId) || !Array.isArray(entry?.roles)) continue;
+    const roles = [...new Set(entry.roles.filter((id) => typeof id === 'string' && SYNC_ROLE_ID_RE.test(id)))].slice(0, SYNC_ROLES_MAX);
+    if (!roles.length) continue;
+    out[panelId] = {
+      roles, done: Number.isInteger(entry.done) && entry.done > 0 ? entry.done : 0, rev: Number.isInteger(entry.rev) ? entry.rev : 0,
+    };
+  }
+  return out;
+}
+
+/**
+ * Pure. The payload of a guild's one `ticket.managersync` job after `incoming` (`{ panels: { [panelId]: { roles } } }`: the
+ * roles whose manager status a change touched, added or removed) is merged into `existing` (null for a new job): the roles are
+ * unioned per panel, the panel starts over (`done` 0) and its `rev` counts up, so a run knows its panel changed under it.
+ * Whether a role is then added or removed is decided against the panel's CURRENT managers when the job runs, so a removal is
+ * never lost and an add-then-remove leaves the tickets as the panel says. It is the `merge` of scheduleJob.
+ * @returns {{ panels: Record<string, { roles: string[], done: number, rev: number }> }}
+ */
+export function mergeManagerSync(existing, incoming) {
+  const out = readManagerSync(existing);
+  for (const [panelId, entry] of Object.entries(readManagerSync(incoming))) {
+    const prev = out[panelId];
+    out[panelId] = { roles: [...new Set([...(prev?.roles ?? []), ...entry.roles])].slice(0, SYNC_ROLES_MAX), done: 0, rev: (prev?.rev ?? 0) + 1 };
+  }
+  return { panels: out };
+}
+
+/** The payload that queues a back-fill of `roleIds` (added or removed) on one panel: pass as `payload` with `mergeManagerSync`. */
+export const managerSyncPayload = (panelId, roleIds) => mergeManagerSync(null, { panels: { [panelId]: { roles: roleIds } } });
+
+/**
+ * Brings one panel's newest tickets in line with its current managers for the touched `roleIds`, from ticket `from` on, until
+ * `deadline`. A role the panel lists gets its overwrite, one it does not list loses it; a role deleted in Discord is skipped.
+ * @returns {Promise<{ done: number, complete: boolean, failed: number }>} done: tickets handled so far, in order
+ */
+async function reconcilePanelManagers({ guild, panelId, roleIds, from, deadline }) {
+  const panel = await prisma.ticketPanel.findFirst({ where: { id: panelId, guildId: guild.id }, select: { managerRoleIds: true } });
+  if (!panel) return { done: 0, complete: true, failed: 0 };
+  const add = roleIds.filter((id) => panel.managerRoleIds.includes(id) && guild.roles.cache.has(id));
+  const remove = roleIds.filter((id) => !panel.managerRoleIds.includes(id));
+  const tickets = await prisma.ticket.findMany({
+    where: { guildId: guild.id, panelId, status: { in: ['OPEN', 'CLAIMED', 'CLOSED'] } },
+    orderBy: { createdAt: 'desc' }, take: MANAGER_SYNC_MAX, select: { channelId: true },
+  });
+  let failed = 0;
+  let i = Math.min(from, tickets.length);
+  for (; i < tickets.length; i++) {
+    if (Date.now() >= deadline) return { done: i, complete: false, failed };
+    const channel = guild.channels.cache.get(tickets[i].channelId);
+    if (!channel) continue;
+    for (const [roleId, mode] of [...add.map((id) => [id, 'add']), ...remove.map((id) => [id, 'remove'])]) {
+      if (!(await writeManagerOverwrite(channel, roleId, mode))) failed++;
+    }
+  }
+  return { done: i, complete: true, failed };
+}
+
+/**
+ * The `ticket.managersync` job: the one back-fill job of a guild (dedupe `ticket.managersync:{guildId}`). The dashboard's
+ * ticket.refresh task merges every manager change into it (scheduleJob 'merge', mergeManagerSync) instead of doing up to 50
+ * sequential REST calls per role itself, so the task answers fast, a guild holds at most one ordinary slot however many roles
+ * or panels it changes, and a repeated save never starts a second copy. Each run works for at most `budgetMs`, resuming each
+ * panel where the last run stopped (`done`); what is left, and anything merged in while it ran, goes to a follow-up run, which
+ * queues behind other due jobs. The run settles itself under the row lock (settleMergedJob). Idempotent.
+ * @param {{ id: string, guildId: string, version: number, payload: object }} job
+ * @param {{ guild: import('discord.js').Guild }} ctx
+ * @param {{ budgetMs?: number }} [opts] test seam
+ */
+export async function runManagerSyncJob(job, { guild }, { budgetMs = MANAGER_SYNC_JOB_BUDGET_MS } = {}) {
+  const claimed = readManagerSync(job.payload);
+  const deadline = Date.now() + budgetMs;
+  const progress = {};
+  let failed = 0;
+  for (const [panelId, entry] of Object.entries(claimed)) {
+    if (Date.now() >= deadline) break;
+    progress[panelId] = await reconcilePanelManagers({ guild, panelId, roleIds: entry.roles, from: entry.done, deadline });
+    failed += progress[panelId].failed;
+  }
+  const outcome = await settleMergedJob(job, (live) => {
+    const left = {};
+    for (const [panelId, entry] of Object.entries(readManagerSync(live))) {
+      const mine = progress[panelId];
+      // A panel merged into meanwhile (its rev moved) starts over, which mergeManagerSync already recorded; one not reached
+      // keeps its place; one finished drops out; one cut short resumes where it stopped.
+      if (mine && claimed[panelId].rev === entry.rev) {
+        if (mine.complete) continue;
+        left[panelId] = { ...entry, done: mine.done };
+      } else {
+        left[panelId] = entry;
+      }
+    }
+    return Object.keys(left).length ? { panels: left } : null;
+  });
+  logger.info(`tickets: manager sync in guild ${guild.id}: ${outcome === 'again' ? 'more to do' : 'done'}${failed ? `, ${failed} overwrite(s) failed (missing permissions)` : ''}`);
 }
 
 /**

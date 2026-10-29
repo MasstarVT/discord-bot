@@ -22,8 +22,8 @@ const IMAGE_OPTS = Object.freeze({ extension: 'png', size: 256 });
 
 const stamp = (ms, style) => (Number.isFinite(ms) ? `<t:${Math.floor(ms / 1000)}:${style}>` : '');
 
-// A display name or nickname is free text: "<@123>" in one would render (and, with parse: ['users'], ping) as a mention.
-// A zero-width space after "<" keeps the text as typed but no longer a mention, role or channel tag.
+// A display name, nickname, thread name or server name is free text: "<@123>" in one would render (and, with parse: ['users'],
+// ping) as a mention. A zero-width space after "<" keeps the text as typed but no longer a mention, role or channel tag.
 const unmention = (s) => String(s).replace(/<(?=[@#])/g, '<\u200b');
 
 function channelTypeName(type) {
@@ -59,7 +59,7 @@ const BUILTINS = [
   [['{user.created_at}'], 'user', 'Account creation date', ({ u }) => stamp(u.createdTimestamp, 'D')],
   [['{user.joined}'], 'user', 'Time since joining the server, relative', ({ m }) => stamp(m?.joinedTimestamp, 'R')],
   [['{user.joined_at}'], 'user', 'Date the member joined the server', ({ m }) => stamp(m?.joinedTimestamp, 'D')],
-  [['{server}', '{server.name}'], 'server', 'Server name', ({ g }) => g.name ?? ''],
+  [['{server}', '{server.name}'], 'server', 'Server name', ({ g }) => unmention(g.name ?? '')],
   [['{server.id}'], 'server', 'Server ID', ({ g }) => g.id],
   [['{server.icon}', '{server.icon_url}'], 'server', 'Server icon URL', ({ g }) => g.iconURL?.(IMAGE_OPTS) ?? ''],
   [['{server.owner}'], 'server', 'Mention of the server owner', ({ g }) => (g.ownerId ? `<@${g.ownerId}>` : '')],
@@ -72,7 +72,7 @@ const BUILTINS = [
   [['{server.boost_count}'], 'server', 'Number of boosts', ({ g }) => String(g.premiumSubscriptionCount ?? 0)],
   [['{server.boost_level}'], 'server', 'Boost tier', ({ g }) => String(g.premiumTier ?? 0)],
   [['{channel}', '{channel.mention}'], 'channel', 'Mention of the channel', ({ c }) => `<#${c.id}>`],
-  [['{channel.name}'], 'channel', 'Channel name', ({ c }) => c.name ?? ''],
+  [['{channel.name}'], 'channel', 'Channel name', ({ c }) => unmention(c.name ?? '')], // a thread or forum post name is free text
   [['{channel.id}'], 'channel', 'Channel ID', ({ c }) => c.id],
   [['{channel.type}'], 'channel', 'Channel type: text, voice, category, announcement, stage, forum, media, thread or other',
     ({ c }) => channelTypeName(c.type)],

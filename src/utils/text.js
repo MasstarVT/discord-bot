@@ -30,6 +30,40 @@ export function clampText(str, max, ellipsis = '…') {
 }
 
 /**
+ * The forwarded snapshots of a message (a forward has no content of its own; its text lives in `messageSnapshots`).
+ * [] for anything that is not a message with an iterable snapshot collection: stubs, partials, old payloads.
+ * @param {unknown} message
+ * @returns {object[]}
+ */
+export function forwardedSnapshots(message) {
+  try {
+    const snaps = message?.messageSnapshots;
+    if (snaps == null) return [];
+    const it = typeof snaps.values === 'function' ? snaps.values() : snaps;
+    return [...it].filter((s) => s != null);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The text a member makes visible in the channel: the message's own content plus the content of every
+ * forwarded snapshot, joined with '\n'. Equal to `content` for a message that is not a forward, '' when empty.
+ * Moderation and the message logs read this, never `message.content` alone (a forward would slip past both).
+ * @param {unknown} message
+ * @returns {string}
+ */
+export function effectiveText(message) {
+  try {
+    const parts = [String(message?.content ?? '')];
+    for (const s of forwardedSnapshots(message)) parts.push(String(s?.content ?? ''));
+    return parts.filter(Boolean).join('\n');
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Packs lines greedily into chunks joined with '\n', each at most `maxLen` long.
  * An overlong single line is clamped first.
  * @param {unknown[]} lines

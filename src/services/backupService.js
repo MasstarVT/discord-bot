@@ -10,7 +10,8 @@
 //   - It never runs inside the interaction. Confirm schedules the one-shot job `backup.restore` (dedupe
 //     `backup.restore:{guildId}`: one restore at a time per guild). Each run does a bounded batch (about 10 Discord calls,
 //     20 s at most) and saves its progress in the job payload, so it resumes after a crash or restart. A batch that was
-//     repeated adopts what the crashed one made (see guildSnapshot.adoptRole) instead of making it again.
+//     repeated (payload `retry`) or whose create timed out adopts what the crashed try made (see guildSnapshot.adoptRole)
+//     instead of making it again, but only when the audit log shows that the bot made it for this restore.
 //   - The bot can only give permissions it has itself and place roles below its own highest role: the rest is masked and
 //     reported in the summary posted in the channel where the restore was started.
 //   - A finished restore stores old id -> new id in the backup (`data.idMap`, never exported), so restoring the same backup
@@ -292,9 +293,9 @@ export async function startRestore({ guild, backupId, snapshot, mode, startedByI
   const prev = await getRestoreJob(guild.id);
   if (isLive(prev)) return { ok: false, reason: 'running' };
   const carried = carriedFrom(guild, prev, backupId);
-  // The start time is NOT carried: adoption is by name, and a wider window would adopt same-named roles or channels made
-  // since by someone else (a booster's "Moderator" role, an admin's #general). Items of the stopped run's last unsaved batch
-  // (about 10 calls) may be made again; everything it saved is reused.
+  // The start time is NOT carried: a wider adoption window would take in same-named roles or channels made since (a
+  // booster's "Moderator" role, an admin's #general). Items of the stopped run's last unsaved batch (about 10 calls) may be
+  // made again; everything it saved is reused.
   const payload = newRestoreState({ backupId, mode, startedById, channelId, idMap: { ...seedIdMap(guild, snapshot), ...carried.idMap } });
   payload.made = carried.made;
   await scheduleJob({
@@ -331,7 +332,12 @@ const batching = new Set();
  */
 export async function handleRestoreJob(job, ctx) {
   const guildId = job.guildId;
-  if (batching.has(guildId)) return { nextRunAt: new Date(Date.now() + BACKUP.STEP_MS) }; // payload unchanged
+  if (batching.has(guildId)) {
+    // The old run is still going or timed out, and its progress is lost either way: the next batch may repeat its work, so it
+    // may adopt what that run made (the claim count is reset by this reschedule, so the payload carries the signal).
+    const payload = job.payload && typeof job.payload === 'object' && !Array.isArray(job.payload) ? { ...job.payload, retry: true } : job.payload;
+    return { nextRunAt: new Date(Date.now() + BACKUP.STEP_MS), payload };
+  }
   batching.add(guildId);
   try {
     return await runRestore(job, ctx);
@@ -344,6 +350,9 @@ async function runRestore(job, ctx) {
   const state = normaliseRestoreState(job.payload);
   if (!state) throw new PermanentJobError('backup.restore: the job payload is unusable');
   const { guild } = ctx;
+  // Attempt 2 or later: an earlier run of this very payload did not finish (crash, timeout, database error), so it may have
+  // made roles or channels whose ids were never saved. Only this batch may adopt them; it is cleared before saving.
+  if ((ctx.attempt ?? 1) > 1) state.retry = true;
 
   const row = await prisma.serverBackup.findFirst({ where: { id: state.backupId, guildId: job.guildId } }); // a failure throws: retried
   if (!row) {
@@ -381,6 +390,7 @@ async function runRestore(job, ctx) {
     throw new PermanentJobError(`backup.restore: stopped, the bot lacks ${missing.join(' and ')}`);
   }
   const result = await runRestoreBatch(env);
+  state.retry = false; // this batch's progress is saved below; the next one is a first try (a timed-out item still has stalls)
   if (result === 'more') return { nextRunAt: new Date(Date.now() + BACKUP.STEP_MS), payload: state };
 
   await rememberIds(row, snapshot, state, guild);

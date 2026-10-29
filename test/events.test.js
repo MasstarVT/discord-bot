@@ -883,7 +883,7 @@ test('cancelEvent and stripRoles only take the role from members the bot gave it
   assert.equal(guild.members.cache.get('C').roles.cache.has('R1'), true, 'C: the removal failed');
   assert.deepEqual(log.map((l) => l[0]), ['remove'], 'one removal, for A');
   const flag = (u) => rsvps.find((r) => r.userId === u).roleGranted;
-  assert.deepEqual(['A', 'B', 'C', 'D'].map(flag), [false, false, true, false], 'cleared, except where the removal failed (a later run retries)');
+  assert.deepEqual(['A', 'B', 'C', 'D'].map(flag), [false, false, true, true], 'cleared, except where the removal failed (a later run retries) and for D, who left: the flag stays as the marker Role Persistence reads');
 });
 
 test('stripRoles is bounded: one batch per run with a cursor, never above the run cap', async () => {

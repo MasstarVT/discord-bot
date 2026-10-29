@@ -226,7 +226,8 @@ export function resolvePublishMentions(content, channel, member) {
 }
 
 /**
- * @param {string|null|undefined} content - the rendered message text
+ * @param {string|null|undefined} content - the message text the admin wrote (the template's, with its `<@&id>` as typed), never
+ *   the rendered text: a variable such as {channel.name} can hold text a member chose, which must not add a role ping
  * @param {'publish'|'none'} mode - 'none' (preview, update, presets) pings nobody
  * @param {{ channel?: object|null, member?: object|null }} [ctx] - required for 'publish'; without a channel no role is allowed
  * @returns {import('discord.js').MessageMentionOptions}
@@ -248,7 +249,8 @@ export function renderSavedEmbed(tpl, { member, guild, channel, settings }, { me
   const ctx = { member, user: member?.user ?? null, guild, channel };
   const out = renderTemplate(tpl, ctx, { defaultColor: resolveDefaultColor(settings) });
   if (!out) return null;
-  return { ...out, allowedMentions: mentionPolicy(out.content, mentions, { channel, member }) };
+  // The role allowlist comes from the admin-authored text, as automationService.allowedMentionsFor does, not from `out.content`.
+  return { ...out, allowedMentions: mentionPolicy(normalizeTemplate(tpl).content, mentions, { channel, member }) };
 }
 
 /**
@@ -774,13 +776,14 @@ export async function publishSavedEmbed({ row, channel, member, settings = null 
 
     const fresh = await prisma.savedEmbed.findUnique({ where: { id: row.id } });
     if (!fresh) throw new EmbedEditError(notFoundText(row.name), 'NOTFOUND');
+    const template = normalizeTemplate(fresh.template);
     const payload = renderSavedEmbed(
-      normalizeTemplate(fresh.template),
+      template,
       { member, guild: channel.guild, channel, settings },
       { mentions: 'publish' },
     );
     if (!payload) return { ok: false, code: 'EMPTY' };
-    const { refused } = resolvePublishMentions(payload.content, channel, member);
+    const { refused } = resolvePublishMentions(template.content, channel, member);
 
     let message;
     try {

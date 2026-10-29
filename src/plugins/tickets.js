@@ -1,7 +1,7 @@
 // Ticketing plugin declaration (pkg-tickets.md §5): the channelDelete cleanup hook and the persistent panel components. Declaration
 // only: the logic lives in services/ticketService.js and nothing runs at import.
 import { ChannelType } from 'discord.js';
-import { onChannelDelete, handleTicketButton, handleTicketSelect, handleTicketModal } from '../services/ticketService.js';
+import { onChannelDelete, handleTicketButton, handleTicketSelect, handleTicketModal, runManagerSyncJob } from '../services/ticketService.js';
 
 const RELEVANT = new Set([ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildCategory]);
 
@@ -22,6 +22,6 @@ export const plugin = {
     // itself and the template form checks the Admin level itself.
     { type: 'modal', prefix: 'ticket-modal', handler: handleTicketModal, module: null },
   ],
-  jobs: [],
+  jobs: [{ type: 'ticket.managersync', handler: runManagerSyncJob }],
   provides: {},
 };

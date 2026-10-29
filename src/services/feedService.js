@@ -27,6 +27,7 @@ import {
   decodeXmlBuffer,
   discoverFeedLinks,
   looksLikeHtml,
+  oneLine,
   parseBlueskyAuthorFeed,
   parseItunesSearch,
   parseXmlFeed,
@@ -309,10 +310,10 @@ export function buildPostPayload(feed, item, { guild, channel, feedImage = null,
 
 /** The new display name after a successful fetch, or null for no change. */
 export function displayNameUpdate(feed, parsed) {
-  if (feed.type === 'YOUTUBE' && feed.displayName === feed.source && parsed?.title) return clampText(parsed.title, 100);
+  if (feed.type === 'YOUTUBE' && feed.displayName === feed.source && parsed?.title) return clampText(oneLine(parsed.title), 100) || null;
   if (feed.type === 'BLUESKY') {
     const h = parsed?.items?.[0]?.actorHandle;
-    if (h && `@${h}` !== feed.displayName) return clampText(`@${h}`, 100);
+    if (h && `@${h}` !== feed.displayName) return clampText(oneLine(`@${h}`), 100);
   }
   return null;
 }
@@ -712,14 +713,17 @@ async function resolvePodcast({ url, query }) {
  */
 export async function resolveFeedSource(type, input) {
   try {
+    let r;
     switch (type) {
-      case 'RSS': return await resolveXmlFeedUrl(input.url, 'RSS');
-      case 'YOUTUBE': return await resolveYouTube(input);
-      case 'REDDIT': return await resolveReddit(input);
-      case 'BLUESKY': return await resolveBluesky(input);
-      case 'PODCAST': return await resolvePodcast(input);
+      case 'RSS': r = await resolveXmlFeedUrl(input.url, 'RSS'); break;
+      case 'YOUTUBE': r = await resolveYouTube(input); break;
+      case 'REDDIT': r = await resolveReddit(input); break;
+      case 'BLUESKY': r = await resolveBluesky(input); break;
+      case 'PODCAST': r = await resolvePodcast(input); break;
       default: return refuse('Unknown Feed Type', 'That kind of feed is not supported.');
     }
+    // The name is stored and logged, so a third party's title is cut to one line here, for the dashboard too.
+    return r.ok ? { ...r, displayName: oneLine(r.displayName) || 'Feed' } : r;
   } catch (err) {
     logger.error(`feeds: resolving a ${type} source failed`, err);
     return refuse('Something went wrong', 'I could not check that source. Please try again.');
@@ -761,7 +765,7 @@ export async function createFeedRow({
     try {
       return await prisma.feed.create({
         data: {
-          guildId, type, source, displayName: clampText(displayName, 100), fetchUrl, channelId, pingRoleId,
+          guildId, type, source, displayName: clampText(oneLine(displayName), 100), fetchUrl, channelId, pingRoleId,
           messageTemplate, includeReposts: type === 'BLUESKY' && includeReposts, createdBy,
           initialized: seeded,
           seenIds: seeded ? [...new Set(probe.items.map((i) => i.id))].slice(0, SEEN_CAP) : [],
