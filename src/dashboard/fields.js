@@ -22,7 +22,7 @@ import {
 } from './schema.js';
 
 /** Most fields one PATCH may change (every field once is far below the body limit). */
-export const MAX_SETTINGS_CHANGES = 200;
+export const MAX_SETTINGS_CHANGES = 300;
 
 // ── Restated constants (originals named; test/dashboard.test.js compares them) ──────────────────────────────
 

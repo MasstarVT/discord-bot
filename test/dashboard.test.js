@@ -139,6 +139,10 @@ describe('catalog', () => {
     assert.deepEqual(JSON.parse(JSON.stringify(c)), c);
   });
 
+  test('one request can carry every field', () => {
+    assert.ok(Object.keys(fields.readSettingsValues(null)).length <= fields.MAX_SETTINGS_CHANGES);
+  });
+
   test('every sub-toggle is a Boolean GuildSettings column whose @default matches the catalog', () => {
     const columns = schemaBooleans();
     const subs = Object.values(SUB_TOGGLES).flat();
