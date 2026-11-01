@@ -8,7 +8,7 @@ import prisma from '../../database/client.js';
 import { getSettingsSafe } from '../../services/settingsService.js';
 import {
   EVENT, attendeeLines, buildEditModal, cancelEvent, createEvent, findEventsForAutocomplete, getTally, isOpen, jumpUrl, listLine,
-  listOpenEvents, loadZone, parseEventFields, remindAt, resolveEventRef,
+  listOpenEvents, loadZone, parseEventFields, remindAt, resolveEventRef, voiceLead, voiceLeadText,
 } from '../../services/eventService.js';
 import { TimeoutError, ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { errorEmbed, guildEmbed, infoEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
@@ -141,6 +141,9 @@ async function create(interaction, client) {
     if (personalUnknown) lines.push('⚠️ Your saved timezone could not be loaded just now, so another one was used.');
   }
   if (event.discordEventId) lines.push('A Discord event was created too.');
+  if (event.textChannelId) {
+    lines.push(`Its chat is <#${event.textChannelId}>, for members who answer Going or Maybe. A voice channel opens ${voiceLeadText(voiceLead(settings))}.`);
+  }
   if (event.reminderMinutes > 0) {
     lines.push(remindAt(event).getTime() > Date.now()
       ? `Members who are going are pinged ${event.reminderMinutes} minutes before the start.`
@@ -193,6 +196,7 @@ async function cancel(interaction, client) {
   if (!res.ok) return reply(res.code === 'CLOSED' ? closed() : notFound());
   const lines = [`**${clampText(event.title, 100)}** is cancelled. Its post is updated and its reminder is removed.`];
   if (event.roleId) lines.push(`The <@&${event.roleId}> role is being taken back from the members who were going.`);
+  if (res.event?.textChannelId || res.event?.voiceChannelId) lines.push('Its chat, voice channel, post and reminders are deleted as soon as the voice channel is empty.');
   if (res.discordFailed) lines.push('⚠️ I could not delete the linked Discord event: remove it by hand.');
   return reply(successEmbed('Event Cancelled', lines.join('\n')));
 }
@@ -229,6 +233,8 @@ async function info(interaction) {
     `**Host:** <@${event.hostId}>`,
     `**Post:** <#${event.channelId}>${url ? ` · [jump](${url})` : ' · the post was deleted'}`,
     ...(event.roleId ? [`**Role:** <@&${event.roleId}>`] : []),
+    ...(event.textChannelId ? [`**Chat:** <#${event.textChannelId}>`] : []),
+    ...(event.voiceChannelId ? [`**Voice:** <#${event.voiceChannelId}>`] : []),
     `**Going:** ${tally.going}${event.capacity ? `/${event.capacity}` : ''} · **Maybe:** ${tally.maybe} · **Can't go:** ${tally.declined}`,
     `**Reminder:** ${event.reminderMinutes > 0 ? `${event.reminderMinutes} min before${event.reminderSentAt ? ' (sent)' : ''}` : 'none'}`,
     ...(event.discordEventId ? [`**Discord event:** https://discord.com/events/${guildId}/${event.discordEventId}`] : []),

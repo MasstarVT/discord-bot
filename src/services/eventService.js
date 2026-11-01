@@ -6,19 +6,26 @@
 //
 // Status: SCHEDULED and ACTIVE both count as open. Nothing writes ACTIVE (there is no start job): an open event whose start
 // has passed is shown as "happening now".
+//
+// Event channels (`eventChannelsEnabled`): a text chat when the event is created and a voice channel shortly before the start
+// (`event.voice`), private to a temporary role held by the members going or maybe and the host. `event.cleanup` deletes all
+// three, then the announcement and its reminders, once the event is closed and no human is left in the voice channel.
 import { Prisma } from '@prisma/client';
 import {
-  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, GuildScheduledEventEntityType,
-  GuildScheduledEventPrivacyLevel, GuildScheduledEventStatus, ModalBuilder, TextInputBuilder, TextInputStyle, escapeMarkdown,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, GuildScheduledEventEntityType,
+  GuildScheduledEventPrivacyLevel, GuildScheduledEventStatus, ModalBuilder, OverwriteType, TextInputBuilder, TextInputStyle,
+  escapeMarkdown,
 } from 'discord.js';
 import prisma from '../database/client.js';
 import { COLORS, LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { cancelJobs, PermanentJobError, scheduleJob } from './scheduler.js';
-import { ensureGuildSettings, getSettingsSafe, isModuleEnabled, peekSettings } from './settingsService.js';
+import { ensureGuildSettings, getSettingsSafe, isModuleEnabled, peekSettings, updateSettings } from './settingsService.js';
+import { countHumans } from './tempVoiceService.js';
 import { getUserTimezone, resolveMemberTimezone } from './userTimezoneService.js';
 import { ackBudgetMs, createKeyedMutex, mapLimit, withTimeout } from '../utils/async.js';
 import { buildIcs, googleCalendarUrl, outlookCalendarUrl } from '../utils/calendar.js';
+import { markBotDeletion } from '../utils/deletionTracker.js';
 import { applyGuildColor, errorEmbed, guildEmbed, successEmbed, warnEmbed } from '../utils/embedBuilder.js';
 import {
   checkAssignableRole, checkChannelUsable, missingBotPermissions, replyError, safeDefer, safeReply,
@@ -44,12 +51,19 @@ export const EVENT = Object.freeze({
   RENDER_INTERVAL_MS: 5_000, NAME_LOOKUP_MS: 4_000,
   REMIND_USERS_MAX: 500, REMIND_CHUNK_USERS: 80, REMIND_CHUNK_CHARS: 1900,
   STRIP_BATCH: 100, STRIP_CONCURRENCY: 3, STRIP_RUNS_MAX: 50, STRIP_RESUME_MS: 15_000,
+  VOICE_LEAD_DEFAULT: 30, VOICE_LEAD_MAX: 1440, CATEGORY_NAME: 'Events', RENAME_MS: 2_000,
+  EMPTY_GRACE_MS: 60_000,            // from the last leave to the delete: a dropped connection can come back
+  CLEANUP_RECHECK_MS: 10 * 60_000,   // how often `event.cleanup` looks at a voice channel that still has people in it
 });
 
 export const REMIND_JOB_TYPE = 'event.remind';
 export const END_JOB_TYPE = 'event.end';
+export const VOICE_JOB_TYPE = 'event.voice';
+export const CLEANUP_JOB_TYPE = 'event.cleanup';
 export const remindJobKey = (eventId) => `event.remind:${eventId}`;
 export const endJobKey = (eventId) => `event.end:${eventId}`;
+export const voiceJobKey = (eventId) => `event.voice:${eventId}`;
+export const cleanupJobKey = (eventId) => `event.cleanup:${eventId}`;
 
 export const OPEN_STATUSES = Object.freeze(['SCHEDULED', 'ACTIVE']);
 export const STATUS_BY_ACTION = Object.freeze({ going: 'GOING', maybe: 'MAYBE', declined: 'DECLINED' });
@@ -62,10 +76,14 @@ const WARN_EVERY_MS = 10 * 60_000;
 const RENDER_SWEEP_AT = 500;
 const RENDER_IDLE_MS = 10 * 60_000;
 const SEQUENCE_EPOCH = Date.UTC(2020, 0, 1);
+// What the access role, and the bot, may do in an event channel.
+const TEXT_ALLOW = Object.freeze(['ViewChannel', 'SendMessages', 'ReadMessageHistory']);
+const VOICE_ALLOW = Object.freeze(['ViewChannel', 'Connect', 'Speak']);
 const CALENDAR_HINT = 'Add it to your calendar with the buttons below, or open the attached file in Apple Calendar or any other calendar app.';
 
 // Discord API error codes we react to.
 const UNKNOWN_CHANNEL = 10003;
+const UNKNOWN_ROLE = 10011;
 const UNKNOWN_MESSAGE = 10008;
 const UNKNOWN_MEMBER = 10007;
 const UNKNOWN_SCHEDULED_EVENT = 10070;
@@ -99,6 +117,27 @@ export function remindAt(event) {
   const m = Number(event.reminderMinutes);
   if (!Number.isFinite(m) || m <= 0) return null;
   return new Date(new Date(event.startsAt).getTime() - m * 60_000);
+}
+
+/** @returns {number} the guild's minutes between the voice channel opening and the start */
+export const voiceLead = (settings) => (Number.isInteger(settings?.eventVoiceLeadMinutes) ? settings.eventVoiceLeadMinutes : EVENT.VOICE_LEAD_DEFAULT);
+
+export const voiceLeadText = (minutes) => (minutes > 0 ? `${minutes} minute${minutes === 1 ? '' : 's'} before the start` : 'at the start');
+
+/** @returns {Date} when the voice channel opens: `lead` minutes before the start, or now when that has passed */
+export function voiceAt(event, lead, now = Date.now()) {
+  return new Date(Math.max(new Date(event.startsAt).getTime() - lead * 60_000, now));
+}
+
+export const textChannelName = (title) => sanitizeName(title, { max: 90, fallback: 'event' });
+
+/** Who sees an event channel: the access role and the bot. @everyone is denied, so it does not follow the category. */
+export function eventOverwrites(guild, roleId, allow) {
+  return [
+    { id: guild.id, type: OverwriteType.Role, deny: ['ViewChannel'] },
+    { id: roleId, type: OverwriteType.Role, allow: [...allow] },
+    { id: guild.client.user.id, type: OverwriteType.Member, allow: [...allow, 'ManageChannels'] },
+  ];
 }
 
 /**
@@ -174,6 +213,9 @@ export function buildEventEmbed(event, tally = emptyTally(), { settings = null, 
   if (event.location) fields.push({ name: 'Where', value: clampText(event.location, EVENT.LOCATION_MAX), inline: true });
   fields.push({ name: 'Host', value: `<@${event.hostId}>`, inline: true });
   if (event.roleId) fields.push({ name: 'Role', value: `<@&${event.roleId}>`, inline: true });
+  // Only while open: a closed event's channels are about to go, and a deleted one shows as #deleted-channel.
+  if (isOpen(event) && event.textChannelId) fields.push({ name: 'Chat', value: `<#${event.textChannelId}>`, inline: true });
+  if (isOpen(event) && event.voiceChannelId) fields.push({ name: 'Voice', value: `<#${event.voiceChannelId}>`, inline: true });
 
   const cap = event.capacity ? ` / ${event.capacity}` : '';
   const shown = tally.goingIds.slice(0, EVENT.GOING_SHOWN);
@@ -192,7 +234,7 @@ export function buildEventEmbed(event, tally = emptyTally(), { settings = null, 
   embed.setFooter({
     text: event.status === 'CANCELLED' ? 'This event was cancelled.'
       : event.status === 'ENDED' ? 'This event has ended.'
-        : 'RSVP with the buttons below.',
+        : event.textChannelId ? 'Going or Maybe gets you into the event chat.' : 'RSVP with the buttons below.',
   });
   return embed;
 }
@@ -229,7 +271,8 @@ export function reminderMessages(event, userIds, now = Date.now()) {
   const start = new Date(event.startsAt);
   const when = start.getTime() > now ? `starts ${discordTimestamp(start, 'R')}` : 'is starting';
   const link = jumpUrl(event);
-  const head = `⏰ **${clampText(event.title, 100)}** ${when}.${link ? ` ${link}` : ''}`;
+  const voice = event.voiceChannelId ? ` Voice: <#${event.voiceChannelId}>` : '';
+  const head = `⏰ **${clampText(event.title, 100)}** ${when}.${link ? ` ${link}` : ''}${voice}`;
   const out = [];
   let cur = null;
   for (const id of userIds) {
@@ -272,7 +315,8 @@ export function rsvpReplyText(out, event, status) {
   const base = out.result === 'same'
     ? `You are already marked as **${RSVP_LABELS[status]}** for **${title}**.`
     : `${RSVP_EMOJI[status]} You are marked as **${RSVP_LABELS[status]}** for **${title}**.`;
-  return out.note ? `${base}\n⚠️ ${out.note}` : base;
+  const chat = status !== 'DECLINED' && event?.textChannelId ? `\n💬 Event chat: <#${event.textChannelId}>` : '';
+  return out.note ? `${base}${chat}\n⚠️ ${out.note}` : `${base}${chat}`;
 }
 
 // ── Add to calendar ───────────────────────────────────────────────────────────
@@ -368,6 +412,10 @@ const userMutex = createKeyedMutex();   // one RSVP (database + role) at a time 
 /** @type {Map<string, { lastAt: number, timer: any }>} */
 const renderState = new Map();
 const warnedAt = new Map();
+const categoryMutex = createKeyedMutex(); // one category made per guild, however many events are created at once
+// Voice channels of closed events with people still in them: id -> { eventId, guildId }. `event.cleanup` fills it again every
+// CLEANUP_RECHECK_MS, so a restart only delays the cleanup, and voice leaves elsewhere cost no database query.
+const waitingVoice = new Map();
 let renderImpl = renderEventMessage;
 
 /** Test hook: replaces the Discord render. Pass nothing to restore. */
@@ -545,10 +593,182 @@ async function deleteDiscordEvent(guild, event) {
   return true;
 }
 
+// ── Event channels ────────────────────────────────────────────────────────────
+
+/**
+ * The category for event channels: the configured one, else one called Events, else a new one, which the settings remember.
+ * @returns {Promise<{ category: object } | { note: string }>} throws when Discord refuses the new category
+ */
+function resolveCategory(guild, settings) {
+  return categoryMutex.run(guild.id, async () => {
+    const isCategory = (c) => c?.type === ChannelType.GuildCategory;
+    const configured = guild.channels.cache.get(settings?.eventCategoryId ?? '');
+    if (isCategory(configured)) return { category: configured };
+    const named = guild.channels.cache.find((c) => isCategory(c) && c.name.toLowerCase() === EVENT.CATEGORY_NAME.toLowerCase());
+    if (!named && missingBotPermissions(guild, ['ManageChannels']).length) {
+      return { note: 'No event channels were made: I need the **Manage Channels** permission.' };
+    }
+    const category = named ?? await guild.channels.create({
+      name: EVENT.CATEGORY_NAME, type: ChannelType.GuildCategory, reason: 'Category for event channels',
+    });
+    // Unsaved is harmless: the next event finds the category by name.
+    await updateSettings(guild.id, { eventCategoryId: category.id }).catch((err) => logger.warn('events: could not save the category', err));
+    return { category };
+  });
+}
+
+/**
+ * Makes the event's access role and private text chat when the setting is on.
+ * @returns {Promise<{ channel: object, role: object } | { note: string } | null>} null when the setting is off
+ */
+export async function createEventChat(guild, event, settings) {
+  if (settings?.eventChannelsEnabled !== true) return null;
+  let role = null;
+  try {
+    const found = await resolveCategory(guild, settings);
+    if (found.note) return { note: found.note };
+    if (missingBotPermissions(found.category, [...TEXT_ALLOW, 'ManageChannels', 'ManageRoles']).length) {
+      return { note: `No event channels were made: I need **Manage Channels**, **Manage Roles**, **Send Messages** and **Read Message History** in <#${found.category.id}>.` };
+    }
+    role = await guild.roles.create({
+      name: clampText(`Event: ${event.title}`, 100), permissions: [], mentionable: false, hoist: false,
+      reason: `Access to the event chat of ${clampText(event.title, 60)}`,
+    });
+    const channel = await guild.channels.create({
+      name: textChannelName(event.title), type: ChannelType.GuildText, parent: found.category.id,
+      permissionOverwrites: eventOverwrites(guild, role.id, TEXT_ALLOW), reason: `Event chat: ${clampText(event.title, 60)}`,
+    });
+    return { channel, role };
+  } catch (err) {
+    await role?.delete('Event chat could not be made').catch(() => {});
+    logger.warn(`events: could not create the event chat in ${guild.id}`, err);
+    return { note: `I could not create the event chat (${reasonOf(err)}).` };
+  }
+}
+
+/** Takes back createEventChat when the event itself could not be made. */
+async function removeEventChat(chat) {
+  await chat?.channel?.delete('Event could not be created').catch(() => {});
+  await chat?.role?.delete('Event could not be created').catch(() => {});
+}
+
+/** A message in the event chat. Best effort: the chat is a convenience, never the reason a job fails. */
+async function tellChat(channel, content) {
+  try {
+    await channel?.send?.({ content, allowedMentions: NO_MENTIONS });
+  } catch (err) {
+    logger.warn(`events: could not post in the event chat ${channel?.id}`, err);
+  }
+}
+
+/**
+ * Shows the event's channels to a member going or maybe (and the host, whatever they answered) and hides them from one who
+ * cannot go. A repeat click repairs a role that an earlier one failed to change.
+ * @returns {Promise<string|null>} a note for the member when the role could not be changed
+ */
+export async function syncAccessRole({ member, event, status }) {
+  const roleId = event.accessRoleId;
+  if (!roleId || !member?.roles) return null;
+  const want = status !== 'DECLINED' || member.id === event.hostId;
+  if (want === (member.roles.cache?.has(roleId) === true)) return null;
+  try {
+    if (want) await member.roles.add(roleId, `Event RSVP: ${clampText(event.title, 60)}`);
+    else await member.roles.remove(roleId, `Event RSVP: not going to ${clampText(event.title, 60)}`);
+    return null;
+  } catch (err) {
+    logger.warn(`events: could not change the event chat access of ${member.id} for ${event.id}`, err);
+    return `I could not change your access to the event chat (${reasonOf(err)}).`;
+  }
+}
+
+/** Renames the event's channels after a title edit. Bounded: Discord allows two renames per 10 minutes and holds back the rest. */
+async function renameEventChannels(guild, event) {
+  const names = [[event.textChannelId, textChannelName(event.title)], [event.voiceChannelId, clampText(event.title, EVENT.TITLE_MAX)]];
+  await Promise.all(names.map(async ([id, name]) => {
+    const channel = id ? guild.channels.cache.get(id) : null;
+    if (!channel) return;
+    await withTimeout(channel.setName(name, 'Event renamed'), EVENT.RENAME_MS, 'event channel rename')
+      .catch((err) => logger.warn(`events: could not rename ${id}`, err));
+  }));
+}
+
+const queueCleanup = ({ eventId, guildId }, delayMs = 0) => jobs.schedule({
+  guildId, type: CLEANUP_JOB_TYPE, runAt: new Date(Date.now() + delayMs), payload: { eventId }, dedupeKey: cleanupJobKey(eventId),
+});
+
+/**
+ * Deletes one of the event's channels and forgets it. One that is already gone counts as deleted; one the bot may not delete
+ * stays linked (deleting it by hand clears the id); anything else throws, so the job retries.
+ * @param {'textChannelId'|'voiceChannelId'} column
+ * @returns {Promise<boolean>} whether the channel is gone
+ */
+async function deleteEventChannel(client, event, column) {
+  const id = event[column];
+  if (!id) return true;
+  try {
+    const { channel, noAccess } = await resolveChannel(client, id);
+    if (noAccess) {
+      warnThrottled(`cleanup:${id}`, `event ${event.id}: cannot reach ${id} to delete it`);
+      return false;
+    }
+    markBotDeletion(id, 'events:cleanup');
+    await channel?.delete(`Event is over: ${clampText(event.title, 60)}`);
+  } catch (err) {
+    if (NO_ACCESS_CODES.has(err?.code)) {
+      warnThrottled(`cleanup:${id}`, `event ${event.id}: cannot delete ${id}`, err);
+      return false;
+    }
+    if (err?.code !== UNKNOWN_CHANNEL) throw err;
+  }
+  await prisma.guildEvent.updateMany({ where: { id: event.id }, data: { [column]: null } });
+  return true;
+}
+
+/** Deletes the access role, which takes it from everyone. Failures as in deleteEventChannel. */
+async function deleteAccessRole(client, event) {
+  const guild = guildFor(client, event.guildId);
+  if (!event.accessRoleId || !guild) return;
+  try {
+    await guild.roles.delete(event.accessRoleId, `Event is over: ${clampText(event.title, 60)}`);
+  } catch (err) {
+    if (NO_ACCESS_CODES.has(err?.code)) {
+      warnThrottled(`cleanup:${event.accessRoleId}`, `event ${event.id}: cannot delete its access role`, err);
+      return;
+    }
+    if (err?.code !== UNKNOWN_ROLE) throw err;
+  }
+  await prisma.guildEvent.updateMany({ where: { id: event.id }, data: { accessRoleId: null } });
+}
+
+/** Deletes the announcement and its reminders and forgets them. Failures as in deleteEventChannel. */
+async function deleteEventMessages(client, event) {
+  const ids = [event.messageId, ...(event.reminderMessageIds ?? [])].filter(Boolean);
+  if (!ids.length) return;
+  const { channel, noAccess } = await resolveChannel(client, event.channelId);
+  if (noAccess) {
+    warnThrottled(`cleanup:${event.id}`, `event ${event.id}: cannot reach <#${event.channelId}> to delete its post`);
+    return;
+  }
+  for (const id of channel ? ids : []) {
+    markBotDeletion(id, 'events:cleanup');
+    try {
+      await channel.messages.delete(id);
+    } catch (err) {
+      if (NO_ACCESS_CODES.has(err?.code)) {
+        warnThrottled(`cleanup:${event.id}`, `event ${event.id}: cannot delete its post or reminders`, err);
+        return;
+      }
+      if (err?.code !== UNKNOWN_MESSAGE && err?.code !== UNKNOWN_CHANNEL) throw err;
+    }
+  }
+  await prisma.guildEvent.updateMany({ where: { id: event.id }, data: { messageId: null, reminderMessageIds: [] } });
+}
+
 // ── Jobs ──────────────────────────────────────────────────────────────────────
 
 /**
- * Schedules `event.end` and, when it is still ahead, `event.remind`; cancels the reminder otherwise.
+ * Schedules `event.end`, `event.remind` while it is still ahead (cancelled otherwise), and `event.voice` for an event with a
+ * chat and no voice channel yet.
  * @returns {Promise<{ failed: boolean }>} failed: a job could not be written
  */
 export async function scheduleEventJobs(event, now = Date.now()) {
@@ -573,6 +793,17 @@ export async function scheduleEventJobs(event, now = Date.now()) {
   } catch (err) {
     failed = true;
     logger.error(`events: could not schedule event.remind for ${event.id}`, err);
+  }
+  try {
+    if (event.textChannelId && !event.voiceChannelId) {
+      const settings = await getSettingsSafe(event.guildId);
+      await jobs.schedule({
+        guildId: event.guildId, type: VOICE_JOB_TYPE, runAt: voiceAt(event, voiceLead(settings), now), payload: { eventId: event.id }, dedupeKey: voiceJobKey(event.id),
+      });
+    }
+  } catch (err) {
+    failed = true;
+    logger.error(`events: could not schedule event.voice for ${event.id}`, err);
   }
   return { failed };
 }
@@ -736,12 +967,28 @@ export async function createEvent({ client, guild, channel, settings, data }) {
     if (!created.ok) return { ok: false, code: 'LIMIT' };
   }
   let event = created.event;
+  const notes = [];
+
+  // Before the post, so nobody can answer an event whose access role does not exist yet.
+  let chat = await createEventChat(guild, event, settings);
+  if (chat?.note) notes.push(chat.note);
+  if (chat?.channel) {
+    try {
+      event = await prisma.guildEvent.update({ where: { id: event.id }, data: { textChannelId: chat.channel.id, accessRoleId: chat.role.id } });
+    } catch (err) {
+      logger.error('events: could not store the event chat', err);
+      await removeEventChat(chat);
+      chat = null;
+      notes.push('The event chat could not be linked, so it was removed.');
+    }
+  }
 
   let msg;
   try {
     msg = await channel.send(buildEventPayload(event, emptyTally(), { settings }));
   } catch (err) {
     logger.warn(`events: could not post the announcement in ${guild.id}`, err);
+    await removeEventChat(chat);
     await prisma.guildEvent.delete({ where: { id: event.id } }).catch(() => {});
     return { ok: false, code: 'SEND', error: err };
   }
@@ -750,11 +997,20 @@ export async function createEvent({ client, guild, channel, settings, data }) {
   } catch (err) {
     logger.error('events: could not store the announcement id', err);
     await msg.delete?.().catch(() => {});
+    await removeEventChat(chat);
     await prisma.guildEvent.delete({ where: { id: event.id } }).catch(() => {});
     return { ok: false, code: 'SAVE', error: err };
   }
 
-  const notes = [];
+  if (chat?.channel) {
+    const host = await guild.members.fetch(event.hostId).catch(() => null);
+    const note = await syncAccessRole({ member: host, event, status: 'GOING' });
+    if (note) notes.push(note);
+    await tellChat(chat.channel, `💬 This is the chat for **${clampText(event.title, 100)}**.${jumpUrl(event) ? ` ${jumpUrl(event)}` : ''}\n`
+      + `Only members who answered Going or Maybe can see it. A voice channel opens ${voiceLeadText(voiceLead(settings))}. `
+      + 'When the event is over and the voice channel is empty, both are deleted, along with the event post and its reminders.');
+  }
+
   const discord = await createDiscordEvent(guild, event, settings);
   if (discord?.id) {
     try {
@@ -907,7 +1163,8 @@ export async function handleRsvpButton(interaction, client) {
       const note = res.result === 'set' || status === 'GOING'
         ? await syncRsvpRole({ guild, member, event, status })
         : null;
-      return { ...res, note };
+      const access = await syncAccessRole({ member, event, status });
+      return { ...res, note: [note, access].filter(Boolean).join('\n⚠️ ') || null };
     });
     const text = rsvpReplyText(out, event, status);
     // Only on joining: moving between Going and Maybe would send the file again every time.
@@ -959,6 +1216,14 @@ export async function closeEvent(client, eventId, { status, reason, guildId = un
     if (reason !== 'timer') await jobs.cancel({ dedupeKey: endJobKey(eventId) });
     event = await prisma.guildEvent.findUnique({ where: { id: eventId } });
     if (!event) return { ok: true, event, discordFailed };
+    if (event.textChannelId || event.voiceChannelId || event.accessRoleId) {
+      try {
+        await jobs.cancel({ dedupeKey: voiceJobKey(eventId) });
+        await queueCleanup({ eventId, guildId: event.guildId });
+      } catch (err) {
+        logger.error(`event ${eventId}: could not schedule the cleanup of its channels`, err);
+      }
+    }
     const guild = guildFor(client, event.guildId);
     if (!guild) {
       // An unavailable guild is never judged: the post keeps its buttons (they answer "no longer open").
@@ -1060,6 +1325,7 @@ export async function editEvent({ client, guild, event, changes }) {
   const startChanged = data.startsAt !== undefined && data.startsAt.getTime() !== new Date(event.startsAt).getTime();
   const endChanged = data.endsAt !== undefined && (data.endsAt?.getTime() ?? null) !== (event.endsAt ? new Date(event.endsAt).getTime() : null);
   const reminderChanged = data.reminderMinutes !== undefined && data.reminderMinutes !== event.reminderMinutes;
+  const titleChanged = data.title !== undefined && data.title !== event.title;
   if (startChanged || reminderChanged) data.reminderSentAt = null; // a moved event reminds again
   const { count } = await prisma.guildEvent.updateMany({
     where: { id: event.id, guildId: event.guildId, status: { in: [...OPEN_STATUSES] } }, data,
@@ -1075,6 +1341,7 @@ export async function editEvent({ client, guild, event, changes }) {
   }
   const discordNote = await updateDiscordEvent(guild, updated, { startChanged, endChanged });
   if (discordNote) notes.push(discordNote);
+  if (titleChanged) await renameEventChannels(guild, updated);
   if (data.capacity != null) {
     const tally = await getTally(event.id);
     if (tally.going > data.capacity) notes.push(`${tally.going} members are already going: they keep their place.`);
@@ -1229,10 +1496,16 @@ export async function onMessageDelete(ctx) {
   await prisma.guildEvent.updateMany({ where: { guildId: ctx.guildId, messageId }, data: { messageId: null } });
 }
 
-/** channelDelete: every open event posted in the channel is cancelled. */
+/**
+ * channelDelete: every open event posted in the channel is cancelled; an event's own chat or voice channel is only forgotten
+ * (the bot's own deletes come through here too). An open event that lost its chat gets no voice channel.
+ */
 export async function onChannelDelete(ctx) {
   const channelId = ctx.channel?.id;
   if (!channelId || !ctx.guildId) return;
+  waitingVoice.delete(channelId);
+  await prisma.guildEvent.updateMany({ where: { guildId: ctx.guildId, textChannelId: channelId }, data: { textChannelId: null } });
+  await prisma.guildEvent.updateMany({ where: { guildId: ctx.guildId, voiceChannelId: channelId }, data: { voiceChannelId: null } });
   const rows = await prisma.guildEvent.findMany({
     where: { guildId: ctx.guildId, channelId, status: { in: [...OPEN_STATUSES] } }, select: { id: true },
   });
@@ -1266,12 +1539,25 @@ export async function onDiscordEventCancelled(ctx) {
   }
 }
 
-/** roleDelete: the event role is gone, so events stop giving it. */
+/** voiceStateUpdate filter (sync, no database): someone left a voice channel that is waiting to be cleaned up. */
+export const leftWaitingVoice = (ctx) => ctx?.change !== 'state' && waitingVoice.has(ctx?.oldState?.channelId);
+
+/** voiceStateUpdate: the last human left the voice channel of a closed event, so `event.cleanup` runs after the grace. */
+export async function onWaitingVoiceLeft(ctx) {
+  const voiceId = ctx.oldState?.channelId;
+  const waiting = waitingVoice.get(voiceId);
+  if (!waiting || countHumans(ctx.oldState.channel) > 0) return;
+  waitingVoice.delete(voiceId);
+  await queueCleanup(waiting, EVENT.EMPTY_GRACE_MS);
+}
+
+/** roleDelete: the event role or access role is gone, so events stop giving it. */
 export async function onRoleDelete(ctx) {
   const roleId = ctx.role?.id;
   const guildId = ctx.guildId ?? ctx.guild?.id;
   if (!roleId || !guildId) return;
   await prisma.guildEvent.updateMany({ where: { guildId, roleId }, data: { roleId: null } });
+  await prisma.guildEvent.updateMany({ where: { guildId, accessRoleId: roleId }, data: { accessRoleId: null } });
 }
 
 /** Scheduler handler for `event.remind`: one message pinging the members going (claimed first, so a retry never pings twice). */
@@ -1303,13 +1589,19 @@ export async function handleRemindJob(job, ctx) {
     logger.warn(`event ${eventId}: cannot post the reminder in <#${event.channelId}>`);
     return;
   }
+  const sentIds = [];
   for (const m of reminderMessages(event, going.map((r) => r.userId))) {
     try {
-      await found.channel.send({ content: m.content, allowedMentions: { parse: [], users: m.userIds } });
+      const sent = await found.channel.send({ content: m.content, allowedMentions: { parse: [], users: m.userIds } });
+      if (sent?.id) sentIds.push(sent.id);
     } catch (err) {
       logger.warn(`event ${eventId}: could not post the reminder`, err);
-      return;
+      break;
     }
+  }
+  if (sentIds.length) {
+    // Added to the older ones: a moved event reminds again, and `event.cleanup` removes them all.
+    await prisma.guildEvent.updateMany({ where: { id: eventId }, data: { reminderMessageIds: [...(event.reminderMessageIds ?? []), ...sentIds] } });
   }
 }
 
@@ -1333,5 +1625,95 @@ export async function handleEndJob(job, ctx) {
   if (!event || isOpen(event)) return;
   const { more } = await stripRoles(ctx.client, event, { after, run });
   if (more) return { nextRunAt: new Date(Date.now() + EVENT.STRIP_RESUME_MS), payload: { eventId, after: more, run: run + 1 } };
+  return undefined;
+}
+
+/**
+ * Scheduler handler for `event.voice`: opens the voice channel next to the chat, private to the same role. Skips an event that
+ * is closed, already has one, or lost its chat or role. The conditional save loses to a close that came in meanwhile, and the
+ * new channel is removed again. Discord's and the network's own failures are retried; a refusal (permissions, a full category)
+ * is told in the chat.
+ */
+export async function handleVoiceJob(job, ctx) {
+  const eventId = job.payload?.eventId;
+  if (typeof eventId !== 'string' || !eventId) throw new PermanentJobError('event.voice: missing eventId');
+  const event = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId: job.guildId } });
+  if (!event || !isOpen(event) || !event.textChannelId || !event.accessRoleId || event.voiceChannelId) return;
+  if (eventEnd(event).getTime() <= Date.now()) return; // a late job: the end job closes the event
+  const settings = await getSettingsSafe(job.guildId);
+  if (settings && (!isModuleEnabled(settings, 'events') || settings.eventChannelsEnabled !== true)) return;
+  if (await discordEventCancelled(ctx.client, event)) {
+    await cancelEvent(ctx.client, eventId, { guildId: job.guildId, reason: 'discord-cancelled' });
+    return;
+  }
+  const guild = guildFor(ctx.client, event.guildId);
+  if (!guild) return;
+
+  const chat = await resolveChannel(ctx.client, event.textChannelId);
+  if (chat.gone) {
+    await prisma.guildEvent.updateMany({ where: { id: eventId, textChannelId: event.textChannelId }, data: { textChannelId: null } });
+    return;
+  }
+  const parentId = chat.channel?.parentId ?? settings?.eventCategoryId ?? null;
+  const parent = parentId ? guild.channels.cache.get(parentId) : null;
+  if (missingBotPermissions(parent ?? guild, [...VOICE_ALLOW, 'ManageChannels', 'ManageRoles']).length) {
+    logger.warn(`event ${eventId}: no permission to open its voice channel`);
+    await tellChat(chat.channel, '⚠️ I could not open the voice channel: I need **Manage Channels**, **Manage Roles**, **Connect** and **Speak** in this category.');
+    return;
+  }
+
+  let voice;
+  try {
+    voice = await guild.channels.create({
+      name: clampText(event.title, EVENT.TITLE_MAX), type: ChannelType.GuildVoice, parent: parentId,
+      permissionOverwrites: eventOverwrites(guild, event.accessRoleId, VOICE_ALLOW), reason: `Event voice: ${clampText(event.title, 60)}`,
+    });
+  } catch (err) {
+    if (!(err?.status >= 400 && err.status < 500)) throw err;
+    logger.warn(`event ${eventId}: Discord refused its voice channel`, err);
+    await tellChat(chat.channel, `⚠️ I could not open the voice channel (${reasonOf(err)}).`);
+    return;
+  }
+
+  let saved;
+  try {
+    saved = await prisma.guildEvent.updateMany({
+      where: { id: eventId, status: { in: [...OPEN_STATUSES] }, voiceChannelId: null }, data: { voiceChannelId: voice.id },
+    });
+  } catch (err) {
+    await voice.delete('Event voice channel could not be linked').catch(() => {});
+    throw err;
+  }
+  if (saved.count === 0) {
+    await voice.delete('Event closed while its voice channel opened').catch(() => {});
+    return;
+  }
+  await tellChat(chat.channel, `🔊 The voice channel is open: <#${voice.id}>`);
+  requestRender(ctx.client, eventId);
+}
+
+/**
+ * Scheduler handler for `event.cleanup`, the only thing that deletes event channels. It runs even while the module is off, and
+ * again every CLEANUP_RECHECK_MS while people are in the voice channel; the chat, the role and the post stay with them. The
+ * post and reminders go last, and only once both channels are gone. A retry is safe: each thing is forgotten as it goes.
+ */
+export async function handleCleanupJob(job, ctx) {
+  const eventId = job.payload?.eventId;
+  if (typeof eventId !== 'string' || !eventId) throw new PermanentJobError('event.cleanup: missing eventId');
+  const event = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId: job.guildId } });
+  if (!event || isOpen(event)) return undefined;
+  if (event.voiceChannelId) {
+    const { channel, noAccess } = await resolveChannel(ctx.client, event.voiceChannelId);
+    // A channel the bot cannot see counts as occupied: what the deletes below take cannot be brought back.
+    if (noAccess || countHumans(channel) > 0) {
+      waitingVoice.set(event.voiceChannelId, { eventId, guildId: event.guildId });
+      return { nextRunAt: new Date(Date.now() + EVENT.CLEANUP_RECHECK_MS) };
+    }
+    waitingVoice.delete(event.voiceChannelId);
+  }
+  const voiceGone = await deleteEventChannel(ctx.client, event, 'voiceChannelId');
+  const textGone = await deleteEventChannel(ctx.client, event, 'textChannelId');
+  await deleteAccessRole(ctx.client, event);
+  if (voiceGone && textGone) await deleteEventMessages(ctx.client, event);
   return undefined;
 }

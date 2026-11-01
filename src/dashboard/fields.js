@@ -1341,6 +1341,17 @@ export const MODULE_GROUPS = {
       int('eventReminderMinutes', 15, 0, 1440, 'Reminder',
         'Minutes before the start to ping members who are going. 0 = no reminder.', { unit: 'minutes' }),
     ],
+  }, {
+    id: 'event-channels',
+    title: 'Event channels',
+    description: 'Private text and voice channels for each new event. Only members who answer Going or Maybe, the host and administrators can see them. The bot needs Manage Channels and Manage Roles.',
+    fields: [
+      bool('eventChannelsEnabled', false, 'Create channels for events',
+        'A text chat when the event is created and a voice channel before it starts. When the event is over and the voice channel is empty, both are deleted, along with the event post and its reminders.'),
+      channel('eventCategoryId', 'Category', 'Where the channels go. Empty uses a category called Events and makes it if needed.', { kinds: ['category'] }),
+      int('eventVoiceLeadMinutes', 30, 0, 1440, 'Open the voice channel early',
+        'Minutes before the start. 0 = at the start.', { unit: 'minutes' }),
+    ],
   }],
   rolepersist: [{
     id: 'rolepersist',

@@ -1,10 +1,11 @@
-// Events plugin declaration: the RSVP and Add to calendar buttons and the edit form, the `event.remind` / `event.end` jobs and the hooks that
-// keep events consistent when their post, channel, role or Discord event vanishes. Declaration only: the logic lives in
+// Events plugin declaration: the RSVP and Add to calendar buttons and the edit form, the `event.remind` / `event.end` /
+// `event.voice` / `event.cleanup` jobs and the hooks that keep events consistent when their post, channel, role or Discord
+// event vanishes, or that clean up an event's channels when the last member leaves. Declaration only: the logic lives in
 // services/eventService.js and nothing runs at import.
 import { GuildScheduledEventStatus } from 'discord.js';
 import {
-  handleEditModal, handleEndJob, handleRemindJob, handleRsvpButton, onChannelDelete, onDiscordEventCancelled, onMessageDelete,
-  onRoleDelete,
+  handleCleanupJob, handleEditModal, handleEndJob, handleRemindJob, handleRsvpButton, handleVoiceJob, leftWaitingVoice,
+  onChannelDelete, onDiscordEventCancelled, onMessageDelete, onRoleDelete, onWaitingVoiceLeft,
 } from '../services/eventService.js';
 
 // Event posts are bot-authored; a partial (uncached) message has no author and is looked up by id.
@@ -25,6 +26,7 @@ export const plugin = {
       run: (ctx) => onDiscordEventCancelled(ctx),
     },
     { event: 'guildScheduledEventDelete', id: 'events', always: true, timeoutMs: 30_000, run: (ctx) => onDiscordEventCancelled(ctx) },
+    { event: 'voiceStateUpdate', id: 'events', always: true, filter: leftWaitingVoice, run: (ctx) => onWaitingVoiceLeft(ctx) },
   ],
   components: [
     // Module gating is applied by installPlugins (plugin.module = 'events').
@@ -34,6 +36,8 @@ export const plugin = {
   jobs: [
     { type: 'event.remind', handler: (job, ctx) => handleRemindJob(job, ctx) },
     { type: 'event.end', handler: (job, ctx) => handleEndJob(job, ctx) },
+    { type: 'event.voice', handler: (job, ctx) => handleVoiceJob(job, ctx) },
+    { type: 'event.cleanup', handler: (job, ctx) => handleCleanupJob(job, ctx) },
   ],
   provides: {},
 };

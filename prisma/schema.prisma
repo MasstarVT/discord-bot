@@ -363,6 +363,13 @@ model GuildSettings {
   eventCreateDiscordEvent Boolean @default(true)
   // Default minutes before the start to ping members who are going (0 = no reminder).
   eventReminderMinutes    Int     @default(15)
+  // Give each event a text chat and, shortly before the start, a voice channel, private to members going or maybe (needs
+  // Manage Channels and Manage Roles).
+  eventChannelsEnabled    Boolean @default(false)
+  // The category for those channels (null = one called Events, found or made on first use).
+  eventCategoryId         String?
+  // Minutes before the start the voice channel opens.
+  eventVoiceLeadMinutes   Int     @default(30)
 
   // ── Role Persistence ────────────────────────────────────────────────────────
   // Also give back the nickname.
@@ -1908,29 +1915,36 @@ enum RsvpStatus {
 }
 
 model GuildEvent {
-  id              String           @id @default(cuid())
-  guildId         String
-  title           String
-  description     String?          @db.Text
-  location        String?
-  startsAt        DateTime
-  endsAt          DateTime?
-  hostId          String
+  id                 String           @id @default(cuid())
+  guildId            String
+  title              String
+  description        String?          @db.Text
+  location           String?
+  startsAt           DateTime
+  endsAt             DateTime?
+  hostId             String
   // The announcement message with the RSVP buttons.
-  channelId       String
-  messageId       String?          @unique
+  channelId          String
+  messageId          String?          @unique
   // Given to members going, taken back when the event ends (null = none).
-  roleId          String?
+  roleId             String?
   // Most members going (null = no cap).
-  capacity        Int?
+  capacity           Int?
   // Minutes before the start to ping members going (0 = none).
-  reminderMinutes Int              @default(15)
-  reminderSentAt  DateTime?
+  reminderMinutes    Int              @default(15)
+  reminderSentAt     DateTime?
+  // The reminders posted so far, deleted with the announcement once the event's own channels are gone.
+  reminderMessageIds String[]         @default([])
   // The linked Discord Scheduled Event (eventCreateDiscordEvent), if one was created.
-  discordEventId  String?
-  status          GuildEventStatus @default(SCHEDULED)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  discordEventId     String?
+  // The event's own channels (eventChannelsEnabled) and the temporary role that shows them to members going or maybe: deleted,
+  // and set back to null, once the event is over and the voice channel is empty.
+  textChannelId      String?
+  voiceChannelId     String?
+  accessRoleId       String?
+  status             GuildEventStatus @default(SCHEDULED)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   guild GuildSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
   rsvps EventRsvp[]

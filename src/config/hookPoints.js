@@ -15,7 +15,7 @@ export const HOOK_ORDER = Object.freeze({
   "messageReactionRemove": Object.freeze(["reaction-roles","starboard"]),
   "messageReactionRemoveAll": Object.freeze(["reaction-roles","starboard"]),
   "messageReactionRemoveEmoji": Object.freeze(["reaction-roles","starboard"]),
-  "voiceStateUpdate": Object.freeze(["temp-voice","levels","logging","automations","voice-roles"]),
+  "voiceStateUpdate": Object.freeze(["temp-voice","levels","logging","automations","voice-roles","events"]),
   "guildMemberAdd": Object.freeze(["invites","moderation","antiraid","logging","captcha","welcome","role-persist","automations","stat-channels"]),
   "guildMemberRemove": Object.freeze(["invites","logging","welcome","captcha","stat-channels","role-persist","boosts"]),
   "guildMemberUpdate": Object.freeze(["welcome","captcha","logging","achievements","automations","liverole","role-persist","boosts"]),

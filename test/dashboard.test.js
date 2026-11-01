@@ -142,7 +142,7 @@ describe('catalog', () => {
   test('every sub-toggle is a Boolean GuildSettings column whose @default matches the catalog', () => {
     const columns = schemaBooleans();
     const subs = Object.values(SUB_TOGGLES).flat();
-    assert.equal(subs.length, 30);
+    assert.equal(subs.length, 31);
     for (const t of subs) {
       const col = columns.get(t.field);
       assert.ok(col, `${t.field} is not a Boolean column of GuildSettings`);

@@ -148,7 +148,7 @@ const SUB_TOGGLE_FIELDS = Object.freeze({
   modmail: ['modmailAnonymousReplies'],
   afk: ['afkNicknamePrefix'],
   antiraid: ['antiRaidPauseInvites', 'antiRaidLockChat'],
-  events: ['eventCreateDiscordEvent'],
+  events: ['eventCreateDiscordEvent', 'eventChannelsEnabled'],
   rolepersist: ['rolePersistNicknames'],
   boosts: ['boostCustomRoles'],
   confessions: ['confessionAllowImages', 'confessionBlockLinks'],

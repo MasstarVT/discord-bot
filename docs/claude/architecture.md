@@ -153,7 +153,7 @@ The module registry (test-checked: every module key, flag and plugin file must b
 | `voiceroles` | `voiceRolesEnabled` | off | 🎙️ Voice Roles | `/voicerole` | `src/plugins/voice-roles.js` |
 | `bumps` | `bumpsEnabled` | off | 📣 Bump Reminders | `/bumps` | `src/plugins/bumps.js` |
 
-Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task` `antiraid.unlock` `event.remind` `event.end` `boosts.sweep` `backup.auto` `backup.restore` `bump.remind` `ticket.managersync`. Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`.
+Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.expire` `welcome.autorole` `captcha.timeout` `reminder.fire` `giveaway.end` `poll.end` `tempvoice.cleanup` `stats.refresh` `birthday.tick` `feed.poll` `levels.voiceSweep` `dashboard.task` `antiraid.unlock` `event.remind` `event.end` `event.voice` `event.cleanup` `boosts.sweep` `backup.auto` `backup.restore` `bump.remind` `ticket.managersync`. Core plugins (no module): `src/plugins/dashboard-tasks.js` `src/plugins/bot-joins.js`.
 
 `levelingEnabled` is deprecated and never read (`xpEnabled` is used).
 

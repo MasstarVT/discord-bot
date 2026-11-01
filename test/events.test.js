@@ -70,7 +70,9 @@ prisma.guildEvent = {
   create: async ({ data }) => {
     const row = {
       id: `E${seq++}`, description: null, location: null, endsAt: null, messageId: null, roleId: null, capacity: null,
-      reminderMinutes: 15, reminderSentAt: null, discordEventId: null, status: 'SCHEDULED', createdAt: new Date(), ...data,
+      reminderMinutes: 15, reminderSentAt: null, reminderMessageIds: [], discordEventId: null, textChannelId: null, voiceChannelId: null,
+      accessRoleId: null,
+      status: 'SCHEDULED', createdAt: new Date(), ...data,
     };
     events.set(row.id, row);
     return clone(row);
@@ -206,7 +208,11 @@ function fakeChannel(guild, id = 'C1', { sendFails = false } = {}) {
       this.sent.push(payload);
       return { id: String(nextId++), delete: async () => {} };
     },
-    messages: { edit: async (mid, payload) => { ch.edits.push([mid, payload]); } },
+    messages: {
+      deleted: [],
+      edit: async (mid, payload) => { ch.edits.push([mid, payload]); },
+      async delete(mid) { this.deleted.push(mid); },
+    },
   };
   guild.channels.cache.set(id, ch);
   return ch;
@@ -1395,6 +1401,7 @@ test('plugin declaration: hooks (always), components, jobs match the registries'
   assert.deepEqual(plugin.hooks.map((h) => [h.event, h.id, h.always]), [
     ['messageDelete', 'events', true], ['channelDelete', 'events', true], ['roleDelete', 'events', true],
     ['guildScheduledEventUpdate', 'events', true], ['guildScheduledEventDelete', 'events', true],
+    ['voiceStateUpdate', 'events', true],
   ]);
   for (const h of plugin.hooks) {
     assert.ok(HOOK_ORDER[h.event].includes('events'), `${h.event} lists events`);
@@ -1407,7 +1414,9 @@ test('plugin declaration: hooks (always), components, jobs match the registries'
   assert.equal(del.filter({ message: { author: { id: 'U' } }, client: { user: { id: 'BOT' } } }), false);
   assert.deepEqual(plugin.components.map((c) => [c.type, c.prefix]), [['button', 'event'], ['modal', 'event-modal']]);
   for (const c of plugin.components) assert.equal(CUSTOM_ID_PREFIXES[c.prefix].owner, 'events');
-  assert.deepEqual(plugin.jobs.map((j) => j.type), ['event.remind', 'event.end']);
+  assert.deepEqual(plugin.jobs.map((j) => j.type), ['event.remind', 'event.end', 'event.voice', 'event.cleanup']);
+  assert.equal(JOB_TYPES['event.voice'].dedupe, 'event.voice:{eventId}');
+  assert.equal(JOB_TYPES['event.cleanup'].dedupe, 'event.cleanup:{eventId}');
   assert.equal(JOB_TYPES['event.remind'].dedupe, 'event.remind:{eventId}');
   assert.equal(JOB_TYPES['event.end'].dedupe, 'event.end:{eventId}');
   const { plugins, errors } = await collectPlugins();
@@ -1650,4 +1659,574 @@ test('/event edit: opens the form with the five fields (no deferral), refuses a 
   events.get(event.id).status = 'ENDED';
   const closed = await call({ event: event.id });
   assert.match(embedText(closed.replies[0]), /Event Closed/);
+});
+
+// ── Event channels ────────────────────────────────────────────────────────────
+
+const { ChannelType, Collection, OverwriteType } = await import('discord.js');
+
+/** A guild that can make channels and roles. `deleted` lists channels and roles in the order they went. */
+function channelGuild({ manageChannels = true, manageRoles = true, failCreate = null } = {}) {
+  const guild = fakeGuild({ manageRoles });
+  const has = guild.members.me.permissions.has;
+  guild.members.me.permissions.has = (b) => (b === PermissionFlagsBits.ManageChannels ? manageChannels : has(b));
+  guild.client = { user: { id: 'BOT' } };
+  guild.channels.cache = new Collection();
+  guild.deleted = [];
+  guild.madeRoles = [];
+  guild.addChannel = (id, o) => {
+    const ch = {
+      id, guild, guildId: guild.id, type: o.type, name: o.name, parentId: o.parent ?? null, overwrites: o.permissionOverwrites ?? [],
+      options: o, sent: [], renamed: [], members: new Collection(),
+      permissionsFor: () => guild.members.me.permissions,
+      async send(p) { this.sent.push(p); return { id: 'MSG' }; },
+      async delete() { guild.channels.cache.delete(id); guild.deleted.push(id); },
+      async setName(name) { this.renamed.push(name); },
+    };
+    guild.channels.cache.set(id, ch);
+    return ch;
+  };
+  guild.channels.create = async (o) => {
+    const err = failCreate?.(o);
+    if (err) throw err;
+    return guild.addChannel(`CH${nextId++}`, o);
+  };
+  guild.roles.create = async (o) => {
+    const role = { id: `AR${nextId++}`, ...o, async delete() { guild.deleted.push(role.id); } };
+    guild.madeRoles.push(role);
+    return role;
+  };
+  guild.roles.delete = async (id) => { guild.deleted.push(id); };
+  guild.members.cache.set('HOST', fakeMember('HOST'));
+  return guild;
+}
+const madeOfType = (guild, type) => [...guild.channels.cache.values()].filter((c) => c.type === type);
+const human = (id = 'U1') => [id, { user: { bot: false } }];
+const robot = (id = 'B1') => [id, { user: { bot: true } }];
+
+async function makeEvent(guild, settings = {}, data = {}) {
+  const channel = guild.channels.cache.get('C1') ?? fakeChannel(guild, 'C1');
+  const out = await svc.createEvent({
+    client: fakeClient(guild), guild, channel, settings: { eventChannelsEnabled: true, eventCreateDiscordEvent: false, ...settings },
+    data: { title: 'Movie Night!', hostId: 'HOST', startsAt: future(DAY), reminderMinutes: 15, ...data },
+  });
+  return { ...out, channel };
+}
+const voiceJob = (event) => ({ guildId: event.guildId, payload: { eventId: event.id } });
+const cleanupJob = voiceJob;
+
+/** An open event with its chat, role and (by default) voice channel, as `event.voice` leaves it. */
+async function seedChannels(guild, { voice = true, ...over } = {}) {
+  const chat = guild.addChannel('CHAT', { name: 'movie-night', type: ChannelType.GuildText, parent: 'CAT' });
+  const vc = voice ? guild.addChannel('VC', { name: 'Movie night', type: ChannelType.GuildVoice, parent: 'CAT' }) : null;
+  const event = await seedEvent({ textChannelId: 'CHAT', voiceChannelId: voice ? 'VC' : null, accessRoleId: 'AR', ...over });
+  return { event, chat, vc };
+}
+
+test('event channels: off by default, nothing is made', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  const { ok, event } = await makeEvent(guild, { eventChannelsEnabled: false });
+  assert.equal(ok, true);
+  assert.equal(event.textChannelId, null);
+  assert.equal(guild.madeRoles.length, 0);
+  assert.equal(madeOfType(guild, ChannelType.GuildCategory).length, 0);
+  assert.equal(jobCalls.schedule.some((j) => j.type === 'event.voice'), false);
+});
+
+test('event channels: a private chat and role in a new Events category, the host in, the voice job scheduled', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  const start = future(DAY);
+  const { ok, event, notes, channel } = await makeEvent(guild, {}, { startsAt: start });
+  assert.equal(ok, true);
+  assert.deepEqual(notes, []);
+
+  const [category] = madeOfType(guild, ChannelType.GuildCategory);
+  assert.equal(category.name, 'Events');
+  const [role] = guild.madeRoles;
+  assert.deepEqual([role.permissions, role.mentionable, role.name], [[], false, 'Event: Movie Night!']);
+  const chat = guild.channels.cache.get(event.textChannelId);
+  assert.deepEqual([chat.name, chat.parentId, event.accessRoleId], ['movie-night', category.id, role.id]);
+
+  const [everyone, access, bot] = chat.overwrites;
+  assert.deepEqual([everyone.id, everyone.type, everyone.deny], ['G', OverwriteType.Role, ['ViewChannel']]);
+  assert.equal(everyone.allow, undefined);
+  assert.deepEqual([access.id, access.type], [role.id, OverwriteType.Role]);
+  assert.ok(access.allow.includes('SendMessages'));
+  assert.equal(access.allow.includes('ManageChannels'), false);
+  assert.deepEqual([bot.id, bot.type], ['BOT', OverwriteType.Member]);
+  assert.ok(bot.allow.includes('ManageChannels'));
+
+  assert.equal(guild.members.cache.get('HOST').roles.cache.has(role.id), true, 'the host can see their own event');
+  assert.match(chat.sent[0].content, /Only members who answered Going or Maybe/);
+  assert.match(chat.sent[0].content, /opens 30 minutes before the start/);
+  assert.deepEqual(chat.sent[0].allowedMentions, { parse: [] });
+  const card = channel.sent[0].embeds[0].toJSON();
+  assert.equal(card.fields.find((x) => x.name === 'Chat').value, `<#${chat.id}>`, 'the first post links the chat');
+  assert.match(card.footer.text, /Going or Maybe/);
+
+  const job = jobCalls.schedule.find((j) => j.type === 'event.voice');
+  assert.equal(job.runAt.getTime(), start.getTime() - 30 * 60_000);
+  assert.equal(job.dedupeKey, svc.voiceJobKey(event.id));
+});
+
+test('event channels: two events at once share one category; a configured or existing one is used', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  await Promise.all([makeEvent(guild), makeEvent(guild)]);
+  assert.equal(madeOfType(guild, ChannelType.GuildCategory).length, 1);
+
+  const named = channelGuild();
+  const existing = named.addChannel('OLD', { name: 'EVENTS', type: ChannelType.GuildCategory });
+  const a = await makeEvent(named);
+  assert.equal(named.channels.cache.get(a.event.textChannelId).parentId, existing.id);
+  assert.equal(madeOfType(named, ChannelType.GuildCategory).length, 1);
+
+  const picked = channelGuild();
+  picked.addChannel('PICK', { name: 'Hangouts', type: ChannelType.GuildCategory });
+  const b = await makeEvent(picked, { eventCategoryId: 'PICK' });
+  assert.equal(picked.channels.cache.get(b.event.textChannelId).parentId, 'PICK');
+});
+
+test('event channels: a missing permission or a refusal is a note, and the event still stands', async () => {
+  reset();
+  await configure('G');
+  const noRoles = channelGuild({ manageRoles: false });
+  const a = await makeEvent(noRoles);
+  assert.equal(a.ok, true);
+  assert.match(a.notes.join(), /Manage Roles/);
+  assert.deepEqual([a.event.textChannelId, a.event.accessRoleId, noRoles.madeRoles.length], [null, null, 0]);
+  assert.equal(jobCalls.schedule.some((j) => j.type === 'event.voice'), false, 'no chat, no voice channel');
+
+  const noChannels = channelGuild({ manageChannels: false });
+  const b = await makeEvent(noChannels);
+  assert.match(b.notes.join(), /Manage Channels/);
+
+  const refuses = channelGuild({ failCreate: (o) => (o.type === ChannelType.GuildText ? Object.assign(new Error('nope'), { code: 30013 }) : null) });
+  const c = await makeEvent(refuses);
+  assert.equal(c.ok, true);
+  assert.match(c.notes.join(), /could not create the event chat \(nope\)/);
+  assert.deepEqual(refuses.deleted, [refuses.madeRoles[0].id], 'the role of a chat that failed is removed');
+});
+
+test('event channels: a failed post takes the chat and role back', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  const channel = fakeChannel(guild, 'C1', { sendFails: true });
+  const out = await makeEvent(guild);
+  assert.deepEqual([out.ok, out.code], [false, 'SEND']);
+  assert.equal(channel.sent.length, 0);
+  assert.equal(events.size, 0);
+  assert.equal(guild.deleted.length, 2, 'chat and role');
+  assert.equal(madeOfType(guild, ChannelType.GuildText).length, 0);
+});
+
+test('syncAccessRole: Going and Maybe see the channels, Can\'t go does not, the host always does', async () => {
+  const event = { id: 'E', title: 'Night', hostId: 'HOST', accessRoleId: 'AR' };
+  const m = fakeMember('U1');
+  assert.equal(await svc.syncAccessRole({ member: m, event, status: 'GOING' }), null);
+  assert.equal(m.roles.cache.has('AR'), true);
+  await svc.syncAccessRole({ member: m, event, status: 'MAYBE' });
+  assert.equal(m.roles.cache.has('AR'), true);
+  await svc.syncAccessRole({ member: m, event, status: 'DECLINED' });
+  assert.equal(m.roles.cache.has('AR'), false);
+  await svc.syncAccessRole({ member: m, event, status: 'MAYBE' });
+  assert.equal(m.roles.cache.has('AR'), true, 'coming back to Maybe gives it again');
+
+  const host = fakeMember('HOST', { roleIds: ['AR'] });
+  await svc.syncAccessRole({ member: host, event, status: 'DECLINED' });
+  assert.equal(host.roles.cache.has('AR'), true);
+
+  const none = fakeMember('U2');
+  assert.equal(await svc.syncAccessRole({ member: none, event: { ...event, accessRoleId: null }, status: 'GOING' }), null);
+  assert.equal(await svc.syncAccessRole({ member: null, event, status: 'GOING' }), null);
+  assert.equal(none.roles.cache.size, 0);
+
+  const broken = fakeMember('U3');
+  broken.roles.add = async () => { throw new Error('Missing Permissions'); };
+  assert.match(await svc.syncAccessRole({ member: broken, event, status: 'GOING' }), /could not change your access/);
+});
+
+test('RSVP button: the access role follows the answer and the reply links the chat', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event } = await seedChannels(guild, { voice: false });
+  const member = fakeMember('U1');
+  guild.members.cache.set('U1', member);
+  const click = async (action) => {
+    const i = fakeInteraction({
+      customId: `event:${event.id}:${action}`, guildId: guild.id, guild, user: { id: 'U1' }, member, inCachedGuild: () => true,
+    });
+    await svc.handleRsvpButton(i, client);
+    return i.replies[0];
+  };
+  const first = await click('maybe');
+  assert.equal(member.roles.cache.has('AR'), true);
+  assert.match(first.content, /<#CHAT>/);
+  await click('going');
+  assert.equal(member.roles.cache.has('AR'), true);
+  const no = await click('declined');
+  assert.equal(member.roles.cache.has('AR'), false);
+  assert.doesNotMatch(no.content, /<#CHAT>/);
+});
+
+test('voiceAt: the lead before the start, or now once that has passed', () => {
+  const now = Date.now();
+  const event = { startsAt: new Date(now + DAY) };
+  assert.equal(svc.voiceAt(event, 30, now).getTime(), now + DAY - 30 * 60_000);
+  assert.equal(svc.voiceAt(event, 0, now).getTime(), now + DAY);
+  assert.equal(svc.voiceAt({ startsAt: new Date(now + 60_000) }, 30, now).getTime(), now);
+  assert.equal(svc.voiceLead({ eventVoiceLeadMinutes: 45 }), 45);
+  assert.equal(svc.voiceLead({ eventVoiceLeadMinutes: 0 }), 0);
+  assert.equal(svc.voiceLead(null), 30);
+  assert.equal(svc.voiceLeadText(1), '1 minute before the start');
+  assert.equal(svc.voiceLeadText(0), 'at the start');
+});
+
+test('event.voice: opens the channel beside the chat, private to the same role, and says so', async () => {
+  reset();
+  await configure('G', { eventChannelsEnabled: true });
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, chat } = await seedChannels(guild, { voice: false });
+  await svc.handleVoiceJob(voiceJob(event), { client });
+
+  const [voice] = madeOfType(guild, ChannelType.GuildVoice);
+  assert.deepEqual([voice.name, voice.parentId, events.get(event.id).voiceChannelId], ['Movie night', 'CAT', voice.id]);
+  const [everyone, access, bot] = voice.overwrites;
+  assert.deepEqual(everyone.deny, ['ViewChannel']);
+  assert.equal(access.id, 'AR');
+  assert.ok(access.allow.includes('Connect'));
+  assert.ok(bot.allow.includes('ManageChannels'));
+  assert.ok(bot.allow.includes('Connect'), 'discord.js needs Connect to delete a voice channel');
+  assert.equal(chat.sent.at(-1).content, `🔊 The voice channel is open: <#${voice.id}>`);
+
+  await svc.handleVoiceJob(voiceJob(event), { client });
+  assert.equal(madeOfType(guild, ChannelType.GuildVoice).length, 1, 'a repeat run makes no second channel');
+  await sleep(5);
+  assert.ok(renders.includes(event.id), 'the card shows the channel');
+  assert.match(svc.reminderMessages(events.get(event.id), ['U1'])[0].content, new RegExp(`Voice: <#${voice.id}>`));
+});
+
+test('event.voice: skips closed events, module off, a lost chat or role, and a job that came too late', async () => {
+  reset();
+  await configure('G', { eventChannelsEnabled: true });
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const voices = () => madeOfType(guild, ChannelType.GuildVoice).length;
+  await assert.rejects(svc.handleVoiceJob({ guildId: 'G', payload: {} }, { client }), /missing eventId/);
+
+  const { event } = await seedChannels(guild, { voice: false });
+  const row = events.get(event.id);
+  const run = () => svc.handleVoiceJob(voiceJob(event), { client });
+
+  row.status = 'CANCELLED';
+  await run();
+  row.status = 'SCHEDULED';
+  row.accessRoleId = null;
+  await run();
+  row.accessRoleId = 'AR';
+  row.startsAt = future(-3 * HOUR);
+  await run();
+  row.startsAt = future(DAY);
+  await configure('G', { eventChannelsEnabled: false });
+  await run();
+  await configure('G', { eventChannelsEnabled: true, eventsEnabled: false });
+  await run();
+  assert.equal(voices(), 0);
+
+  await configure('G', { eventChannelsEnabled: true });
+  guild.channels.cache.delete('CHAT');
+  await run();
+  assert.equal(voices(), 0);
+  assert.equal(row.textChannelId, null, 'a chat deleted while the bot was away is forgotten');
+});
+
+test('event.voice: a close during creation wins, refusals are told in the chat, other failures retry', async () => {
+  reset();
+  await configure('G', { eventChannelsEnabled: true });
+  const closes = channelGuild();
+  const { event } = await seedChannels(closes, { voice: false });
+  const create = closes.channels.create;
+  closes.channels.create = async (o) => { events.get(event.id).status = 'ENDED'; return create(o); };
+  await svc.handleVoiceJob(voiceJob(event), { client: fakeClient(closes) });
+  assert.equal(events.get(event.id).voiceChannelId, null);
+  assert.equal(madeOfType(closes, ChannelType.GuildVoice).length, 0, 'the new channel was removed');
+
+  reset();
+  const refuses = channelGuild({ failCreate: () => Object.assign(new Error('Maximum channels'), { status: 400, code: 30013 }) });
+  const a = await seedChannels(refuses, { voice: false });
+  await svc.handleVoiceJob(voiceJob(a.event), { client: fakeClient(refuses) });
+  assert.match(a.chat.sent.at(-1).content, /could not open the voice channel \(Maximum channels\)/);
+
+  reset();
+  const down = channelGuild({ failCreate: () => Object.assign(new Error('Bad Gateway'), { status: 502 }) });
+  const b = await seedChannels(down, { voice: false });
+  await assert.rejects(svc.handleVoiceJob(voiceJob(b.event), { client: fakeClient(down) }), /Bad Gateway/);
+
+  reset();
+  const noPerm = channelGuild({ manageRoles: false });
+  const c = await seedChannels(noPerm, { voice: false });
+  await svc.handleVoiceJob(voiceJob(c.event), { client: fakeClient(noPerm) });
+  assert.match(c.chat.sent.at(-1).content, /I need \*\*Manage Channels\*\*, \*\*Manage Roles\*\*/);
+  assert.equal(madeOfType(noPerm, ChannelType.GuildVoice).length, 0);
+});
+
+test('closing: every close queues the cleanup, and cancelling before the voice channel removes the chat and role', async () => {
+  reset();
+  await configure('G', { eventChannelsEnabled: true });
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, chat } = await seedChannels(guild, { voice: false });
+  const res = await svc.cancelEvent(client, event.id, { guildId: 'G' });
+  assert.equal(res.ok, true);
+  assert.ok(jobCalls.cancel.some((c) => c.dedupeKey === svc.voiceJobKey(event.id)), 'the voice channel no longer opens');
+  const job = jobCalls.schedule.find((j) => j.type === 'event.cleanup');
+  assert.equal(job.dedupeKey, svc.cleanupJobKey(event.id));
+  assert.ok(job.runAt.getTime() <= Date.now());
+
+  assert.equal(await svc.handleCleanupJob(cleanupJob(event), { client }), undefined);
+  assert.deepEqual(guild.deleted, [chat.id, 'AR']);
+  const row = events.get(event.id);
+  assert.deepEqual([row.textChannelId, row.accessRoleId], [null, null]);
+
+  reset();
+  const plain = await seedEvent();
+  await svc.closeEvent(client, plain.id, { status: 'ENDED', reason: 'timer' });
+  assert.equal(jobCalls.schedule.some((j) => j.type === 'event.cleanup'), false, 'an event without channels queues nothing');
+});
+
+test('cleanup: an empty voice channel goes at the end, voice then chat then role; a bot left inside does not count', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, vc } = await seedChannels(guild, { status: 'ENDED' });
+  vc.members.set(...robot());
+  assert.equal(await svc.handleCleanupJob(cleanupJob(event), { client }), undefined);
+  assert.deepEqual(guild.deleted, ['VC', 'CHAT', 'AR']);
+  const row = events.get(event.id);
+  assert.deepEqual([row.textChannelId, row.voiceChannelId, row.accessRoleId], [null, null, null]);
+});
+
+test('cleanup: people in the voice channel keep everything until the last one leaves, then a short grace', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, vc } = await seedChannels(guild, { status: 'ENDED' });
+  vc.members.set(...human('U1'));
+  vc.members.set(...human('U2'));
+
+  const before = Date.now();
+  const res = await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.ok(res.nextRunAt.getTime() >= before + EVENT.CLEANUP_RECHECK_MS, 'it looks again later');
+  assert.deepEqual(guild.deleted, [], 'nothing goes while someone is in the call');
+
+  const hook = plugin.hooks.find((h) => h.event === 'voiceStateUpdate');
+  const left = (change = 'leave', channel = vc) => ({ change, guild, oldState: { channelId: channel?.id ?? null, channel } });
+  assert.equal(hook.filter(left()), true);
+  assert.equal(hook.filter(left('move')), true);
+  assert.equal(hook.filter(left('state')), false, 'a mute costs nothing');
+  assert.equal(hook.filter(left('join', null)), false);
+  assert.equal(hook.filter({ change: 'leave', oldState: { channelId: 'OTHER' } }), false, 'other voice channels cost no query');
+
+  vc.members.delete('U1');
+  await hook.run(left());
+  assert.equal(jobCalls.schedule.length, 0, 'U2 is still there');
+
+  vc.members.delete('U2');
+  const at = Date.now();
+  await hook.run(left());
+  const [job] = jobCalls.schedule;
+  assert.equal(job.type, 'event.cleanup');
+  assert.ok(job.runAt.getTime() >= at + EVENT.EMPTY_GRACE_MS, 'a dropped connection can come back');
+  assert.equal(hook.filter(left()), false, 'it stops waiting');
+
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(guild.deleted, ['VC', 'CHAT', 'AR']);
+});
+
+test('cleanup: someone back within the grace keeps it open, and a restart loses nothing', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, vc } = await seedChannels(guild, { status: 'ENDED' });
+
+  // The job runs for the first time after a restart, with people in the call: it starts waiting again.
+  vc.members.set(...human());
+  assert.ok((await svc.handleCleanupJob(cleanupJob(event), { client })).nextRunAt);
+  const hook = plugin.hooks.find((h) => h.event === 'voiceStateUpdate');
+  assert.equal(hook.filter({ change: 'leave', oldState: { channelId: 'VC' } }), true);
+
+  // They left while the bot was down, so no hook ran: the next look finds it empty.
+  vc.members.clear();
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(guild.deleted, ['VC', 'CHAT', 'AR']);
+});
+
+test('cleanup: a voice channel the bot cannot see counts as occupied', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  client.channels.fetch = async () => { throw Object.assign(new Error('Missing Access'), { code: 50001 }); };
+  const { event, vc } = await seedChannels(guild, { status: 'ENDED' });
+  guild.channels.cache.delete(vc.id);
+  assert.ok((await svc.handleCleanupJob(cleanupJob(event), { client })).nextRunAt);
+  assert.deepEqual(guild.deleted, []);
+});
+
+test('cleanup: skips open events, channels already gone count as deleted, a refused delete stays linked, others retry', async () => {
+  reset();
+  await assert.rejects(svc.handleCleanupJob({ guildId: 'G', payload: {} }, { client: {} }), /missing eventId/);
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, chat, vc } = await seedChannels(guild);
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(guild.deleted, [], 'an open event keeps its channels');
+
+  const row = events.get(event.id);
+  row.status = 'ENDED';
+  vc.delete = async () => { throw Object.assign(new Error('Unknown Channel'), { code: 10003 }); };
+  chat.delete = async () => { throw Object.assign(new Error('Missing Permissions'), { code: 50013 }); };
+  guild.roles.delete = async () => { throw Object.assign(new Error('Unknown Role'), { code: 10011 }); };
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual([row.voiceChannelId, row.textChannelId, row.accessRoleId], [null, 'CHAT', null]);
+
+  chat.delete = async () => { throw Object.assign(new Error('Bad Gateway'), { status: 502 }); };
+  await assert.rejects(svc.handleCleanupJob(cleanupJob(event), { client }), /Bad Gateway/);
+});
+
+test('hooks: a deleted event channel or access role is forgotten and the event stays open', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event } = await seedChannels(guild);
+  const row = events.get(event.id);
+  await svc.onChannelDelete({ client, guildId: 'G', channel: { id: 'VC' } });
+  assert.deepEqual([row.voiceChannelId, row.textChannelId, row.status], [null, 'CHAT', 'SCHEDULED']);
+  await svc.onChannelDelete({ client, guildId: 'G', channel: { id: 'CHAT' } });
+  assert.deepEqual([row.textChannelId, row.status], [null, 'SCHEDULED']);
+  await svc.onRoleDelete({ guildId: 'G', role: { id: 'AR' } });
+  assert.equal(row.accessRoleId, null);
+});
+
+test('edit: a new title renames the channels, a moved start moves the voice job, an opened voice channel needs no job', async () => {
+  reset();
+  await configure('G', { eventChannelsEnabled: true });
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, chat, vc } = await seedChannels(guild);
+  await svc.editEvent({ client, guild, event, changes: { description: 'Popcorn' } });
+  assert.deepEqual(chat.renamed, []);
+  await svc.editEvent({ client, guild, event, changes: { title: 'Film Club' } });
+  assert.deepEqual([chat.renamed, vc.renamed], [['film-club'], ['Film Club']]);
+  await svc.editEvent({ client, guild, event: events.get(event.id), changes: { startsAt: future(3 * DAY) } });
+  assert.equal(jobCalls.schedule.some((j) => j.type === 'event.voice'), false);
+
+  reset();
+  const next = channelGuild();
+  const open = await seedChannels(next, { voice: false });
+  const start = future(3 * DAY);
+  await svc.editEvent({ client: fakeClient(next), guild: next, event: open.event, changes: { startsAt: start } });
+  assert.equal(jobCalls.schedule.find((j) => j.type === 'event.voice').runAt.getTime(), start.getTime() - 30 * 60_000);
+});
+
+test('card: the channels show only while the event is open', () => {
+  const event = { id: 'E', guildId: 'G', title: 'T', hostId: 'H', startsAt: future(DAY), status: 'SCHEDULED', textChannelId: 'CHAT', voiceChannelId: 'VC' };
+  const names = (e) => svc.buildEventEmbed(e).toJSON().fields.map((x) => x.name);
+  assert.ok(names(event).includes('Chat'));
+  assert.ok(names(event).includes('Voice'));
+  const closed = names({ ...event, status: 'ENDED' });
+  assert.equal(closed.includes('Chat') || closed.includes('Voice'), false, 'no #deleted-channel on a closed card');
+});
+
+test('cleanup: the post and every reminder go last, once both channels are gone, and logging is told it was the bot', async () => {
+  const { wasDeletedByBot } = await import('../src/utils/deletionTracker.js');
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const announce = fakeChannel(guild, 'C1');
+  const { event } = await seedChannels(guild, { status: 'ENDED', messageId: 'POST', reminderMessageIds: ['R1', 'R2'] });
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(announce.messages.deleted, ['POST', 'R1', 'R2']);
+  assert.deepEqual(guild.deleted, ['VC', 'CHAT', 'AR']);
+  const row = events.get(event.id);
+  assert.deepEqual([row.messageId, row.reminderMessageIds], [null, []]);
+  assert.ok(wasDeletedByBot('POST'));
+  assert.ok(wasDeletedByBot('R2'));
+  assert.ok(wasDeletedByBot('VC'));
+});
+
+test('cleanup: the post stays while people are in the voice channel, and when a channel could not be deleted', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const announce = fakeChannel(guild, 'C1');
+  const { event, chat, vc } = await seedChannels(guild, { status: 'ENDED', messageId: 'POST', reminderMessageIds: ['R1'] });
+  vc.members.set(...human());
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(announce.messages.deleted, []);
+
+  vc.members.clear();
+  chat.delete = async () => { throw Object.assign(new Error('Missing Permissions'), { code: 50013 }); };
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  const row = events.get(event.id);
+  assert.deepEqual(announce.messages.deleted, [], 'no post gone while the chat is still there');
+  assert.deepEqual([row.textChannelId, row.messageId, row.reminderMessageIds], ['CHAT', 'POST', ['R1']]);
+
+  delete chat.delete;
+  chat.delete = async () => { guild.channels.cache.delete('CHAT'); };
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual(announce.messages.deleted, ['POST', 'R1'], 'a later run finishes the job');
+});
+
+test('cleanup: a post already gone or a lost channel still finishes; no access keeps the ids; other failures retry', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const announce = fakeChannel(guild, 'C1');
+  const del = announce.messages;
+  const { event } = await seedChannels(guild, { status: 'ENDED', messageId: 'POST', reminderMessageIds: ['R1'] });
+  const row = events.get(event.id);
+
+  del.delete = async () => { throw Object.assign(new Error('Bad Gateway'), { status: 502 }); };
+  await assert.rejects(svc.handleCleanupJob(cleanupJob(event), { client }), /Bad Gateway/);
+  assert.equal(row.messageId, 'POST', 'kept for the retry');
+  assert.deepEqual([row.voiceChannelId, row.textChannelId, row.accessRoleId], [null, null, null], 'the channels stay forgotten');
+
+  del.delete = async () => { throw Object.assign(new Error('Missing Access'), { code: 50001 }); };
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.equal(row.messageId, 'POST');
+
+  del.delete = async () => { throw Object.assign(new Error('Unknown Message'), { code: 10008 }); };
+  await svc.handleCleanupJob(cleanupJob(event), { client });
+  assert.deepEqual([row.messageId, row.reminderMessageIds], [null, []]);
+
+  const lost = await seedEvent({ status: 'ENDED', channelId: 'NOPE', messageId: 'POST2', accessRoleId: 'AR2' });
+  await svc.handleCleanupJob(cleanupJob(lost), { client });
+  assert.equal(events.get(lost.id).messageId, null, 'a deleted announcement channel took the post with it');
+});
+
+test('event.remind: remembers its messages, and a second reminder after a move adds to them', async () => {
+  reset();
+  await configure('G');
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const announce = fakeChannel(guild, 'C1');
+  const event = await seedEvent();
+  await going(event.id, 'U1');
+  await svc.handleRemindJob({ guildId: 'G', payload: { eventId: event.id } }, { client });
+  const row = events.get(event.id);
+  assert.equal(row.reminderMessageIds.length, 1);
+
+  row.reminderSentAt = null;
+  await svc.handleRemindJob({ guildId: 'G', payload: { eventId: event.id } }, { client });
+  assert.equal(row.reminderMessageIds.length, 2);
+  assert.equal(announce.sent.length, 2);
 });
