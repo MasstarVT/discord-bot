@@ -1,19 +1,19 @@
 // /event (module `events`): community events with RSVP buttons, an optional Discord Scheduled Event, a role for the members
 // who are going and a reminder before the start. This file is thin: option parsing, validation and replies. Posting, RSVPs,
-// the jobs, editing and cancelling live in services/eventService.js. `edit` opens a form (no I/O beyond a bounded lookup
-// before showModal); every reply is private, the announcement and the reminder are the public output.
+// the jobs, editing and cancelling live in services/eventService.js. `edit` shows a panel whose buttons open one form each
+// (details, date and time, capacity and reminder); every reply is private, the announcement and the reminder are the public output.
 import { ChannelType, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import prisma from '../../database/client.js';
 import { getSettingsSafe } from '../../services/settingsService.js';
 import {
-  EVENT, attendeeLines, buildEditModal, cancelEvent, createEvent, findEventsForAutocomplete, getTally, isOpen, jumpUrl, listLine,
+  EVENT, attendeeLines, buildEditPanel, cancelEvent, createEvent, findEventsForAutocomplete, getTally, isOpen, jumpUrl, listLine,
   listOpenEvents, loadZone, parseEventFields, remindAt, resolveEventRef, voiceLead, voiceLeadText,
 } from '../../services/eventService.js';
-import { TimeoutError, ackBudgetMs, withTimeout } from '../../utils/async.js';
+import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { errorEmbed, guildEmbed, infoEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
 import {
-  checkAssignableRole, checkChannelUsable, isInteractionGone, respondAutocomplete, safeDefer, safeReply,
+  checkAssignableRole, checkChannelUsable, respondAutocomplete, safeDefer, safeReply,
 } from '../../utils/interactionHelpers.js';
 import logger from '../../utils/logger.js';
 import { paginate } from '../../utils/paginator.js';
@@ -49,12 +49,8 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1).setMaxValue(EVENT.CAPACITY_MAX))
     .addIntegerOption((o) => o.setName('reminder').setDescription('Minutes before the start to ping (0 = none)')
       .setMinValue(0).setMaxValue(EVENT.REMINDER_MAX)))
-  .addSubcommand((s) => s.setName('edit').setDescription('Edit an event in a form')
-    .addStringOption(eventOption)
-    .addIntegerOption((o) => o.setName('capacity').setDescription('Most members who can go (0 = no limit)')
-      .setMinValue(0).setMaxValue(EVENT.CAPACITY_MAX))
-    .addIntegerOption((o) => o.setName('reminder').setDescription('Minutes before the start to ping (0 = none)')
-      .setMinValue(0).setMaxValue(EVENT.REMINDER_MAX)))
+  .addSubcommand((s) => s.setName('edit').setDescription('Edit an event')
+    .addStringOption(eventOption))
   .addSubcommand((s) => s.setName('cancel').setDescription('Cancel an event').addStringOption(eventOption))
   .addSubcommand((s) => s.setName('list').setDescription('List the open events'))
   .addSubcommand((s) => s.setName('info').setDescription('Show an event').addStringOption(eventOption))
@@ -155,33 +151,15 @@ async function create(interaction, client) {
 
 // ── edit ──────────────────────────────────────────────────────────────────────
 
-/** The form: nothing is acknowledged before showModal, so the lookups are bounded by the ack budget. */
+/** The panel: its buttons open the forms (handled in services/eventService.js), each prefilled from the event as it is then. */
 async function edit(interaction) {
+  if (!(await safeDefer(interaction, { ephemeral: true }))) return;
+  const reply = (payload) => safeReply(interaction, { ...payload, allowedMentions: NO_MENTIONS });
   const { guildId } = interaction;
-  const deny = (embed) => safeReply(interaction, { embeds: [embed], ephemeral: true });
-  let found;
-  try {
-    const budget = ackBudgetMs(interaction);
-    found = await withTimeout(
-      Promise.all([resolveEventRef(guildId, eventRef(interaction)), loadZone(interaction, { budgetMs: budget })]),
-      budget,
-      'event edit lookup',
-    );
-  } catch (err) {
-    if (err instanceof TimeoutError) return deny(errorEmbed('Temporarily Unavailable', 'That took too long. Please try again.'));
-    throw err;
-  }
-  const [event, { resolved }] = found;
-  if (!event) return deny(notFound());
-  if (!isOpen(event)) return deny(closed());
-  try {
-    await interaction.showModal(buildEditModal(event, resolved.zone, {
-      capacity: interaction.options.getInteger('capacity'), reminder: interaction.options.getInteger('reminder'),
-    }));
-  } catch (err) {
-    if (!isInteractionGone(err)) logger.error('event edit: showModal failed', err);
-  }
-  return undefined;
+  const event = await resolveEventRef(guildId, eventRef(interaction));
+  if (!event) return reply({ embeds: [notFound()] });
+  if (!isOpen(event)) return reply({ embeds: [closed()] });
+  return reply(buildEditPanel(event, { settings: await getSettingsSafe(guildId) }));
 }
 
 // ── cancel ────────────────────────────────────────────────────────────────────

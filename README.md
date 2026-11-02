@@ -122,7 +122,7 @@ Each bullet except the web dashboard is a module you can turn on or off with `/m
 | `/sticky` | 📌 Sticky Messages | Admins | Keep a message at the bottom of a channel: set, remove, list, pause and resume. |
 | `/afk` | 💤 AFK | Everyone (some subcommands: Moderators) | Go AFK: others who mention you are told, and it ends when you write. |
 | `/antiraid` | 🚨 Anti-Raid | Admins | Show the lockdown and settings, start or end a lockdown by hand, set the join-flood threshold, the action, invite pause, chat lock, minimum account age and alert channel. |
-| `/event` | 📅 Events | Moderators | Post events with RSVP and Add to calendar (Google, Outlook, .ics) buttons, an optional Discord event, a role for members who are going, a reminder and private event channels; edit, cancel, list. |
+| `/event` | 📅 Events | Moderators | Post events with RSVP and Add to calendar (Google, Outlook, .ics) buttons, an optional Discord event, a role for members who are going, a reminder and private event channels; edit any part (details, day and time, capacity, reminder), cancel, list. |
 | `/rolepersist` | 🔁 Role Persistence | Admins | Give members their roles back when they leave and rejoin: status, never-give-back roles, view or clear a member. |
 | `/boost` | 💎 Server Boosts | Everyone | Boosters make, edit or delete a role of their own (`role create|edit|delete`). Admins: `config` (thank-you channel, booster roles on/off, place below a role, grace days), `test` (preview of the thank-you), `list`, `remove` a member's role. |
 | `/confession` | 🤫 Confessions | Everyone | Post an anonymous confession (moderators delete or block by number, admins `reveal`, `panel` and `setup`). |

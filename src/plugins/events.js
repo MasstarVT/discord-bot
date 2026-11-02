@@ -1,10 +1,10 @@
-// Events plugin declaration: the RSVP and Add to calendar buttons and the edit form, the `event.remind` / `event.end` /
+// Events plugin declaration: the RSVP and Add to calendar buttons, the edit panel and its forms, the `event.remind` / `event.end` /
 // `event.voice` / `event.cleanup` jobs and the hooks that keep events consistent when their post, channel, role or Discord
 // event vanishes, or that clean up an event's channels when the last member leaves. Declaration only: the logic lives in
 // services/eventService.js and nothing runs at import.
 import { GuildScheduledEventStatus } from 'discord.js';
 import {
-  handleCleanupJob, handleEditModal, handleEndJob, handleRemindJob, handleRsvpButton, handleVoiceJob, leftWaitingVoice,
+  handleCleanupJob, handleEditButton, handleEditModal, handleEndJob, handleRemindJob, handleRsvpButton, handleVoiceJob, leftWaitingVoice,
   onChannelDelete, onDiscordEventCancelled, onMessageDelete, onRoleDelete, onWaitingVoiceLeft,
 } from '../services/eventService.js';
 
@@ -31,6 +31,7 @@ export const plugin = {
   components: [
     // Module gating is applied by installPlugins (plugin.module = 'events').
     { type: 'button', prefix: 'event', handler: (interaction, client) => handleRsvpButton(interaction, client) },
+    { type: 'button', prefix: 'event-edit', handler: (interaction) => handleEditButton(interaction) },
     { type: 'modal', prefix: 'event-modal', handler: (interaction, client) => handleEditModal(interaction, client) },
   ],
   jobs: [

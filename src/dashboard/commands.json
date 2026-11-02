@@ -905,7 +905,7 @@
       },
       {
         "name": "edit",
-        "description": "Edit an event in a form"
+        "description": "Edit an event"
       },
       {
         "name": "cancel",

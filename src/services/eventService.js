@@ -23,19 +23,19 @@ import { cancelJobs, PermanentJobError, scheduleJob } from './scheduler.js';
 import { ensureGuildSettings, getSettingsSafe, isModuleEnabled, peekSettings, updateSettings } from './settingsService.js';
 import { countHumans } from './tempVoiceService.js';
 import { getUserTimezone, resolveMemberTimezone } from './userTimezoneService.js';
-import { ackBudgetMs, createKeyedMutex, mapLimit, withTimeout } from '../utils/async.js';
+import { TimeoutError, ackBudgetMs, createKeyedMutex, mapLimit, withTimeout } from '../utils/async.js';
 import { buildIcs, googleCalendarUrl, outlookCalendarUrl } from '../utils/calendar.js';
 import { markBotDeletion } from '../utils/deletionTracker.js';
 import { applyGuildColor, errorEmbed, guildEmbed, successEmbed, warnEmbed } from '../utils/embedBuilder.js';
 import {
-  checkAssignableRole, checkChannelUsable, missingBotPermissions, replyError, safeDefer, safeReply,
+  checkAssignableRole, checkChannelUsable, isInteractionGone, missingBotPermissions, replyError, safeDefer, safeReply,
 } from '../utils/interactionHelpers.js';
 import logger from '../utils/logger.js';
 import { formatDuration, parseDuration } from '../utils/parseDuration.js';
 import { resolvePermissionLevel } from '../utils/permissionChecker.js';
 import { clampText, sanitizeName } from '../utils/text.js';
 import { discordTimestamp, parseWhen, zonedParts } from '../utils/time.js';
-import { zoneLabel, zoneSourceText } from '../utils/timezones.js';
+import { parseZoneInput, zoneLabel, zoneSourceText } from '../utils/timezones.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -1355,8 +1355,43 @@ export async function editEvent({ client, guild, event, changes }) {
   return { ok: true, event: updated, notes };
 }
 
-/** The 5-field form of /event edit: customId `event-modal:{eventId}:{capacity|-}:{reminder|-}`. */
-export function buildEditModal(event, zone, { capacity = null, reminder = null } = {}) {
+/** The forms of the /event edit panel, each changing only its own fields. */
+export const EDIT_FORMS = Object.freeze(['details', 'when', 'limits']);
+
+/** 'YYYY-MM-DD' and 'HH:MM' in `zone`: the Day and Time boxes of the Date & time form. */
+export function formatStartFields(date, zone) {
+  const [day, time] = formatStartForEdit(date, zone).split(' ');
+  return { day, time };
+}
+
+/**
+ * The /event edit panel: what the event is set to now and a button per form (`event-edit:{eventId}:{form}`).
+ * @returns {{ embeds: object[], components: object[] }}
+ */
+export function buildEditPanel(event, { settings = null } = {}) {
+  const length = event.endsAt ? formatDuration(new Date(event.endsAt).getTime() - new Date(event.startsAt).getTime()) : null;
+  const lines = [
+    `**When:** ${discordTimestamp(event.startsAt, 'F')} (${discordTimestamp(event.startsAt, 'R')})${length ? `, for ${length}` : ''}`,
+    `**Where:** ${event.location ? clampText(event.location, 100) : 'not set'}`,
+    `**Description:** ${event.description ? clampText(event.description, 300) : 'none'}`,
+    `**Capacity:** ${event.capacity ? `${event.capacity} members` : 'no limit'}`,
+    `**Reminder:** ${event.reminderMinutes > 0 ? `${event.reminderMinutes} min before${event.reminderSentAt ? ' (sent)' : ''}` : 'none'}`,
+  ];
+  const embed = guildEmbed(settings, `✏️ ${clampText(event.title, 200)}`, lines.join('\n'), 'Pick what to change. The post, the reminder and the Discord event follow.');
+  const button = (form, label, emoji) => new ButtonBuilder()
+    .setCustomId(buildCustomId('event-edit', event.id, form)).setLabel(label).setEmoji(emoji).setStyle(ButtonStyle.Primary);
+  const row = new ActionRowBuilder().addComponents(
+    button('details', 'Details', '📝'), button('when', 'Date & time', '🗓️'), button('limits', 'Capacity & reminder', '👥'),
+  );
+  if (jumpUrl(event)) row.addComponents(new ButtonBuilder().setLabel('Open post').setStyle(ButtonStyle.Link).setURL(jumpUrl(event)));
+  return { embeds: [embed], components: [row] };
+}
+
+/**
+ * One form of the edit panel, prefilled from the event: customId `event-modal:{eventId}:{form}`. The Date & time form shows
+ * the start in `zone` and names the zone in its own box, so an untouched form reads back the same minute.
+ */
+export function buildEditModal(event, form, zone) {
   const field = (id, label, style, { value, required, max, placeholder } = {}) => {
     const input = new TextInputBuilder().setCustomId(id).setLabel(label).setStyle(style).setRequired(Boolean(required));
     if (max) input.setMaxLength(max);
@@ -1364,37 +1399,64 @@ export function buildEditModal(event, zone, { capacity = null, reminder = null }
     if (placeholder) input.setPlaceholder(placeholder);
     return new ActionRowBuilder().addComponents(input);
   };
-  const end = event.endsAt ? new Date(event.endsAt).getTime() - new Date(event.startsAt).getTime() : 0;
-  return new ModalBuilder()
-    .setCustomId(buildCustomId('event-modal', event.id, capacity ?? '-', reminder ?? '-'))
-    .setTitle('Edit event')
-    .addComponents(
+  const modal = new ModalBuilder().setCustomId(buildCustomId('event-modal', event.id, form));
+  if (form === 'details') {
+    return modal.setTitle('Edit details').addComponents(
       field('event-title', 'Title', TextInputStyle.Short, { value: event.title, required: true, max: EVENT.TITLE_MAX }),
       field('event-description', 'Description', TextInputStyle.Paragraph, { value: event.description ?? '', max: EVENT.DESCRIPTION_MAX }),
-      field('event-start', 'Start', TextInputStyle.Short, {
-        value: formatStartForEdit(event.startsAt, zone), required: true, max: 100, placeholder: 'fri 7pm, or 2026-10-30 18:00 Europe/London',
-      }),
+      field('event-location', 'Location', TextInputStyle.Short, { value: event.location ?? '', max: EVENT.LOCATION_MAX }),
+    );
+  }
+  if (form === 'when') {
+    const { day, time } = formatStartFields(event.startsAt, zone);
+    const end = event.endsAt ? new Date(event.endsAt).getTime() - new Date(event.startsAt).getTime() : 0;
+    return modal.setTitle('Edit date and time').addComponents(
+      field('event-day', 'Day', TextInputStyle.Short, { value: day, required: true, max: 40, placeholder: 'fri, tomorrow, nov 20 or 2026-11-20' }),
+      field('event-time', 'Time', TextInputStyle.Short, { value: time, required: true, max: 40, placeholder: '7pm or 18:30' }),
+      field('event-zone', 'Time zone (empty = yours)', TextInputStyle.Short, { value: zone, max: 64, placeholder: 'Europe/London, or CST' }),
       field('event-duration', 'Duration (empty = none)', TextInputStyle.Short, {
         value: end > 0 ? formatDuration(end) : '', max: 40, placeholder: '2h',
       }),
-      field('event-location', 'Location', TextInputStyle.Short, { value: event.location ?? '', max: EVENT.LOCATION_MAX }),
     );
+  }
+  return modal.setTitle('Edit capacity and reminder').addComponents(
+    field('event-capacity', 'Most members who can go (empty = no limit)', TextInputStyle.Short, {
+      value: event.capacity ? String(event.capacity) : '', max: 5, placeholder: `1 to ${EVENT.CAPACITY_MAX}`,
+    }),
+    field('event-reminder', 'Minutes before the start to ping (0 = none)', TextInputStyle.Short, {
+      value: String(event.reminderMinutes ?? 0), required: true, max: 4, placeholder: `0 to ${EVENT.REMINDER_MAX}`,
+    }),
+  );
 }
 
-// ── Reading the fields (create options and the edit form) ─────────────────────
+// ── Reading the fields (create options and the edit forms) ────────────────────
 
 const shown = (raw) => clampText(String(raw ?? '').replace(/[`\\]/g, '').trim(), 64) || '(empty)';
+const fail = (title, text) => ({ ok: false, title, text });
+const CREATE_EXAMPLES = 'Try `fri 7pm`, `tomorrow 18:30`, `oct 30 7:30pm`, `2026-10-30 19:00`, `in 3d` or `7pm CST`.';
+const FORM_EXAMPLES = 'Type a day like `fri`, `tomorrow`, `nov 20` or `2026-11-20` and a time like `7pm` or `18:30`.';
 
 /**
- * Reads and checks the text fields of a new or edited event. `current` is the event being edited: its own start stays valid
- * when it already passed, and a Discord event keeps its location.
+ * Reads and checks the text fields of a new or edited event: parseEventDetails, then parseEventWhen.
  * @param {{ title: string, description?: string|null, location?: string|null, start: string, duration?: string|null }} fields
  * @param {{ resolved: { zone: string, source: string, roleId: string|null }, now?: number, current?: object|null }} ctx
  * @returns {{ ok: true, values: { title: string, description: string|null, location: string|null, startsAt: Date,
  *   endsAt: Date|null, zone: string, zoneFromInput: boolean } } | { ok: false, title: string, text: string }}
  */
-export function parseEventFields(fields, { resolved, now = Date.now(), current = null }) {
-  const fail = (title, text) => ({ ok: false, title, text });
+export function parseEventFields(fields, ctx) {
+  const details = parseEventDetails(fields, ctx);
+  if (!details.ok) return details;
+  const when = parseEventWhen(fields, ctx);
+  if (!when.ok) return when;
+  return { ok: true, values: { ...details.values, ...when.values } };
+}
+
+/**
+ * Title, description and location. `current` is the event being edited: a linked Discord event keeps its location.
+ * @returns {{ ok: true, values: { title: string, description: string|null, location: string|null } }
+ *   | { ok: false, title: string, text: string }}
+ */
+export function parseEventDetails(fields, { current = null } = {}) {
   const title = String(fields.title ?? '').trim();
   if (!title) return fail('Missing Title', 'Give the event a title.');
   if (title.length > EVENT.TITLE_MAX) return fail('Title Too Long', `The title can have at most ${EVENT.TITLE_MAX} characters.`);
@@ -1407,13 +1469,27 @@ export function parseEventFields(fields, { resolved, now = Date.now(), current =
   if (!location && current?.discordEventId) {
     return fail('Location Needed', 'This event is linked to a Discord event, which needs a location.');
   }
+  return { ok: true, values: { title, description, location } };
+}
 
-  const parsed = parseWhen(fields.start, resolved.zone, { now: new Date(now) });
+/**
+ * Start and duration. The start is read in `zone` (the caller's by default) unless the text names one. `current` is the event
+ * being edited: its own start stays valid when it already passed. `examples` is the hint shown under an unreadable start.
+ * @param {{ start: string, duration?: string|null }} fields
+ * @param {{ resolved: { zone: string, source: string, roleId: string|null }, zone?: string, now?: number,
+ *   current?: object|null, examples?: string }} ctx
+ * @returns {{ ok: true, values: { startsAt: Date, endsAt: Date|null, zone: string, zoneFromInput: boolean } }
+ *   | { ok: false, title: string, text: string }}
+ */
+export function parseEventWhen(fields, { resolved, zone = resolved.zone, now = Date.now(), current = null, examples = CREATE_EXAMPLES }) {
+  const parsed = parseWhen(fields.start, zone, { now: new Date(now) });
   if (!parsed) {
     return fail('Could Not Read That Time', [
       `I couldn't read \`${shown(fields.start)}\` as a time.`,
-      'Try `fri 7pm`, `tomorrow 18:30`, `oct 30 7:30pm`, `2026-10-30 19:00`, `in 3d` or `7pm CST`.',
-      `Times are read in **${zoneLabel(resolved.zone)}**, ${zoneSourceText(resolved)}.`,
+      examples,
+      zone === resolved.zone
+        ? `Times are read in **${zoneLabel(zone)}**, ${zoneSourceText(resolved)}.`
+        : `Times are read in **${zoneLabel(zone)}**.`,
     ].join('\n'));
   }
   // Whole minutes only: the edit form shows the start to the minute, so a start with seconds ("in 3d") must not look changed
@@ -1430,60 +1506,154 @@ export function parseEventFields(fields, { resolved, now = Date.now(), current =
   const d = parseDurationInput(fields.duration);
   if (d.error) return fail('Invalid Duration', DURATION_ERRORS[d.error]);
   const endsAt = d.ms ? new Date(startsAt.getTime() + d.ms) : null;
-  return { ok: true, values: { title, description, location, startsAt, endsAt, zone: parsed.zone, zoneFromInput: parsed.zoneFromInput } };
+  return { ok: true, values: { startsAt, endsAt, zone: parsed.zone, zoneFromInput: parsed.zoneFromInput } };
 }
 
 /**
- * `event-modal:{eventId}:{capacity|-}:{reminder|-}`: the submitted /event edit form. The router checks levels for commands,
- * not for components, so the Moderator level is checked here.
+ * The Capacity & reminder form. An empty or 0 capacity is no limit; an empty reminder is none.
+ * @returns {{ ok: true, values: { capacity: number|null, reminderMinutes: number } } | { ok: false, title: string, text: string }}
+ */
+export function parseEventLimits(fields) {
+  const cap = String(fields.capacity ?? '').trim();
+  const rem = String(fields.reminder ?? '').trim();
+  if (cap && (!/^\d{1,5}$/.test(cap) || Number(cap) > EVENT.CAPACITY_MAX)) {
+    return fail('Invalid Capacity', `Type how many members can go, from 1 to ${EVENT.CAPACITY_MAX}, or leave it empty for no limit.`);
+  }
+  if (rem && (!/^\d{1,4}$/.test(rem) || Number(rem) > EVENT.REMINDER_MAX)) {
+    return fail('Invalid Reminder', `Type the minutes before the start, from 0 to ${EVENT.REMINDER_MAX}. 0 means no reminder.`);
+  }
+  return { ok: true, values: { capacity: Number(cap) > 0 ? Number(cap) : null, reminderMinutes: rem ? Number(rem) : 0 } };
+}
+
+/** The Moderator level, checked here: the router checks levels for commands, not for components. */
+const isEventModerator = (member, settings) => resolvePermissionLevel(member, settings) >= PERMISSION_LEVELS.MODERATOR;
+
+/**
+ * `event-edit:{eventId}:{form}`: a button of the /event edit panel opens that form, prefilled from the event as it is now.
+ * Nothing is acknowledged before showModal, so the lookups share the ack budget.
+ * @param {import('discord.js').ButtonInteraction} interaction
+ */
+export async function handleEditButton(interaction) {
+  const { params: [eventId, form] } = parseCustomId(interaction.customId);
+  if (!interaction.inCachedGuild?.() || !eventId || !EDIT_FORMS.includes(form)) {
+    return replyError(interaction, 'Panel Expired', 'This panel has expired. Please run `/event edit` again.');
+  }
+  let found;
+  try {
+    const budget = ackBudgetMs(interaction);
+    found = await withTimeout(
+      Promise.all([prisma.guildEvent.findFirst({ where: { id: eventId, guildId: interaction.guildId } }), loadZone(interaction, { budgetMs: budget })]),
+      budget,
+      'event edit form',
+    );
+  } catch (err) {
+    if (err instanceof TimeoutError) return replyError(interaction, 'Temporarily Unavailable', 'That took too long. Please try again.');
+    throw err;
+  }
+  const [event, { resolved, settings }] = found;
+  if (!isEventModerator(interaction.member, settings)) {
+    return replyError(interaction, 'Insufficient Permissions', 'You need the Moderator level to edit events.');
+  }
+  if (!event) return replyError(interaction, 'Event Not Found', 'This event no longer exists.');
+  if (!isOpen(event)) {
+    return safeReply(interaction, { embeds: [warnEmbed('Event Closed', 'This event has ended or was cancelled, so it cannot be edited.')], ephemeral: true });
+  }
+  try {
+    await interaction.showModal(buildEditModal(event, form, resolved.zone));
+  } catch (err) {
+    if (!isInteractionGone(err)) logger.error('event edit: showModal failed', err);
+  }
+  return undefined;
+}
+
+/** Reads one submitted form. @returns {Promise<{ ok: true, changes: object, zoneNote: string|null } | { ok: false, title: string, text: string }>} */
+async function readEditForm(interaction, form, event) {
+  const text = (id) => interaction.fields.getTextInputValue(id) ?? '';
+  if (form === 'details') {
+    const read = parseEventDetails({ title: text('event-title'), description: text('event-description'), location: text('event-location') }, { current: event });
+    return read.ok ? { ok: true, changes: read.values, zoneNote: null } : read;
+  }
+  if (form === 'limits') {
+    const read = parseEventLimits({ capacity: text('event-capacity'), reminder: text('event-reminder') });
+    return read.ok ? { ok: true, changes: read.values, zoneNote: null } : read;
+  }
+  const { resolved } = await loadZone(interaction);
+  const zoneRaw = text('event-zone').trim();
+  let zone = resolved.zone;
+  if (zoneRaw) {
+    const z = parseZoneInput(zoneRaw);
+    if (!z.ok) {
+      return fail('Unknown Time Zone', z.code === 'AMBIGUOUS'
+        ? `\`${shown(zoneRaw)}\` can mean several time zones: ${z.options.map((o) => `\`${o}\``).join(', ')}. Type the one you mean.`
+        : `\`${shown(zoneRaw)}\` is not a time zone I know. Type a name like \`Europe/London\` or \`America/Chicago\`, an abbreviation like \`CST\`, or leave it empty for yours.`);
+    }
+    zone = z.zone;
+  }
+  const start = `${text('event-day').trim()} ${text('event-time').trim()}`.trim();
+  const read = parseEventWhen({ start, duration: text('event-duration') }, { resolved, zone, current: event, examples: FORM_EXAMPLES });
+  if (!read.ok) return read;
+  const { startsAt, endsAt, zoneFromInput } = read.values;
+  const zoneNote = !zoneRaw && !zoneFromInput ? `The start was read in ${zoneLabel(zone)}, ${zoneSourceText(resolved)}.` : null;
+  return { ok: true, changes: { startsAt, endsAt }, zoneNote };
+}
+
+/**
+ * `event-modal:{eventId}:{details|when|limits}`: a submitted form of the /event edit panel. Only that form's fields change,
+ * so two moderators editing different parts do not undo each other. The panel is updated in place, with the result on top.
  * @param {import('discord.js').ModalSubmitInteraction} interaction
  * @param {import('discord.js').Client} client
  */
 export async function handleEditModal(interaction, client) {
-  const { params: [eventId, capRaw, remRaw] } = parseCustomId(interaction.customId);
-  if (!interaction.inCachedGuild?.() || !eventId) {
+  const { params: [eventId, form] } = parseCustomId(interaction.customId);
+  if (!interaction.inCachedGuild?.() || !eventId || !EDIT_FORMS.includes(form)) {
     return replyError(interaction, 'Form Expired', 'This form has expired. Please run `/event edit` again.');
   }
   const { guildId } = interaction;
   const settings = peekSettings(guildId)
     ?? await withTimeout(getSettingsSafe(guildId), ackBudgetMs(interaction), 'event modal settings').catch(() => null);
-  if (resolvePermissionLevel(interaction.member, settings) < PERMISSION_LEVELS.MODERATOR) {
+  if (!isEventModerator(interaction.member, settings)) {
     return replyError(interaction, 'Insufficient Permissions', 'You need the Moderator level to edit events.');
   }
-  if (!(await safeDefer(interaction, { ephemeral: true }))) return undefined;
-  const reply = (embed) => safeReply(interaction, { embeds: [embed], allowedMentions: NO_MENTIONS });
+  const fromPanel = interaction.isFromMessage?.() === true;
+  if (fromPanel) {
+    try {
+      await interaction.deferUpdate();
+    } catch (err) {
+      if (!isInteractionGone(err)) logger.warn('event edit: deferUpdate failed', err);
+      return undefined;
+    }
+  } else if (!(await safeDefer(interaction, { ephemeral: true }))) {
+    return undefined;
+  }
+  const note = (embed) => safeReply(interaction, { embeds: [embed], ephemeral: true, allowedMentions: NO_MENTIONS });
+  // The result above the panel as it is now; with no open event, the buttons go. A panel that was dismissed gets a reply.
+  const panel = async (embed, event) => {
+    if (!fromPanel) return note(embed);
+    const current = event && isOpen(event) ? buildEditPanel(event, { settings }) : { embeds: [], components: [] };
+    try {
+      return await interaction.editReply({ embeds: [embed, ...current.embeds], components: current.components, allowedMentions: NO_MENTIONS });
+    } catch (err) {
+      if (isInteractionGone(err)) return null;
+      logger.warn('event edit: could not update the panel', err);
+      return note(embed);
+    }
+  };
   try {
     const event = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId } });
-    if (!event) return reply(errorEmbed('Event Not Found', 'This event no longer exists.'));
-    if (!isOpen(event)) return reply(warnEmbed('Event Closed', 'This event has ended or was cancelled, so it cannot be edited.'));
+    if (!event) return panel(errorEmbed('Event Not Found', 'This event no longer exists.'), null);
+    if (!isOpen(event)) return panel(warnEmbed('Event Closed', 'This event has ended or was cancelled, so it cannot be edited.'), null);
 
-    const { resolved } = await loadZone(interaction);
-    const text = (id) => interaction.fields.getTextInputValue(id);
-    const read = parseEventFields({
-      title: text('event-title'), description: text('event-description'), start: text('event-start'),
-      duration: text('event-duration'), location: text('event-location'),
-    }, { resolved, current: event });
-    if (!read.ok) return reply(errorEmbed(read.title, `${read.text}\nNothing was saved.`));
-
-    const capacity = /^\d{1,5}$/.test(capRaw ?? '') ? Number(capRaw) : undefined; // 0 = no limit
-    const reminder = /^\d{1,4}$/.test(remRaw ?? '') ? Number(remRaw) : undefined;
-    const { values } = read;
-    const out = await editEvent({
-      client, guild: interaction.guild, event,
-      changes: {
-        title: values.title, description: values.description, location: values.location, startsAt: values.startsAt, endsAt: values.endsAt,
-        ...(capacity !== undefined && { capacity: capacity === 0 ? null : capacity }),
-        ...(reminder !== undefined && { reminderMinutes: reminder }),
-      },
-    });
-    if (!out.ok) return reply(warnEmbed('Event Closed', 'This event ended or was cancelled before the form was saved.'));
+    const read = await readEditForm(interaction, form, event);
+    if (!read.ok) return panel(errorEmbed(read.title, `${read.text}\nNothing was saved.`), event);
+    const out = await editEvent({ client, guild: interaction.guild, event, changes: read.changes });
+    if (!out.ok) return panel(warnEmbed('Event Closed', 'This event ended or was cancelled before the form was saved.'), null);
     const lines = [`**${clampText(out.event.title, 100)}** starts ${discordTimestamp(out.event.startsAt, 'F')} (${discordTimestamp(out.event.startsAt, 'R')}).`];
-    if (!values.zoneFromInput) lines.push(`The start was read in ${zoneLabel(resolved.zone)}, ${zoneSourceText(resolved)}.`);
+    if (read.zoneNote) lines.push(read.zoneNote);
     for (const n of out.notes) lines.push(`⚠️ ${n}`);
-    return reply(successEmbed('Event Updated', lines.join('\n')));
+    return panel(successEmbed('Event Updated', lines.join('\n')), out.event);
   } catch (err) {
     logger.error('event edit failed', err);
-    return reply(errorEmbed('Could Not Save', 'Something went wrong saving the event. Please try again.'));
+    return note(errorEmbed('Could Not Save', 'Something went wrong saving the event. Please try again.'));
   }
 }
 

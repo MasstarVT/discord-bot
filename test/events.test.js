@@ -1122,76 +1122,208 @@ test('editEvent: lowering the capacity below the going count keeps them and says
   assert.equal(events.get(event.id).capacity, 1);
 });
 
-test('buildEditModal: the five fields, prefilled, with the start in the editor zone and the change carried in the customId', () => {
+test('buildEditPanel: what the event is set to now, a button per form and a link to the post', () => {
   const event = {
-    id: 'E1', title: 'Movie', description: 'Snacks', location: 'Voice 1', startsAt: new Date('2026-11-05T01:30:00Z'),
-    endsAt: new Date('2026-11-05T03:30:00Z'),
+    id: 'E1', guildId: 'G', channelId: 'C1', messageId: 'M1', title: 'Movie', description: 'Snacks', location: 'Voice 1',
+    startsAt: new Date('2026-11-05T01:30:00Z'), endsAt: new Date('2026-11-05T03:30:00Z'), capacity: 20, reminderMinutes: 15,
   };
-  const json = svc.buildEditModal(event, 'America/Chicago', { capacity: 0, reminder: null }).toJSON();
-  assert.equal(json.custom_id, 'event-modal:E1:0:-');
-  const inputs = json.components.map((r) => r.components[0]);
-  assert.deepEqual(inputs.map((i) => i.custom_id), ['event-title', 'event-description', 'event-start', 'event-duration', 'event-location']);
-  for (const id of ['event-title', 'event-description', 'event-start', 'event-duration', 'event-location']) {
-    assert.equal(Object.hasOwn(CUSTOM_ID_PREFIXES, id), true);
-    assert.equal(CUSTOM_ID_PREFIXES[id].kind, 'field');
-  }
-  assert.equal(inputs[2].value, '2026-11-04 19:30 America/Chicago');
-  assert.equal(inputs[3].value, '2h');
-  assert.equal(inputs[0].value, 'Movie');
-  assert.equal(json.custom_id.length <= 100, true);
-  const blank = svc.buildEditModal({ ...event, endsAt: null, description: null, location: null }, 'UTC').toJSON();
-  assert.equal(blank.custom_id, 'event-modal:E1:-:-');
-  assert.equal(blank.components[3].components[0].value, undefined);
+  const { embeds, components } = svc.buildEditPanel(event);
+  const text = embedText({ embeds });
+  for (const part of ['Movie', 'for 2h', 'Voice 1', 'Snacks', '20 members', '15 min before']) assert.match(text, new RegExp(part));
+  const buttons = components[0].toJSON().components;
+  assert.deepEqual(buttons.slice(0, 3).map((b) => b.custom_id), ['event-edit:E1:details', 'event-edit:E1:when', 'event-edit:E1:limits']);
+  assert.deepEqual(CUSTOM_ID_PREFIXES['event-edit'], { owner: 'events', types: ['button'], kind: 'persistent' });
+  assert.equal(buttons[3].url, 'https://discord.com/channels/G/C1/M1');
+
+  const bare = svc.buildEditPanel({ ...event, messageId: null, endsAt: null, description: null, location: null, capacity: null, reminderMinutes: 0 });
+  const bareText = embedText(bare);
+  for (const part of ['not set', 'Description:\\*\\* none', 'no limit', 'Reminder:\\*\\* none']) assert.match(bareText, new RegExp(part));
+  assert.equal(bare.components[0].toJSON().components.length, 3, 'no link without a post');
 });
 
-function modalInteraction(eventId, fields, { mod = true, customId = `event-modal:${eventId}:-:-`, guild = fakeGuild() } = {}) {
+test('buildEditModal: one form per part, prefilled, the start split into day, time and zone', () => {
+  const event = {
+    id: 'E1', title: 'Movie', description: 'Snacks', location: 'Voice 1', startsAt: new Date('2026-11-05T01:30:00Z'),
+    endsAt: new Date('2026-11-05T03:30:00Z'), capacity: null, reminderMinutes: 15,
+  };
+  const form = (name, zone = 'America/Chicago') => {
+    const json = svc.buildEditModal(event, name, zone).toJSON();
+    const inputs = json.components.map((r) => r.components[0]);
+    return { json, ids: inputs.map((i) => i.custom_id), values: Object.fromEntries(inputs.map((i) => [i.custom_id, i.value])) };
+  };
+  const details = form('details');
+  assert.equal(details.json.custom_id, 'event-modal:E1:details');
+  assert.deepEqual(details.ids, ['event-title', 'event-description', 'event-location']);
+  assert.deepEqual(details.values, { 'event-title': 'Movie', 'event-description': 'Snacks', 'event-location': 'Voice 1' });
+
+  const when = form('when');
+  assert.equal(when.json.custom_id, 'event-modal:E1:when');
+  assert.deepEqual(when.ids, ['event-day', 'event-time', 'event-zone', 'event-duration']);
+  assert.deepEqual(when.values, { 'event-day': '2026-11-04', 'event-time': '19:30', 'event-zone': 'America/Chicago', 'event-duration': '2h' });
+  assert.deepEqual(svc.formatStartFields(event.startsAt, 'UTC'), { day: '2026-11-05', time: '01:30' });
+
+  const limits = form('limits');
+  assert.equal(limits.json.custom_id, 'event-modal:E1:limits');
+  assert.deepEqual(limits.ids, ['event-capacity', 'event-reminder']);
+  assert.deepEqual(limits.values, { 'event-capacity': undefined, 'event-reminder': '15' });
+  assert.equal(svc.buildEditModal({ ...event, capacity: 40 }, 'limits', 'UTC').toJSON().components[0].components[0].value, '40');
+
+  for (const id of [...details.ids, ...when.ids, ...limits.ids]) assert.equal(CUSTOM_ID_PREFIXES[id]?.kind, 'field', id);
+  for (const f of [details, when, limits]) assert.ok(f.json.components.length <= 5 && f.json.title.length <= 45);
+});
+
+test('parseEventLimits and parseEventWhen: the edit forms\' own rules', () => {
+  assert.deepEqual(svc.parseEventLimits({ capacity: '', reminder: '' }), { ok: true, values: { capacity: null, reminderMinutes: 0 } });
+  assert.deepEqual(svc.parseEventLimits({ capacity: ' 0 ', reminder: '30' }), { ok: true, values: { capacity: null, reminderMinutes: 30 } });
+  assert.deepEqual(svc.parseEventLimits({ capacity: '25', reminder: '0' }), { ok: true, values: { capacity: 25, reminderMinutes: 0 } });
+  for (const capacity of ['ten', '-3', '2.5', String(EVENT.CAPACITY_MAX + 1)]) {
+    assert.equal(svc.parseEventLimits({ capacity, reminder: '15' }).title, 'Invalid Capacity', capacity);
+  }
+  for (const reminder of ['soon', String(EVENT.REMINDER_MAX + 1)]) {
+    assert.equal(svc.parseEventLimits({ capacity: '', reminder }).title, 'Invalid Reminder', reminder);
+  }
+
+  const now = Date.parse('2026-10-20T12:00:00Z');
+  const london = svc.parseEventWhen({ start: '2026-10-25 19:00', duration: '' }, { resolved: resolvedUtc, zone: 'Europe/London', now });
+  assert.equal(london.values.startsAt.toISOString(), '2026-10-25T19:00:00.000Z', 'after the clocks went back');
+  const summer = svc.parseEventWhen({ start: '2026-10-24 19:00' }, { resolved: resolvedUtc, zone: 'Europe/London', now });
+  assert.equal(summer.values.startsAt.toISOString(), '2026-10-24T18:00:00.000Z');
+  const named = svc.parseEventWhen({ start: '2026-10-24 19:00 CST' }, { resolved: resolvedUtc, zone: 'Europe/London', now });
+  assert.equal(named.values.startsAt.toISOString(), '2026-10-25T00:00:00.000Z', 'a zone typed with the time wins');
+  const bad = svc.parseEventWhen({ start: 'someday' }, { resolved: resolvedUtc, zone: 'Europe/London', now, examples: 'EXAMPLES' });
+  assert.equal(bad.title, 'Could Not Read That Time');
+  assert.match(bad.text, /EXAMPLES/);
+  assert.match(bad.text, /London/);
+});
+
+/** A submitted form; from the panel by default (`isFromMessage`), so it acknowledges with deferUpdate. */
+function modalInteraction(eventId, fields, { mod = true, form = 'details', customId = `event-modal:${eventId}:${form}`, guild = fakeGuild(), fromPanel = true } = {}) {
   return fakeInteraction({
     customId, guildId: 'G', guild, user: { id: 'MOD' }, member: fakeMember('MOD', { mod }),
     inCachedGuild: () => true,
+    isFromMessage: () => fromPanel,
+    async deferUpdate() { this.deferred = true; this.ephemeral = null; this.updated = true; },
     fields: { getTextInputValue: (id) => fields[id] ?? '' },
   });
 }
+/** The custom ids of the panel buttons in a reply ([] when the panel lost its buttons). */
+const panelButtons = (payload) => (payload.components ?? []).flatMap((r) => r.toJSON().components).map((b) => b.custom_id).filter(Boolean);
+/** What an untouched form sends back. */
+const formFields = (event, form, zone = 'UTC', over = {}) => {
+  const inputs = svc.buildEditModal(event, form, zone).toJSON().components.map((r) => r.components[0]);
+  return { ...Object.fromEntries(inputs.map((i) => [i.custom_id, i.value ?? ''])), ...over };
+};
 
-test('edit form: needs the Moderator level (the router does not check components), saves, refuses a past start', async () => {
+test('edit button: needs the Moderator level, opens the chosen form prefilled (no deferral), refuses a closed event', async () => {
+  reset();
+  await configure('G');
+  const guild = fakeGuild();
+  const event = await seedEvent({ title: 'Movie night', capacity: 12 });
+  const click = async (customId, { mod = true } = {}) => {
+    const i = fakeInteraction({ customId, guildId: 'G', guild, user: { id: 'MOD' }, member: fakeMember('MOD', { mod }), inCachedGuild: () => true });
+    await svc.handleEditButton(i);
+    return i;
+  };
+
+  const member = await click(`event-edit:${event.id}:when`, { mod: false });
+  assert.equal(member.modals.length, 0);
+  assert.match(embedText(member.replies[0]), /Moderator level/);
+
+  for (const [form, first] of [['details', 'event-title'], ['when', 'event-day'], ['limits', 'event-capacity']]) {
+    const ok = await click(`event-edit:${event.id}:${form}`);
+    assert.equal(ok.deferred, false, 'showModal is the first response');
+    const json = ok.modals[0].toJSON();
+    assert.equal(json.custom_id, `event-modal:${event.id}:${form}`);
+    assert.equal(json.components[0].components[0].custom_id, first);
+  }
+  assert.equal((await click(`event-edit:${event.id}:limits`)).modals[0].toJSON().components[0].components[0].value, '12', 'prefilled from the row');
+
+  assert.match(embedText((await click(`event-edit:${event.id}:bogus`)).replies[0]), /Panel Expired/);
+  assert.match(embedText((await click('event-edit:nope:when')).replies[0]), /Event Not Found/);
+  events.get(event.id).status = 'ENDED';
+  const closed = await click(`event-edit:${event.id}:when`);
+  assert.equal(closed.modals.length, 0);
+  assert.match(embedText(closed.replies[0]), /Event Closed/);
+});
+
+test('edit forms: each saves only its own fields and updates the panel in place; errors keep the panel', async () => {
   reset();
   await configure('G');
   const guild = fakeGuild();
   fakeChannel(guild);
   const client = fakeClient(guild);
-  const event = await seedEvent();
-  const fields = {
-    'event-title': 'Renamed', 'event-description': '', 'event-start': svc.formatStartForEdit(future(4 * DAY), 'UTC'),
-    'event-duration': '90m', 'event-location': 'Voice 3',
+  const startsAt = future(2 * DAY);
+  const event = await seedEvent({ startsAt, endsAt: new Date(startsAt.getTime() + HOUR), capacity: 10, reminderMinutes: 15, location: 'Voice 1' });
+  const submit = async (form, fields, opts = {}) => {
+    const i = modalInteraction(event.id, fields, { guild, form, ...opts });
+    await svc.handleEditModal(i, client);
+    return i;
   };
 
-  const member = modalInteraction(event.id, fields, { mod: false, guild });
-  await svc.handleEditModal(member, client);
+  const member = await submit('details', { 'event-title': 'Nope' }, { mod: false });
   assert.match(embedText(member.replies[0]), /Moderator level/);
   assert.equal(events.get(event.id).title, 'Movie night', 'nothing changed');
 
-  const past = modalInteraction(event.id, { ...fields, 'event-start': '2020-01-01 10:00' }, { guild });
-  await svc.handleEditModal(past, client);
+  // Details: the start, capacity and reminder are left alone.
+  const details = await submit('details', { 'event-title': 'Renamed', 'event-description': 'Bring snacks', 'event-location': 'Voice 3' });
+  assert.equal(details.updated, true, 'acknowledged with deferUpdate');
+  assert.match(embedText(details.replies[0]), /Event Updated/);
+  assert.match(embedText(details.replies[0]), /Renamed/, 'the refreshed panel follows the result');
+  assert.equal(panelButtons(details.replies[0]).length, 3);
+  let row = events.get(event.id);
+  assert.deepEqual([row.title, row.description, row.location], ['Renamed', 'Bring snacks', 'Voice 3']);
+  assert.equal(row.startsAt.getTime(), startsAt.getTime());
+  assert.deepEqual([row.capacity, row.reminderMinutes], [10, 15]);
+
+  // Date & time: day, time, zone and duration.
+  const day = new Date(future(5 * DAY)).toISOString().slice(0, 10);
+  const when = await submit('when', { 'event-day': day, 'event-time': '19:30', 'event-zone': 'UTC', 'event-duration': '3h' });
+  assert.match(embedText(when.replies[0]), /Event Updated/);
+  row = events.get(event.id);
+  assert.equal(row.startsAt.toISOString(), `${day}T19:30:00.000Z`);
+  assert.equal(row.endsAt.getTime() - row.startsAt.getTime(), 3 * HOUR);
+  assert.equal(row.title, 'Renamed');
+  assert.deepEqual([row.capacity, row.reminderMinutes], [10, 15]);
+
+  const zoned = await submit('when', { 'event-day': day, 'event-time': '7:30pm', 'event-zone': 'America/New_York', 'event-duration': '' });
+  assert.match(embedText(zoned.replies[0]), /Event Updated/);
+  row = events.get(event.id);
+  assert.equal(row.startsAt.getTime(), parseWhen(`${day} 19:30`, 'America/New_York').date.getTime(), 'read in the zone typed in its box');
+  assert.notEqual(row.startsAt.toISOString(), `${day}T19:30:00.000Z`);
+  assert.equal(row.endsAt, null, 'an empty duration is none');
+
+  // Capacity & reminder.
+  const limits = await submit('limits', { 'event-capacity': '', 'event-reminder': '30' });
+  assert.match(embedText(limits.replies[0]), /Event Updated/);
+  row = events.get(event.id);
+  assert.deepEqual([row.capacity, row.reminderMinutes], [null, 30], 'empty = no limit');
+
+  // A refused form saves nothing and keeps the panel under the error.
+  const before = events.get(event.id).startsAt.getTime();
+  const past = await submit('when', { 'event-day': '2020-01-01', 'event-time': '10:00', 'event-zone': 'UTC' });
   assert.match(embedText(past.replies[0]), /Start In The Past/);
   assert.match(embedText(past.replies[0]), /Nothing was saved/);
+  assert.equal(panelButtons(past.replies[0]).length, 3);
+  assert.equal(events.get(event.id).startsAt.getTime(), before);
+  const badZone = await submit('when', { 'event-day': day, 'event-time': '19:00', 'event-zone': 'Mars/Olympus' });
+  assert.match(embedText(badZone.replies[0]), /Unknown Time Zone/);
+  const badCap = await submit('limits', { 'event-capacity': 'lots', 'event-reminder': '15' });
+  assert.match(embedText(badCap.replies[0]), /Invalid Capacity/);
+  assert.equal(events.get(event.id).reminderMinutes, 30);
 
-  const ok = modalInteraction(event.id, fields, { guild, customId: `event-modal:${event.id}:0:30` });
-  await svc.handleEditModal(ok, client);
-  assert.match(embedText(ok.replies[0]), /Event Updated/);
-  const row = events.get(event.id);
-  assert.equal(row.title, 'Renamed');
-  assert.equal(row.location, 'Voice 3');
-  assert.equal(row.capacity, null, '0 = no limit');
-  assert.equal(row.reminderMinutes, 30);
-  assert.equal(row.endsAt.getTime() - row.startsAt.getTime(), 90 * 60_000);
+  // A form with no panel behind it gets its own reply.
+  const loose = await submit('limits', { 'event-capacity': '5', 'event-reminder': '30' }, { fromPanel: false });
+  assert.equal(loose.ephemeral, true);
+  assert.match(embedText(loose.replies[0]), /Event Updated/);
+  assert.equal(events.get(event.id).capacity, 5);
 
-  const expired = modalInteraction(event.id, fields, { guild, customId: 'event-modal' });
-  await svc.handleEditModal(expired, client);
-  assert.match(embedText(expired.replies[0]), /Form Expired/);
-
+  // A form from before the panel, or with no event: expired. A closed event loses the buttons.
+  assert.match(embedText((await submit('details', {}, { customId: `event-modal:${event.id}:-:-` })).replies[0]), /Form Expired/);
+  assert.match(embedText((await submit('details', {}, { customId: 'event-modal' })).replies[0]), /Form Expired/);
   events.get(event.id).status = 'CANCELLED';
-  const closed = modalInteraction(event.id, fields, { guild });
-  await svc.handleEditModal(closed, client);
+  const closed = await submit('details', { 'event-title': 'Late' });
   assert.match(embedText(closed.replies[0]), /Event Closed/);
+  assert.deepEqual(panelButtons(closed.replies[0]), []);
 });
 
 test('a start typed as "in 3d" is stored to the whole minute', () => {
@@ -1202,41 +1334,38 @@ test('a start typed as "in 3d" is stored to the whole minute', () => {
   assert.equal(out.values.endsAt.toISOString(), '2026-10-23T14:00:00.000Z');
 });
 
-test('edit form returned untouched: a start with seconds (upcoming or already started) is not a change', async () => {
+test('edit forms returned untouched: a start with seconds (upcoming or already started) is not a change', async () => {
   reset();
   await configure('G');
   const guild = fakeGuild();
   fakeChannel(guild);
   const client = fakeClient(guild);
   const sent = new Date(Date.now() - 5 * 60_000);
-  const formFields = (event, over = {}) => {
-    const inputs = svc.buildEditModal(event, 'UTC').toJSON().components.map((r) => r.components[0]);
-    return { ...Object.fromEntries(inputs.map((i) => [i.custom_id, i.value ?? ''])), ...over };
-  };
 
   for (const startsAt of [new Date(future(2 * DAY).getTime() + 37_123), new Date(Date.now() - HOUR + 12_345)]) {
     jobCalls.schedule.length = 0;
     guild.scheduledEvents.edited.length = 0;
     const event = await seedEvent({ startsAt, endsAt: null, discordEventId: 'DE1', location: 'Voice 1', reminderSentAt: sent, reminderMinutes: 15 });
-    const submit = async (customId, over) => {
-      const i = modalInteraction(event.id, formFields(event, over), { guild, customId });
+    const submit = async (form, over = {}) => {
+      const i = modalInteraction(event.id, formFields(events.get(event.id), form, 'UTC', over), { guild, form });
       await svc.handleEditModal(i, client);
       return embedText(i.replies[0]);
     };
 
-    assert.match(await submit(`event-modal:${event.id}:-:-`, { 'event-title': 'Renamed' }), /Event Updated/);
+    assert.match(await submit('when'), /Event Updated/);
+    assert.match(await submit('details', { 'event-title': 'Renamed' }), /Event Updated/);
     const row = events.get(event.id);
     assert.equal(row.title, 'Renamed');
     assert.equal(row.startsAt.getTime(), startsAt.getTime(), 'the stored start is kept as it was');
     assert.equal(row.reminderSentAt?.getTime(), sent.getTime(), 'no second ping');
     assert.equal(jobCalls.schedule.length, 0, 'no job is rescheduled');
-    assert.equal('scheduledStartTime' in guild.scheduledEvents.edited[0][1], false, 'the Discord times are not resent');
+    assert.equal(guild.scheduledEvents.edited.some(([, opts]) => 'scheduledStartTime' in opts), false, 'the Discord times are not resent');
 
     // The same reminder value is not a change either; a different one is.
-    await submit(`event-modal:${event.id}:-:15`, {});
+    await submit('limits');
     assert.equal(events.get(event.id).reminderSentAt?.getTime(), sent.getTime());
     assert.equal(jobCalls.schedule.length, 0);
-    await submit(`event-modal:${event.id}:-:30`, {});
+    await submit('limits', { 'event-reminder': '30' });
     assert.equal(events.get(event.id).reminderMinutes, 30);
     assert.equal(events.get(event.id).reminderSentAt, null);
   }
@@ -1412,7 +1541,7 @@ test('plugin declaration: hooks (always), components, jobs match the registries'
   assert.equal(del.filter({ message: { author: { id: 'BOT' } }, client: { user: { id: 'BOT' } } }), true);
   assert.equal(del.filter({ message: { partial: true }, client: { user: { id: 'BOT' } } }), true);
   assert.equal(del.filter({ message: { author: { id: 'U' } }, client: { user: { id: 'BOT' } } }), false);
-  assert.deepEqual(plugin.components.map((c) => [c.type, c.prefix]), [['button', 'event'], ['modal', 'event-modal']]);
+  assert.deepEqual(plugin.components.map((c) => [c.type, c.prefix]), [['button', 'event'], ['button', 'event-edit'], ['modal', 'event-modal']]);
   for (const c of plugin.components) assert.equal(CUSTOM_ID_PREFIXES[c.prefix].owner, 'events');
   assert.deepEqual(plugin.jobs.map((j) => j.type), ['event.remind', 'event.end', 'event.voice', 'event.cleanup']);
   assert.equal(JOB_TYPES['event.voice'].dedupe, 'event.voice:{eventId}');
@@ -1448,7 +1577,7 @@ test('/event payload', () => {
     assert.equal(o.autocomplete, true, name);
     assert.equal(o.required, true, name);
   }
-  assert.deepEqual(sub.edit.options.map((o) => o.name), ['event', 'capacity', 'reminder']);
+  assert.deepEqual(sub.edit.options.map((o) => o.name), ['event']);
   assert.ok(charCount(json) <= 2000, `payload is ${charCount(json)} chars`);
   assert.ok(charCount(json) <= 4000);
   assert.equal(cmd.module, 'events');
@@ -1635,7 +1764,7 @@ test('/event cancel, info, list and attendees: private replies and the guild sco
   assert.match(embedText(none.replies[0]), /No Open Events/);
 });
 
-test('/event edit: opens the form with the five fields (no deferral), refuses a closed or unknown event', async () => {
+test('/event edit: shows the panel privately, refuses a closed or unknown event', async () => {
   reset();
   await configure('G');
   const guild = fakeGuild();
@@ -1645,20 +1774,19 @@ test('/event edit: opens the form with the five fields (no deferral), refuses a 
     await cmd.execute(i, fakeClient(guild));
     return i;
   };
-  const ok = await call({ event: event.id, capacity: 8 });
-  assert.equal(ok.deferred, false, 'showModal is the first response');
-  assert.equal(ok.modals.length, 1);
-  const json = ok.modals[0].toJSON();
-  assert.equal(json.custom_id, `event-modal:${event.id}:8:-`);
-  assert.equal(json.components.length, 5);
+  const ok = await call({ event: event.id });
+  assert.equal(ok.ephemeral, true);
+  assert.equal(ok.modals.length, 0, 'the forms open from the panel buttons');
+  assert.match(embedText(ok.replies[0]), /Movie night/);
+  assert.deepEqual(panelButtons(ok.replies[0]), ['details', 'when', 'limits'].map((f) => `event-edit:${event.id}:${f}`));
 
   const unknown = await call({ event: 'nope' });
-  assert.equal(unknown.modals.length, 0);
   assert.match(embedText(unknown.replies[0]), /Event Not Found/);
-  assert.equal(unknown.replies[0].ephemeral, true);
+  assert.equal(unknown.ephemeral, true);
   events.get(event.id).status = 'ENDED';
   const closed = await call({ event: event.id });
   assert.match(embedText(closed.replies[0]), /Event Closed/);
+  assert.deepEqual(panelButtons(closed.replies[0]), []);
 });
 
 // ── Event channels ────────────────────────────────────────────────────────────
