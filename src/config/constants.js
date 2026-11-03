@@ -46,6 +46,7 @@ export const LIMITS = Object.freeze({
   SUGGESTION_LENGTH: 2000,     // Suggestion.content (/suggestion submit)
   MODMAIL_PING_ROLES: 10,      // GuildSettings.modmailPingRoleIds
   MODMAIL_BLOCKED_USERS: 500,  // GuildSettings.modmailBlockedUserIds
+  CAPTCHA_REQUIRED_ROLES: 10,  // GuildSettings.captchaRequiredRoleIds (/captcha require)
   APPLICATION_FORMS: 10,       // ApplicationForm rows per guild
   APPLICATION_QUESTIONS: 15,   // ApplicationForm.questions (3 modal pages of 5)
   APPLICATION_ROLES: 10,       // ApplicationForm.acceptRoleIds and requiredRoleIds, each

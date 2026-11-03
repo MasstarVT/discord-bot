@@ -21,13 +21,14 @@ import {
 } from 'discord.js';
 import prisma from '../database/client.js';
 import {
-  ensureGuildSettings, getSettings, getSettingsSafe, peekSettings, updateSettings, updateSettingsWith,
+  ensureGuildSettings, getSettings, getSettingsSafe, isModuleEnabled, peekSettings, updateSettings, updateSettingsWith,
 } from './settingsService.js';
+import { buildApplyButton, findFormById, judgeApply, reviewChannelIssue } from './applicationService.js';
 import { cancelJobs, scheduleJob, PermanentJobError } from './scheduler.js';
 import { cache } from './redis.js';
 import { assignAutorole } from './welcomeService.js';
 import { executeModAction } from './moderationService.js';
-import { COLORS, PERMISSION_LEVELS } from '../config/constants.js';
+import { COLORS, LIMITS, PERMISSION_LEVELS } from '../config/constants.js';
 import { MODULES } from '../config/modules.js';
 import { buildCustomId, parseCustomId } from '../config/customIds.js';
 import { normalizeTemplate, parseTemplateModal, renderTemplate } from '../utils/customEmbed.js';
@@ -59,6 +60,7 @@ export const USER_IMAGE_LIMIT = Object.freeze({ max: 10, windowMs: 600_000 });
 export const GUILD_IMAGE_LIMIT = Object.freeze({ max: 120, windowMs: 60_000 });
 export const KICK_DM_LIMIT = Object.freeze({ max: 30, windowMs: 60_000 });
 export const VERIFY_EXISTING_BATCH = 2000;
+export const FORM_LOOKUP_MS = 2_000; // the fallback form lookup in the "role required" reply
 export const DEFAULT_ROLE_NAME = 'verified'; // MEE6 "@verified"
 export const DEFAULT_CHANNEL_NAME = 'verification'; // MEE6 "#verification"
 export const BUTTON_STYLES = Object.freeze({
@@ -102,6 +104,23 @@ export function defaultPanelTemplate() {
 // A full replacement payload: editing a challenge message with it removes the stale image and buttons.
 const full = (embed) => ({ content: '', embeds: [embed], components: [], attachments: [] });
 
+export const FORM_BUTTON_LABEL = 'Fill out the form';
+const LINKED_ROLE_HELP = 'is a Linked Role: connect the account it asks for in **User Settings → Connections**, then click the server name → **Linked Roles** and claim it. Then press **Verify** again.';
+
+// The text of the "you need a role" reply (MSG.NEEDS_ROLE).
+function needsRoleText({ roleIds, linkedRoleIds, hasForm }) {
+  const lines = [`To verify here you need one of these roles: ${roleIds.map((id) => `<@&${id}>`).join(', ')}.`];
+  for (const id of linkedRoleIds) lines.push(`**<@&${id}>** ${LINKED_ROLE_HELP}`);
+  if (hasForm) {
+    lines.push(linkedRoleIds.length
+      ? `No linked account? Press **${FORM_BUTTON_LABEL}** below; staff will review it.`
+      : `Don't have one? Press **${FORM_BUTTON_LABEL}** below; staff will review it.`);
+  } else if (!linkedRoleIds.length) {
+    lines.push('If you think you should have one, please ask a server admin.');
+  }
+  return lines.join('\n\n');
+}
+
 /** Messages shown to members (all ephemeral). Every key except the two strings is a factory (fresh timestamp). */
 export const MSG = Object.freeze({
   MODULE_OFF: `The **${MODULES.captcha.label}** module is turned off on this server.`,
@@ -109,6 +128,11 @@ export const MSG = Object.freeze({
   NOT_SET_UP: () => full(errorEmbed('Verification Unavailable', "Verification isn't set up correctly on this server. Please tell a server admin.")),
   ALREADY: () => full(successEmbed('Already Verified', "You're already verified.")),
   SCREENING_FIRST: () => full(warnEmbed('Rules Screening First', "Please complete this server's rules screening first (the prompt at the bottom of the channel list), then press **Verify** again.")),
+  NEEDS_ROLE: ({ roleIds = [], linkedRoleIds = [], formButton = null } = {}) => ({
+    ...full(warnEmbed('Role Required', needsRoleText({ roleIds, linkedRoleIds, hasForm: !!formButton }))),
+    components: formButton ? [new ActionRowBuilder().addComponents(formButton)] : [],
+    allowedMentions: { parse: [] }, // role mentions in an embed never ping; this keeps it so if the text ever moves to content
+  }),
   RATE_USER: () => full(warnEmbed('Slow Down', "You've asked for a lot of codes. Please try again in a few minutes.")),
   RATE_GUILD: () => full(warnEmbed('Busy', 'Lots of people are verifying right now. Please try again in a minute.')),
   IMAGE_FAILED: () => full(errorEmbed('Try Again', "I couldn't draw a captcha just now. Press **Verify** again in a moment.")),
@@ -305,6 +329,83 @@ export function checkVerifiedRole(guild, role, settings, { executor = null } = {
   }
   if (settings?.muteRoleId === role.id) return { ok: false, reason: "That's the mute role." };
   return { ok: true };
+}
+
+/**
+ * The required-role gate (`/captcha require`). Pure.
+ * Ids that no longer exist in the guild (`guildRoleIds`) are ignored, and so is `exceptRoleId` (the verified role: nobody
+ * holds it before verifying, so asking for it would lock everyone out). No live id left means no gate.
+ * @param {{ requiredRoleIds?: Iterable<string>|null, memberRoleIds?: Iterable<string>|null, guildRoleIds?: Iterable<string>|null,
+ *   exceptRoleId?: string|null }} facts
+ * @returns {string[]|null} the roles the member needs one of, or null when nothing holds them back
+ */
+export function missingRequirement({ requiredRoleIds, memberRoleIds, guildRoleIds, exceptRoleId = null }) {
+  const exist = new Set(guildRoleIds ?? []);
+  const live = [...new Set(requiredRoleIds ?? [])].filter((id) => id !== exceptRoleId && exist.has(id));
+  if (!live.length) return null;
+  const have = new Set(memberRoleIds ?? []);
+  return live.some((id) => have.has(id)) ? null : live;
+}
+
+/**
+ * Whether a role may be required. Not checkVerifiedRole: the bot never gives these roles, so hierarchy and dangerous
+ * permissions do not matter. A Linked Role (earned through a connected account) is the main use, so it always passes.
+ * @param {{ role: { id: string, managed?: boolean, tags?: { guildConnections?: boolean } }, guildId: string, verifiedRoleId?: string|null }} facts
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export function checkRequiredRole({ role, guildId, verifiedRoleId = null }) {
+  if (role.id === guildId) return { ok: false, reason: '@everyone is not a useful requirement: everybody has it.' };
+  if (role.id === verifiedRoleId) return { ok: false, reason: "That's the verified role: nobody has it before they verify, so nobody could." };
+  if (role.managed && role.tags?.guildConnections !== true) {
+    return { ok: false, reason: "That's a bot or integration role, which members don't earn. Pick a normal role or a Linked Role." };
+  }
+  return { ok: true };
+}
+
+/**
+ * The new required-role list after `/captcha require`. Pure. Roles that were deleted since (not in `guildRoleIds`) drop out
+ * whenever the list is saved.
+ * @param {{ current?: string[]|null, guildRoleIds: Iterable<string>, addId?: string|null, removeId?: string|null, clear?: boolean,
+ *   max?: number }} change
+ * @returns {{ ok: true, roleIds: string[], outcome: 'added'|'already'|'removed'|'absent'|'cleared'|'unchanged', changed: boolean,
+ *   dropped: number } | { ok: false, reason: string }}
+ */
+export function planRequiredRoles({ current, guildRoleIds, addId = null, removeId = null, clear = false, max = LIMITS.CAPTCHA_REQUIRED_ROLES }) {
+  const before = [...new Set(current ?? [])];
+  const exist = new Set(guildRoleIds ?? []);
+  const kept = clear ? [] : before.filter((id) => exist.has(id));
+  const dropped = clear ? 0 : before.length - kept.length;
+  let roleIds = kept;
+  let outcome = clear ? 'cleared' : 'unchanged';
+  if (!clear && addId) {
+    if (kept.includes(addId)) outcome = 'already';
+    else if (kept.length >= max) return { ok: false, reason: `At most ${max} roles can be required. Remove one first.` };
+    else { roleIds = [...kept, addId]; outcome = 'added'; }
+  } else if (!clear && removeId) {
+    if (kept.includes(removeId)) { roleIds = kept.filter((id) => id !== removeId); outcome = 'removed'; } else outcome = 'absent';
+  }
+  const changed = roleIds.length !== before.length || roleIds.some((id, i) => id !== before[i]);
+  return { ok: true, roleIds, outcome, changed, dropped };
+}
+
+/**
+ * Why a member could not use the fallback application form (null when they can). Pure: judgeApply (the Applications rules,
+ * minus the per-member pending and cooldown checks that need the database) decides; the module switch comes first.
+ * @param {{ form: object|null, moduleOn: boolean, memberRoleIds?: Iterable<string>, reviewChannelProblem?: string|null }} facts
+ * @returns {string|null}
+ */
+export function fallbackFormProblem({ form, moduleOn, memberRoleIds = [], reviewChannelProblem = null }) {
+  if (!moduleOn) return 'The Applications module is off (`/module enable applications`).';
+  if (!form) return 'The form no longer exists (`/captcha require form:none` clears it).';
+  const verdict = judgeApply({ form, memberRoleIds, reviewChannelProblem });
+  if (verdict.ok) return null;
+  switch (verdict.code) {
+    case 'FORM_DISABLED': return 'The form is closed (disabled).';
+    case 'NOT_SET_UP': return form.reviewChannelId ? 'The form has no questions.' : 'The form has no review channel.';
+    case 'REVIEW_CHANNEL': return verdict.data?.reason ?? "The form's review channel is not usable.";
+    case 'MISSING_ROLE': return 'The form has required roles of its own, so members without them cannot use it.';
+    default: return 'The form cannot be used right now.';
+  }
 }
 
 export function progressText(run) {
@@ -832,7 +933,7 @@ export async function startVerifyExisting(interaction, settings, { includePendin
 // ── Diagnostics and status ────────────────────────────────────────────────────
 
 /** Human-readable problems with the current setup. Never throws. */
-export async function diagnoseCaptcha(guild, settings, { checkPanel = true } = {}) {
+export async function diagnoseCaptcha(guild, settings, { checkPanel = true, fallback = null } = {}) {
   const problems = [];
   try {
     const locked = isLocked(guild);
@@ -883,15 +984,66 @@ export async function diagnoseCaptcha(guild, settings, { checkPanel = true } = {
     if (settings.captchaTimeoutMinutes > 0 && missingBotPermissions(guild, ['KickMembers']).length) {
       problems.push("Unverified members can't be kicked: I need **Kick Members**.");
     }
+    problems.push(...(await requirementProblems(guild, settings, fallback)));
   } catch (err) {
     logger.warn(`Captcha diagnostics failed in ${guild?.id}`, err);
   }
   return problems;
 }
 
+/** Problems with `/captcha require`: roles that no longer count, and a fallback form members cannot use. */
+async function requirementProblems(guild, settings, fallback = null) {
+  const problems = [];
+  const required = settings.captchaRequiredRoleIds ?? [];
+  if (required.length) {
+    const exist = guild.roles.cache;
+    const dead = required.filter((id) => !exist.has(id));
+    const live = required.filter((id) => exist.has(id) && id !== settings.captchaRoleId);
+    if (required.includes(settings.captchaRoleId)) {
+      problems.push(`<@&${settings.captchaRoleId}> is both the verified role and a required role. It is ignored: nobody has it before they verify.`);
+    }
+    if (!live.length) {
+      problems.push('No required role is left (they were deleted), so nobody is held back. Add roles with `/captcha require role:` or turn the requirement off with `/captcha require clear:true`.');
+    } else if (dead.length) {
+      problems.push(`${dead.length} required role(s) were deleted and are ignored. Any change with \`/captcha require\` drops them from the list.`);
+    }
+  }
+  if (settings.captchaFallbackFormId) {
+    if (!required.length) problems.push('A fallback form is set but no role is required, so it is never offered: add one with `/captcha require role:`.');
+    const { problem } = fallback ?? await inspectFallbackForm(guild, settings);
+    if (problem) problems.push(`Fallback form: ${problem}`);
+  }
+  return problems;
+}
+
+/**
+ * The "Required roles" and "Fallback form" texts for `/captcha status` and `/captcha require`.
+ * @param {object} guild
+ * @param {object} settings
+ * @param {{ formId: string|null, form: object|null, problem: string|null }} fallback from inspectFallbackForm
+ * @returns {{ roles: string, form: string }}
+ */
+export function describeRequirements(guild, settings, fallback) {
+  const required = settings.captchaRequiredRoleIds ?? [];
+  const roles = required.length
+    ? joinWithLimit(required.map((id) => {
+      if (!guild.roles.cache.has(id)) return `⚠️ deleted (\`${id}\`)`;
+      return id === settings.captchaRoleId ? `<@&${id}> (⚠️ verified role: ignored)` : `<@&${id}>`;
+    }), { max: 1024 })
+    : 'None';
+  let form = 'None';
+  if (fallback?.formId) {
+    const name = fallback.form ? `**${clampText(fallback.form.name, 100)}**` : `\`${fallback.formId}\``;
+    form = fallback.problem ? `${name} · ⚠️ ${fallback.problem}` : name;
+  }
+  return { roles, form };
+}
+
 export async function buildStatusEmbed(guild, settings) {
   const embed = applyGuildColor(infoEmbed('🛡️ Verification'), settings);
-  const problems = await diagnoseCaptcha(guild, settings);
+  const fallback = await inspectFallbackForm(guild, settings); // once: the problems list and the form field share it
+  const problems = await diagnoseCaptcha(guild, settings, { fallback });
+  const requirements = describeRequirements(guild, settings, fallback);
   const role = settings.captchaRoleId ? guild.roles.cache.get(settings.captchaRoleId) : null;
   const channel = settings.captchaChannelId ? guild.channels.cache.get(settings.captchaChannelId) : null;
 
@@ -929,6 +1081,8 @@ export async function buildStatusEmbed(guild, settings) {
     },
     { name: 'Lock-down', value: isLocked(guild) ? '🔒 On' : '🔓 Off', inline: true },
     { name: 'Waiting to verify', value: pending, inline: true },
+    { name: 'Required roles', value: requirements.roles },
+    { name: 'Fallback form', value: clampText(requirements.form, 1024) },
   );
   const run = getBulkRun(guild.id);
   if (run) embed.addFields({ name: 'Batch', value: progressText(run), inline: true });
@@ -1145,6 +1299,44 @@ async function showAnswerModal(interaction) {
   }
 }
 
+/**
+ * The saved fallback form of the guild and whether members could use it (`problem` is null when they can). The one cheap,
+ * bounded lookup `/captcha status`, `/captcha require` and the "role required" reply share. Never throws: a failed
+ * lookup is a problem text, not an error.
+ * @param {object} guild
+ * @param {object} settings
+ * @param {Iterable<string>} [memberRoleIds] the member the reply is for (empty for the admin views)
+ * @returns {Promise<{ formId: string|null, form: object|null, problem: string|null }>}
+ */
+export async function inspectFallbackForm(guild, settings, memberRoleIds = []) {
+  const formId = settings?.captchaFallbackFormId ?? null;
+  if (!formId) return { formId: null, form: null, problem: null };
+  let form;
+  try {
+    form = await withTimeout(findFormById(guild.id, formId), FORM_LOOKUP_MS, 'captcha fallback form');
+  } catch (err) {
+    throttledWarn(`${guild.id}:fallbackform`, `Captcha: could not load the fallback form in ${guild.id}: ${err?.message}`);
+    return { formId, form: null, problem: 'The form could not be checked right now.' };
+  }
+  const problem = fallbackFormProblem({
+    form, moduleOn: isModuleEnabled(settings, 'applications'), memberRoleIds, reviewChannelProblem: form ? reviewChannelIssue(guild, form) : null,
+  });
+  return { formId, form, problem };
+}
+
+/** The "role required" reply for a member who holds none of `roleIds`, with the form button when the fallback form is usable. Never throws. */
+async function buildNeedsRoleReply({ guild, member, settings, roleIds }) {
+  const linkedRoleIds = roleIds.filter((id) => guild.roles.cache.get(id)?.tags?.guildConnections === true);
+  let formButton = null;
+  try {
+    const { form, problem } = await inspectFallbackForm(guild, settings, [...member.roles.cache.keys()]);
+    if (form && !problem) formButton = buildApplyButton(form, FORM_BUTTON_LABEL); // the Applications panel's own Apply button
+  } catch (err) {
+    logger.warn(`Captcha: fallback form button failed in ${guild.id}`, err);
+  }
+  return MSG.NEEDS_ROLE({ roleIds, linkedRoleIds, formButton });
+}
+
 // Shared by Verify and the answer form. Returns the role to grant, or null when it has already answered.
 async function preflight({ guild, member, settings, respond }) {
   const role = guild.roles.cache.get(settings.captchaRoleId ?? '');
@@ -1157,6 +1349,17 @@ async function preflight({ guild, member, settings, respond }) {
   if (member.roles.cache.has(role.id)) {
     await completeVerification(member, settings, role); // finishes a leftover pending row; no role add
     await respond(MSG.ALREADY());
+    return null;
+  }
+  // The required-role gate (/captcha require): before any challenge is drawn and before the role is given.
+  const needs = missingRequirement({
+    requiredRoleIds: settings.captchaRequiredRoleIds,
+    memberRoleIds: member.roles.cache.keys(),
+    guildRoleIds: guild.roles.cache.keys(),
+    exceptRoleId: role.id,
+  });
+  if (needs) {
+    await respond(await buildNeedsRoleReply({ guild, member, settings, roleIds: needs }));
     return null;
   }
   return role;

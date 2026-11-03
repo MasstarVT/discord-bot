@@ -37,7 +37,10 @@ const {
   isImageCaptchaAvailable, applyLock, removeLock, publishPanel, refreshPanel, diagnoseCaptcha, timeoutJobKey,
   onMemberJoin, onMemberLeave, onMemberUpdate, runTimeoutJob, handleCaptchaButton, handleCaptchaModal,
   completeVerification, issueChallenge, startVerifyExisting, getBulkRun, isBulkTarget, CaptchaConfigError,
+  missingRequirement, checkRequiredRole, planRequiredRoles, fallbackFormProblem, describeRequirements, FORM_BUTTON_LABEL,
 } = svc;
+const { applyCustomId, buildApplyButton, buildPanelPayload: buildApplicationPanel } = await import('../src/services/applicationService.js');
+const { LIMITS } = await import('../src/config/constants.js');
 
 // Silence the Redis reconnect and logger noise.
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug, info: console.info };
@@ -455,13 +458,18 @@ const charCount = (node) => {
   return n;
 };
 
-test('/captcha payload: 11 subcommands, within limits, exports', () => {
+test('/captcha payload: 12 subcommands, within limits, exports', () => {
   const json = buildCommandPayload(cmd);
   assert.equal(json.name, 'captcha');
-  assert.equal(json.options.length, 11);
+  assert.equal(json.options.length, 12);
   assert.deepEqual(json.options.map((o) => o.name),
-    ['setup', 'enable', 'disable', 'status', 'mode', 'role', 'channel', 'timeout', 'message', 'lock', 'verify-existing']);
-  assert.ok(charCount(json) <= 1450, `${charCount(json)} characters`);
+    ['setup', 'enable', 'disable', 'status', 'mode', 'role', 'require', 'channel', 'timeout', 'message', 'lock', 'verify-existing']);
+  assert.ok(charCount(json) <= 1650, `${charCount(json)} characters`);
+  // /captcha require: role, remove, clear and an autocompleted form, none of them required (no options shows the state).
+  const req = json.options.find((o) => o.name === 'require');
+  assert.deepEqual(req.options.map((o) => [o.name, o.type, !!o.required, !!o.autocomplete]),
+    [['role', 8, false, false], ['remove', 5, false, false], ['clear', 5, false, false], ['form', 3, false, true]]);
+  assert.equal(typeof cmd.autocomplete, 'function');
   const walk = (n) => { assert.ok(n.description.length <= 100, n.name); (n.options ?? []).forEach(walk); };
   walk(json);
   assert.equal(cmd.module, 'captcha');
@@ -575,6 +583,194 @@ test('diagnoseCaptcha reports setup problems and never throws', async () => {
 
   // A broken guild object: still no throw.
   assert.ok(Array.isArray(await diagnoseCaptcha({}, { captchaRoleId: 'x' })));
+});
+
+// ── Required roles and the fallback form (/captcha require) ───────────────────
+
+test('missingRequirement: no list, a deleted list, a held role and a missing role', () => {
+  const guildRoleIds = ['G', 'R1', 'R2', 'RV'];
+  const need = (o) => missingRequirement({ guildRoleIds, ...o });
+  // Empty or absent list: today's behaviour, no gate.
+  assert.equal(need({ requiredRoleIds: [], memberRoleIds: [] }), null);
+  assert.equal(need({ requiredRoleIds: undefined, memberRoleIds: undefined }), null);
+  assert.equal(need({ requiredRoleIds: null, memberRoleIds: ['R1'] }), null);
+  // Any one of the listed roles is enough.
+  assert.equal(need({ requiredRoleIds: ['R1', 'R2'], memberRoleIds: ['R2'] }), null);
+  assert.equal(need({ requiredRoleIds: ['R1', 'R2'], memberRoleIds: new Set(['R1', 'X']) }), null);
+  // None held: the live roles are returned, in order, without duplicates.
+  assert.deepEqual(need({ requiredRoleIds: ['R1', 'R2', 'R1'], memberRoleIds: ['X'] }), ['R1', 'R2']);
+  assert.deepEqual(need({ requiredRoleIds: ['R1'], memberRoleIds: [] }), ['R1']);
+  // Deleted roles are ignored: they neither gate nor satisfy ...
+  assert.deepEqual(need({ requiredRoleIds: ['GONE', 'R2'], memberRoleIds: ['X'] }), ['R2']);
+  assert.equal(need({ requiredRoleIds: ['GONE', 'R2'], memberRoleIds: ['GONE'] })?.[0], 'R2');
+  // ... and when every listed role is deleted there is no gate at all.
+  assert.equal(need({ requiredRoleIds: ['GONE', 'GONE2'], memberRoleIds: [] }), null);
+  // The verified role is never a requirement (nobody has it before verifying).
+  assert.equal(need({ requiredRoleIds: ['RV'], memberRoleIds: [], exceptRoleId: 'RV' }), null);
+  assert.deepEqual(need({ requiredRoleIds: ['RV', 'R1'], memberRoleIds: [], exceptRoleId: 'RV' }), ['R1']);
+  // Iterables work (a Collection's keys()), and bad input never throws.
+  assert.deepEqual(missingRequirement({ requiredRoleIds: ['R1'], memberRoleIds: new Collection().keys(), guildRoleIds: new Collection([['R1', {}]]).keys() }), ['R1']);
+  assert.equal(missingRequirement({}), null);
+});
+
+test('checkRequiredRole: refuses @everyone, the verified role and bot roles, but never a Linked Role', () => {
+  const ok = (role, extra = {}) => checkRequiredRole({ role, guildId: 'G', verifiedRoleId: 'RV', ...extra });
+  assert.deepEqual(ok({ id: 'R1' }), { ok: true });
+  assert.equal(ok({ id: 'G' }).ok, false);
+  assert.match(ok({ id: 'G' }).reason, /@everyone/);
+  assert.equal(ok({ id: 'RV' }).ok, false);
+  assert.match(ok({ id: 'RV' }).reason, /verified role/);
+  assert.equal(ok({ id: 'RB', managed: true }).ok, false);
+  assert.match(ok({ id: 'RB', managed: true, tags: { botId: '1' } }).reason, /bot or integration/);
+  // A Linked Role is the main use: it passes even if the API ever flags it as managed.
+  assert.deepEqual(ok({ id: 'RL', tags: { guildConnections: true } }), { ok: true });
+  assert.deepEqual(ok({ id: 'RL', managed: true, tags: { guildConnections: true } }), { ok: true });
+  // No dangerous-permission or hierarchy rule: the bot never gives these roles.
+  assert.deepEqual(ok({ id: 'RA', managed: false, permissions: perms('Administrator'), position: 99 }), { ok: true });
+  assert.deepEqual(checkRequiredRole({ role: { id: 'R1' }, guildId: 'G' }), { ok: true }); // no verified role set yet
+});
+
+test('planRequiredRoles: add, duplicate, cap, remove, clear and deleted roles dropping out', () => {
+  const live = ['A', 'B', 'C', 'D'];
+  const plan = (o) => planRequiredRoles({ guildRoleIds: live, ...o });
+  assert.deepEqual(plan({ current: [], addId: 'A' }), { ok: true, roleIds: ['A'], outcome: 'added', changed: true, dropped: 0 });
+  assert.deepEqual(plan({ current: undefined, addId: 'A' }).roleIds, ['A']);
+  assert.deepEqual(plan({ current: ['A'], addId: 'A' }), { ok: true, roleIds: ['A'], outcome: 'already', changed: false, dropped: 0 });
+  assert.deepEqual(plan({ current: ['A'], addId: 'B' }).roleIds, ['A', 'B']);
+  assert.deepEqual(plan({ current: ['A', 'B'], removeId: 'A' }), { ok: true, roleIds: ['B'], outcome: 'removed', changed: true, dropped: 0 });
+  assert.deepEqual(plan({ current: ['B'], removeId: 'A' }), { ok: true, roleIds: ['B'], outcome: 'absent', changed: false, dropped: 0 });
+  assert.deepEqual(plan({ current: ['A', 'B'], clear: true }), { ok: true, roleIds: [], outcome: 'cleared', changed: true, dropped: 0 });
+  assert.deepEqual(plan({ current: [], clear: true }), { ok: true, roleIds: [], outcome: 'cleared', changed: false, dropped: 0 });
+  assert.deepEqual(plan({ current: ['A'] }), { ok: true, roleIds: ['A'], outcome: 'unchanged', changed: false, dropped: 0 });
+  // The cap is LIMITS.CAPTCHA_REQUIRED_ROLES (10): the 11th is refused, a duplicate at the cap is not.
+  assert.equal(LIMITS.CAPTCHA_REQUIRED_ROLES, 10);
+  const ten = Array.from({ length: 10 }, (_, i) => `R${i}`);
+  const big = { guildRoleIds: [...ten, 'NEW'], current: ten };
+  const refused = planRequiredRoles({ ...big, addId: 'NEW' });
+  assert.equal(refused.ok, false);
+  assert.match(refused.reason, /At most 10/);
+  assert.equal(planRequiredRoles({ ...big, addId: 'R3' }).outcome, 'already');
+  assert.equal(planRequiredRoles({ ...big, addId: 'NEW', max: 11 }).ok, true);
+  // Deleted roles fall out of any saved list, and the plan says so.
+  assert.deepEqual(plan({ current: ['GONE', 'A'], addId: 'B' }), { ok: true, roleIds: ['A', 'B'], outcome: 'added', changed: true, dropped: 1 });
+  assert.deepEqual(plan({ current: ['GONE', 'A'], addId: 'A' }), { ok: true, roleIds: ['A'], outcome: 'already', changed: true, dropped: 1 });
+  // A deleted role does not use up room under the cap.
+  assert.equal(planRequiredRoles({ guildRoleIds: [...ten.slice(1), 'NEW'], current: ten, addId: 'NEW' }).ok, true);
+});
+
+test('fallbackFormProblem: the Applications rules decide, the module switch comes first', () => {
+  const form = (o = {}) => ({ id: 'F1', name: 'Apply', enabled: true, reviewChannelId: 'RC', questions: [{ label: 'Why?', style: 'SHORT', required: true }], requiredRoleIds: [], ...o });
+  const problem = (o) => fallbackFormProblem({ form: form(), moduleOn: true, ...o });
+  assert.equal(problem({}), null);
+  assert.match(problem({ moduleOn: false }), /Applications module is off/);
+  assert.match(problem({ form: null }), /no longer exists/);
+  assert.match(problem({ moduleOn: false, form: null }), /Applications module is off/); // the module first
+  assert.match(problem({ form: form({ enabled: false }) }), /closed/);
+  assert.match(problem({ form: form({ reviewChannelId: null }) }), /no review channel/);
+  assert.match(problem({ form: form({ questions: [] }) }), /no questions/);
+  assert.match(problem({ form: form({ questions: [{ label: '   ' }, 'junk'] }) }), /no questions/); // parseQuestions drops them
+  assert.equal(problem({ reviewChannelProblem: 'The review channel was deleted.' }), 'The review channel was deleted.');
+  assert.match(problem({ form: form({ requiredRoleIds: ['X'] }) }), /required roles of its own/);
+  assert.equal(problem({ form: form({ requiredRoleIds: ['X'] }), memberRoleIds: ['X'] }), null);
+});
+
+test('MSG.NEEDS_ROLE: lists the roles, explains a Linked Role, and offers the form with the Applications Apply button', () => {
+  const text = (p) => p.embeds[0].toJSON().description;
+  const plain = MSG.NEEDS_ROLE({ roleIds: ['111', '222'] });
+  assert.match(plain.embeds[0].toJSON().title, /Role Required$/);
+  assert.match(text(plain), /one of these roles: <@&111>, <@&222>\./);
+  assert.match(text(plain), /ask a server admin/);
+  assert.doesNotMatch(text(plain), /Linked Role|Fill out the form/);
+  assert.deepEqual(plain.components, []);
+  assert.deepEqual(plain.attachments, []); // an edit that replaces a challenge image removes it
+  assert.equal(plain.content, '');
+  assert.deepEqual(plain.allowedMentions, { parse: [] });
+  assert.notEqual(MSG.NEEDS_ROLE({ roleIds: ['1'] }), MSG.NEEDS_ROLE({ roleIds: ['1'] })); // a fresh payload each time
+  assert.deepEqual(MSG.NEEDS_ROLE().components, []); // never throws without arguments
+
+  const linked = MSG.NEEDS_ROLE({ roleIds: ['111', '222'], linkedRoleIds: ['222'] });
+  assert.match(text(linked), /\*\*<@&222>\*\* is a Linked Role: connect the account it asks for in \*\*User Settings → Connections\*\*, then click the server name → \*\*Linked Roles\*\* and claim it\. Then press \*\*Verify\*\* again\./);
+  assert.doesNotMatch(text(linked), /\*\*<@&111>\*\* is a Linked Role/);
+  assert.doesNotMatch(text(linked), /ask a server admin/);
+
+  const form = { id: 'clx0form0000000000000001', name: 'Apply' };
+  const withForm = MSG.NEEDS_ROLE({ roleIds: ['222'], linkedRoleIds: ['222'], formButton: buildApplyButton(form, FORM_BUTTON_LABEL) });
+  assert.match(text(withForm), /No linked account\? Press \*\*Fill out the form\*\* below; staff will review it\./);
+  assert.equal(withForm.components.length, 1);
+  const button = withForm.components[0].toJSON().components[0];
+  assert.equal(button.label, 'Fill out the form');
+  // Exactly what the Applications panel's Apply button carries, so the existing Applications handler takes over.
+  assert.equal(button.custom_id, `application:apply:${form.id}`);
+  assert.equal(button.custom_id, applyCustomId(form.id));
+  const panelButton = buildApplicationPanel({ ...form, questions: [], description: null }).components[0].toJSON().components[0];
+  assert.equal(button.custom_id, panelButton.custom_id);
+  assert.equal(panelButton.label, 'Apply');
+  // No linked role: the form line asks "Don't have one?" instead.
+  const noLinked = MSG.NEEDS_ROLE({ roleIds: ['222'], formButton: buildApplyButton(form, FORM_BUTTON_LABEL) });
+  assert.match(text(noLinked), /Don't have one\? Press \*\*Fill out the form\*\* below; staff will review it\./);
+  assert.doesNotMatch(text(noLinked), /No linked account/);
+});
+
+test('describeRequirements: mentions, deleted roles, the verified role and the form state', () => {
+  const guild = mkGuild({ id: 'G' });
+  addRole(guild, 'R1');
+  addRole(guild, 'RV');
+  const none = describeRequirements(guild, { captchaRoleId: 'RV' }, { formId: null, form: null, problem: null });
+  assert.deepEqual(none, { roles: 'None', form: 'None' });
+  assert.deepEqual(describeRequirements(guild, {}, undefined), { roles: 'None', form: 'None' });
+  const some = describeRequirements(guild, { captchaRoleId: 'RV', captchaRequiredRoleIds: ['R1', 'GONE', 'RV'] },
+    { formId: 'F1', form: { name: 'Apply' }, problem: null });
+  assert.match(some.roles, /<@&R1>/);
+  assert.match(some.roles, /deleted \(`GONE`\)/);
+  assert.match(some.roles, /<@&RV> \(⚠️ verified role: ignored\)/);
+  assert.equal(some.form, '**Apply**');
+  const bad = describeRequirements(guild, {}, { formId: 'F1', form: { name: 'Apply' }, problem: 'The form is closed (disabled).' });
+  assert.equal(bad.form, '**Apply** · ⚠️ The form is closed (disabled).');
+  const gone = describeRequirements(guild, {}, { formId: 'F9', form: null, problem: 'The form no longer exists (`/captcha require form:none` clears it).' });
+  assert.match(gone.form, /^`F9` · ⚠️ The form no longer exists/);
+});
+
+test('diagnoseCaptcha: required-role problems (all deleted, some deleted, the verified role), without touching the database', async () => {
+  const guild = mkGuild({ id: 'G' });
+  addRole(guild, 'RV', { position: 2 });
+  addRole(guild, 'R1', { position: 2 });
+  const base = { captchaMode: 'BUTTON', captchaTimeoutMinutes: 0, captchaRoleId: 'RV', captchaChannelId: 'CA', captchaMessageId: 'M' };
+  mkChannel(guild, 'CA');
+  const probs = async (extra) => (await diagnoseCaptcha(guild, { ...base, ...extra }, { checkPanel: false })).join('\n');
+  assert.doesNotMatch(await probs({}), /required/i);
+  assert.doesNotMatch(await probs({ captchaRequiredRoleIds: ['R1'] }), /required/i);
+  assert.match(await probs({ captchaRequiredRoleIds: ['GONE'] }), /No required role is left.*nobody is held back/);
+  assert.match(await probs({ captchaRequiredRoleIds: ['GONE', 'R1'] }), /1 required role\(s\) were deleted and are ignored/);
+  assert.match(await probs({ captchaRequiredRoleIds: ['RV', 'R1'] }), /both the verified role and a required role/);
+  assert.match(await probs({ captchaRequiredRoleIds: ['RV'] }), /No required role is left/);
+  // A fallback form without a required role is never offered (the form lookup is given, so no database).
+  const out = await diagnoseCaptcha(guild, { ...base, captchaFallbackFormId: 'F1' }, { checkPanel: false, fallback: { formId: 'F1', form: { name: 'A' }, problem: null } });
+  assert.ok(out.some((p) => /fallback form is set but no role is required/.test(p)));
+  const bad = await diagnoseCaptcha(guild, { ...base, captchaRequiredRoleIds: ['R1'], captchaFallbackFormId: 'F1' },
+    { checkPanel: false, fallback: { formId: 'F1', form: { name: 'A' }, problem: 'The form has no review channel.' } });
+  assert.ok(bad.includes('Fallback form: The form has no review channel.'));
+});
+
+test('inspectFallbackForm: no form id never touches the database; a failing lookup is a problem text, not an error', async () => {
+  const guild = mkGuild({ id: 'G' });
+  const started = Date.now();
+  assert.deepEqual(await svc.inspectFallbackForm(guild, {}), { formId: null, form: null, problem: null });
+  assert.deepEqual(await svc.inspectFallbackForm(guild, { captchaFallbackFormId: null }), { formId: null, form: null, problem: null });
+  assert.ok(Date.now() - started < 200, 'no lookup without a form id');
+  if (DB) return; // with a database the id below would simply not be found
+  const res = await svc.inspectFallbackForm(guild, { captchaFallbackFormId: 'F1', applicationsEnabled: true }, ['R1']);
+  assert.deepEqual(res, { formId: 'F1', form: null, problem: 'The form could not be checked right now.' });
+  assert.ok(Date.now() - started < svc.FORM_LOOKUP_MS + 1500, 'the lookup is bounded');
+});
+
+test('/captcha require autocomplete: anything but the form option answers nothing', async () => {
+  let answered = null;
+  await cmd.autocomplete({
+    guildId: 'G', responded: false,
+    options: { getFocused: () => ({ name: 'role', value: 'x' }) },
+    respond: async (choices) => { answered = choices; },
+  });
+  assert.deepEqual(answered, []);
 });
 
 // ── Hook bodies and the challenge flow against a real database ────────────────
@@ -1295,6 +1491,222 @@ test('DB: /captcha timeout, mode, role, enable, disable and message button optio
   assert.equal(form.log.modals.length, 1);
   assert.equal(form.log.modals[0].toJSON().custom_id, 'captcha-modal:panel');
   assert.deepEqual(form.log.defers, []);
+});
+
+test('DB: Verify is held back until the member has a required role (both paths, both modes), and deleted roles never gate', { skip: skipDb }, async () => {
+  const guild = await dbGuild(60, { captchaMode: 'IMAGE', captchaRequiredRoleIds: ['RQ1', 'RQ2'], autoroleIds: [] });
+  addRole(guild, 'RQ1', { position: 2 });
+  addRole(guild, 'RQ2', { position: 2 });
+  const m = mkMember(guild, UID(600));
+
+  // The Verify button in IMAGE mode: refused before any challenge is drawn or stored.
+  const start = mkInteraction(guild, m, { customId: 'captcha:start' });
+  await handleCaptchaButton(start);
+  assert.deepEqual(start.log.defers, [['reply', { ephemeral: true }]]); // acknowledged first, privately
+  const reply = start.log.edits.at(-1);
+  assert.match(embedText(lastEmbed(start.log.edits)), /Role Required/);
+  assert.match(embedText(lastEmbed(start.log.edits)), /<@&RQ1>, <@&RQ2>/);
+  assert.deepEqual(reply.components, []);
+  assert.equal(reply.files, undefined);
+  assert.equal(await row(guild, m.id), null);
+  assert.deepEqual(m.roles.calls, []);
+
+  // The answer form: a challenge that existed before the requirement is replaced by the message, never completed.
+  await prisma.captchaVerification.create({ data: { guildId: guild.id, userId: m.id, answerHash: hashAnswer(guild.id, m.id, 'ACEFHJ'), attempts: 0, expiresAt: new Date(Date.now() + 600_000) } });
+  const answer = mkInteraction(guild, m, { customId: 'captcha-modal:answer', input: 'ACEFHJ' });
+  await handleCaptchaModal(answer);
+  assert.match(embedText(lastEmbed(answer.log.edits)), /Role Required/);
+  assert.deepEqual(answer.log.edits.at(-1).attachments, []);
+  assert.deepEqual(m.roles.calls, []);
+  assert.ok(await row(guild, m.id), 'the row is untouched');
+
+  // Holding any one of the roles opens the gate.
+  await updateSettings(guild.id, { captchaMode: 'BUTTON' });
+  m.roles.cache.set('RQ2', guild.roles.cache.get('RQ2'));
+  const ok = mkInteraction(guild, m, { customId: 'captcha:start' });
+  await handleCaptchaButton(ok);
+  assert.match(embedText(lastEmbed(ok.log.edits)), /Verified/);
+  assert.deepEqual(m.roles.calls.map((c) => c.id), ['RV']);
+
+  // An already verified member is told so, whatever the list says.
+  const again = mkInteraction(guild, m, { customId: 'captcha:start' });
+  await handleCaptchaButton(again);
+  assert.match(embedText(lastEmbed(again.log.edits)), /Already Verified/);
+
+  // A list of deleted roles is no gate; an empty list is today's behaviour.
+  for (const list of [['GONE'], []]) {
+    await updateSettings(guild.id, { captchaRequiredRoleIds: list });
+    const n = mkMember(guild, UID(601 + list.length));
+    const i = mkInteraction(guild, n, { customId: 'captcha:start' });
+    await handleCaptchaButton(i);
+    assert.match(embedText(lastEmbed(i.log.edits)), /Verified/);
+  }
+});
+
+test('DB: the required-role reply explains Linked Roles and offers the fallback form only when it is usable', { skip: skipDb }, async () => {
+  const guild = await dbGuild(61, { captchaRequiredRoleIds: ['RL'], applicationsEnabled: true });
+  addRole(guild, 'RL', { position: 2 }).tags = { guildConnections: true };
+  mkChannel(guild, 'RC');
+  const form = await prisma.applicationForm.create({
+    data: { guildId: guild.id, name: 'Join Us', questions: [{ label: 'Why?', style: 'SHORT', required: true }], reviewChannelId: 'RC' },
+  });
+  const press = async () => {
+    const m = mkMember(guild, UID(610 + press.n++));
+    const i = mkInteraction(guild, m, { customId: 'captcha:start' });
+    await handleCaptchaButton(i);
+    assert.deepEqual(m.roles.calls, []);
+    return i.log.edits.at(-1);
+  };
+  press.n = 0;
+  const buttonOf = (payload) => payload.components[0]?.toJSON().components[0];
+
+  // No form saved: the Linked Role help, no button.
+  let p = await press();
+  assert.match(embedText(p.embeds[0].toJSON()), /\*\*<@&RL>\*\* is a Linked Role: connect the account it asks for/);
+  assert.deepEqual(p.components, []);
+
+  // A usable form: its line and the Applications panel's own Apply button.
+  await updateSettings(guild.id, { captchaFallbackFormId: form.id });
+  p = await press();
+  assert.match(embedText(p.embeds[0].toJSON()), /No linked account\? Press \*\*Fill out the form\*\* below; staff will review it\./);
+  assert.equal(buttonOf(p).custom_id, `application:apply:${form.id}`);
+  assert.equal(buttonOf(p).label, 'Fill out the form');
+
+  // Closed form, no questions, no review channel, deleted review channel, Applications off, a form of another guild, a gone form:
+  // the reply stays, the button goes.
+  const closed = async (why, change) => {
+    await change();
+    p = await press();
+    assert.match(embedText(p.embeds[0].toJSON()), /Role Required/, why);
+    assert.deepEqual(p.components, [], why);
+  };
+  await closed('disabled', () => prisma.applicationForm.update({ where: { id: form.id }, data: { enabled: false } }));
+  await closed('no questions', () => prisma.applicationForm.update({ where: { id: form.id }, data: { enabled: true, questions: [] } }));
+  await closed('no review channel', () => prisma.applicationForm.update({ where: { id: form.id }, data: { questions: [{ label: 'Why?', style: 'SHORT', required: true }], reviewChannelId: null } }));
+  await closed('review channel deleted', () => prisma.applicationForm.update({ where: { id: form.id }, data: { reviewChannelId: 'DELETED' } }));
+  await prisma.applicationForm.update({ where: { id: form.id }, data: { reviewChannelId: 'RC' } });
+  p = await press();
+  assert.equal(buttonOf(p).custom_id, `application:apply:${form.id}`, 'usable again');
+  await closed('Applications module off', () => updateSettings(guild.id, { applicationsEnabled: false }));
+  await updateSettings(guild.id, { applicationsEnabled: true });
+  const other = await dbGuild(63);
+  const foreign = await prisma.applicationForm.create({ data: { guildId: other.id, name: 'Other', questions: [{ label: 'Q', style: 'SHORT', required: true }], reviewChannelId: 'RC' } });
+  await closed('form of another guild', () => updateSettings(guild.id, { captchaFallbackFormId: foreign.id }));
+  await closed('form gone', () => updateSettings(guild.id, { captchaFallbackFormId: 'gone' }));
+});
+
+test('DB: /captcha require: add, remove, clear, the cap, refused roles, the fallback form and the status', { skip: skipDb }, async () => {
+  const guild = await dbGuild(62, { captchaTimeoutMinutes: 30 });
+  const ten = Array.from({ length: 10 }, (_, i) => `RQ${i}`);
+  for (const id of [...ten, 'RQX']) addRole(guild, id, { position: 2 });
+  addRole(guild, 'RB', { managed: true });
+  const admin = mkMember(guild, UID(620), { permissions: perms('Administrator') });
+  const run = async (o) => { const i = mkSlash(guild, admin, 'require', o); await cmd.execute(i); return i; };
+  const text = (i) => embedText(lastEmbed(i.log.edits));
+  const stored = async () => (await prisma.guildSettings.findUnique({ where: { guildId: guild.id } }));
+  const role = (id) => guild.roles.cache.get(id);
+
+  // No options: show the current requirement.
+  let i = await run({});
+  assert.match(text(i), /Verification Requirements/);
+  assert.match(text(i), /Required roles\*\* \(any one of them\): None/);
+  assert.match(text(i), /Fallback form:\*\* None/);
+
+  // Refused roles.
+  for (const [r, re] of [[guild.roles.everyone, /@everyone/], [role('RV'), /verified role/], [role('RB'), /bot or integration/]]) {
+    i = await run({ role: r });
+    assert.match(text(i), /Cannot Require This Role/);
+    assert.match(text(i), re);
+  }
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, []);
+
+  // Add, add again, remove, remove again.
+  i = await run({ role: role('RQ0') });
+  assert.match(text(i), /Requirements Updated/);
+  assert.match(text(i), /<@&RQ0> is now required/);
+  assert.match(text(i), /kicked after 30 minutes/); // a timeout plus a requirement is called out
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, ['RQ0']);
+  i = await run({ role: role('RQ0') });
+  assert.match(text(i), /No Change/);
+  assert.match(text(i), /already required/);
+  i = await run({ role: role('RQ0'), remove: true });
+  assert.match(text(i), /no longer required/);
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, []);
+  i = await run({ role: role('RQ0'), remove: true });
+  assert.match(text(i), /was not required/);
+
+  // Option conflicts.
+  assert.match(text(await run({ remove: true })), /Pick the role to remove/);
+  assert.match(text(await run({ clear: true, role: role('RQ0') })), /Use `clear` on its own/);
+
+  // The cap: ten fit, the eleventh does not, and nothing was saved for it.
+  for (const id of ten) await run({ role: role(id) });
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, ten);
+  i = await run({ role: role('RQX') });
+  assert.match(text(i), /At most 10 roles/);
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, ten);
+
+  // Clear.
+  i = await run({ clear: true });
+  assert.match(text(i), /Every required role was removed/);
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, []);
+  assert.match(text(await run({ clear: true })), /No role was required/);
+
+  // A deleted role drops out of the list on the next change.
+  await updateSettings(guild.id, { captchaRequiredRoleIds: ['RQ1', 'GONE'] });
+  i = await run({ role: role('RQ2') });
+  assert.match(text(i), /Dropped 1 deleted role/);
+  assert.deepEqual((await stored()).captchaRequiredRoleIds, ['RQ1', 'RQ2']);
+
+  // The fallback form: by name (any case), unknown names refused, none clears.
+  const form = await prisma.applicationForm.create({
+    data: { guildId: guild.id, name: 'Join Us', questions: [{ label: 'Why?', style: 'SHORT', required: true }], reviewChannelId: 'RC' },
+  });
+  i = await run({ form: 'join us' });
+  assert.match(text(i), /Requirements Updated/);
+  assert.match(text(i), /Fallback form:\*\* \*\*Join Us\*\* · ⚠️ The Applications module is off/); // saved, with the warning
+  assert.equal((await stored()).captchaFallbackFormId, form.id);
+  i = await run({ form: form.id }); // the autocomplete value is the id
+  assert.match(text(i), /No Change/);
+  assert.match(text(i), /already the fallback form/);
+  i = await run({ form: 'nope' });
+  assert.match(text(i), /Form Not Found/);
+  assert.equal((await stored()).captchaFallbackFormId, form.id);
+
+  // Status shows both, and the problems list carries the form's warning.
+  const status = mkSlash(guild, admin, 'status');
+  await cmd.execute(status);
+  const fields = lastEmbed(status.log.edits).fields;
+  assert.match(fields.find((f) => f.name === 'Required roles').value, /<@&RQ1>.*<@&RQ2>/);
+  assert.match(fields.find((f) => f.name === 'Fallback form').value, /Join Us.*Applications module is off/);
+  assert.match(fields.find((f) => f.name === 'Problems').value, /Fallback form: The Applications module is off/);
+
+  i = await run({ form: 'NONE' });
+  assert.match(text(i), /fallback form was cleared/);
+  assert.equal((await stored()).captchaFallbackFormId, null);
+  i = await run({ form: 'none' });
+  assert.match(text(i), /No fallback form was set/);
+});
+
+test('DB: /captcha require autocomplete lists the guild forms and none', { skip: skipDb }, async () => {
+  const guild = await dbGuild(64);
+  await prisma.applicationForm.create({ data: { guildId: guild.id, name: 'Join Us', enabled: false } });
+  const ask = async (value) => {
+    let answered = null;
+    await cmd.autocomplete({
+      guildId: guild.id, responded: false,
+      options: { getFocused: () => ({ name: 'form', value }) },
+      respond: async (choices) => { answered = choices; },
+    });
+    return answered;
+  };
+  const all = await ask('');
+  assert.equal(all[0].value, 'none');
+  assert.equal(all.length, 2);
+  assert.match(all[1].name, /Join Us/);
+  assert.match(all[1].name, /⏸️/); // a closed form is marked
+  assert.deepEqual((await ask('join')).map((c) => c.name.includes('Join Us')), [true]);
+  assert.deepEqual((await ask('xyz')), []);
 });
 
 test('DB: /captcha lock: pre-checks, and lock off keeps a private server private (prior state)', { skip: skipDb }, async () => {

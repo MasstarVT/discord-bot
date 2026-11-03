@@ -240,6 +240,14 @@ export function reviewRow(submissionId) {
   );
 }
 
+/** The customId of the Apply button of `formId`: the panel's, and any other message that hands a member to the apply flow. */
+export const applyCustomId = (formId) => buildCustomId('application', 'apply', formId);
+
+/** An Apply button for `form` (the panel's; /captcha's fallback "Fill out the form" is the same button with another label). */
+export function buildApplyButton(form, label = APPLICATION.APPLY_LABEL) {
+  return new ButtonBuilder().setCustomId(applyCustomId(form.id)).setLabel(label).setEmoji('📝').setStyle(ButtonStyle.Primary);
+}
+
 /** The panel message with its Apply button. */
 export function buildPanelPayload(form, guild = null) {
   const questions = parseQuestions(form.questions);
@@ -248,10 +256,7 @@ export function buildPanelPayload(form, guild = null) {
     .setTitle(clampText(`📝 ${form.name}`, 256))
     .setDescription(clampText((form.description && renderPlaceholders(form.description, { guild })) || 'Press **Apply** to fill in the application.', 4000))
     .setFooter({ text: `${questions.length} question${questions.length === 1 ? '' : 's'}` });
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(buildCustomId('application', 'apply', form.id)).setLabel(APPLICATION.APPLY_LABEL)
-      .setEmoji('📝').setStyle(ButtonStyle.Primary),
-  );
+  const row = new ActionRowBuilder().addComponents(buildApplyButton(form));
   return { embeds: [embed], components: [row], allowedMentions: NO_MENTIONS };
 }
 
@@ -347,6 +352,13 @@ export async function findForm(guildId, ref) {
   const byId = await prisma.applicationForm.findFirst({ where: { id: text, guildId } });
   if (byId) return byId;
   return prisma.applicationForm.findFirst({ where: { guildId, name: { equals: text, mode: 'insensitive' } } });
+}
+
+/** A form of this guild by id only (null when it is gone or belongs to another guild). Throws on a database failure. */
+export async function findFormById(guildId, id) {
+  const text = String(id ?? '').trim().slice(0, 100);
+  if (!text) return null;
+  return prisma.applicationForm.findFirst({ where: { id: text, guildId } });
 }
 
 /** Choices for the `form` option: id values, names as labels. */
@@ -555,7 +567,7 @@ export async function startDraft({ form, userId, memberRoleIds, reviewChannelPro
 }
 
 /** Why the bot cannot post in the form's review channel (null when it can, or when none is set: that is NOT_SET_UP). */
-function reviewChannelIssue(guild, form) {
+export function reviewChannelIssue(guild, form) {
   if (!form.reviewChannelId) return null;
   const channel = guild.channels.cache.get(form.reviewChannelId);
   if (!channel) return 'The review channel was deleted.';

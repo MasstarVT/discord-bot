@@ -4,14 +4,15 @@ import {
   buildStatusEmbed, countPending, createVerificationChannel, diagnoseCaptcha, discordErrorText, everyoneCanView,
   getBulkRun, isImageCaptchaAvailable, isLocked, lockPlan, panelTemplate, parseVerifyButton, progressText, publishPanel,
   refreshPanel, removeLock, resetPanelTemplate, settingsForAck, startVerifyExisting, validateTimeoutMinutes,
-  checkVerifiedRole, MSG,
+  checkRequiredRole, checkVerifiedRole, describeRequirements, inspectFallbackForm, planRequiredRoles, MSG,
 } from '../../services/captchaService.js';
+import { findForm, findFormsForAutocomplete } from '../../services/applicationService.js';
 import { getSettings, updateSettings, updateSettingsWith } from '../../services/settingsService.js';
 import { cancelJobs } from '../../services/scheduler.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import { errorEmbed, infoEmbed, successEmbed } from '../../utils/embedBuilder.js';
 import {
-  awaitConfirm, checkAssignableRole, checkChannelUsable, missingBotPermissions, permissionNames, safeReply,
+  awaitConfirm, checkAssignableRole, checkChannelUsable, missingBotPermissions, permissionNames, respondAutocomplete, safeReply,
 } from '../../utils/interactionHelpers.js';
 import { buildTemplateModal } from '../../utils/customEmbed.js';
 import { clampText, formatNumber } from '../../utils/text.js';
@@ -44,6 +45,12 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('role').setDescription('Set the verified role.')
     .addRoleOption((o) => o.setName('role').setDescription('Verified role'))
     .addStringOption((o) => newRoleOption(o)))
+  .addSubcommand((s) => s.setName('require').setDescription('Roles needed to verify, and a form for those without (no options: show).')
+    .addRoleOption((o) => o.setName('role').setDescription('Role to require (any one is enough)'))
+    .addBooleanOption((o) => o.setName('remove').setDescription('Remove that role instead'))
+    .addBooleanOption((o) => o.setName('clear').setDescription('Remove every required role'))
+    .addStringOption((o) => o.setName('form').setDescription('Fallback application form; none clears')
+      .setAutocomplete(true).setMaxLength(100)))
   .addSubcommand((s) => s.setName('channel').setDescription('Move the panel to another channel.')
     .addChannelOption((o) => o.setName('channel').setDescription('Verification channel').addChannelTypes(...TXT))
     .addStringOption((o) => newChannelOption(o)))
@@ -84,6 +91,7 @@ export async function execute(interaction) {
       case 'status': return await interaction.editReply({ embeds: [await buildStatusEmbed(interaction.guild, s)] });
       case 'mode': return await doMode(interaction);
       case 'role': return await doRole(interaction, s);
+      case 'require': return await doRequire(interaction, s);
       case 'channel': return await doChannel(interaction, s);
       case 'timeout': return await doTimeout(interaction);
       case 'message': return await doMessage(interaction);
@@ -251,6 +259,108 @@ async function doRole(interaction, s) {
     lines.push('⚠️ The server is locked: run `/captcha lock state:on` again so this role gets View Channels.');
   }
   return interaction.editReply({ embeds: [successEmbed('Verified Role Set', lines.join('\n'))] });
+}
+
+// ── require (required-role gate and fallback form) ────────────────────────────
+
+const NO_FORM = /^none$/i;
+
+/** `form` choices: the guild's application forms (any state: the status explains a closed one) and `none`. */
+export async function autocomplete(interaction) {
+  try {
+    const focused = interaction.options.getFocused(true);
+    if (focused.name !== 'form') return await respondAutocomplete(interaction, []);
+    const query = String(focused.value ?? '').trim().toLowerCase();
+    const forms = await findFormsForAutocomplete(interaction.guildId, focused.value);
+    const choices = forms.map((f) => ({ name: `${f.enabled ? '' : '⏸️ '}${f.name}`, value: f.id }));
+    if (!query || 'none'.includes(query)) choices.unshift({ name: 'none (no form)', value: 'none' });
+    return await respondAutocomplete(interaction, choices);
+  } catch (err) {
+    logger.debug(`[captcha] autocomplete failed: ${err?.message}`);
+    return respondAutocomplete(interaction, []);
+  }
+}
+
+const REQUIRE_OUTCOMES = (id) => ({
+  added: `<@&${id}> is now required.`,
+  already: `<@&${id}> is already required.`,
+  removed: `<@&${id}> is no longer required.`,
+  absent: `<@&${id}> was not required.`,
+});
+
+async function doRequire(interaction, s) {
+  const { guild, guildId, options } = interaction;
+  const role = options.getRole('role');
+  const remove = options.getBoolean('remove') === true;
+  const clear = options.getBoolean('clear') === true;
+  const formText = options.getString('form')?.trim() || null;
+
+  if (clear && (role || remove)) throw new CaptchaConfigError('Use `clear` on its own (it can go with `form`).');
+  if (remove && !role) throw new CaptchaConfigError('Pick the role to remove in `role`.');
+  if (role && !remove) {
+    const chk = checkRequiredRole({ role, guildId, verifiedRoleId: s.captchaRoleId });
+    if (!chk.ok) throw new CaptchaConfigError(chk.reason, 'Cannot Require This Role');
+  }
+
+  let formId; // undefined = leave it, null = clear it
+  if (formText !== null) {
+    if (NO_FORM.test(formText)) {
+      formId = null;
+    } else {
+      const form = await findForm(guildId, formText);
+      if (!form) {
+        throw new CaptchaConfigError(`No application form is named "${clampText(formText, 80)}" here. Pick one from the list, or create it with \`/application form create\`.`, 'Form Not Found');
+      }
+      formId = form.id;
+    }
+  }
+
+  const asked = Boolean(role) || clear || formId !== undefined;
+  let plan = { ok: true, roleIds: s.captchaRequiredRoleIds ?? [], outcome: 'unchanged', changed: false, dropped: 0 };
+  let formChanged = false;
+  let after = s;
+  if (asked) {
+    after = await updateSettingsWith(guildId, (cur) => {
+      plan = planRequiredRoles({
+        current: cur.captchaRequiredRoleIds, guildRoleIds: guild.roles.cache.keys(), clear,
+        addId: role && !remove ? role.id : null, removeId: role && remove ? role.id : null,
+      });
+      if (!plan.ok) throw new CaptchaConfigError(plan.reason, 'Not Saved'); // judged on the locked row: the cap and duplicates
+      formChanged = formId !== undefined && (cur.captchaFallbackFormId ?? null) !== formId;
+      const data = {};
+      if (plan.changed) data.captchaRequiredRoleIds = plan.roleIds;
+      if (formChanged) data.captchaFallbackFormId = formId;
+      return data;
+    });
+  }
+
+  const lines = [];
+  if (role) lines.push(REQUIRE_OUTCOMES(role.id)[plan.outcome]);
+  if (clear) lines.push(plan.outcome === 'cleared' && plan.changed ? 'Every required role was removed: anyone can verify again.' : 'No role was required.');
+  if (formId !== undefined) {
+    if (!formChanged) lines.push(formId === null ? 'No fallback form was set.' : 'That form was already the fallback form.');
+    else lines.push(formId === null ? 'The fallback form was cleared.' : 'Members without a required role are offered that form.');
+  }
+  if (plan.dropped) lines.push(`Dropped ${plan.dropped} deleted role(s) from the list.`);
+  if (lines.length) lines.push('');
+
+  const shown = describeRequirements(guild, after, await inspectFallbackForm(guild, after));
+  lines.push(`**Required roles** (any one of them): ${shown.roles}`, `**Fallback form:** ${shown.form}`);
+
+  const live = (after.captchaRequiredRoleIds ?? []).filter((id) => guild.roles.cache.has(id) && id !== after.captchaRoleId);
+  if (live.length) {
+    lines.push('', 'Members who already have the verified role are not checked, and roles given by staff or `/captcha verify-existing` skip the check.');
+    if (after.captchaTimeoutMinutes > 0) {
+      lines.push(`⚠️ Unverified members are kicked after ${formatDurationLong(after.captchaTimeoutMinutes * 60_000)} (\`/captcha timeout\`), including those who never get a required role.`);
+    }
+  } else if (after.captchaFallbackFormId) {
+    lines.push('', '⚠️ The form only appears for members who lack a required role: add one with `role`.');
+  }
+  const text = clampText(lines.join('\n'), 4000);
+  const embed = asked && (plan.changed || formChanged)
+    ? successEmbed('Requirements Updated', text)
+    : infoEmbed(asked ? 'No Change' : 'Verification Requirements', text);
+  return interaction.editReply({ embeds: [embed] });
 }
 
 async function doChannel(interaction, s) {

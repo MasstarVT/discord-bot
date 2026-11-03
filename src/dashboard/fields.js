@@ -887,6 +887,8 @@ const CAPTCHA_GROUPS = [
     fields: [
       { field: 'captchaRoleId', type: 'role', label: 'Verified role', assignable: true, default: null,
         description: 'Given to members who pass. It cannot be a moderator, immune or mute role.' },
+      { field: 'captchaRequiredRoleIds', type: 'roles', label: 'Required roles', maxItems: LIMITS.CAPTCHA_REQUIRED_ROLES, default: [],
+        description: 'Members need any one of these before Verify works (a Linked Role fits). Empty means no requirement. Pick the fallback form with /captcha require in Discord.' },
       { field: 'captchaMode', type: 'enum', label: 'Captcha type', default: 'IMAGE',
         description: 'Image: type the code from a picture. Button: one click.',
         options: [{ value: 'IMAGE', label: 'Image code' }, { value: 'BUTTON', label: 'Button only' }] },
@@ -1542,6 +1544,7 @@ export const NOT_EXPOSED = Object.freeze({
   captchaChannelId: 'changes only together with the posted panel: /captcha setup or /captcha channel posts it',
   captchaMessageId: 'bot-managed: the id of the posted verification panel',
   captchaLockdownPrior: 'bot-managed: what /captcha lock off restores',
+  captchaFallbackFormId: 'an application form id, picked by name with /captcha require form (no form picker here)',
   modmailBlockedUserIds: 'a list of members: /modmail block and unblock manage it',
   confessionBlockedUserIds: 'secret: blocked by confession number so staff never learn who wrote it (/confession block)',
 });
@@ -1800,6 +1803,12 @@ const CROSS_RULES = [
     test: (r) => !r.captchaRoleId || !((r.modRoleIds ?? []).includes(r.captchaRoleId)
       || (r.immuneRoleIds ?? []).includes(r.captchaRoleId) || r.muteRoleId === r.captchaRoleId),
     message: 'The verified role cannot also be a moderator, immune or mute role.',
+  },
+  {
+    // missingRequirement (captchaService) ignores the verified role: nobody holds it before verifying.
+    fields: ['captchaRequiredRoleIds', 'captchaRoleId'],
+    test: (r) => !r.captchaRoleId || !(r.captchaRequiredRoleIds ?? []).includes(r.captchaRoleId),
+    message: 'The verified role cannot also be a required role.',
   },
   {
     fields: ['liveRoleRequiredRoleId', 'liveRoleId'],

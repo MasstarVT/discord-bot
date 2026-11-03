@@ -204,6 +204,10 @@ model GuildSettings {
   // null = no lock-down by the bot is active. Otherwise whether @everyone had View Channels
   // before /captcha lock on, so /captcha lock off restores exactly that state.
   captchaLockdownPrior  Boolean?
+  // Roles a member must hold (any one of them) before Verify works; empty = no requirement.
+  captchaRequiredRoleIds String[] @default([])
+  // ApplicationForm.id offered to members who lack a required role (/captcha require form); no relation.
+  captchaFallbackFormId  String?
 
   // ── Leveling ────────────────────────────────────────────────────────────────
   // Module toggle for leveling (MODULES.leveling.flag).

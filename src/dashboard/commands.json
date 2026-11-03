@@ -581,6 +581,10 @@
         "description": "Set the verified role."
       },
       {
+        "name": "require",
+        "description": "Roles needed to verify, and a form for those without (no options: show)."
+      },
+      {
         "name": "channel",
         "description": "Move the panel to another channel."
       },
