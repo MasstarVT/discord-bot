@@ -12,7 +12,7 @@ Required `.env` keys before the bot will start: `DISCORD_TOKEN`, `CLIENT_ID`, `D
 | `DEPLOY_GUILD_ID`, `BOT_OWNER_ID` | global, none | instant guild-scoped deployment; user with the OWNER level |
 | `NODE_ENV`, `PRISMA_LOG_QUERIES` | none, off | `production` hides debug logs; `1` logs every Prisma query |
 | `DISABLE_PRESENCES` | off | `1` drops the Presence intent (`presencesEnabled()`, `src/utils/gatewayFeatures.js`): Online counters use Discord's approximate count, `/liverole` (except `disable`) answers "unavailable" and the live-role engine never syncs |
-| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY` | `google`, `http://localhost:5000`, none | `google` or `libretranslate` (anything else warns, uses google) |
+| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY`, `LIBRETRANSLATE_FALLBACK_URL` | `google`, `http://localhost:5000`, none, none | `google` or `libretranslate` (anything else warns, uses google); the fallback is a second LibreTranslate server used after a network error, timeout or 502/503/504 from the main one |
 | `HTTP_CONTACT` | `n/a` | contact in the User-Agent of every `safeFetch` request |
 | `REDDIT_USER_AGENT`, `BSKY_APPVIEW_URL` | `DEFAULT_USER_AGENT`, `https://public.api.bsky.app` | Reddit feed User-Agent; Bluesky AppView |
 | `TEST_GUILD_ID`, `TEST_DATABASE_URL` | 0, none | `db:seed` guild; opt-in DB tests |
