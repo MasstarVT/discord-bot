@@ -288,7 +288,7 @@ export function providerLabel() {
 
 let pausedUntil = 0;
 let lastPauseSync = 0;
-let ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
+let ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false, viaFallback: false };
 let ltMainDownUntil = 0;   // while in the future, LibreTranslate requests go straight to the fallback
 let ltOnFallback = false;  // the main server failed and has not answered since (logs once per outage)
 let runtimeUnsupported = new Set();
@@ -461,14 +461,16 @@ export function toLtCode(code, rawCodes = ltSupport.rawCodes) {
  * down. A network error, timeout or 502/503/504 from the main server sends the same request to the fallback
  * at once and skips the main server for LT_FAILOVER_MS; the first request after that tries it again. Every
  * other answer (400, 429, ...) is returned as is. State is per shard. Without a fallback it is a plain fetch.
+ * The fallback may load fewer languages, so callers never let its answers stick (`viaFallback`).
  * @param {string} path
  * @param {() => RequestInit} makeInit called once per attempt (each attempt needs a fresh timeout signal)
- * @returns {Promise<Response>}
+ * @returns {Promise<{ res: Response, viaFallback: boolean }>}
  */
 async function ltFetch(path, makeInit) {
   const { ltUrl, ltFallbackUrl } = config();
-  if (!ltFallbackUrl || ltFallbackUrl === ltUrl) return doFetch(`${ltUrl}${path}`, makeInit());
-  if (Date.now() < ltMainDownUntil) return doFetch(`${ltFallbackUrl}${path}`, makeInit());
+  const viaBackup = async () => ({ res: await doFetch(`${ltFallbackUrl}${path}`, makeInit()), viaFallback: true });
+  if (!ltFallbackUrl || ltFallbackUrl === ltUrl) return { res: await doFetch(`${ltUrl}${path}`, makeInit()), viaFallback: false };
+  if (Date.now() < ltMainDownUntil) return viaBackup();
   let reason;
   try {
     const res = await doFetch(`${ltUrl}${path}`, makeInit());
@@ -477,7 +479,7 @@ async function ltFetch(path, makeInit) {
         ltOnFallback = false;
         logger.info('translationService: the main LibreTranslate server answers again; the fallback is no longer used');
       }
-      return res;
+      return { res, viaFallback: false };
     }
     reason = `HTTP ${res.status}`;
     res.body?.cancel().catch(() => {});
@@ -492,26 +494,26 @@ async function ltFetch(path, makeInit) {
       logger.warn(`translationService: the main LibreTranslate server failed (${reason}); using the fallback`);
     }
   }
-  return doFetch(`${ltFallbackUrl}${path}`, makeInit());
+  return viaBackup();
 }
 
 async function ltPost(path, body) {
   const { ltKey } = config();
   const payload = JSON.stringify(ltKey ? { ...body, api_key: ltKey } : body);
-  const res = await ltFetch(path, () => ({
+  const out = await ltFetch(path, () => ({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: payload,
     signal: AbortSignal.timeout(LT_TIMEOUT_MS),
   }));
-  if (res.status === 429) await tripBreaker(res);
-  return res;
+  if (out.res.status === 429) await tripBreaker(out.res);
+  return out;
 }
 
 const LT_UNSUPPORTED_RE = /not supported|unsupported|invalid (source|target)? ?language/i;
 
 async function ltTranslate(text, target, source) {
-  const res = await ltPost('/translate', {
+  const { res, viaFallback } = await ltPost('/translate', {
     q: text,
     source: source === 'auto' ? 'auto' : toLtCode(source),
     target: toLtCode(target),
@@ -524,6 +526,10 @@ async function ltTranslate(text, target, source) {
       if (LT_UNSUPPORTED_RE.test(message)) {
         const namesSource = source !== 'auto' && /source/i.test(message) && !/target/i.test(message);
         const lang = namesSource ? source : target;
+        // The fallback may lack a language the main server has: fail this request only, remember nothing.
+        if (viaFallback) {
+          throw new TranslationError('HTTP_ERROR', `The fallback LibreTranslate server lacks ${lang}: ${message}`, { status: res.status, lang });
+        }
         runtimeUnsupported.add(lang);
         throw new TranslationError('UNSUPPORTED_LANGUAGE', message, { status: res.status, lang });
       }
@@ -540,6 +546,7 @@ async function ltTranslate(text, target, source) {
   return {
     text: typeof data.translatedText === 'string' ? data.translatedText : '',
     detected: source === 'auto' ? ltLanguage(data.detectedLanguage) : source,
+    viaFallback,
   };
 }
 
@@ -550,7 +557,7 @@ const ltLanguage = (found) => (typeof found?.confidence === 'number' && found.co
   : normalizeLangCode(found?.language ?? null));
 
 async function ltDetect(text) {
-  const res = await ltPost('/detect', { q: text });
+  const { res } = await ltPost('/detect', { q: text });
   if (!res.ok) throw new TranslationError('HTTP_ERROR', `LibreTranslate returned ${res.status}`, { status: res.status });
   let data;
   try {
@@ -571,7 +578,9 @@ export async function loadLanguageSupport({ force = false } = {}) {
   if (providerName() !== 'libretranslate') return null;
   const now = Date.now();
   if (!force) {
-    if (ltSupport.known && now - ltSupport.loadedAt < LT_LANGUAGES_TTL_MS) return ltSupport.codes;
+    // A list only the fallback gave (cold start while the main server is down) is re-fetched sooner.
+    const ttl = ltSupport.viaFallback ? LT_LANGUAGES_RETRY_MS : LT_LANGUAGES_TTL_MS;
+    if (ltSupport.known && now - ltSupport.loadedAt < ttl) return ltSupport.codes;
     // A recent failure is not retried at once; a stale but known list keeps serving meanwhile.
     if (ltSupport.failedAt && now - ltSupport.failedAt < LT_LANGUAGES_RETRY_MS) return ltSupport.known ? ltSupport.codes : null;
   }
@@ -579,13 +588,18 @@ export async function loadLanguageSupport({ force = false } = {}) {
   const state = ltSupport;
   const promise = (async () => {
     try {
-      const res = await ltFetch('/languages', () => ({ signal: AbortSignal.timeout(LT_LANGUAGES_TIMEOUT_MS) }));
+      const { res, viaFallback } = await ltFetch('/languages', () => ({ signal: AbortSignal.timeout(LT_LANGUAGES_TIMEOUT_MS) }));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const entries = await res.json();
       if (!Array.isArray(entries)) throw new Error('unexpected response');
+      // The fallback may load fewer languages: never let its list replace one the main server gave.
+      if (viaFallback && ltSupport.known && !ltSupport.viaFallback) {
+        if (state === ltSupport) ltSupport.failedAt = Date.now();
+        return ltSupport.codes;
+      }
       const rawCodes = new Set(entries.map((e) => String(e?.code ?? '').toLowerCase()).filter(Boolean));
       const codes = new Set(entries.map((e) => normalizeLangCode(e?.code)).filter((c) => c && has(LANGUAGES, c)));
-      if (state === ltSupport) Object.assign(ltSupport, { codes, rawCodes, loadedAt: Date.now(), failedAt: 0, known: true });
+      if (state === ltSupport) Object.assign(ltSupport, { codes, rawCodes, loadedAt: Date.now(), failedAt: 0, known: true, viaFallback });
       return codes;
     } catch (err) {
       if (state === ltSupport) ltSupport.failedAt = Date.now();
@@ -867,8 +881,9 @@ export async function translateText(text, target, { source = 'auto', maxChunks =
 
   let translated;
   let detected;
+  let viaFallback = false; // the fallback detects fewer languages: its answers are not cached
   if (provider === 'libretranslate') {
-    ({ text: translated, detected } = await ltTranslate(input, target, source));
+    ({ text: translated, detected, viaFallback } = await ltTranslate(input, target, source));
     if (source === 'auto') detected = reconcileDetected(input, detected);
   } else if (encodeURIComponent(input).length <= MAX_POST_Q_BYTES) {
     ({ text: translated, detected } = await googleTranslate(input, target, source));
@@ -890,7 +905,7 @@ export async function translateText(text, target, { source = 'auto', maxChunks =
     translated = translated.trim();
   }
 
-  if (key) await cache.set(key, { t: translated, d: detected }, RESULT_CACHE_TTL_S);
+  if (key && !viaFallback) await cache.set(key, { t: translated, d: detected }, RESULT_CACHE_TTL_S);
   return { text: translated, detected };
 }
 
@@ -1281,7 +1296,7 @@ export const __testing = Object.freeze({
   reset() {
     pausedUntil = 0;
     lastPauseSync = 0;
-    ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
+    ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false, viaFallback: false };
     ltMainDownUntil = 0;
     ltOnFallback = false;
     runtimeUnsupported = new Set();
