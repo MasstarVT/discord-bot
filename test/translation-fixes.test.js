@@ -559,6 +559,77 @@ describe('LibreTranslate', () => {
       await assert.rejects(svc.translateText('hola', 'en'), { code: 'NETWORK' });
       assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
     });
+
+    test('a language only the main server has fails on the fallback for that request only', async () => {
+      __testing.configure(fb);
+      let calls = installFetch((url) => {
+        if (url.startsWith('http://lt.test')) throw new TypeError('fetch failed');
+        return jsonRes({ error: 'ko is not supported' }, 400);
+      });
+      const err = await svc.translateText('hello', 'ko').catch((e) => e);
+      assert.equal(err.code, 'HTTP_ERROR');
+      assert.equal(err.lang, 'ko');
+      assert.notEqual(svc.isSupportedTarget('ko'), false, 'not remembered as unsupported');
+      assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
+
+      const start = realNow();
+      Date.now = () => start + svc.LT_FAILOVER_MS + 1;
+      calls = installFetch(() => jsonRes({ translatedText: 'annyeong', detectedLanguage: { language: 'en', confidence: 90 } }));
+      assert.equal((await svc.translateText('hello', 'ko')).text, 'annyeong');
+      assert.deepEqual(hosts(calls), ['lt.test']);
+    });
+
+    test("a fallback list never replaces the main server's list", async () => {
+      __testing.configure(fb);
+      installFetch(() => jsonRes([{ code: 'en' }, { code: 'es' }, { code: 'ko' }]));
+      await svc.loadLanguageSupport();
+      const calls = installFetch((url) => {
+        if (url.startsWith('http://lt.test')) throw new TypeError('fetch failed');
+        return jsonRes([{ code: 'en' }, { code: 'es' }]);
+      });
+      const support = await svc.loadLanguageSupport({ force: true });
+      assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
+      assert.deepEqual([...support].sort(), ['en', 'es', 'ko']);
+      assert.equal(svc.isSupportedTarget('ko'), true);
+    });
+
+    test('a list only the fallback gave is re-fetched after LT_LANGUAGES_RETRY_MS', async () => {
+      __testing.configure(fb);
+      installFetch((url) => {
+        if (url.startsWith('http://lt.test')) throw new TypeError('fetch failed');
+        return jsonRes([{ code: 'en' }, { code: 'es' }]);
+      });
+      assert.deepEqual([...await svc.loadLanguageSupport()].sort(), ['en', 'es']);
+      assert.equal(svc.isSupportedTarget('ko'), false, 'during the outage');
+
+      const start = realNow();
+      Date.now = () => start + Math.max(svc.LT_LANGUAGES_RETRY_MS, svc.LT_FAILOVER_MS) + 1;
+      const calls = installFetch(() => jsonRes([{ code: 'en' }, { code: 'es' }, { code: 'ko' }]));
+      assert.deepEqual([...await svc.loadLanguageSupport()].sort(), ['en', 'es', 'ko']);
+      assert.deepEqual(hosts(calls), ['lt.test']);
+    });
+
+    test('answers from the fallback are not cached', async () => {
+      const { cache } = await import('../src/services/redis.js');
+      const real = { get: cache.get, set: cache.set };
+      const keys = [];
+      cache.get = async () => null;
+      cache.set = async (key) => { keys.push(key); };
+      try {
+        __testing.configure({ ...fb, resultCache: true });
+        installFetch(mainDown);
+        await svc.translateText('hola', 'en');
+        assert.deepEqual(keys.filter((k) => k.startsWith('tr:')), []);
+
+        __testing.reset();
+        __testing.configure({ ...fb, resultCache: true });
+        installFetch(ok);
+        await svc.translateText('hola', 'en');
+        assert.equal(keys.filter((k) => k.startsWith('tr:')).length, 1, 'answers from the main server still are');
+      } finally {
+        Object.assign(cache, real);
+      }
+    });
   });
 });
 
