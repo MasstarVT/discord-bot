@@ -30,6 +30,8 @@ export const LT_TIMEOUT_MS = 15_000;
 export const LT_LANGUAGES_TIMEOUT_MS = 5_000;
 export const LT_LANGUAGES_TTL_MS = 6 * 60 * 60_000;     // re-fetch the server list every 6 h
 export const LT_LANGUAGES_RETRY_MS = 5 * 60_000;        // after a failed fetch
+export const LT_FAILOVER_MS = 5 * 60_000;               // after the main LibreTranslate fails, use the fallback this long
+const LT_FAILOVER_STATUS = new Set([502, 503, 504]);    // plus network errors and timeouts
 export const PAUSE_MS = Object.freeze({ google: 30 * 60_000, libretranslate: 60_000 });
 export const PAUSE_MAX_MS = 6 * 60 * 60_000;            // cap for Retry-After
 export const MAX_Q_ENCODED_BYTES = 6_000;               // Google GET: q stays <= 6,000 URL-encoded bytes (URL < 6.2 KB)
@@ -265,6 +267,7 @@ function config() {
       provider,
       ltUrl: String(process.env.LIBRETRANSLATE_URL || 'http://localhost:5000').replace(/\/+$/, ''),
       ltKey: process.env.LIBRETRANSLATE_API_KEY || '',
+      ltFallbackUrl: String(process.env.LIBRETRANSLATE_FALLBACK_URL || '').replace(/\/+$/, ''),
       resultCache: true,
     };
   }
@@ -286,6 +289,8 @@ export function providerLabel() {
 let pausedUntil = 0;
 let lastPauseSync = 0;
 let ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
+let ltMainDownUntil = 0;   // while in the future, LibreTranslate requests go straight to the fallback
+let ltOnFallback = false;  // the main server failed and has not answered since (logs once per outage)
 let runtimeUnsupported = new Set();
 let channelMemo = new Map();
 let channelGen = new Map(); // per guild: bumped by every invalidation, so a read that began earlier never memoises
@@ -451,14 +456,54 @@ export function toLtCode(code, rawCodes = ltSupport.rawCodes) {
   return candidates[0];
 }
 
+/**
+ * Sends a LibreTranslate request to LIBRETRANSLATE_URL, or to LIBRETRANSLATE_FALLBACK_URL while that one is
+ * down. A network error, timeout or 502/503/504 from the main server sends the same request to the fallback
+ * at once and skips the main server for LT_FAILOVER_MS; the first request after that tries it again. Every
+ * other answer (400, 429, ...) is returned as is. State is per shard. Without a fallback it is a plain fetch.
+ * @param {string} path
+ * @param {() => RequestInit} makeInit called once per attempt (each attempt needs a fresh timeout signal)
+ * @returns {Promise<Response>}
+ */
+async function ltFetch(path, makeInit) {
+  const { ltUrl, ltFallbackUrl } = config();
+  if (!ltFallbackUrl || ltFallbackUrl === ltUrl) return doFetch(`${ltUrl}${path}`, makeInit());
+  if (Date.now() < ltMainDownUntil) return doFetch(`${ltFallbackUrl}${path}`, makeInit());
+  let reason;
+  try {
+    const res = await doFetch(`${ltUrl}${path}`, makeInit());
+    if (!LT_FAILOVER_STATUS.has(res.status)) {
+      if (ltOnFallback) {
+        ltOnFallback = false;
+        logger.info('translationService: the main LibreTranslate server answers again; the fallback is no longer used');
+      }
+      return res;
+    }
+    reason = `HTTP ${res.status}`;
+    res.body?.cancel().catch(() => {});
+  } catch (err) {
+    if (err?.code !== 'NETWORK' && err?.code !== 'TIMEOUT') throw err;
+    reason = err.message;
+  }
+  ltMainDownUntil = Date.now() + LT_FAILOVER_MS;
+  if (!ltOnFallback) {
+    ltOnFallback = true;
+    if (throttles.tenMin('lt-failover')) {
+      logger.warn(`translationService: the main LibreTranslate server failed (${reason}); using the fallback`);
+    }
+  }
+  return doFetch(`${ltFallbackUrl}${path}`, makeInit());
+}
+
 async function ltPost(path, body) {
-  const { ltUrl, ltKey } = config();
-  const res = await doFetch(`${ltUrl}${path}`, {
+  const { ltKey } = config();
+  const payload = JSON.stringify(ltKey ? { ...body, api_key: ltKey } : body);
+  const res = await ltFetch(path, () => ({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(ltKey ? { ...body, api_key: ltKey } : body),
+    body: payload,
     signal: AbortSignal.timeout(LT_TIMEOUT_MS),
-  });
+  }));
   if (res.status === 429) await tripBreaker(res);
   return res;
 }
@@ -534,7 +579,7 @@ export async function loadLanguageSupport({ force = false } = {}) {
   const state = ltSupport;
   const promise = (async () => {
     try {
-      const res = await doFetch(`${config().ltUrl}/languages`, { signal: AbortSignal.timeout(LT_LANGUAGES_TIMEOUT_MS) });
+      const res = await ltFetch('/languages', () => ({ signal: AbortSignal.timeout(LT_LANGUAGES_TIMEOUT_MS) }));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const entries = await res.json();
       if (!Array.isArray(entries)) throw new Error('unexpected response');
@@ -1225,7 +1270,7 @@ export async function handleAutoTranslate(ctx, { checkPermissions = true } = {})
 // ── Test seam (offline tests only; never used by production code) ─────────────
 
 export const __testing = Object.freeze({
-  /** Overrides the lazy env config: { provider, ltUrl, ltKey, resultCache }. */
+  /** Overrides the lazy env config: { provider, ltUrl, ltKey, ltFallbackUrl, resultCache }. */
   configure(opts = {}) {
     override = { ...override, ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v !== undefined)) };
   },
@@ -1237,6 +1282,8 @@ export const __testing = Object.freeze({
     pausedUntil = 0;
     lastPauseSync = 0;
     ltSupport = { codes: new Set(), rawCodes: new Set(), loadedAt: 0, failedAt: 0, inflight: null, known: false };
+    ltMainDownUntil = 0;
+    ltOnFallback = false;
     runtimeUnsupported = new Set();
     channelMemo = new Map();
     channelGen = new Map();

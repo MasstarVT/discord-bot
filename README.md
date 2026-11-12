@@ -172,7 +172,7 @@ Required: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Everything 
 | `DEPLOY_HASH_FILE` | `./.deploy-hash` | command hash |
 | `PRISMA_LOG_QUERIES` | off | `1` logs every Prisma query |
 | `DISABLE_PRESENCES` | off | `1` connects without the Presence intent: online counters use Discord's approximate count and the Live Role stops working |
-| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY` | `google` | translation backend (below) |
+| `TRANSLATE_PROVIDER`, `LIBRETRANSLATE_URL`, `LIBRETRANSLATE_API_KEY`, `LIBRETRANSLATE_FALLBACK_URL` | `google` | translation backend (below) |
 | `HTTP_CONTACT` | `n/a` | contact added to the User-Agent of feed and search requests |
 | `REDDIT_USER_AGENT` | standard User-Agent | User-Agent for Reddit feeds |
 | `BSKY_APPVIEW_URL` | `https://public.api.bsky.app` | Bluesky AppView |
@@ -265,7 +265,10 @@ Auto-translate and `/translate` use Google's free endpoint by default. It has no
 TRANSLATE_PROVIDER=libretranslate
 LIBRETRANSLATE_URL=http://<host>:5000
 # LIBRETRANSLATE_API_KEY=   # only if the server requires keys
+# LIBRETRANSLATE_FALLBACK_URL=http://<backup-host>:5000   # optional second server
 ```
+
+With `LIBRETRANSLATE_FALLBACK_URL` set, a network error, timeout or 502/503/504 from the main server sends the same request to the fallback at once, and the bot uses the fallback for the next 5 minutes before trying the main server again. Load the same languages on both servers and give them the same API key (or none); a 400 or 429 never switches servers.
 
 `TRANSLATE_PROVIDER` is `google` or `libretranslate`; any other value logs a warning and uses Google. On an HTTP 429 the bot pauses translation (30 minutes for Google, 1 minute for LibreTranslate, or the server's `Retry-After` when that is longer, capped at 6 hours) instead of retrying on every message, and logs once. The pause is shared between shards through Redis. Auto-translate translates the first 1,000 characters of a message and shows up to 1,000 characters per language. Traditional Chinese is `zh-tw`; the aliases `iw`, `nb`, `zh-cn`, `zh-hant` and `fil` are accepted.
 

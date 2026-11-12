@@ -465,6 +465,101 @@ describe('LibreTranslate', () => {
     installFetch(() => jsonRes([{ language: 'en', confidence: 97 }]));
     assert.deepEqual(await svc.detectLanguage('Good morning, how are you?'), { code: 'en', name: 'English' });
   });
+
+  describe('fallback server', () => {
+    const fb = { ...lt, ltFallbackUrl: 'http://lt-backup.test' };
+    const ok = () => jsonRes({ translatedText: 'hello', detectedLanguage: { language: 'es' } });
+    const hosts = (calls) => calls.map((c) => new URL(c.url).host);
+    /** Main server unreachable (fetch rejects like undici does); the fallback answers. */
+    const mainDown = (url) => {
+      if (url.startsWith('http://lt.test')) throw new TypeError('fetch failed');
+      return ok();
+    };
+    const realNow = Date.now;
+    afterEach(() => { Date.now = realNow; });
+
+    test('a network error sends the same request to the fallback, and later calls skip the main server', async () => {
+      __testing.configure(fb);
+      const calls = installFetch(mainDown);
+      const r = await svc.translateText('hola', 'en');
+      assert.equal(r.text, 'hello');
+      assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
+      assert.equal(calls[1].init.body, calls[0].init.body, 'same request');
+      assert.match(calls[1].url, /\/translate$/);
+
+      await svc.translateText('buenos dias', 'en');
+      assert.deepEqual(hosts(calls).slice(2), ['lt-backup.test'], 'main server skipped');
+    });
+
+    test('after LT_FAILOVER_MS the main server is tried again', async () => {
+      __testing.configure(fb);
+      let calls = installFetch(mainDown);
+      await svc.translateText('hola', 'en');
+      const start = realNow();
+      Date.now = () => start + svc.LT_FAILOVER_MS + 1;
+      calls = installFetch(ok);
+      await svc.translateText('hola amigo', 'en');
+      assert.deepEqual(hosts(calls), ['lt.test']);
+      await svc.translateText('hola amigos', 'en');
+      assert.deepEqual(hosts(calls), ['lt.test', 'lt.test'], 'stays on the main server once it answers');
+    });
+
+    test('a timeout or 502/503/504 fails over too', async () => {
+      for (const fail of [
+        () => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError'); },
+        () => new Response('bad gateway', { status: 502 }),
+        () => new Response('unavailable', { status: 503 }),
+        () => new Response('gateway timeout', { status: 504 }),
+      ]) {
+        __testing.reset();
+        __testing.configure(fb);
+        const calls = installFetch((url) => (url.startsWith('http://lt.test') ? fail() : ok()));
+        assert.equal((await svc.translateText('hola', 'en')).text, 'hello');
+        assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
+      }
+    });
+
+    test('an unsupported language, a 429 or a 500 does not fail over', async () => {
+      __testing.configure(fb);
+      let calls = installFetch(() => jsonRes({ error: 'cy is not supported' }, 400));
+      await assert.rejects(svc.translateText('hi', 'cy'), { code: 'UNSUPPORTED_LANGUAGE' });
+      assert.deepEqual(hosts(calls), ['lt.test']);
+
+      calls = installFetch(() => new Response('boom', { status: 500 }));
+      await assert.rejects(svc.translateText('hi', 'es'), { code: 'HTTP_ERROR', status: 500 });
+      assert.deepEqual(hosts(calls), ['lt.test']);
+
+      calls = installFetch(() => new Response('slow down', { status: 429 }));
+      await assert.rejects(svc.translateText('hi', 'es'), { code: 'RATE_LIMITED' });
+      assert.deepEqual(hosts(calls), ['lt.test']);
+      assert.equal(svc.translationPaused(), true);
+    });
+
+    test('the language list loads from the fallback while the main server is down', async () => {
+      __testing.configure(fb);
+      const calls = installFetch((url) => {
+        if (url.startsWith('http://lt.test')) throw new TypeError('fetch failed');
+        return jsonRes([{ code: 'en' }, { code: 'es' }, { code: 'ja' }]);
+      });
+      const support = await svc.loadLanguageSupport();
+      assert.deepEqual([...support].sort(), ['en', 'es', 'ja']);
+      assert.deepEqual(calls.map((c) => c.url), ['http://lt.test/languages', 'http://lt-backup.test/languages']);
+    });
+
+    test('without a fallback, a network error fails as before', async () => {
+      __testing.configure(lt);
+      const calls = installFetch(mainDown);
+      await assert.rejects(svc.translateText('hola', 'en'), { code: 'NETWORK' });
+      assert.deepEqual(hosts(calls), ['lt.test']);
+    });
+
+    test('both servers down fails with the fallback error', async () => {
+      __testing.configure(fb);
+      const calls = installFetch(() => { throw new TypeError('fetch failed'); });
+      await assert.rejects(svc.translateText('hola', 'en'), { code: 'NETWORK' });
+      assert.deepEqual(hosts(calls), ['lt.test', 'lt-backup.test']);
+    });
+  });
 });
 
 // ── 12. The hook body, fully offline (R011, R183, R184, R264, R265, R288) ─────

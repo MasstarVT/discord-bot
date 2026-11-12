@@ -24,7 +24,7 @@ Object.assign(process.env, {
   REDIS_URL: 'redis://127.0.0.1:1',
 });
 for (const key of ['BOT_OWNER_ID', 'DEPLOY_GUILD_ID', 'TRANSLATE_PROVIDER', 'LIBRETRANSLATE_URL',
-  'LIBRETRANSLATE_API_KEY', 'HTTP_CONTACT', 'REDDIT_USER_AGENT', 'PRISMA_LOG_QUERIES']) delete process.env[key];
+  'LIBRETRANSLATE_API_KEY', 'LIBRETRANSLATE_FALLBACK_URL', 'HTTP_CONTACT', 'REDDIT_USER_AGENT', 'PRISMA_LOG_QUERIES']) delete process.env[key];
 
 // ── Network guard: loopback only (Redis/Postgres at 127.0.0.1:1 fail fast) ──
 const LOOPBACK = new Set(['127.0.0.1', '::1', 'localhost']);
