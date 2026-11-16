@@ -55,6 +55,7 @@ export const LIMITS = Object.freeze({
   AFK_PINGS_KEPT: 10,          // AfkStatus.pings
   AFK_IGNORED_CHANNELS: 100,   // GuildSettings.afkIgnoredChannelIds
   EVENTS_ACTIVE: 25,           // SCHEDULED or ACTIVE GuildEvent rows per guild
+  EVENTS_PER_HOST: 3,          // open events one member below the Moderator level may host at once
   ROLEPERSIST_IGNORED_ROLES: 50, // GuildSettings.rolePersistIgnoredRoleIds
   BOOSTER_ROLE_NAME: 50,       // BoosterRole names (/boost role)
   BOOSTER_ROLE_ICON_BYTES: 256000, // image uploaded as a booster role icon (Discord's cap)

@@ -1197,9 +1197,9 @@ test('parseEventLimits and parseEventWhen: the edit forms\' own rules', () => {
 });
 
 /** A submitted form; from the panel by default (`isFromMessage`), so it acknowledges with deferUpdate. */
-function modalInteraction(eventId, fields, { mod = true, form = 'details', customId = `event-modal:${eventId}:${form}`, guild = fakeGuild(), fromPanel = true } = {}) {
+function modalInteraction(eventId, fields, { mod = true, id = 'MOD', form = 'details', customId = `event-modal:${eventId}:${form}`, guild = fakeGuild(), fromPanel = true } = {}) {
   return fakeInteraction({
-    customId, guildId: 'G', guild, user: { id: 'MOD' }, member: fakeMember('MOD', { mod }),
+    customId, guildId: 'G', guild, user: { id }, member: fakeMember(id, { mod }),
     inCachedGuild: () => true,
     isFromMessage: () => fromPanel,
     async deferUpdate() { this.deferred = true; this.ephemeral = null; this.updated = true; },
@@ -1214,20 +1214,22 @@ const formFields = (event, form, zone = 'UTC', over = {}) => {
   return { ...Object.fromEntries(inputs.map((i) => [i.custom_id, i.value ?? ''])), ...over };
 };
 
-test('edit button: needs the Moderator level, opens the chosen form prefilled (no deferral), refuses a closed event', async () => {
+test('edit button: the host or staff only, opens the chosen form prefilled (no deferral), refuses a closed event', async () => {
   reset();
   await configure('G');
   const guild = fakeGuild();
   const event = await seedEvent({ title: 'Movie night', capacity: 12 });
-  const click = async (customId, { mod = true } = {}) => {
-    const i = fakeInteraction({ customId, guildId: 'G', guild, user: { id: 'MOD' }, member: fakeMember('MOD', { mod }), inCachedGuild: () => true });
+  const click = async (customId, { mod = true, id = 'MOD' } = {}) => {
+    const i = fakeInteraction({ customId, guildId: 'G', guild, user: { id }, member: fakeMember(id, { mod }), inCachedGuild: () => true });
     await svc.handleEditButton(i);
     return i;
   };
 
-  const member = await click(`event-edit:${event.id}:when`, { mod: false });
+  const member = await click(`event-edit:${event.id}:when`, { mod: false, id: 'STRANGER' });
   assert.equal(member.modals.length, 0);
-  assert.match(embedText(member.replies[0]), /Moderator level/);
+  assert.match(embedText(member.replies[0]), /Not Your Event/);
+  const host = await click(`event-edit:${event.id}:when`, { mod: false, id: 'HOST' });
+  assert.equal(host.modals.length, 1, 'the host opens the form without the Moderator level');
 
   for (const [form, first] of [['details', 'event-title'], ['when', 'event-day'], ['limits', 'event-capacity']]) {
     const ok = await click(`event-edit:${event.id}:${form}`);
@@ -1260,9 +1262,12 @@ test('edit forms: each saves only its own fields and updates the panel in place;
     return i;
   };
 
-  const member = await submit('details', { 'event-title': 'Nope' }, { mod: false });
-  assert.match(embedText(member.replies[0]), /Moderator level/);
+  const member = await submit('details', { 'event-title': 'Nope' }, { mod: false, id: 'STRANGER' });
+  assert.match(embedText(member.replies[0]), /Not Your Event/);
+  assert.match(embedText(member.replies[0]), /Nothing was saved/);
   assert.equal(events.get(event.id).title, 'Movie night', 'nothing changed');
+  const host = await submit('details', { 'event-title': 'Movie night', 'event-location': 'Voice 1' }, { mod: false, id: 'HOST' });
+  assert.match(embedText(host.replies[0]), /Event Updated/, 'the host saves without the Moderator level');
 
   // Details: the start, capacity and reminder are left alone.
   const details = await submit('details', { 'event-title': 'Renamed', 'event-description': 'Bring snacks', 'event-location': 'Voice 3' });
@@ -1483,7 +1488,7 @@ test('autocomplete: edit and cancel offer open events, info offers closed ones t
   const run = async (sub, value) => {
     let choices = null;
     await cmd.autocomplete({
-      guildId: 'G', createdTimestamp: Date.now(),
+      guildId: 'G', createdTimestamp: Date.now(), user: { id: 'MOD' }, member: fakeMember('MOD', { mod: true }),
       options: { getFocused: () => ({ name: 'event', value }), getSubcommand: () => sub },
       respond: async (c) => { choices = c; },
       responded: false,
@@ -1563,7 +1568,7 @@ function charCount(node) {
 test('/event payload', () => {
   const json = buildCommandPayload(cmd);
   assert.equal(json.name, 'event');
-  assert.equal(json.default_member_permissions, String(PermissionFlagsBits.ModerateMembers));
+  assert.equal(json.default_member_permissions ?? null, null, 'every member sees /event');
   assert.deepEqual(json.contexts, [0]);
   assert.deepEqual(json.options.map((o) => [o.name, o.type]), [['create', 1], ['edit', 1], ['cancel', 1], ['list', 1], ['info', 1], ['attendees', 1]]);
   const sub = Object.fromEntries(json.options.map((o) => [o.name, o]));
@@ -1582,7 +1587,7 @@ test('/event payload', () => {
   assert.ok(charCount(json) <= 4000);
   assert.equal(cmd.module, 'events');
   assert.equal(cmd.gated, true);
-  assert.equal(cmd.permissionLevel, PERMISSION_LEVELS.MODERATOR);
+  assert.equal(cmd.permissionLevel, PERMISSION_LEVELS.MEMBER);
   assert.equal(typeof cmd.autocomplete, 'function');
 });
 
@@ -1787,6 +1792,102 @@ test('/event edit: shows the panel privately, refuses a closed or unknown event'
   const closed = await call({ event: event.id });
   assert.match(embedText(closed.replies[0]), /Event Closed/);
   assert.deepEqual(panelButtons(closed.replies[0]), []);
+});
+
+test('/event for members: anyone creates (up to EVENTS_PER_HOST open), the host edits and cancels, others cannot, staff can', async () => {
+  reset();
+  await configure('G');
+  const guild = fakeGuild();
+  const channel = fakeChannel(guild);
+  const client = fakeClient(guild);
+  const call = async (sub, id, values = {}, { mod = false } = {}) => {
+    const i = fakeInteraction({
+      guildId: 'G', guild, channel, channelId: 'C1', user: { id }, member: fakeMember(id, { mod }), options: optionsOf({ __sub: sub, ...values }),
+    });
+    await cmd.execute(i, client);
+    return i;
+  };
+  const create = (id, title, opts) => call('create', id, { title, start: svc.formatStartForEdit(future(3 * DAY), 'UTC') }, opts);
+
+  assert.equal(EVENT.HOST_MAX, LIMITS.EVENTS_PER_HOST);
+  for (let n = 1; n <= EVENT.HOST_MAX; n += 1) assert.match(embedText((await create('AMY', `Amy ${n}`)).replies[0]), /Event Created/);
+  const capped = await create('AMY', 'One too many');
+  assert.match(embedText(capped.replies[0]), /You already host 3 open events/);
+  assert.equal(events.size, EVENT.HOST_MAX, 'nothing was saved');
+  assert.match(embedText((await create('BEN', 'Ben 1')).replies[0]), /Event Created/, 'the cap is per host');
+  for (let n = 1; n <= EVENT.HOST_MAX; n += 1) await create('MOD', `Staff ${n}`, { mod: true });
+  assert.match(embedText((await create('MOD', 'Staff more', { mod: true })).replies[0]), /Event Created/, 'staff have no host cap');
+
+  const amys = [...events.values()].find((e) => e.hostId === 'AMY');
+  const bens = [...events.values()].find((e) => e.hostId === 'BEN');
+
+  // Someone else's event: refused for edit and cancel, nothing changes.
+  const strangerEdit = await call('edit', 'BEN', { event: amys.id });
+  assert.match(embedText(strangerEdit.replies[0]), /Not Your Event/);
+  assert.deepEqual(panelButtons(strangerEdit.replies[0]), []);
+  assert.match(embedText((await call('cancel', 'BEN', { event: amys.id })).replies[0]), /Not Your Event/);
+  assert.equal(events.get(amys.id).status, 'SCHEDULED');
+
+  // The host has full control of their own.
+  const hostEdit = await call('edit', 'AMY', { event: amys.id });
+  assert.deepEqual(panelButtons(hostEdit.replies[0]), ['details', 'when', 'limits'].map((f) => `event-edit:${amys.id}:${f}`));
+  assert.match(embedText((await call('cancel', 'AMY', { event: amys.id })).replies[0]), /Event Cancelled/);
+  assert.equal(events.get(amys.id).status, 'CANCELLED');
+  assert.match(embedText((await create('AMY', 'Room again')).replies[0]), /Event Created/, 'a cancelled event frees a place');
+
+  // Staff manage anyone's event.
+  assert.equal(panelButtons((await call('edit', 'MOD', { event: bens.id }, { mod: true })).replies[0]).length, 3);
+  assert.match(embedText((await call('cancel', 'MOD', { event: bens.id }, { mod: true })).replies[0]), /Event Cancelled/);
+  assert.equal(events.get(bens.id).status, 'CANCELLED');
+});
+
+test('/event create below staff: the channel the command ran in must be writable, the announcement channel is always fine', async () => {
+  reset();
+  await configure('G');
+  const guild = fakeGuild();
+  const here = fakeChannel(guild, 'HERE');
+  here.permissionsFor = (who) => ({ has: () => who?.id === 'BOT' });
+  const client = fakeClient(guild);
+  const run = async (id, { mod = false } = {}) => {
+    const i = fakeInteraction({
+      guildId: 'G', guild, channel: here, channelId: 'HERE', user: { id }, member: fakeMember(id, { mod }),
+      options: optionsOf({ __sub: 'create', title: `T ${id}`, start: svc.formatStartForEdit(future(2 * DAY), 'UTC') }),
+    });
+    await cmd.execute(i, client);
+    return embedText(i.replies[0]);
+  };
+  assert.match(await run('AMY'), /You cannot send messages in <#HERE>/);
+  assert.equal(here.sent.length, 0);
+  assert.match(await run('MOD', { mod: true }), /Event Created/, 'staff keep posting where they run it');
+
+  const ann = fakeChannel(guild, 'ANN');
+  ann.permissionsFor = here.permissionsFor;
+  await configure('G', { eventChannelId: 'ANN' });
+  assert.match(await run('AMY'), /Event Created/);
+  assert.equal(ann.sent.length, 1, 'posted in the announcement channel');
+});
+
+test('/event autocomplete: edit and cancel list only your own events below staff; info lists every event', async () => {
+  reset();
+  await configure('G');
+  await seedEvent({ title: 'Amy party', hostId: 'AMY' });
+  await seedEvent({ title: 'Ben party', hostId: 'BEN' });
+  const names = async (sub, id, { mod = false } = {}) => {
+    let out = null;
+    await cmd.autocomplete({
+      guildId: 'G', createdTimestamp: Date.now(), user: { id }, member: fakeMember(id, { mod }),
+      options: { getFocused: () => ({ name: 'event', value: '' }), getSubcommand: () => sub },
+      respond: async (choices) => { out = choices.map((c) => c.name); },
+      responded: false,
+    });
+    return (out ?? []).join(' | ');
+  };
+  for (const sub of ['edit', 'cancel']) {
+    assert.match(await names(sub, 'AMY'), /Amy party/);
+    assert.doesNotMatch(await names(sub, 'AMY'), /Ben party/, sub);
+    assert.match(await names(sub, 'MOD', { mod: true }), /Amy party.*Ben party|Ben party.*Amy party/, `${sub}: staff see all`);
+  }
+  assert.match(await names('info', 'AMY'), /Ben party/, 'info is open to everyone');
 });
 
 // ── Event channels ────────────────────────────────────────────────────────────

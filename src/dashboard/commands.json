@@ -901,7 +901,7 @@
     "name": "event",
     "description": "Run events with RSVP buttons, an optional Discord event and a reminder",
     "module": "events",
-    "who": "moderators",
+    "who": "everyone",
     "subcommands": [
       {
         "name": "create",

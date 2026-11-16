@@ -40,7 +40,7 @@ import { parseZoneInput, zoneLabel, zoneSourceText } from '../utils/timezones.js
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 export const EVENT = Object.freeze({
-  ACTIVE_MAX: LIMITS.EVENTS_ACTIVE,
+  ACTIVE_MAX: LIMITS.EVENTS_ACTIVE, HOST_MAX: LIMITS.EVENTS_PER_HOST,
   TITLE_MAX: 100, DESCRIPTION_MAX: 1000, LOCATION_MAX: 100, // Discord's own limits for a scheduled event
   CAPACITY_MAX: 10_000, REMINDER_MAX: 1440,
   DURATION_MIN_MS: 5 * 60_000, DURATION_MAX_MS: 14 * 86_400_000, HORIZON_MS: 365 * 86_400_000,
@@ -471,14 +471,18 @@ export async function listOpenEvents(guildId) {
   return { events, going };
 }
 
-/** Autocomplete rows: edit/cancel offer open events, info/attendees also the latest closed ones. */
-export function findEventsForAutocomplete({ guildId, sub, q }) {
+/**
+ * Autocomplete rows: edit/cancel offer open events, info/attendees also the latest closed ones. With `hostId`, edit/cancel
+ * offer only that member's events (a member who is not staff can change only their own).
+ */
+export function findEventsForAutocomplete({ guildId, sub, q, hostId = null }) {
   const open = sub === 'edit' || sub === 'cancel';
   const query = String(q ?? '').trim().slice(0, 100);
   return prisma.guildEvent.findMany({
     where: {
       guildId,
       ...(open && { status: { in: [...OPEN_STATUSES] } }),
+      ...(open && hostId && { hostId }),
       ...(query && { title: { contains: query, mode: 'insensitive' } }),
     },
     orderBy: open ? { startsAt: 'asc' } : { startsAt: 'desc' },
@@ -488,15 +492,19 @@ export function findEventsForAutocomplete({ guildId, sub, q }) {
 }
 
 /**
- * Inserts the event under the guild's open-event cap.
- * @returns {Promise<{ ok: true, event: object } | { ok: false, code: 'LIMIT' }>}
+ * Inserts the event under the guild's open-event cap and, with `hostMax`, the host's own cap (staff pass null).
+ * @returns {Promise<{ ok: true, event: object } | { ok: false, code: 'LIMIT'|'HOST_LIMIT' }>}
  */
-export async function createEventRow(guildId, data) {
+export async function createEventRow(guildId, data, { hostMax = null } = {}) {
   await ensureGuildSettings(guildId);
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(createLockSql(guildId));
     const open = await tx.guildEvent.count({ where: { guildId, status: { in: [...OPEN_STATUSES] } } });
     if (open >= EVENT.ACTIVE_MAX) return { ok: false, code: 'LIMIT' };
+    if (hostMax != null) {
+      const own = await tx.guildEvent.count({ where: { guildId, hostId: data.hostId, status: { in: [...OPEN_STATUSES] } } });
+      if (own >= hostMax) return { ok: false, code: 'HOST_LIMIT' };
+    }
     const event = await tx.guildEvent.create({ data: { ...data, guildId } });
     return { ok: true, event };
   }, TX_OPTS);
@@ -953,18 +961,20 @@ export async function reconcileOverdue(client, guildId) {
  * @param {{ client: import('discord.js').Client, guild: import('discord.js').Guild, channel: object, settings: object|null,
  *   data: { title: string, description?: string|null, location?: string|null, startsAt: Date, endsAt?: Date|null, hostId: string,
  *   roleId?: string|null, capacity?: number|null, reminderMinutes: number } }} input
- * @returns {Promise<{ ok: true, event: object, notes: string[] } | { ok: false, code: 'LIMIT'|'SEND'|'SAVE', error?: unknown }>}
+ * `hostMax`: how many open events the host may have (null for staff, who are held only to the guild cap).
+ * @returns {Promise<{ ok: true, event: object, notes: string[] } | { ok: false, code: 'LIMIT'|'HOST_LIMIT'|'SEND'|'SAVE', error?: unknown }>}
  */
-export async function createEvent({ client, guild, channel, settings, data }) {
+export async function createEvent({ client, guild, channel, settings, data, hostMax = null }) {
   const row = { ...data, channelId: channel.id };
-  let created = await createEventRow(guild.id, row);
+  let created = await createEventRow(guild.id, row, { hostMax });
   if (!created.ok) {
+    // Overdue events still count against both caps until their end job runs: end them, then try once more.
     try {
-      if ((await reconcileOverdue(client, guild.id)) > 0) created = await createEventRow(guild.id, row);
+      if ((await reconcileOverdue(client, guild.id)) > 0) created = await createEventRow(guild.id, row, { hostMax });
     } catch (err) {
       logger.warn('events: reconciling overdue events failed', err);
     }
-    if (!created.ok) return { ok: false, code: 'LIMIT' };
+    if (!created.ok) return { ok: false, code: created.code };
   }
   let event = created.event;
   const notes = [];
@@ -1525,8 +1535,14 @@ export function parseEventLimits(fields) {
   return { ok: true, values: { capacity: Number(cap) > 0 ? Number(cap) : null, reminderMinutes: rem ? Number(rem) : 0 } };
 }
 
-/** The Moderator level, checked here: the router checks levels for commands, not for components. */
-const isEventModerator = (member, settings) => resolvePermissionLevel(member, settings) >= PERMISSION_LEVELS.MODERATOR;
+/** Staff (the Moderator level and up) manage every event; checked here because the router checks levels for commands only. */
+export const isEventStaff = (member, settings) => resolvePermissionLevel(member, settings) >= PERMISSION_LEVELS.MODERATOR;
+
+/** May the member edit or cancel the event? Its host always may (whatever their level), staff may for any event. */
+export const canManageEvent = (member, settings, event) => Boolean(member && event)
+  && (member.id === event.hostId || isEventStaff(member, settings));
+
+export const NOT_YOURS_TEXT = 'Only the host of this event or a moderator can change it.';
 
 /**
  * `event-edit:{eventId}:{form}`: a button of the /event edit panel opens that form, prefilled from the event as it is now.
@@ -1551,10 +1567,8 @@ export async function handleEditButton(interaction) {
     throw err;
   }
   const [event, { resolved, settings }] = found;
-  if (!isEventModerator(interaction.member, settings)) {
-    return replyError(interaction, 'Insufficient Permissions', 'You need the Moderator level to edit events.');
-  }
   if (!event) return replyError(interaction, 'Event Not Found', 'This event no longer exists.');
+  if (!canManageEvent(interaction.member, settings, event)) return replyError(interaction, 'Not Your Event', NOT_YOURS_TEXT);
   if (!isOpen(event)) {
     return safeReply(interaction, { embeds: [warnEmbed('Event Closed', 'This event has ended or was cancelled, so it cannot be edited.')], ephemeral: true });
   }
@@ -1611,9 +1625,7 @@ export async function handleEditModal(interaction, client) {
   const { guildId } = interaction;
   const settings = peekSettings(guildId)
     ?? await withTimeout(getSettingsSafe(guildId), ackBudgetMs(interaction), 'event modal settings').catch(() => null);
-  if (!isEventModerator(interaction.member, settings)) {
-    return replyError(interaction, 'Insufficient Permissions', 'You need the Moderator level to edit events.');
-  }
+  // Who may save is checked once the event (and so its host) is loaded, below, before anything is read or saved.
   const fromPanel = interaction.isFromMessage?.() === true;
   if (fromPanel) {
     try {
@@ -1641,6 +1653,7 @@ export async function handleEditModal(interaction, client) {
   try {
     const event = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId } });
     if (!event) return panel(errorEmbed('Event Not Found', 'This event no longer exists.'), null);
+    if (!canManageEvent(interaction.member, settings, event)) return panel(errorEmbed('Not Your Event', `${NOT_YOURS_TEXT}\nNothing was saved.`), null);
     if (!isOpen(event)) return panel(warnEmbed('Event Closed', 'This event has ended or was cancelled, so it cannot be edited.'), null);
 
     const read = await readEditForm(interaction, form, event);

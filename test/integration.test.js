@@ -135,7 +135,7 @@ const EXPECTED_COMMANDS = Object.freeze({
   'sticky':            { file: 'src/commands/admin/sticky.js',             module: 'sticky',       gated: false, level: 'ADMIN',    budget: 1000 },
   'afk':               { file: 'src/commands/community/afk.js',            module: 'afk',          gated: true,  level: 'MEMBER',   budget:  800 },
   'antiraid':          { file: 'src/commands/admin/antiraid.js',           module: 'antiraid',     gated: false, level: 'ADMIN',    budget: 1500 },
-  'event':             { file: 'src/commands/community/event.js',          module: 'events',       gated: true,  level: 'MODERATOR', budget: 2000 },
+  'event':             { file: 'src/commands/community/event.js',          module: 'events',       gated: true,  level: 'MEMBER',   budget: 2000 },
   'rolepersist':       { file: 'src/commands/admin/rolepersist.js',        module: 'rolepersist',  gated: false, level: 'ADMIN',    budget: 1000 },
   'boost':             { file: 'src/commands/community/boost.js',          module: 'boosts',       gated: false, level: 'MEMBER',   budget: 2000 },
   'backup':            { file: 'src/commands/admin/backup.js',             module: 'backups',      gated: false, level: 'ADMIN',    budget: 1500 },

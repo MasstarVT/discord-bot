@@ -2,13 +2,16 @@
 // who are going and a reminder before the start. This file is thin: option parsing, validation and replies. Posting, RSVPs,
 // the jobs, editing and cancelling live in services/eventService.js. `edit` shows a panel whose buttons open one form each
 // (details, date and time, capacity and reminder); every reply is private, the announcement and the reminder are the public output.
+// Any member may create an event; its host may edit and cancel it, and staff (Moderator level and up) may do so for every event.
+// Members below the Moderator level may host at most EVENT.HOST_MAX open events at once.
 import { ChannelType, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { PERMISSION_LEVELS } from '../../config/constants.js';
 import prisma from '../../database/client.js';
 import { getSettingsSafe } from '../../services/settingsService.js';
 import {
-  EVENT, attendeeLines, buildEditPanel, cancelEvent, createEvent, findEventsForAutocomplete, getTally, isOpen, jumpUrl, listLine,
-  listOpenEvents, loadZone, parseEventFields, remindAt, resolveEventRef, voiceLead, voiceLeadText,
+  EVENT, NOT_YOURS_TEXT, attendeeLines, buildEditPanel, canManageEvent, cancelEvent, createEvent, findEventsForAutocomplete, getTally,
+  isEventStaff, isOpen, jumpUrl, listLine, listOpenEvents, loadZone, parseEventFields, remindAt, resolveEventRef, voiceLead,
+  voiceLeadText,
 } from '../../services/eventService.js';
 import { ackBudgetMs, withTimeout } from '../../utils/async.js';
 import { errorEmbed, guildEmbed, infoEmbed, successEmbed, warnEmbed } from '../../utils/embedBuilder.js';
@@ -24,8 +27,8 @@ import { zoneLabel, zoneSourceText } from '../../utils/timezones.js';
 
 export const module = 'events';
 export const gated = true;
-export const permissionLevel = PERMISSION_LEVELS.MODERATOR;
-// No allowInDMs export: buildCommandPayload registers the command for servers only.
+export const permissionLevel = PERMISSION_LEVELS.MEMBER; // edit and cancel check the host or staff per event
+// No allowInDMs export: buildCommandPayload registers the command for servers only. No default member permissions: everyone sees it.
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 // The payload budget is tight (about 1800 of 2000 characters): do not lengthen any description.
@@ -36,7 +39,6 @@ const TEXT_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
 export const data = new SlashCommandBuilder()
   .setName('event')
   .setDescription('Run events with RSVP buttons, an optional Discord event and a reminder')
-  .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
   .addSubcommand((s) => s.setName('create').setDescription('Post an event with RSVP buttons')
     .addStringOption((o) => o.setName('title').setDescription('Event name').setRequired(true).setMaxLength(EVENT.TITLE_MAX))
     .addStringOption((o) => o.setName('start').setDescription('When: fri 7pm, oct 30 18:00, in 3d').setRequired(true).setMaxLength(100))
@@ -61,11 +63,12 @@ export const data = new SlashCommandBuilder()
 const NO_MENTIONS = Object.freeze({ parse: [] });
 const notFound = () => errorEmbed('Event Not Found', 'Pick an event from the list.');
 const closed = () => warnEmbed('Event Closed', 'That event has ended or was cancelled.');
+const notYours = () => errorEmbed('Not Your Event', NOT_YOURS_TEXT);
 
 const STATUS_EMOJI = Object.freeze({ SCHEDULED: '🟢', ACTIVE: '🟢', ENDED: '🏁', CANCELLED: '🚫' });
 const STATUS_TEXT = Object.freeze({ SCHEDULED: 'Scheduled', ACTIVE: 'Active', ENDED: 'Ended', CANCELLED: 'Cancelled' });
 
-/** Can the member post in the channel (a channel they chose, so a moderator cannot post where they could not)? */
+/** Can the member post in the channel (so nobody makes the bot post where they could not post themselves)? */
 function memberCanPost(channel, member) {
   const need = channel.isThread?.() ? ['ViewChannel', 'SendMessagesInThreads'] : ['ViewChannel', 'SendMessages'];
   return channel.permissionsFor?.(member)?.has(need.map((k) => PermissionFlagsBits[k])) === true;
@@ -96,13 +99,17 @@ async function create(interaction, client) {
       || interaction.channel || guild.channels.cache.get(interaction.channelId) || null);
   const usable = checkChannelUsable(channel);
   if (!usable.ok) return reply(errorEmbed('Cannot Post There', usable.reason ?? 'I cannot post in that channel.'));
-  if (picked && !memberCanPost(channel, member)) {
+  // A chosen channel is always checked. Below staff, so is the channel the command ran in (slash commands work in channels a
+  // member cannot write in); only the configured announcement channel is open to everyone.
+  const staff = isEventStaff(member, settings);
+  const mustCheck = Boolean(picked) || (!staff && channel.id !== settings?.eventChannelId);
+  if (mustCheck && !memberCanPost(channel, member)) {
     return reply(errorEmbed('Cannot Post There', `You cannot send messages in <#${channel.id}>.`));
   }
 
   const roleOpt = options.getRole('role');
   if (roleOpt) {
-    // A Moderator-level caller must not hand out a role they could not give themselves (the role is added by the bot).
+    // A caller must not hand out a role they could not give themselves (the role is added by the bot).
     const mayGive = member.id === guild.ownerId || member.permissions?.has(PermissionFlagsBits.ManageRoles) === true;
     if (!mayGive) return reply(errorEmbed('Invalid Role', 'You need the **Manage Roles** permission to attach a role to an event.'));
     const check = checkAssignableRole(guild, guild.roles.cache.get(roleOpt.id) ?? roleOpt, { executor: member });
@@ -117,10 +124,16 @@ async function create(interaction, client) {
       hostId: interaction.user.id, roleId: roleOpt?.id ?? null, capacity: options.getInteger('capacity') ?? null,
       reminderMinutes: Math.min(Math.max(options.getInteger('reminder') ?? fallback, 0), EVENT.REMINDER_MAX),
     },
+    hostMax: staff ? null : EVENT.HOST_MAX,
   });
   if (!out.ok) {
     if (out.code === 'LIMIT') {
-      return reply(errorEmbed('Too Many Events', `This server already has ${EVENT.ACTIVE_MAX} open events. Cancel one with \`/event cancel\` first.`));
+      return reply(errorEmbed('Too Many Events', `This server already has ${EVENT.ACTIVE_MAX} open events. ${staff
+        ? 'Cancel one with `/event cancel` first.'
+        : 'Try again once one has ended.'}`));
+    }
+    if (out.code === 'HOST_LIMIT') {
+      return reply(errorEmbed('Too Many Events', `You already host ${EVENT.HOST_MAX} open events. Cancel one with \`/event cancel\` or wait until one ends.`));
     }
     return reply(errorEmbed('Could Not Create The Event', out.code === 'SEND'
       ? `I could not post in <#${channel.id}>. Check that I can send messages and embeds there.`
@@ -158,8 +171,10 @@ async function edit(interaction) {
   const { guildId } = interaction;
   const event = await resolveEventRef(guildId, eventRef(interaction));
   if (!event) return reply({ embeds: [notFound()] });
+  const settings = await getSettingsSafe(guildId);
+  if (!canManageEvent(interaction.member, settings, event)) return reply({ embeds: [notYours()] });
   if (!isOpen(event)) return reply({ embeds: [closed()] });
-  return reply(buildEditPanel(event, { settings: await getSettingsSafe(guildId) }));
+  return reply(buildEditPanel(event, { settings }));
 }
 
 // ── cancel ────────────────────────────────────────────────────────────────────
@@ -170,6 +185,7 @@ async function cancel(interaction, client) {
   const { guildId } = interaction;
   const event = await resolveEventRef(guildId, eventRef(interaction));
   if (!event) return reply(notFound());
+  if (!canManageEvent(interaction.member, await getSettingsSafe(guildId), event)) return reply(notYours());
   const res = await cancelEvent(client, event.id, { guildId, reason: 'manual' });
   if (!res.ok) return reply(res.code === 'CLOSED' ? closed() : notFound());
   const lines = [`**${clampText(event.title, 100)}** is cancelled. Its post is updated and its reminder is removed.`];
@@ -263,11 +279,13 @@ export async function autocomplete(interaction) {
     const focused = interaction.options.getFocused(true);
     const sub = interaction.options.getSubcommand(false);
     if (focused.name !== 'event' || !sub) return await respondAutocomplete(interaction, []);
-    const rows = await withTimeout(
-      findEventsForAutocomplete({ guildId: interaction.guildId, sub, q: focused.value }),
-      ackBudgetMs(interaction),
-      'event autocomplete',
-    );
+    const { guildId } = interaction;
+    // Edit and cancel offer a member who is not staff only their own events (execute checks again; this is only the list).
+    const lookup = async () => {
+      const own = (sub === 'edit' || sub === 'cancel') && !isEventStaff(interaction.member, await getSettingsSafe(guildId));
+      return findEventsForAutocomplete({ guildId, sub, q: focused.value, hostId: own ? interaction.user.id : null });
+    };
+    const rows = await withTimeout(lookup(), ackBudgetMs(interaction), 'event autocomplete');
     const choices = rows.map((e) => ({
       value: e.id,
       name: `${STATUS_EMOJI[e.status] ?? ''} ${clampText(e.title, 70)} · ${new Date(e.startsAt).toISOString().slice(0, 10)}`.trim(),
