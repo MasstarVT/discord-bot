@@ -1,0 +1,5277 @@
+{
+ "mm.isInternalNote": [
+  {
+   "in": "// ask the owner",
+   "out": true
+  },
+  {
+   "in": "   //note",
+   "out": true
+  },
+  {
+   "in": "see https://x.y // fine",
+   "out": false
+  },
+  {
+   "in": "hello",
+   "out": false
+  },
+  {
+   "in": "",
+   "out": false
+  },
+  {
+   "in": " // nbsp note",
+   "out": true
+  },
+  {
+   "in": "\n//x",
+   "out": true
+  },
+  {
+   "in": "/ / no",
+   "out": false
+  },
+  {
+   "in": "///",
+   "out": true
+  },
+  {
+   "in": "x//",
+   "out": false
+  }
+ ],
+ "mm.threadName": [
+  {
+   "in": "Cool Kid!",
+   "out": "modmail-cool-kid"
+  },
+  {
+   "in": "!!!",
+   "out": "modmail-member"
+  },
+  {
+   "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "out": "modmail-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "in": "Ünïcödé User",
+   "out": "modmail-unicode-user"
+  },
+  {
+   "in": "abc_def.ghi",
+   "out": "modmail-abc_defghi"
+  },
+  {
+   "in": "   ",
+   "out": "modmail-member"
+  },
+  {
+   "in": "José Ñandú 42",
+   "out": "modmail-jose-nandu-42"
+  },
+  {
+   "in": "emoji😀name",
+   "out": "modmail-emojiname"
+  },
+  {
+   "in": "UPPER lower",
+   "out": "modmail-upper-lower"
+  }
+ ],
+ "mm.relay": [
+  {
+   "in": {
+    "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "attachments": [
+     [
+      "cat [1].png",
+      "https://cdn.example/cat.png"
+     ]
+    ],
+    "stickers": [
+     "wave"
+    ]
+   },
+   "out": {
+    "lines": [
+     "[cat 1.png](https://cdn.example/cat.png)",
+     "[Sticker: wave]"
+    ],
+    "parts": {
+     "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+     "attachments": "[cat 1.png](https://cdn.example/cat.png)\n[Sticker: wave]"
+    },
+    "has": true
+   }
+  },
+  {
+   "in": {
+    "content": "  ",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "lines": [],
+    "parts": {
+     "description": "",
+     "attachments": null
+    },
+    "has": false
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "a",
+      "https://x/a"
+     ]
+    ],
+    "stickers": []
+   },
+   "out": {
+    "lines": [
+     "[a](https://x/a)"
+    ],
+    "parts": {
+     "description": "",
+     "attachments": "[a](https://x/a)"
+    },
+    "has": true
+   }
+  },
+  {
+   "in": {
+    "content": "hi",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "lines": [],
+    "parts": {
+     "description": "hi",
+     "attachments": null
+    },
+    "has": true
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "   ",
+      "https://x/b"
+     ],
+     [
+      null,
+      "https://x/c"
+     ],
+     [
+      "n*a_m~e|<x>`\\",
+      "https://x/d"
+     ],
+     [
+      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "https://x/e"
+     ]
+    ],
+    "stickers": [
+     null,
+     "[s]"
+    ]
+   },
+   "out": {
+    "lines": [
+     "[file](https://x/b)",
+     "[file](https://x/c)",
+     "[namex](https://x/d)",
+     "[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy](https://x/e)",
+     "[Sticker: sticker]",
+     "[Sticker: s]"
+    ],
+    "parts": {
+     "description": "",
+     "attachments": "[file](https://x/b)\n[file](https://x/c)\n[namex](https://x/d)\n[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy](https://x/e)\n[Sticker: sticker]\n[Sticker: s]"
+    },
+    "has": true
+   }
+  },
+  {
+   "in": {
+    "content": " padded text ",
+    "attachments": [
+     [
+      "file-0-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/0/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-1-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/1/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-2-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/2/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-3-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/3/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-4-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/4/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-5-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/5/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-6-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/6/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-7-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/7/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-8-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/8/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-9-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/9/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-10-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/10/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-11-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/11/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-12-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/12/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-13-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/13/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-14-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/14/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-15-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/15/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-16-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/16/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-17-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/17/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-18-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/18/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-19-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/19/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-20-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/20/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-21-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/21/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-22-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/22/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-23-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/23/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-24-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/24/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-25-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/25/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-26-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/26/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-27-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/27/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-28-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/28/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-29-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/29/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-30-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/30/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-31-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/31/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-32-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/32/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-33-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/33/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-34-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/34/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-35-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/35/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-36-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/36/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-37-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/37/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-38-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/38/qqqqqqqqqqqqqqqqqqqq"
+     ],
+     [
+      "file-39-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png",
+      "https://cdn.example/39/qqqqqqqqqqqqqqqqqqqq"
+     ]
+    ],
+    "stickers": []
+   },
+   "out": {
+    "lines": [
+     "[file-0-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/0/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-1-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/1/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-2-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/2/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-3-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/3/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-4-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/4/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-5-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/5/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-6-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/6/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-7-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/7/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-8-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/8/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-9-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/9/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-10-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/10/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-11-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/11/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-12-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/12/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-13-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/13/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-14-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/14/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-15-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/15/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-16-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/16/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-17-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/17/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-18-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/18/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-19-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/19/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-20-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/20/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-21-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/21/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-22-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/22/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-23-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/23/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-24-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/24/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-25-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/25/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-26-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/26/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-27-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/27/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-28-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/28/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-29-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/29/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-30-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/30/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-31-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/31/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-32-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/32/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-33-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/33/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-34-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/34/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-35-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/35/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-36-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/36/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-37-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/37/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-38-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/38/qqqqqqqqqqqqqqqqqqqq)",
+     "[file-39-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/39/qqqqqqqqqqqqqqqqqqqq)"
+    ],
+    "parts": {
+     "description": "padded text",
+     "attachments": "[file-0-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/0/qqqqqqqqqqqqqqqqqqqq)\n[file-1-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/1/qqqqqqqqqqqqqqqqqqqq)\n[file-2-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/2/qqqqqqqqqqqqqqqqqqqq)\n[file-3-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/3/qqqqqqqqqqqqqqqqqqqq)\n[file-4-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/4/qqqqqqqqqqqqqqqqqqqq)\n[file-5-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/5/qqqqqqqqqqqqqqqqqqqq)\n[file-6-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/6/qqqqqqqqqqqqqqqqqqqq)\n[file-7-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/7/qqqqqqqqqqqqqqqqqqqq)\n[file-8-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/8/qqqqqqqqqqqqqqqqqqqq)\n[file-9-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/9/qqqqqqqqqqqqqqqqqqqq)\n[file-10-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.png](https://cdn.example/10/qqqqqqqqqqqqqqqqqqqq)\n… and 29 more"
+    },
+    "has": true
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "nourl",
+      ""
+     ]
+    ],
+    "stickers": []
+   },
+   "out": {
+    "lines": [],
+    "parts": {
+     "description": "",
+     "attachments": null
+    },
+    "has": false
+   }
+  }
+ ],
+ "mm.whoLines": [
+  {
+   "in": [
+    "U1",
+    1600000000123,
+    1700000000999
+   ],
+   "out": [
+    "**Member:** <@U1> (`U1`)",
+    "**Account created:** <t:1600000000:R>",
+    "**Joined the server:** <t:1700000000:R>"
+   ]
+  },
+  {
+   "in": [
+    "U2",
+    null,
+    null
+   ],
+   "out": [
+    "**Member:** <@U2> (`U2`)"
+   ]
+  },
+  {
+   "in": [
+    "U3",
+    1500000000000,
+    null
+   ],
+   "out": [
+    "**Member:** <@U3> (`U3`)",
+    "**Account created:** <t:1500000000:R>"
+   ]
+  }
+ ],
+ "mm.staffAuthor": [
+  {
+   "in": [
+    "sam",
+    false
+   ],
+   "out": "sam"
+  },
+  {
+   "in": [
+    "sam",
+    true
+   ],
+   "out": "Staff"
+  },
+  {
+   "in": [
+    null,
+    false
+   ],
+   "out": "Staff"
+  },
+  {
+   "in": [
+    "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+    false
+   ],
+   "out": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…"
+  }
+ ],
+ "mm.closedEmbed": [
+  {
+   "in": [
+    "My *Server*",
+    null
+   ],
+   "out": {
+    "title": "ℹ️  Conversation Closed",
+    "description": "Your conversation with the staff of **My \\*Server\\*** has ended.\nSend me a message any time to start a new one.",
+    "color": 5793266,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": [
+    "Plain",
+    "because"
+   ],
+   "out": {
+    "title": "ℹ️  Conversation Closed",
+    "description": "Your conversation with the staff of **Plain** has ended.\n**Reason:** because\nSend me a message any time to start a new one.",
+    "color": 5793266,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": [
+    "G_u_i_l_d",
+    "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+   ],
+   "out": {
+    "title": "ℹ️  Conversation Closed",
+    "description": "Your conversation with the staff of **G\\_u\\_i\\_l\\_d** has ended.\n**Reason:** rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr…\nSend me a message any time to start a new one.",
+    "color": 5793266,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  }
+ ],
+ "mm.confirmPayload": [
+  {
+   "in": [
+    "900000000000000001",
+    "Cool *Guild*",
+    "700000000000000001"
+   ],
+   "out": {
+    "embeds": [
+     {
+      "title": "ℹ️  Contact Staff?",
+      "description": "Do you want to send your message to the staff of **Cool \\*Guild\\***? A private conversation opens; staff will see your name and your messages, and answer you here.",
+      "color": 5793266,
+      "footer": null,
+      "author": null,
+      "fields": []
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "📨",
+         "animated": false
+        },
+        "custom_id": "modmail:open:900000000000000001:700000000000000001",
+        "label": "Send to staff",
+        "style": 1
+       },
+       {
+        "type": 2,
+        "custom_id": "modmail:cancel",
+        "label": "Cancel",
+        "style": 2
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "mm.openPickPayload": [
+  {
+   "in": 2,
+   "out": {
+    "embeds": [
+     {
+      "title": "ℹ️  Which server?",
+      "description": "Which server do you want to contact? Your message will be sent to its staff.",
+      "color": 5793266,
+      "footer": null,
+      "author": null,
+      "fields": []
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 3,
+        "custom_id": "modmail-select:open:700000000000000002",
+        "placeholder": "Choose a server",
+        "options": [
+         {
+          "label": "Server 0 ",
+          "value": "900000000000000000"
+         },
+         {
+          "label": "Server",
+          "value": "900000000000000001"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": 30,
+   "out": {
+    "embeds": [
+     {
+      "title": "ℹ️  Which server?",
+      "description": "Which server do you want to contact? Your message will be sent to its staff.\nShowing the first 25 of 30 servers.",
+      "color": 5793266,
+      "footer": null,
+      "author": null,
+      "fields": []
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 3,
+        "custom_id": "modmail-select:open:700000000000000002",
+        "placeholder": "Choose a server",
+        "options": [
+         {
+          "label": "Server 0 ",
+          "value": "900000000000000000"
+         },
+         {
+          "label": "Server",
+          "value": "900000000000000001"
+         },
+         {
+          "label": "Server 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+          "value": "900000000000000002"
+         },
+         {
+          "label": "Server 3 ",
+          "value": "900000000000000003"
+         },
+         {
+          "label": "Server 4 ",
+          "value": "900000000000000004"
+         },
+         {
+          "label": "Server 5 ",
+          "value": "900000000000000005"
+         },
+         {
+          "label": "Server 6 ",
+          "value": "900000000000000006"
+         },
+         {
+          "label": "Server 7 ",
+          "value": "900000000000000007"
+         },
+         {
+          "label": "Server 8 ",
+          "value": "900000000000000008"
+         },
+         {
+          "label": "Server 9 ",
+          "value": "900000000000000009"
+         },
+         {
+          "label": "Server 10 ",
+          "value": "900000000000000010"
+         },
+         {
+          "label": "Server 11 ",
+          "value": "900000000000000011"
+         },
+         {
+          "label": "Server 12 ",
+          "value": "900000000000000012"
+         },
+         {
+          "label": "Server 13 ",
+          "value": "900000000000000013"
+         },
+         {
+          "label": "Server 14 ",
+          "value": "900000000000000014"
+         },
+         {
+          "label": "Server 15 ",
+          "value": "900000000000000015"
+         },
+         {
+          "label": "Server 16 ",
+          "value": "900000000000000016"
+         },
+         {
+          "label": "Server 17 ",
+          "value": "900000000000000017"
+         },
+         {
+          "label": "Server 18 ",
+          "value": "900000000000000018"
+         },
+         {
+          "label": "Server 19 ",
+          "value": "900000000000000019"
+         },
+         {
+          "label": "Server 20 ",
+          "value": "900000000000000020"
+         },
+         {
+          "label": "Server 21 ",
+          "value": "900000000000000021"
+         },
+         {
+          "label": "Server 22 ",
+          "value": "900000000000000022"
+         },
+         {
+          "label": "Server 23 ",
+          "value": "900000000000000023"
+         },
+         {
+          "label": "Server 24 ",
+          "value": "900000000000000024"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "mm.relayPickPayload": [
+  {
+   "in": 3,
+   "out": {
+    "embeds": [
+     {
+      "title": "ℹ️  Which conversation?",
+      "description": "You have several open conversations. Which one is this message for?",
+      "color": 5793266,
+      "footer": null,
+      "author": null,
+      "fields": []
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 3,
+        "custom_id": "modmail-select:relay:700000000000000003",
+        "placeholder": "Choose a server",
+        "options": [
+         {
+          "label": "Server 0 ",
+          "value": "row0"
+         },
+         {
+          "label": "Server",
+          "value": "row1"
+         },
+         {
+          "label": "Server 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+          "value": "row2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "mm.memberMessageEmbed": [
+  {
+   "in": {
+    "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "attachments": [
+     [
+      "cat [1].png",
+      "https://cdn.example/cat.png"
+     ]
+    ],
+    "stickers": [
+     "wave"
+    ]
+   },
+   "out": {
+    "title": null,
+    "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+    "color": 5793266,
+    "footer": "ID U9",
+    "author": "Dee",
+    "fields": [
+     [
+      "Attachments",
+      "[cat 1.png](https://cdn.example/cat.png)\n[Sticker: wave]"
+     ]
+    ]
+   }
+  },
+  {
+   "in": {
+    "content": "  ",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 5793266,
+    "footer": "ID U9",
+    "author": "Dee",
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "a",
+      "https://x/a"
+     ]
+    ],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 5793266,
+    "footer": "ID U9",
+    "author": "Dee",
+    "fields": [
+     [
+      "Attachments",
+      "[a](https://x/a)"
+     ]
+    ]
+   }
+  },
+  {
+   "in": {
+    "content": "hi",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": "hi",
+    "color": 5793266,
+    "footer": "ID U9",
+    "author": "Dee",
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "   ",
+      "https://x/b"
+     ],
+     [
+      null,
+      "https://x/c"
+     ],
+     [
+      "n*a_m~e|<x>`\\",
+      "https://x/d"
+     ],
+     [
+      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "https://x/e"
+     ]
+    ],
+    "stickers": [
+     null,
+     "[s]"
+    ]
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 5793266,
+    "footer": "ID U9",
+    "author": "Dee",
+    "fields": [
+     [
+      "Attachments",
+      "[file](https://x/b)\n[file](https://x/c)\n[namex](https://x/d)\n[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy](https://x/e)\n[Sticker: sticker]\n[Sticker: s]"
+     ]
+    ]
+   }
+  }
+ ],
+ "mm.staffMessageEmbed": [
+  {
+   "in": {
+    "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "attachments": [
+     [
+      "cat [1].png",
+      "https://cdn.example/cat.png"
+     ]
+    ],
+    "stickers": [
+     "wave"
+    ]
+   },
+   "out": {
+    "title": null,
+    "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+    "color": 1193046,
+    "footer": "The Guild",
+    "author": "Staff",
+    "fields": [
+     [
+      "Attachments",
+      "[cat 1.png](https://cdn.example/cat.png)\n[Sticker: wave]"
+     ]
+    ]
+   }
+  },
+  {
+   "in": {
+    "content": "  ",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 1193046,
+    "footer": "The Guild",
+    "author": "Staff",
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "a",
+      "https://x/a"
+     ]
+    ],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 1193046,
+    "footer": "The Guild",
+    "author": "Staff",
+    "fields": [
+     [
+      "Attachments",
+      "[a](https://x/a)"
+     ]
+    ]
+   }
+  },
+  {
+   "in": {
+    "content": "hi",
+    "attachments": [],
+    "stickers": []
+   },
+   "out": {
+    "title": null,
+    "description": "hi",
+    "color": 1193046,
+    "footer": "The Guild",
+    "author": "Staff",
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "content": "",
+    "attachments": [
+     [
+      "   ",
+      "https://x/b"
+     ],
+     [
+      null,
+      "https://x/c"
+     ],
+     [
+      "n*a_m~e|<x>`\\",
+      "https://x/d"
+     ],
+     [
+      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "https://x/e"
+     ]
+    ],
+    "stickers": [
+     null,
+     "[s]"
+    ]
+   },
+   "out": {
+    "title": null,
+    "description": null,
+    "color": 1193046,
+    "footer": "The Guild",
+    "author": "Staff",
+    "fields": [
+     [
+      "Attachments",
+      "[file](https://x/b)\n[file](https://x/c)\n[namex](https://x/d)\n[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy](https://x/e)\n[Sticker: sticker]\n[Sticker: s]"
+     ]
+    ]
+   }
+  }
+ ],
+ "mm.customIds": [
+  {
+   "in": [
+    "modmail",
+    "open",
+    "900000000000000001",
+    "700000000000000001"
+   ],
+   "out": "modmail:open:900000000000000001:700000000000000001"
+  },
+  {
+   "in": [
+    "modmail",
+    "cancel"
+   ],
+   "out": "modmail:cancel"
+  },
+  {
+   "in": [
+    "modmail",
+    "close",
+    "clxyz123"
+   ],
+   "out": "modmail:close:clxyz123"
+  },
+  {
+   "in": [
+    "modmail-select",
+    "open",
+    "7001"
+   ],
+   "out": "modmail-select:open:7001"
+  },
+  {
+   "in": [
+    "modmail-select",
+    "relay",
+    "7002"
+   ],
+   "out": "modmail-select:relay:7002"
+  },
+  {
+   "in": [
+    "autothread",
+    "close",
+    "600000000000000001"
+   ],
+   "out": "autothread:close:600000000000000001"
+  }
+ ],
+ "mm.constants": [
+  {
+   "in": null,
+   "out": {
+    "DEFAULT_GREETING": "Thanks for your message! The staff of **{server}** will answer you here soon.",
+    "STAFF_HELP": "Messages you write here go to the member. Start one with `//` for an internal note. End the conversation with the button below or `/modmail close`.",
+    "MODMAIL": {
+     "NOTE_PREFIX": "//",
+     "OK_EMOJI": "✅",
+     "FAIL_EMOJI": "❌",
+     "WAIT_EMOJI": "⏳",
+     "CATCH_UP_MAX": 10,
+     "CATCH_UP_SCAN": 30,
+     "PICK_MAX": 25,
+     "PENDING_PREFIX": "pending-",
+     "PENDING_STALE_MS": 120000,
+     "MEMBER_FETCH_TIMEOUT_MS": 2500,
+     "SCAN_BUDGET_MS": 6000,
+     "SCAN_CONCURRENCY": 5,
+     "TEXT_MAX": 4000,
+     "THREAD_NAME_MAX": 100,
+     "REASON_MAX": 500,
+     "RATE_MAX": 10,
+     "RATE_WINDOW_MS": 10000,
+     "PROMPT_EVERY_MS": 8000,
+     "BLOCKED_LIST_MAX": 50
+    }
+   }
+  }
+ ],
+ "bs.parseColor": [
+  {
+   "in": "#ff8800",
+   "out": {
+    "ok": true,
+    "value": 16746496
+   }
+  },
+  {
+   "in": "FF8800",
+   "out": {
+    "ok": true,
+    "value": 16746496
+   }
+  },
+  {
+   "in": " #000000 ",
+   "out": {
+    "ok": true,
+    "value": 0
+   }
+  },
+  {
+   "in": null,
+   "out": {
+    "ok": true,
+    "value": null
+   }
+  },
+  {
+   "in": "",
+   "out": {
+    "ok": true,
+    "value": null
+   }
+  },
+  {
+   "in": "#fff",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "red",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "#gg0000",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "#ff88001",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "0xff8800",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "#FFFFFF",
+   "out": {
+    "ok": true,
+    "value": 16777215
+   }
+  },
+  {
+   "in": "  ",
+   "out": {
+    "ok": true,
+    "value": null
+   }
+  },
+  {
+   "in": "ABCDEF",
+   "out": {
+    "ok": true,
+    "value": 11259375
+   }
+  }
+ ],
+ "bs.parseEmoji": [
+  {
+   "in": "💎",
+   "out": {
+    "ok": true,
+    "emoji": "💎"
+   }
+  },
+  {
+   "in": "👍🏽",
+   "out": {
+    "ok": true,
+    "emoji": "👍🏽"
+   }
+  },
+  {
+   "in": "🇩🇪",
+   "out": {
+    "ok": true,
+    "emoji": "🇩🇪"
+   }
+  },
+  {
+   "in": "1️⃣",
+   "out": {
+    "ok": true,
+    "emoji": "1️⃣"
+   }
+  },
+  {
+   "in": "❤️",
+   "out": {
+    "ok": true,
+    "emoji": "❤️"
+   }
+  },
+  {
+   "in": "👨‍👩‍👧",
+   "out": {
+    "ok": true,
+    "emoji": "👨‍👩‍👧"
+   }
+  },
+  {
+   "in": "",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "ab",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "💎💎",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "<:gem:123456789>",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "💎 hi",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "#️⃣",
+   "out": {
+    "ok": true,
+    "emoji": "#️⃣"
+   }
+  },
+  {
+   "in": "*⃣",
+   "out": {
+    "ok": true,
+    "emoji": "*⃣"
+   }
+  },
+  {
+   "in": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+   "out": {
+    "ok": true,
+    "emoji": "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
+   }
+  },
+  {
+   "in": "🇩",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "☺",
+   "out": {
+    "ok": true,
+    "emoji": "☺"
+   }
+  },
+  {
+   "in": "©️",
+   "out": {
+    "ok": true,
+    "emoji": "©️"
+   }
+  },
+  {
+   "in": " 💎 ",
+   "out": {
+    "ok": true,
+    "emoji": "💎"
+   }
+  },
+  {
+   "in": "👩🏽‍💻",
+   "out": {
+    "ok": true,
+    "emoji": "👩🏽‍💻"
+   }
+  },
+  {
+   "in": "🧑‍🤝‍🧑",
+   "out": {
+    "ok": true,
+    "emoji": "🧑‍🤝‍🧑"
+   }
+  },
+  {
+   "in": "1",
+   "out": {
+    "ok": false
+   }
+  },
+  {
+   "in": "™",
+   "out": {
+    "ok": true,
+    "emoji": "™"
+   }
+  },
+  {
+   "in": "🫠",
+   "out": {
+    "ok": true,
+    "emoji": "🫠"
+   }
+  }
+ ],
+ "bs.validateRoleName": [
+  {
+   "in": [
+    "  Cool   Booster  ",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "Cool Booster"
+   }
+  },
+  {
+   "in": [
+    "  Cool   Booster  ",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Cool Booster"
+   }
+  },
+  {
+   "in": [
+    "a​b",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "ab"
+   }
+  },
+  {
+   "in": [
+    "a​b",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "ab"
+   }
+  },
+  {
+   "in": [
+    "",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "empty"
+   }
+  },
+  {
+   "in": [
+    "",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "empty"
+   }
+  },
+  {
+   "in": [
+    "   ​ ",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "empty"
+   }
+  },
+  {
+   "in": [
+    "   ​ ",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "empty"
+   }
+  },
+  {
+   "in": [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   }
+  },
+  {
+   "in": [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   }
+  },
+  {
+   "in": [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "too-long"
+   }
+  },
+  {
+   "in": [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "too-long"
+   }
+  },
+  {
+   "in": [
+    "@everyone",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "@everyone",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "hi @here",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "hi @here",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "mail@x",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "mail@x",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "a＠b",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "a＠b",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "a﹫b",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "a﹫b",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "at"
+   }
+  },
+  {
+   "in": [
+    "https://x.io",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "https://x.io",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "www.example.net",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "www.example.net",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "discord.gg/abc",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "discord.gg/abc",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "discord.com/invite/abc",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "discord.com/invite/abc",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "join x.com now",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "join x.com now",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "moderator",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "moderator",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "moderator"
+   }
+  },
+  {
+   "in": [
+    "MODERATOR",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "MODERATOR",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "MODERATOR"
+   }
+  },
+  {
+   "in": [
+    " Moderator ",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    " Moderator ",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Moderator"
+   }
+  },
+  {
+   "in": [
+    "Mod erator",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "Mod erator",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Mod erator"
+   }
+  },
+  {
+   "in": [
+    "M.o.d.e.r.a.t.o.r",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "M.o.d.e.r.a.t.o.r",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "M.o.d.e.r.a.t.o.r"
+   }
+  },
+  {
+   "in": [
+    "Ｍｏｄｅｒａｔｏｒ",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "Ｍｏｄｅｒａｔｏｒ",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Ｍｏｄｅｒａｔｏｒ"
+   }
+  },
+  {
+   "in": [
+    "admin  team",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "admin  team",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "Admin-Team",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "Admin-Team",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "VIP",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "VIP",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "vip ☆",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "vip ☆",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "taken"
+   }
+  },
+  {
+   "in": [
+    "Café",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "Café"
+   }
+  },
+  {
+   "in": [
+    "Café",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Café"
+   }
+  },
+  {
+   "in": [
+    "CAFÉ",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "CAFÉ"
+   }
+  },
+  {
+   "in": [
+    "CAFÉ",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "CAFÉ"
+   }
+  },
+  {
+   "in": [
+    "ﬁre",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "ﬁre"
+   }
+  },
+  {
+   "in": [
+    "ﬁre",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "ﬁre"
+   }
+  },
+  {
+   "in": [
+    "İstanbul",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "İstanbul"
+   }
+  },
+  {
+   "in": [
+    "İstanbul",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "İstanbul"
+   }
+  },
+  {
+   "in": [
+    "Σίσυφος",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "Σίσυφος"
+   }
+  },
+  {
+   "in": [
+    "Σίσυφος",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "Σίσυφος"
+   }
+  },
+  {
+   "in": [
+    "tab\there",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "tabhere"
+   }
+  },
+  {
+   "in": [
+    "tab\there",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "tabhere"
+   }
+  },
+  {
+   "in": [
+    "line\nbreak",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "linebreak"
+   }
+  },
+  {
+   "in": [
+    "line\nbreak",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "linebreak"
+   }
+  },
+  {
+   "in": [
+    "ok.name",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "ok.name"
+   }
+  },
+  {
+   "in": [
+    "ok.name",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "ok.name"
+   }
+  },
+  {
+   "in": [
+    "site.org",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "site.org",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "x.app",
+    null
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "x.app",
+    "R0"
+   ],
+   "out": {
+    "ok": false,
+    "reason": "link"
+   }
+  },
+  {
+   "in": [
+    "MyDiscordGG",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "MyDiscordGG"
+   }
+  },
+  {
+   "in": [
+    "MyDiscordGG",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "MyDiscordGG"
+   }
+  },
+  {
+   "in": [
+    "­­soft",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "soft"
+   }
+  },
+  {
+   "in": [
+    "­­soft",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "soft"
+   }
+  },
+  {
+   "in": [
+    "😀😀",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "😀😀"
+   }
+  },
+  {
+   "in": [
+    "😀😀",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "😀😀"
+   }
+  },
+  {
+   "in": [
+    "🎉 Party",
+    null
+   ],
+   "out": {
+    "ok": true,
+    "name": "🎉 Party"
+   }
+  },
+  {
+   "in": [
+    "🎉 Party",
+    "R0"
+   ],
+   "out": {
+    "ok": true,
+    "name": "🎉 Party"
+   }
+  }
+ ],
+ "bs.planSweep": [
+  {
+   "in": {
+    "ended": null,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the boost ended"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "ended"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "ended"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "ended"
+   }
+  },
+  {
+   "in": {
+    "ended": null,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the boost ended"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 1,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 2,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 5,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 9,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "unknown",
+    "grace": 0
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "unknown",
+    "grace": 2
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "unknown",
+    "grace": 30
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "unknown",
+    "grace": 99
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "unknown",
+    "grace": -1
+   },
+   "out": {
+    "type": "skip"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "left",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "left",
+    "grace": 2
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "left",
+    "grace": 30
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "left",
+    "grace": 99
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "left",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the member left the server"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "boosting",
+    "grace": 0
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "boosting",
+    "grace": 2
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "boosting",
+    "grace": 30
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "boosting",
+    "grace": 99
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "boosting",
+    "grace": -1
+   },
+   "out": {
+    "type": "resumed"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "idle",
+    "grace": 0
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "idle",
+    "grace": 2
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "idle",
+    "grace": 30
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "idle",
+    "grace": 99
+   },
+   "out": {
+    "type": "none"
+   }
+  },
+  {
+   "in": {
+    "ended": 0,
+    "member": "idle",
+    "grace": -1
+   },
+   "out": {
+    "type": "delete",
+    "why": "the grace period after the boost is over"
+   }
+  }
+ ],
+ "bs.graceMs": [
+  {
+   "in": 0,
+   "out": 0
+  },
+  {
+   "in": 3,
+   "out": 259200000
+  },
+  {
+   "in": 30,
+   "out": 2592000000
+  },
+  {
+   "in": 31,
+   "out": 2592000000
+  },
+  {
+   "in": 99,
+   "out": 2592000000
+  },
+  {
+   "in": -4,
+   "out": 0
+  }
+ ],
+ "bs.messageTemplate": [
+  {
+   "in": null,
+   "out": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts."
+  },
+  {
+   "in": "   ",
+   "out": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts."
+  },
+  {
+   "in": "hi",
+   "out": "hi"
+  },
+  {
+   "in": "\n\t",
+   "out": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts."
+  },
+  {
+   "in": " x ",
+   "out": " x "
+  }
+ ],
+ "bs.renderThankYou": [
+  {
+   "in": {
+    "msg": null,
+    "boosts": 14,
+    "tier": 2,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "💎 <@U1> just boosted **Test Guild**! Thank you! We now have 14 boosts."
+  },
+  {
+   "in": {
+    "msg": "{user.id} / {boosts} / {tier} / {server}",
+    "boosts": 14,
+    "tier": 2,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "U1 / 14 / 2 / Test Guild"
+  },
+  {
+   "in": {
+    "msg": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "boosts": 1,
+    "tier": 0,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+  },
+  {
+   "in": {
+    "msg": "{unknownthing}",
+    "boosts": 1,
+    "tier": 0,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "{unknownthing}"
+  },
+  {
+   "in": {
+    "msg": "{boosts}",
+    "boosts": 14,
+    "tier": 2,
+    "preview": true,
+    "max": 2000
+   },
+   "out": "15"
+  },
+  {
+   "in": {
+    "msg": "{boosts}",
+    "boosts": 0,
+    "tier": 0,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "0"
+  },
+  {
+   "in": {
+    "msg": null,
+    "boosts": 0,
+    "tier": 0,
+    "preview": true,
+    "max": 1500
+   },
+   "out": "💎 <@U1> just boosted **Test Guild**! Thank you! We now have 1 boosts."
+  },
+  {
+   "in": {
+    "msg": "   {tier}   ",
+    "boosts": 3,
+    "tier": 1,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "1"
+  },
+  {
+   "in": {
+    "msg": "{user.name} {user.mention} {server.members}",
+    "boosts": 3,
+    "tier": 1,
+    "preview": false,
+    "max": 2000
+   },
+   "out": "booster <@U1> {server.members}"
+  }
+ ],
+ "bs.problemEmbed": [
+  {
+   "in": {
+    "code": "SETTINGS",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Settings Unavailable",
+    "description": "Server settings could not be loaded. Please try again in a moment.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "MODULE_OFF",
+    "detail": null
+   },
+   "out": {
+    "title": "⚠️  Module Disabled",
+    "description": "The **Server Boosts** module is turned off on this server. An admin can enable it with `/module enable boosts`.",
+    "color": 16705372,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "ROLES_OFF",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Booster Roles Are Off",
+    "description": "An admin has not turned on booster roles on this server yet.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "NOT_BOOSTING",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Boosters Only",
+    "description": "You need to be boosting this server to do that.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "ALREADY",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  You Already Have A Role",
+    "description": "Change it with `/boost role edit`, or remove it with `/boost role delete`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "NO_ROLE",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  No Booster Role",
+    "description": "You do not have a booster role. Make one with `/boost role create`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "COOLDOWN",
+    "detail": {
+     "ms": 0
+    }
+   },
+   "out": {
+    "title": "❌  Slow Down",
+    "description": "You can change your role again in 1 seconds.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "COOLDOWN",
+    "detail": {
+     "ms": 1
+    }
+   },
+   "out": {
+    "title": "❌  Slow Down",
+    "description": "You can change your role again in 1 seconds.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "COOLDOWN",
+    "detail": {
+     "ms": 59001
+    }
+   },
+   "out": {
+    "title": "❌  Slow Down",
+    "description": "You can change your role again in 60 seconds.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "COOLDOWN",
+    "detail": {
+     "ms": 60000
+    }
+   },
+   "out": {
+    "title": "❌  Slow Down",
+    "description": "You can change your role again in 60 seconds.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "empty"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "Give the role a name.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "too-long"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "Role names are at most 50 characters.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "at"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "A role name cannot contain `@`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "link"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "A role name cannot contain a link or an invite.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "taken"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "A role with that name already exists. Pick a different name.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_NAME",
+    "detail": {
+     "reason": "odd"
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Name",
+    "description": "Give the role a name.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_COLOR",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Invalid Colour",
+    "description": "Use a hex colour such as `#ff8800`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_EMOJI",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Invalid Icon",
+    "description": "Use one standard emoji. Custom emojis cannot be role icons; upload an image instead.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_ICON",
+    "detail": {
+     "text": "Too big."
+    }
+   },
+   "out": {
+    "title": "❌  Invalid Icon Image",
+    "description": "Too big.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BAD_ICON",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Invalid Icon Image",
+    "description": "The icon could not be used.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "ICON_BOTH",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Pick One Icon",
+    "description": "Use either `icon_emoji` or `icon_image`, not both.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "NO_ROLE_ICONS",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Role Icons Locked",
+    "description": "This server has not unlocked role icons yet (they need Boost level 2).",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "NOTHING",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Nothing To Change",
+    "description": "Give at least one of `name`, `color`, `icon_emoji` or `icon_image`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BOT_PERMS",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Missing Permissions",
+    "description": "I need the **Manage Roles** permission to make booster roles. Ask an admin.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BOT_LOW",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Cannot Place The Role",
+    "description": "My highest role is too low to put a role below it. An admin must move my role up.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "ANCHOR_HIGH",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Cannot Place The Role",
+    "description": "The role booster roles go below is above my highest role. An admin must fix `/boost config`.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "ROLE_LIMIT",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Role Limit Reached",
+    "description": "This server has reached Discord's limit of 250 roles.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "BOT_ROLE",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Cannot Edit The Role",
+    "description": "Your booster role is above my highest role, so I cannot change it. Ask an admin.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "DISCORD",
+    "detail": {
+     "text": "Nope."
+    }
+   },
+   "out": {
+    "title": "❌  Discord Refused",
+    "description": "Nope.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "DISCORD",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Discord Refused",
+    "description": "Discord refused the change.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "FAILED",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Could Not Save",
+    "description": "Something went wrong. Please try again in a moment.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  },
+  {
+   "in": {
+    "code": "WHATEVER",
+    "detail": null
+   },
+   "out": {
+    "title": "❌  Could Not Save",
+    "description": "Something went wrong. Please try again in a moment.",
+    "color": 15548997,
+    "footer": null,
+    "author": null,
+    "fields": []
+   }
+  }
+ ],
+ "bs.constants": [
+  {
+   "in": null,
+   "out": {
+    "DEFAULT_BOOST_MESSAGE": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts.",
+    "BOOST": {
+     "JOB_TYPE": "boosts.sweep",
+     "DAY_MS": 86400000,
+     "GRACE_MAX_DAYS": 30,
+     "SWEEP_EVERY_MS": 3600000,
+     "SWEEP_MORE_MS": 60000,
+     "SWEEP_RETRY_MS": 300000,
+     "STARTUP_DELAY_MS": 60000,
+     "STARTUP_JITTER_MS": 120000,
+     "LOOKUPS_PER_RUN": 50,
+     "DELETES_PER_RUN": 25,
+     "LOOKUP_TIMEOUT_MS": 8000,
+     "SWEEP_BUDGET_MS": 35000,
+     "ROLES_PER_GUILD": 250,
+     "EDIT_COOLDOWN_MS": 60000,
+     "COOLDOWN_MAX": 5000,
+     "ICON_TIMEOUT_MS": 8000,
+     "EMOJI_MAX": 32,
+     "MESSAGE_MAX": 2000,
+     "REASON_MAX": 400
+    }
+   }
+  }
+ ],
+ "at.normalizeEntry": [
+  {
+   "in": {
+    "channelId": "123456789012345678",
+    "name": " Topic ",
+    "archiveMinutes": "60",
+    "closeButton": true
+   },
+   "out": {
+    "channelId": "123456789012345678",
+    "name": "Topic",
+    "archiveMinutes": "60",
+    "closeButton": true
+   }
+  },
+  {
+   "in": {
+    "channelId": "123456789012345678",
+    "name": "",
+    "archiveMinutes": 60,
+    "closeButton": "yes"
+   },
+   "out": {
+    "channelId": "123456789012345678",
+    "name": "{content}",
+    "archiveMinutes": "60",
+    "closeButton": false
+   }
+  },
+  {
+   "in": {
+    "channelId": "1234",
+    "name": "x"
+   },
+   "out": null
+  },
+  {
+   "in": {
+    "channelId": 123456789012345680
+   },
+   "out": null
+  },
+  {
+   "in": {
+    "channelId": "123456789012345679",
+    "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+    "archiveMinutes": "7"
+   },
+   "out": {
+    "channelId": "123456789012345679",
+    "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+    "archiveMinutes": "1440",
+    "closeButton": false
+   }
+  },
+  {
+   "in": null,
+   "out": null
+  },
+  {
+   "in": "str",
+   "out": null
+  },
+  {
+   "in": [],
+   "out": null
+  },
+  {
+   "in": {
+    "channelId": "1234567890123456789012345"
+   },
+   "out": {
+    "channelId": "1234567890123456789012345",
+    "name": "{content}",
+    "archiveMinutes": "1440",
+    "closeButton": false
+   }
+  },
+  {
+   "in": {
+    "channelId": "12345678901234567890123456"
+   },
+   "out": null
+  },
+  {
+   "in": {
+    "channelId": "12345",
+    "archiveMinutes": [
+     "10080"
+    ]
+   },
+   "out": {
+    "channelId": "12345",
+    "name": "{content}",
+    "archiveMinutes": "10080",
+    "closeButton": false
+   }
+  },
+  {
+   "in": {
+    "channelId": "12345",
+    "archiveMinutes": 4320,
+    "name": 7
+   },
+   "out": {
+    "channelId": "12345",
+    "name": "{content}",
+    "archiveMinutes": "4320",
+    "closeButton": false
+   }
+  }
+ ],
+ "at.readEntries": [
+  {
+   "in": [
+    {
+     "channelId": "123456789012345678",
+     "name": " Topic ",
+     "archiveMinutes": "60",
+     "closeButton": true
+    },
+    {
+     "channelId": "123456789012345678",
+     "name": "",
+     "archiveMinutes": 60,
+     "closeButton": "yes"
+    },
+    {
+     "channelId": "1234",
+     "name": "x"
+    },
+    {
+     "channelId": 123456789012345680
+    },
+    {
+     "channelId": "123456789012345679",
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+     "archiveMinutes": "7"
+    },
+    null,
+    "str",
+    [],
+    {
+     "channelId": "1234567890123456789012345"
+    },
+    {
+     "channelId": "12345678901234567890123456"
+    },
+    {
+     "channelId": "12345",
+     "archiveMinutes": [
+      "10080"
+     ]
+    },
+    {
+     "channelId": "12345",
+     "archiveMinutes": 4320,
+     "name": 7
+    }
+   ],
+   "out": [
+    {
+     "channelId": "123456789012345678",
+     "name": "Topic",
+     "archiveMinutes": "60",
+     "closeButton": true
+    },
+    {
+     "channelId": "123456789012345679",
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1234567890123456789012345",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "12345",
+     "name": "{content}",
+     "archiveMinutes": "10080",
+     "closeButton": false
+    }
+   ]
+  },
+  {
+   "in": [
+    {
+     "channelId": "123456789012345678",
+     "name": " Topic ",
+     "archiveMinutes": "60",
+     "closeButton": true
+    },
+    {
+     "channelId": "123456789012345678",
+     "name": "",
+     "archiveMinutes": 60,
+     "closeButton": "yes"
+    },
+    {
+     "channelId": "1234",
+     "name": "x"
+    },
+    {
+     "channelId": 123456789012345680
+    },
+    {
+     "channelId": "123456789012345679",
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+     "archiveMinutes": "7"
+    },
+    null,
+    "str",
+    [],
+    {
+     "channelId": "1234567890123456789012345"
+    },
+    {
+     "channelId": "12345678901234567890123456"
+    },
+    {
+     "channelId": "12345",
+     "archiveMinutes": [
+      "10080"
+     ]
+    },
+    {
+     "channelId": "12345",
+     "archiveMinutes": 4320,
+     "name": 7
+    },
+    {
+     "channelId": "1000000000000000000"
+    },
+    {
+     "channelId": "1000000000000000001"
+    },
+    {
+     "channelId": "1000000000000000002"
+    },
+    {
+     "channelId": "1000000000000000003"
+    },
+    {
+     "channelId": "1000000000000000004"
+    },
+    {
+     "channelId": "1000000000000000005"
+    },
+    {
+     "channelId": "1000000000000000006"
+    },
+    {
+     "channelId": "1000000000000000007"
+    },
+    {
+     "channelId": "1000000000000000008"
+    },
+    {
+     "channelId": "1000000000000000009"
+    },
+    {
+     "channelId": "1000000000000000010"
+    },
+    {
+     "channelId": "1000000000000000011"
+    },
+    {
+     "channelId": "1000000000000000012"
+    },
+    {
+     "channelId": "1000000000000000013"
+    },
+    {
+     "channelId": "1000000000000000014"
+    },
+    {
+     "channelId": "1000000000000000015"
+    },
+    {
+     "channelId": "1000000000000000016"
+    },
+    {
+     "channelId": "1000000000000000017"
+    },
+    {
+     "channelId": "1000000000000000018"
+    },
+    {
+     "channelId": "1000000000000000019"
+    },
+    {
+     "channelId": "1000000000000000020"
+    },
+    {
+     "channelId": "1000000000000000021"
+    },
+    {
+     "channelId": "1000000000000000022"
+    },
+    {
+     "channelId": "1000000000000000023"
+    },
+    {
+     "channelId": "1000000000000000024"
+    },
+    {
+     "channelId": "1000000000000000025"
+    },
+    {
+     "channelId": "1000000000000000026"
+    },
+    {
+     "channelId": "1000000000000000027"
+    },
+    {
+     "channelId": "1000000000000000028"
+    },
+    {
+     "channelId": "1000000000000000029"
+    }
+   ],
+   "out": [
+    {
+     "channelId": "123456789012345678",
+     "name": "Topic",
+     "archiveMinutes": "60",
+     "closeButton": true
+    },
+    {
+     "channelId": "123456789012345679",
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1234567890123456789012345",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "12345",
+     "name": "{content}",
+     "archiveMinutes": "10080",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000000",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000001",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000002",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000003",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000004",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000005",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000006",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000007",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000008",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000009",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000010",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000011",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000012",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000013",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000014",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000015",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000016",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000017",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000018",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000019",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    },
+    {
+     "channelId": "1000000000000000020",
+     "name": "{content}",
+     "archiveMinutes": "1440",
+     "closeButton": false
+    }
+   ]
+  },
+  {
+   "in": null,
+   "out": []
+  },
+  {
+   "in": "x",
+   "out": []
+  }
+ ],
+ "at.readPublishIds": [
+  {
+   "in": [
+    "123456789012345678",
+    "123456789012345678",
+    "x",
+    "1234"
+   ],
+   "out": [
+    "123456789012345678"
+   ]
+  },
+  {
+   "in": [
+    "1000000000000000000",
+    "1000000000000000001",
+    "1000000000000000002",
+    "1000000000000000003",
+    "1000000000000000004",
+    "1000000000000000005",
+    "1000000000000000006",
+    "1000000000000000007",
+    "1000000000000000008",
+    "1000000000000000009",
+    "1000000000000000010",
+    "1000000000000000011",
+    "1000000000000000012",
+    "1000000000000000013",
+    "1000000000000000014",
+    "1000000000000000015",
+    "1000000000000000016",
+    "1000000000000000017",
+    "1000000000000000018",
+    "1000000000000000019",
+    "1000000000000000020",
+    "1000000000000000021",
+    "1000000000000000022",
+    "1000000000000000023",
+    "1000000000000000024",
+    "1000000000000000025",
+    "1000000000000000026",
+    "1000000000000000027",
+    "1000000000000000028",
+    "1000000000000000029"
+   ],
+   "out": [
+    "1000000000000000000",
+    "1000000000000000001",
+    "1000000000000000002",
+    "1000000000000000003",
+    "1000000000000000004",
+    "1000000000000000005",
+    "1000000000000000006",
+    "1000000000000000007",
+    "1000000000000000008",
+    "1000000000000000009",
+    "1000000000000000010",
+    "1000000000000000011",
+    "1000000000000000012",
+    "1000000000000000013",
+    "1000000000000000014",
+    "1000000000000000015",
+    "1000000000000000016",
+    "1000000000000000017",
+    "1000000000000000018",
+    "1000000000000000019",
+    "1000000000000000020",
+    "1000000000000000021",
+    "1000000000000000022",
+    "1000000000000000023",
+    "1000000000000000024"
+   ]
+  },
+  {
+   "in": [],
+   "out": []
+  }
+ ],
+ "at.plainText": [
+  {
+   "in": "**Bold** and *italic* and ~~gone~~ and __under__",
+   "out": "Bold and italic and gone and under"
+  },
+  {
+   "in": "use `code` here",
+   "out": "use code here"
+  },
+  {
+   "in": "[the docs](https://example.com/x) please",
+   "out": "the docs please"
+  },
+  {
+   "in": "# Heading text",
+   "out": "Heading text"
+  },
+  {
+   "in": "> quoted words",
+   "out": "quoted words"
+  },
+  {
+   "in": "-# small print",
+   "out": "small print"
+  },
+  {
+   "in": "- a bullet",
+   "out": "a bullet"
+  },
+  {
+   "in": "hey <@123456789012345678> and <@&123456789012345678> in <#123456789012345678>",
+   "out": "hey and in"
+  },
+  {
+   "in": "hello @everyone and @here",
+   "out": "hello and"
+  },
+  {
+   "in": "hello @​everyone",
+   "out": "hello"
+  },
+  {
+   "in": "thanks <:pog:123456789012345678> <a:wave:123456789012345678>",
+   "out": "thanks :pog: :wave:"
+  },
+  {
+   "in": "the answer is ||a big spoiler|| ok",
+   "out": "the answer is ok"
+  },
+  {
+   "in": "mail me: a@b.com",
+   "out": "mail me: a@b.com"
+  },
+  {
+   "in": "@Bob can you look #general",
+   "out": "Bob can you look general"
+  },
+  {
+   "in": "snake_case_name stays",
+   "out": "snake_case_name stays"
+  },
+  {
+   "in": "tab\tand\u0000control",
+   "out": "tab and control"
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "in": "```js\ncode```",
+   "out": "code"
+  },
+  {
+   "in": "_lone italic_ here",
+   "out": "lone italic here"
+  },
+  {
+   "in": "(_paren_)",
+   "out": "(paren)"
+  },
+  {
+   "in": "<t:1700000000:R> later",
+   "out": "later"
+  },
+  {
+   "in": "</ping:123456789012345678> cmd",
+   "out": "/ping cmd"
+  },
+  {
+   "in": "a b c",
+   "out": "a b c"
+  },
+  {
+   "in": ">>> deep quote",
+   "out": "deep quote"
+  },
+  {
+   "in": "### three",
+   "out": "three"
+  },
+  {
+   "in": "#### four",
+   "out": "### four"
+  },
+  {
+   "in": "* star bullet",
+   "out": "star bullet"
+  },
+  {
+   "in": "+ plus",
+   "out": "plus"
+  },
+  {
+   "in": "~~a~~~~b~~",
+   "out": "ab"
+  },
+  {
+   "in": "**unclosed",
+   "out": "unclosed"
+  },
+  {
+   "in": "emoji 😀 ok",
+   "out": "emoji 😀 ok"
+  },
+  {
+   "in": "  spaced   out  ",
+   "out": "spaced out"
+  },
+  {
+   "in": "é́ combining",
+   "out": "é́ combining"
+  },
+  {
+   "in": "​zero",
+   "out": "zero"
+  },
+  {
+   "in": "[a]( <https://x.y> )",
+   "out": "a"
+  },
+  {
+   "in": "x <y> z",
+   "out": "x y z"
+  },
+  {
+   "in": "back\\slash",
+   "out": "back slash"
+  },
+  {
+   "in": "|pipe|",
+   "out": "pipe"
+  }
+ ],
+ "at.contentTitle": [
+  {
+   "in": "First line\nSecond line",
+   "out": "First line"
+  },
+  {
+   "in": "\n\n  \n**bold**\nnext",
+   "out": "bold"
+  },
+  {
+   "in": "<@123456789012345678>\nreal text",
+   "out": "real text"
+  },
+  {
+   "in": "😀😀",
+   "out": ""
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "line one\r\nline two",
+   "out": "line one"
+  },
+  {
+   "in": "\n\n\n\n\nsixth",
+   "out": ""
+  },
+  {
+   "in": "-\n—\n…\nok",
+   "out": "ok"
+  },
+  {
+   "in": "Ünïcode words",
+   "out": "Ünïcode words"
+  }
+ ],
+ "at.threadName": [
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "How do I reset?\nmore"
+    }
+   ],
+   "out": "How do I reset?"
+  },
+  {
+   "in": [
+    "{user}: {content}",
+    {
+     "content": "Hi"
+    }
+   ],
+   "out": "Alice: Hi"
+  },
+  {
+   "in": [
+    "{channel} {date}",
+    {
+     "content": "x"
+    }
+   ],
+   "out": "help-desk 2026-10-21"
+  },
+  {
+   "in": [
+    "{server} - {content}",
+    {
+     "content": "x"
+    }
+   ],
+   "out": "My Server - x"
+  },
+  {
+   "in": [
+    "",
+    {
+     "content": "fallback template"
+    }
+   ],
+   "out": "fallback template"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "😀"
+    }
+   ],
+   "out": "Alice"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "",
+     "member": null,
+     "user": {
+      "id": "U",
+      "globalName": "Glob",
+      "username": "u"
+     }
+    }
+   ],
+   "out": "Glob"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "",
+     "bare": true
+    }
+   ],
+   "out": "Thread"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    }
+   ],
+   "out": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word "
+    }
+   ],
+   "out": "word word word word word word word word word word word word word word word word word word word word"
+  },
+  {
+   "in": [
+    "{user}",
+    {
+     "member": {
+      "displayName": "<@123456789012345678> sneaky"
+     },
+     "content": ""
+    }
+   ],
+   "out": "sneaky"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "{user} {server}"
+    }
+   ],
+   "out": "{user} {server}"
+  },
+  {
+   "in": [
+    "{content}",
+    {
+     "content": "line one\r\nline two"
+    }
+   ],
+   "out": "line one"
+  },
+  {
+   "in": [
+    "{date}",
+    {
+     "content": "",
+     "createdAt": null
+    }
+   ],
+   "out": "2026-11-19"
+  },
+  {
+   "in": [
+    "  {content}  \t {user} ",
+    {
+     "content": "tabs\tand spaces"
+    }
+   ],
+   "out": "tabs and spaces Alice"
+  },
+  {
+   "in": [
+    "{unknown} {content}",
+    {
+     "content": "z"
+    }
+   ],
+   "out": "{unknown} z"
+  }
+ ],
+ "at.unknownTokens": [
+  {
+   "in": "{user} {content} {channel} {date} {server} {user.name}",
+   "out": []
+  },
+  {
+   "in": "{nope} {content}",
+   "out": [
+    "{nope}"
+   ]
+  },
+  {
+   "in": "plain",
+   "out": []
+  },
+  {
+   "in": "{a} {b} {a}",
+   "out": [
+    "{a}",
+    "{b}"
+   ]
+  },
+  {
+   "in": "{ user }",
+   "out": []
+  },
+  {
+   "in": "{USER}",
+   "out": []
+  }
+ ],
+ "at.threadNeeds": [
+  {
+   "in": false,
+   "out": [
+    "ViewChannel",
+    "CreatePublicThreads"
+   ]
+  },
+  {
+   "in": true,
+   "out": [
+    "ViewChannel",
+    "CreatePublicThreads",
+    "SendMessagesInThreads"
+   ]
+  }
+ ],
+ "at.isPublishable": [
+  {
+   "in": {
+    "type": 0
+   },
+   "out": true
+  },
+  {
+   "in": {
+    "type": 19
+   },
+   "out": true
+  },
+  {
+   "in": {
+    "type": 20
+   },
+   "out": true
+  },
+  {
+   "in": {
+    "type": 23
+   },
+   "out": true
+  },
+  {
+   "in": {
+    "type": 6
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "flags": 1
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "flags": 2
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "flags": 128
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "poll": true
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "forward": true
+   },
+   "out": false
+  },
+  {
+   "in": {
+    "type": 0,
+    "flags": 4
+   },
+   "out": true
+  },
+  {
+   "in": {
+    "type": 7
+   },
+   "out": false
+  }
+ ],
+ "at.limiter": [
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": false
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    0
+   ],
+   "out": false
+  },
+  {
+   "in": [
+    "remaining",
+    "A",
+    0
+   ],
+   "out": 0
+  },
+  {
+   "in": [
+    "take",
+    "B",
+    0
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "release",
+    "A",
+    0
+   ],
+   "out": null
+  },
+  {
+   "in": [
+    "remaining",
+    "A",
+    0
+   ],
+   "out": 1
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    3599999
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "take",
+    "A",
+    2
+   ],
+   "out": true
+  },
+  {
+   "in": [
+    "remaining",
+    "A",
+    0
+   ],
+   "out": 8
+  },
+  {
+   "in": [
+    "remaining",
+    "Z",
+    0
+   ],
+   "out": 10
+  }
+ ]
+}

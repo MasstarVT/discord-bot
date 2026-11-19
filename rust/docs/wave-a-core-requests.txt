@@ -1,0 +1,115 @@
+[feat-embeds] bot_core::custom_embed: please expose a public is_extended_pictographic(char), or the extendedPictographic table. feat-embeds currently reads ../../bot-core/data/emoji.json with include_str! to port UNICODE_EMOJI_RE (isEmojiSyntax), so it depends on bot-core's file layout.
+
+[feat-levels] bot_core::App (or bot_core::gateway): expose the process ready timestamp (client.readyTimestamp), e.g. App::ready_at_ms() -> Option<i64>, set on the first ClientReady. feat-levels would then use it in xp_service::ready_at instead of its approximation.
+
+[feat-levels] bot_core::guild_members: add fetch_members_by_ids(app, guild_id, &[UserId], timeout_ms) using the gateway REQUEST_GUILD_MEMBERS (opcode 8, user_ids) and writing the result into the cache, i.e. discord.js guild.members.fetch({ user: ids }). It is needed by the leaderboard names and the bulk role sync.
+
+[feat-levels] bot_core::interaction::AutocompleteCtx: add ack_budget_ms() like CommandCtx and ComponentCtx. feat-levels calls bot_core::interaction::ack_budget_ms(ctx.interaction.id) instead.
+
+[feat-levels] bot_core::testing::FakeInteraction: fill data.resolved (users, members, roles, channels) for USER, ROLE, MENTIONABLE and CHANNEL options, as Discord does. The feat-levels tests write data.resolved by hand through json_mut().
+
+[feat-levels] bot_db::GuildSettings: a Default impl (or a test constructor) would help pure tests. The feat-levels tests build rows through the in-memory settings store instead.
+
+[feat-tags] bot_core::interaction::AutocompleteCtx: add getters for non-focused options (get_string, get_integer, as CommandCtx has) and permission_level(). The tag crate works around this with bot_core::interaction::leaf_options plus member_access and resolve_permission_level.
+
+[feat-tags] bot_util::async_util::Throttle: runs on tokio::time::Instant, not the app clock (app.clock()), so tests that cross a throttle interval must sleep in real time. Request: a constructor that takes the app's SharedClock.
+
+[feat-tags] bot_core::interaction_helpers::cached_guild and bot_core::adapters::render_context: both deep-clone the whole Guild (members included) on every call. Request: a borrowing accessor such as with_cached_guild(app, id, |&Guild| ..) to use on hot hook paths. The crate limits clones with a lazy snapshot in DiscordIo and by checking the trigger memo first.
+
+[feat-tags] bot_core::permission_checker / interaction: no helper returns a member's role ids the way discord.js's member.roles.cache does (@everyone included, deleted roles dropped). The crate has its own tag_service::member_role_ids; other feature crates with allow/deny role lists will need the same.
+
+[feat-moderation] bot_core::testing::FakeInteraction::option: user, role and channel options do not fill data.resolved, so ctx.get_user / get_role return None in router tests. The crate's tests work around this by writing data.resolved.users/roles through json_mut(). Request: populate data.resolved for USER/ROLE options (a default user JSON, and a role JSON with the colors field).
+
+[feat-moderation] bot_core has no REST seam for feature crates. Offline tests cannot ban/kick/timeout/DM, and serenity Http::ban_user only takes whole days, not discord.js deleteMessageSeconds. Worked around with feat_moderation::guild_ops::ModRest + set_rest(app, ...) and a raw Request for PUT /guilds/{g}/bans/{u}?delete_message_seconds=N, plus GET /bans?limit=1000 (serenity caps limit at u8). Request: a shared ModRest-style trait in bot-core (or Http helpers for ban-with-seconds and 1000-item ban pages) so automod, captcha and the dashboard reuse one seam.
+
+[feat-moderation] bot_util::async_util::with_timeout requires a 'static future, so bounding get_settings_safe by the ack budget needs a cloned App and guild id. Request: allow borrowed futures (or add a bounded peek-or-load helper in SettingsService, the JS peekSettings ?? withTimeout(getSettingsSafe) pattern).
+
+[feat-moderation] bot_core::interaction_helpers::check_channel_usable / cached_channel only read the cache. Request: an async variant that falls back to a REST channel fetch, as discord.js guild.channels.fetch does, to close the uncached-channel gaps above.
+
+[feat-logging] bot-core (discord.rs or context.rs): a process ready timestamp, e.g. `DiscordHandle::ready_at_ms()` or `App::ready_timestamp_ms() -> Option<i64>`, set when the shard becomes READY. inviteTracker's `trustedSince` needs `client.readyTimestamp`; feat-logging works around it with `invite_tracker::trusted_since` / `set_trusted_since`.
+
+[feat-logging] bot-core (plugin.rs / registry.rs): a way for a plugin to register a shutdown flush without `init`, e.g. `Plugin::on_shutdown(order, label, timeout_ms, warn, f)` that is not counted as `hasInit`, or a Registry-level `on_shutdown`. plugins.json requires `hasInit: false` for logging, so feat-logging registers `client::on_shutdown(app, 20, "log queue flush", 4000, ...)` lazily on the first `send_log`.
+
+[feat-logging] bot-core (gateway.rs, optional): keep `afk_timeout` when no AFK channel is set (serenity folds it into `afk_metadata: Option<..>`), or pass the raw GUILD_UPDATE `afk_timeout`, so the 'AFK Timeout' diff matches the JS.
+
+[feat-logging] bot-core testing.rs (optional): `FakeGuild` setters for `vanity_url_code`, `voice_states` and the guild name. The tests currently edit `FakeGuild::json()` by hand.
+
+[feat-welcome] bot_core::adapters: add a forced-static PNG member avatar, displayAvatarURL({ extension:'png', forceStatic:true, size:256 }); member_display_avatar_url returns .gif for a_ hashes. Also add the default user displayAvatarURL({ size:128 }), webp/gif. Both are implemented locally in welcome_service::card_avatar_url and application_service::avatar_url_128.
+
+[feat-welcome] bot_core::interaction::AutocompleteCtx: add get_string(name) for options that are not focused (options.getString('form') inside autocomplete). Worked around with interaction::leaf_options in commands/application.rs autocomplete_string.
+
+[feat-welcome] bot_core::interaction_helpers: add a REST fallback for uncached channels (guild.channels.fetch). cached_channel / check_channel_usable are cache-only.
+
+[feat-achievements] bot_core::Registry (or Plugin, in a field the golden check ignores): a per-app boot-time hook, so a feature can call bot_core::client::on_shutdown without a plugin init. Needed for the achievement count flush (order 10, 3000 ms), which is registered lazily on the first messageCreate for now.
+
+[feat-achievements] bot_core::guild_members: a fetch-members-by-ids helper using the gateway request_guild_members (up to 100 ids, a timeout), as discord.js guild.members.fetch({ user: ids, time }) does. birthdayService fetchMembers falls back to one REST call per id.
+
+[feat-achievements] bot_core::interaction::AutocompleteCtx::ack_budget_ms(): it exists on CommandCtx and ComponentCtx but not on AutocompleteCtx. The crate calls bot_core::interaction::ack_budget_ms(ctx.interaction.id) directly.
+
+[feat-reactionroles] bot_core::new_targets::resolve_new_options (substitute_role / substitute_channel): insert the role or channel it creates into the serenity cache (or expose the created GuildChannel and Role). Today they exist only in the interaction's resolved data, so check_assignable_role_cached and check_channel_usable report 'Role not found.' / 'Channel not found' for a role or channel new_role/new_channel just created, until the gateway event arrives. feat-counting's /counting set with new_channel has the same exposure. feat-reactionroles works around it locally (see gaps).
+
+[feat-tempvoice] bot_core::testing::FakeGuild cannot express voice states, a channel's `parent_id`, user_limit or bitrate, the guild's AFK channel, or other bot members (it marks only TEST_BOT_ID as a bot). Please add builder methods such as `.voice_state(user, channel)`, `.channel_in(id, kind, name, parent, overwrites)`, `.afk(channel)` and `.bot_member(id)`. This crate works around it with its own TestGuild in tests/common/mod.rs.
+
+[feat-tempvoice] bot-core has no shared helper that puts a channel the bot just created over REST into the serenity cache (discord.js `channels._add`). This crate has its own, `temp_voice_service::cache_created_channel` (a ChannelCreateEvent round-trip). A shared `bot_core::discord::cache_created_channel(app, &GuildChannel)` would let other feature crates do the same.
+
+[feat-tickets] bot_core::interaction_helpers (or a components helper): a converter from model rows to builders, i.e. Message.components (serenity ActionRow) to Vec<CreateActionRow>. It is needed for update({ components: message.components }) and disableButtons. I worked around it inside the crate with feat_tickets::ticket_service::rows_from_json.
+
+[feat-tickets] bot_core::interaction::AutocompleteCtx: getters for options that are not focused (get_string and similar, like CommandCtx has). /ticket-panel autocomplete reads the 'panel' option; the workaround uses bot_core::interaction::leaf_options directly.
+
+[feat-tickets] bot_core::testing::FakeGuild: setters for the guild name and for a channel's parent_id, so category children can be built offline. The tests work around this by writing channels into the cache through ChannelCreateEvent.
+
+[feat-giveaways-polls] bot_core::guild_members (or bot_core::discord::DiscordHandle): fetch_members_by_ids(app, guild_id, &[UserId], timeout_ms) -> Result<HashMap<UserId, Member>, _>, built on serenity ShardMessenger::chunk_guild with ChunkGuildFilter::UserIds and the GUILD_MEMBERS_CHUNK reply. This would give giveawayService.js makeResolver exact parity with guild.members.fetch({ user: ids }). Today feat-giveaways-polls makes one REST call per member.
+
+[feat-giveaways-polls] bot_core::interaction_helpers::check_channel_usable only accepts a channel id that is in the cache. Please add check_channel_usable_for(app, guild_id, &GuildChannel, needs) for a channel fetched over REST. It is implemented locally as feat_giveaways_polls::guild_view::channel_usable.
+
+[feat-giveaways-polls] bot_core::interaction_helpers::cached_guild clones the whole Guild. A borrow-based accessor (a closure over the cache guard) would avoid the clone on hot paths such as button clicks; this crate reads app.discord()?.cache.guild(id) directly instead.
+
+[feat-translation] bot-core hooks: add a shared AutomodAction state type (e.g. bot_core::hooks::AutomodAction { rule: String, deleted: bool }) for HookCtx.state key 'automodAction', so feat-automod writes it and feat-translation reads it with ctx.state.get::<AutomodAction>(). Today feat-translation reads it as serde_json::Value.
+
+[feat-translation] bot-util async_util::Throttle: a constructor that takes the app clock (or a now_ms argument to allow()), so cooldowns follow App::clock() the way the JS Date.now() does and tests can advance them.
+
+[feat-translation] bot-core testing::FakeInteraction::option: for CHANNEL, ROLE and USER options, fill data.resolved (e.g. from a FakeGuild), so CommandCtx::get_channel returns the partial channel in offline tests. Optional.
+
+[feat-search] bot_core::markdown::escape_markdown: add an options variant (at least maskedLink and heading, as @discordjs/formatters has), and skip the italic, underline and bold lookbehind steps when the text lacks '*' or '_'. Today these steps are quadratic on long text without markers (about 60 s on 14 KB in debug). feat-search keeps a local copy (search_service::escape_markdown_default / escape_markdown_block) until then.
+
+[feat-search] bot_core::interaction (CommandCtx): expose the interaction channel's nsfw flag that Discord sends in the interaction payload (serenity's PartialChannel drops it), for example `CommandCtx::channel_nsfw() -> Option<bool>`. That would give isAgeRestrictedChannel the JS behaviour for uncached channels.
+
+[feat-search] bot_core::testing::FakeGuild: optional helpers to add presences (activities) and to mark a channel nsfw. The feat-search tests patch the GUILD_CREATE JSON by hand.
+
+[feat-feeds] bot_util::js::date_parse handles only ISO and RFC 1123/850/asctime dates, and returns NaN for zone names like EST or PDT and for most of V8's legacy forms. A full V8 Date.parse port (crates/feat-feeds/src/js_date.rs, verified against 64 Node results) could move into bot-util for other crates.
+
+[feat-feeds] bot_core::markdown::escape_markdown takes no options. The four non-default escapes of discord.js escapeMarkdown are missing (heading, bulletedList, numberedList, maskedLink); feat-feeds implements them locally in feed_service::escape_third_party with the library's exact gm regexes. Something like escape_markdown_with(text, EscapeOptions) is needed.
+
+[feat-feeds] bot_core::testing has no way to record or fail Discord REST calls made outside an interaction (channel.send, channels.fetch, messages.fetch), so the offline App fails every REST call. feat-feeds added its own net::DiscordRest seam in app.ext. A core recording HTTP double would let every feature test its job and hook posts.
+
+[feat-feeds] bot_core::testing::FakeInteraction::option(name, ROLE|USER|CHANNEL, id) does not fill interaction.data.resolved (testing.rs fills `resolved` only for user selects), so CommandCtx::get_role / get_user / get_channel return None in tests. It should resolve them from the fake guild.
+
+[feat-feeds] bot_db::GuildSettings does not implement Default, so a test that needs a settings row with two fields must go through the settings store. A Default impl (Prisma's defaults) would help tests.
+
+[dash-schema] bot-core: expose an exact `\p{RGI_Emoji}` matcher (and add the RGI ZWJ sequences to data/emoji.json; its `rgi` list has none), so dash-schema's emoji type can refuse non-RGI ZWJ chains as the JS does.
+
+[dash-schema] bot-util (optional): V8's legacy Date.parse fallback in js::date_parse, for full parity of the datetime type and of escalation countFrom with odd stored strings.
+
+[feat-community-a] bot-core interaction_helpers: an async REST-backed channel resolver, the equivalent of guild.channels.fetch(id). Something like resolve_channel(app, guild_id, channel_id) -> Option<GuildChannel> that inserts the result into the cache, so check_channel_usable works on channels that were not cached. This would close the cache-only lookup gap in createSuggestion, resolveTargets, revealConfession and the bumps reminderChannel.
+
+[feat-community-a] bot-util logger: a log capture scoped to one test or task. set_sink is process-global, so the confession anonymity test has to capture every line from parallel tests in the same binary.
+
+[feat-community-a] bot-core testing: a variant of persistent_handler_problems filtered by plugin id or crate. Today it reports the prefixes and job types of every crate missing from the registry, so feature crates have to filter its output by string.
+
+[feat-community-a] bot-core testing: a way to make Scheduler::schedule_job fail in DbTestApp (for example a failing JobStore wrapper), so the JS 'a failing schedule is retried once' test can be ported.
+
+[feat-community-b] bot_core::testing: a scriptable or recording REST backend for `app.http()`, like RecordingBackend does for interactions. `offline_http()` fails every call, so feature crates cannot test their channel, thread, role, DM or reaction REST flows.
+
+[feat-community-b] bot_core (or serenity re-export): a helper to PATCH guild role positions with a full `[{id, position}]` body and an X-Audit-Log-Reason, e.g. `bot_core::discord::set_role_positions(http, guild_id, &[(RoleId, usize)], reason)`. `serenity::http::Request::headers` takes reqwest's `HeaderMap`, which feature crates cannot name, so discord.js `Role#setPosition` cannot be reproduced exactly.
+
+[feat-community-b] bot_core::adapters: `clean_content(app, &Message)` with discord.js `cleanContent` semantics (member display names), and `display_avatar_url_default` / `guild_icon_url_default` with discord.js's no-argument defaults (webp).
+
+[feat-community-b] bot_core::testing::FakeGuild: setters for the guild name, premium_tier, premium_subscription_count and features (e.g. ROLE_ICONS), and for a thread's owner_id. These would let tests cover the role-icon and Nitro-tier branches and bot-owned threads without hand-editing JSON.
+
+[feat-backups] bot_core::scheduler::Scheduler::get_job: returns Option and swallows database errors; a Result-returning variant (like the JS getJob, which throws) would let create_backup / start_restore fail closed on a DB error.
+
+[feat-backups] bot_core::testing::TestApp::with_discord_guilds: does not register the bot user (TEST_BOT_ID), so bot permission checks fail; tests must call app.set_discord(offline_discord_as(..)) directly. Making with_discord_guilds use offline_discord_as would help.
+
+[feat-backups] bot_core::testing::FakeInteraction::button: the fabricated message timestamp is fixed at 2026-01-01, so any handler that judges age from message.timestamp (backup Confirm, 5 min TTL) needs json_mut to set it. Defaulting it to now would help.
+
+[feat-backups] bot_util::async_util::with_timeout requires a 'static future; a variant that accepts borrowed futures (or an Arc-based RestoreApi) would let guild_snapshot keep timed-out calls running like the JS.

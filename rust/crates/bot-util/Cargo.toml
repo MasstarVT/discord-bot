@@ -1,0 +1,33 @@
+[package]
+name = "bot-util"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+bot-config.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+tokio.workspace = true
+thiserror.workspace = true
+futures.workspace = true
+indexmap.workspace = true
+regress = { workspace = true, features = ["utf16"] }
+url.workspace = true
+unicode-normalization.workspace = true
+reqwest.workspace = true
+# Not in [workspace.dependencies] (only foundation agents add there); see the bot-util report.
+encoding_rs = "0.8"
+flate2 = "1"
+brotli-decompressor = "6"
+hyper = "1"
+unicode-ident = "1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+base64.workspace = true
+flate2 = "1"

@@ -1,0 +1,2109 @@
+{
+  "names": {
+    "800000000000000001": "Alice",
+    "800000000000000002": "Bob",
+    "800000000000000003": "Carol",
+    "800000000000000004": "Dan"
+  },
+  "now": "2026-05-02T12:00:00.000Z",
+  "giveawayTexts": {
+    "end": [
+      {
+        "result": {
+          "ok": true,
+          "winnerIds": [],
+          "announced": true,
+          "payWarnings": []
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "Ended \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\" with no valid entrants.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "winnerIds": [
+            "800000000000000001"
+          ],
+          "announced": true,
+          "payWarnings": []
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "Ended \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\". Winner: Alice.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "winnerIds": [
+            "800000000000000001",
+            "800000000000000002",
+            "800000000000000003",
+            "800000000000000004",
+            "800000000000000005",
+            "800000000000000006",
+            "800000000000000007"
+          ],
+          "announced": false,
+          "payWarnings": [
+            "⚠️ **Alice** could not get the XP prize in <#123>."
+          ]
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "Ended \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\". Winners: Alice, Bob, Carol, Dan, user 800000000000000005 and 2 more. Note: Alice could not get the XP prize in the channel. I could not post the announcement in the giveaway channel.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "winnerIds": [
+            "800000000000000001",
+            "800000000000000002"
+          ],
+          "announced": true,
+          "payWarnings": [
+            "Plain warning.",
+            "second"
+          ]
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "Ended \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\". Winners: Alice, Bob. Plain warning.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_ACTIVE"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "That giveaway was already ended."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_FOUND"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "That giveaway was already ended."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "DRAFTED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "The giveaway message or its channel was deleted, so the giveaway was moved to drafts. Restart it to post it again."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NO_ACCESS",
+          "missing": [
+            "EmbedLinks",
+            "ReadMessageHistory"
+          ]
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I need Embed Links, Read Message History in the giveaway channel to end this giveaway."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NO_ACCESS",
+          "missing": [],
+          "reason": "I need **View Channel** in <#555>."
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I need View Channel in the channel."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NO_ACCESS",
+          "missing": []
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I can't use the giveaway channel to end this giveaway."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "RESOLVE_FAILED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I couldn't check every entrant right now (Discord did not answer in time). Please try again in a minute."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "DB_ERROR"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Discord or the database did not respond. Please try again in a moment."
+      }
+    ],
+    "reroll": [
+      {
+        "result": {
+          "ok": true,
+          "newWinnerIds": [
+            "800000000000000001"
+          ],
+          "announced": true,
+          "payWarnings": []
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "New winner of \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\": Alice.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "newWinnerIds": [
+            "800000000000000001",
+            "800000000000000002",
+            "800000000000000003",
+            "800000000000000004",
+            "800000000000000005",
+            "800000000000000006"
+          ],
+          "announced": false,
+          "payWarnings": [
+            "⚠️   Coins were not paid."
+          ]
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "New winners of \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\": Alice, Bob, Carol, Dan, user 800000000000000005 and 1 more. Note: Coins were not paid. I could not post the announcement in the giveaway channel.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NO_ENTRANTS"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "There are no other eligible entrants to draw from."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_ENDED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Only ended giveaways can be rerolled."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_FOUND"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Only ended giveaways can be rerolled."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "CONFLICT"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "That giveaway changed while I was drawing. Please try again."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "RESOLVE_FAILED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I couldn't check every entrant right now (Discord did not answer in time). Please try again in a minute."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "DB_ERROR"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Discord or the database did not respond. Please try again in a moment."
+      }
+    ],
+    "start": [
+      {
+        "result": {
+          "ok": false,
+          "code": "LIMIT"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "This server already has 100 running or draft giveaways. End or cancel one first."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND_FAILED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I couldn't post the giveaway in #general. Check my permissions there."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "DB_ERROR"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Discord or the database did not respond. Please try again in a moment."
+      },
+      {
+        "result": {
+          "ok": true,
+          "giveaway": {
+            "id": "cm0abcdefghijklmnopqrstu"
+          }
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "Started the giveaway for \"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\" in #general. It ends 2026-05-02 13:00 UTC.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      }
+    ],
+    "restart": [
+      {
+        "result": {
+          "ok": false,
+          "code": "LIMIT"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "This server already has 100 running or draft giveaways. End or cancel one first."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND_FAILED"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "I couldn't post the giveaway in #general. Check my permissions there."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "DB_ERROR"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "Discord or the database did not respond. Please try again in a moment."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_DRAFT"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "That giveaway changed meanwhile. Reload the list and try again."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "CONFLICT"
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "error": "That giveaway changed meanwhile. Reload the list and try again."
+      },
+      {
+        "result": {
+          "ok": true
+        },
+        "prize": "A prize pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+        "message": "\"A prize ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp…\" is live again in #general and ends 2026-05-02 14:00 UTC. Existing entries were kept.",
+        "data": {
+          "giveawayId": "cm0abcdefghijklmnopqrstu"
+        }
+      }
+    ]
+  },
+  "pollTexts": {
+    "start": [
+      {
+        "result": {
+          "ok": false,
+          "code": "LIMIT"
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 2,
+          "duration": null
+        },
+        "error": "This server already has 50 active polls. End one first."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND",
+          "error": {
+            "code": 50013
+          }
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 5,
+          "duration": null
+        },
+        "error": "I couldn't post the poll in #general: I'm missing permissions there."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND",
+          "error": {
+            "code": 50083
+          }
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 2,
+          "duration": null
+        },
+        "error": "I couldn't post the poll in #general: that thread is archived."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND",
+          "error": {
+            "code": 10003
+          }
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 5,
+          "duration": null
+        },
+        "error": "I couldn't post the poll in #general: the channel no longer exists."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND",
+          "error": {
+            "code": 40005
+          }
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 2,
+          "duration": null
+        },
+        "error": "I couldn't post the poll in #general: Discord error 40005."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SEND",
+          "error": {}
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 5,
+          "duration": null
+        },
+        "error": "I couldn't post the poll in #general: Discord error unknown."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "SAVE"
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 2,
+          "duration": null
+        },
+        "error": "I couldn't save the poll. Please try again in a moment."
+      },
+      {
+        "result": {
+          "ok": true,
+          "poll": {
+            "id": "cm0abcdefghijklmnopqrstu",
+            "endsAt": "2026-05-03T12:00:00.000Z"
+          },
+          "timerFailed": true
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 5,
+          "duration": "1d"
+        },
+        "message": "Posted the poll \"Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq…\" in #general. It ends 2026-05-03 12:00 UTC. Choices per member was lowered to 3 (the number of options). The end timer could not be scheduled, so end the poll by hand.",
+        "data": {
+          "pollId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "poll": {
+            "id": "cm0abcdefghijklmnopqrstu",
+            "endsAt": null
+          },
+          "timerFailed": false
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "payload": {
+          "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+          "options": [
+            "A",
+            "B",
+            "C"
+          ],
+          "channelId": "920000000000000001",
+          "maxChoices": 2,
+          "duration": null
+        },
+        "message": "Posted the poll \"Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq…\" in #general.",
+        "data": {
+          "pollId": "cm0abcdefghijklmnopqrstu"
+        }
+      }
+    ],
+    "end": [
+      {
+        "result": {
+          "ok": true,
+          "posted": true
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "message": "Ended \"Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq…\". The results were posted in #general.",
+        "data": {
+          "pollId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": true,
+          "posted": false
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "message": "The poll is closed, but I couldn't post the results in #general.",
+        "data": {
+          "pollId": "cm0abcdefghijklmnopqrstu"
+        }
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "ALREADY_ENDED"
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "error": "That poll has already ended."
+      },
+      {
+        "result": {
+          "ok": false,
+          "code": "NOT_FOUND"
+        },
+        "question": "Which qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq?",
+        "error": "That poll no longer exists."
+      }
+    ]
+  },
+  "kinds": [
+    "mod.action",
+    "mod.editCase",
+    "mod.clearWarnings",
+    "xp.adjust",
+    "giveaway.start",
+    "giveaway.end",
+    "giveaway.reroll",
+    "giveaway.cancel",
+    "giveaway.restart",
+    "giveaway.odds",
+    "poll.start",
+    "poll.end",
+    "poll.delete",
+    "rr.publish",
+    "rr.repost",
+    "rr.delete",
+    "rr.roleTemplate",
+    "ticket.check",
+    "ticket.publish",
+    "ticket.refresh",
+    "ticket.delete",
+    "access.channels"
+  ],
+  "constants": {
+    "TASK_JOB_TYPE": "dashboard.task",
+    "TASK_RESULT_TTL_SECONDS": 900,
+    "TASK_MESSAGE_MAX": 500,
+    "resultKey": "dashboard:task:cm0abcdef0123456789abcdef",
+    "dedupeKey": "dashboard.task:0b6f1e9e-58c5-4a51-9d55-a8c1a3f7e2b4",
+    "XP_STEP_MAX": 1000000,
+    "XP_OPS": [
+      "give",
+      "take",
+      "set",
+      "reset"
+    ],
+    "DASHBOARD_MOD_ACTIONS": [
+      "WARN",
+      "TIMEOUT",
+      "UNMUTE",
+      "KICK",
+      "SOFTBAN",
+      "BAN",
+      "UNBAN"
+    ],
+    "COMMAND_REASON_MAX": 512,
+    "ACCESS_NEEDS": [
+      "ViewChannel",
+      "SendMessages",
+      "CreatePublicThreads"
+    ],
+    "ACCESS_CHECKS_MAX": 25
+  },
+  "kindSweep": [
+    {
+      "kind": "mod.action",
+      "ok": true
+    },
+    {
+      "kind": "xp.adjust",
+      "ok": true
+    },
+    {
+      "kind": "a.b",
+      "ok": true
+    },
+    {
+      "kind": "A.b",
+      "ok": false
+    },
+    {
+      "kind": "a.B",
+      "ok": false
+    },
+    {
+      "kind": "ab",
+      "ok": false
+    },
+    {
+      "kind": "a..b",
+      "ok": false
+    },
+    {
+      "kind": "a.b.c",
+      "ok": false
+    },
+    {
+      "kind": "mod.a1",
+      "ok": false
+    },
+    {
+      "kind": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.c",
+      "ok": true
+    },
+    {
+      "kind": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.c",
+      "ok": false
+    },
+    {
+      "kind": "DROP TABLE",
+      "ok": false
+    },
+    {
+      "kind": "",
+      "ok": false
+    },
+    {
+      "kind": "giveaway.start",
+      "ok": true
+    },
+    {
+      "kind": "rr.roleTemplate",
+      "ok": true
+    },
+    {
+      "kind": "é.b",
+      "ok": false
+    },
+    {
+      "kind": "a.b ",
+      "ok": false
+    },
+    {
+      "kind": " a.b",
+      "ok": false
+    }
+  ],
+  "actionPayloads": [
+    {
+      "input": null,
+      "error": "The request was malformed."
+    },
+    {
+      "input": [],
+      "error": "The request was malformed."
+    },
+    {
+      "input": "x",
+      "error": "The request was malformed."
+    },
+    {
+      "input": {},
+      "error": "Unknown moderation action."
+    },
+    {
+      "input": {
+        "action": "MUTE",
+        "userId": "900000000000000003"
+      },
+      "error": "Unknown moderation action."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "alice"
+      },
+      "error": "Pick a member, or paste a user ID."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": 900000000000000000
+      },
+      "ok": {
+        "action": "KICK",
+        "userId": "900000000000000000",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003"
+      },
+      "ok": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": " "
+      },
+      "error": "A warning needs a reason."
+    },
+    {
+      "input": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "  spam  "
+      },
+      "ok": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "spam",
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "error": "The reason can be at most 512 characters."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "ok": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": 5
+      },
+      "error": "The reason must be text."
+    },
+    {
+      "input": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003"
+      },
+      "error": "Timeouts need a duration."
+    },
+    {
+      "input": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003",
+        "durationMs": 60000
+      },
+      "ok": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": 60000,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003",
+        "durationMs": 1.5
+      },
+      "error": "Invalid duration."
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "durationMs": -1
+      },
+      "error": "Invalid duration."
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "durationMs": null
+      },
+      "ok": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": 0,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "durationMs": 9007199254740992
+      },
+      "error": "Invalid duration."
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "durationMs": 604800000,
+        "deleteMessageSeconds": 86400
+      },
+      "ok": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": 604800000,
+        "deleteMessageSeconds": 86400,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "deleteMessageSeconds": 691200
+      },
+      "error": "Message deletion must be between 0 and 7 days."
+    },
+    {
+      "input": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "deleteMessageSeconds": null
+      },
+      "ok": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": 0,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003"
+      },
+      "ok": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": 604800,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003",
+        "deleteMessageSeconds": 0
+      },
+      "error": "Message deletion must be between 1 and 7 days."
+    },
+    {
+      "input": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003",
+        "deleteMessageSeconds": 86400.5
+      },
+      "error": "Message deletion must be between 1 and 7 days."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "proofUrl": "ftp://x"
+      },
+      "error": "Proof must be an http:// or https:// link (max 1000 characters)."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "proofUrl": " https://x.test/p "
+      },
+      "ok": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": "https://x.test/p"
+      }
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "proofUrl": 5
+      },
+      "error": "Proof must be an http:// or https:// link (max 1000 characters)."
+    },
+    {
+      "input": {
+        "action": "KICK",
+        "userId": "900000000000000003",
+        "proofUrl": "https://x.test/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "error": "Proof must be an http:// or https:// link (max 1000 characters)."
+    },
+    {
+      "input": {
+        "action": "UNBAN",
+        "userId": "900000000000000003",
+        "proofUrl": "ftp://ignored",
+        "durationMs": 5
+      },
+      "ok": {
+        "action": "UNBAN",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "UNMUTE",
+        "userId": "900000000000000003",
+        "reason": null
+      },
+      "ok": {
+        "action": "UNMUTE",
+        "userId": "900000000000000003",
+        "reason": null,
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    },
+    {
+      "input": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "﻿ a  "
+      },
+      "ok": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "a",
+        "durationMs": null,
+        "deleteMessageSeconds": null,
+        "proofUrl": null
+      }
+    }
+  ],
+  "xpPayloads": [
+    {
+      "input": null,
+      "error": "The request was malformed."
+    },
+    {
+      "input": [],
+      "error": "The request was malformed."
+    },
+    {
+      "input": {
+        "op": "double",
+        "userId": "900000000000000003"
+      },
+      "error": "Unknown XP change."
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "12"
+      },
+      "error": "Pick a member, or paste a user ID."
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003"
+      },
+      "error": "The amount must be between 1 and 1,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 0
+      },
+      "error": "The amount must be between 1 and 1,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1
+      },
+      "ok": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1
+      }
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1000000
+      },
+      "ok": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1000000
+      }
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1000001
+      },
+      "error": "The amount must be between 1 and 1,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 2.5
+      },
+      "error": "The amount must be between 1 and 1,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "take",
+        "userId": "900000000000000003",
+        "amount": "5"
+      },
+      "error": "The amount must be between 1 and 1,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 0
+      },
+      "ok": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 0
+      }
+    },
+    {
+      "input": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 1000000000
+      },
+      "ok": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 1000000000
+      }
+    },
+    {
+      "input": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 1000000001
+      },
+      "error": "The amount must be between 0 and 1,000,000,000 XP."
+    },
+    {
+      "input": {
+        "op": "reset",
+        "userId": "900000000000000003"
+      },
+      "ok": {
+        "op": "reset",
+        "userId": "900000000000000003",
+        "amount": null
+      }
+    },
+    {
+      "input": {
+        "op": "reset",
+        "userId": 900000000000000000
+      },
+      "ok": {
+        "op": "reset",
+        "userId": "900000000000000000",
+        "amount": null
+      }
+    },
+    {
+      "input": {
+        "op": "reset"
+      },
+      "error": "Pick a member, or paste a user ID."
+    }
+  ],
+  "accessPayloads": [
+    {
+      "input": null,
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {},
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": []
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": "x"
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          },
+          {
+            "channelId": "900000000000000003"
+          }
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003"
+          }
+        ]
+      },
+      "ok": [
+        {
+          "channelId": "900000000000000003",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003",
+            "needs": [
+              "ViewChannel"
+            ],
+            "optional": true
+          }
+        ]
+      },
+      "ok": [
+        {
+          "channelId": "900000000000000003",
+          "needs": [
+            "ViewChannel"
+          ],
+          "optional": true
+        }
+      ]
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003",
+            "needs": []
+          }
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003",
+            "needs": [
+              "ManageGuild"
+            ]
+          }
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003",
+            "needs": "ViewChannel"
+          }
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "1"
+          }
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          null
+        ]
+      },
+      "error": "Those channel checks were not valid. Reload the page and try again."
+    },
+    {
+      "input": {
+        "checks": [
+          {
+            "channelId": "900000000000000003",
+            "optional": "yes"
+          },
+          {
+            "channelId": "900000000000000002",
+            "needs": [
+              "SendMessages",
+              "CreatePublicThreads"
+            ]
+          }
+        ]
+      },
+      "ok": [
+        {
+          "channelId": "900000000000000003",
+          "optional": false
+        },
+        {
+          "channelId": "900000000000000002",
+          "needs": [
+            "SendMessages",
+            "CreatePublicThreads"
+          ],
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "modMessages": [
+    {
+      "payload": {
+        "action": "BAN",
+        "userId": "900000000000000003",
+        "reason": "raid",
+        "durationMs": 604800000,
+        "deleteMessageSeconds": 86400
+      },
+      "result": {
+        "ok": true,
+        "action": "TEMPBAN",
+        "dm": "sent",
+        "warnings": [],
+        "escalation": null,
+        "infraction": {
+          "caseId": 12,
+          "type": "BAN"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Banned Alice for 1 week (case #12). Deleted 1 day(s) of messages.",
+      "data": {
+        "caseId": 12,
+        "action": "TEMPBAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "BAN",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "action": "BAN",
+        "dm": "skipped",
+        "warnings": [
+          "w1"
+        ],
+        "infraction": {
+          "caseId": 2,
+          "type": "BAN"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Banned Alice (case #2). w1",
+      "data": {
+        "caseId": 2,
+        "action": "BAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "spam"
+      },
+      "count": 2,
+      "result": {
+        "ok": true,
+        "action": "WARN",
+        "dm": "failed",
+        "warnings": [],
+        "infraction": {
+          "caseId": 3,
+          "type": "WARN"
+        },
+        "escalation": {
+          "tierId": 1,
+          "action": "TIMEOUT",
+          "ok": true,
+          "caseId": 4,
+          "error": null
+        }
+      },
+      "name": "Alice",
+      "activeWarns": 2,
+      "message": "Warned Alice (case #3). Active warnings: 2. Escalation T1: Timeout applied (case #4). I couldn't DM the user.",
+      "data": {
+        "caseId": 3,
+        "action": "WARN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "WARN",
+        "userId": "900000000000000003",
+        "reason": "spam"
+      },
+      "count": 5,
+      "result": {
+        "ok": true,
+        "action": "WARN",
+        "dm": "sent",
+        "warnings": [
+          "A note."
+        ],
+        "infraction": {
+          "caseId": 3,
+          "type": "WARN"
+        },
+        "escalation": {
+          "tierId": 2,
+          "action": "TEMPBAN",
+          "ok": false,
+          "caseId": null,
+          "error": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": 5,
+      "message": "Warned Alice (case #3). Active warnings: 5. A note. Escalation T2 (Temporary ban) could not be applied: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee…",
+      "data": {
+        "caseId": 3,
+        "action": "WARN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "WARN",
+        "userId": "900000000000000002",
+        "reason": "spam"
+      },
+      "count": 1,
+      "result": {
+        "ok": true,
+        "action": "WARN",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 9,
+          "type": "WARN"
+        },
+        "escalation": {
+          "tierId": 3,
+          "action": "ODD",
+          "ok": false
+        }
+      },
+      "name": "Bob",
+      "activeWarns": 1,
+      "message": "Warned Bob (case #9). Active warnings: 1. Escalation T3 (ODD) could not be applied: unknown error",
+      "data": {
+        "caseId": 9,
+        "action": "WARN",
+        "userId": "900000000000000002"
+      }
+    },
+    {
+      "payload": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003",
+        "durationMs": 3600000
+      },
+      "result": {
+        "ok": true,
+        "action": "TIMEOUT",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 5,
+          "type": "TIMEOUT"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Timed out Alice for 1 hour (case #5).",
+      "data": {
+        "caseId": 5,
+        "action": "TIMEOUT",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "TIMEOUT",
+        "userId": "900000000000000003",
+        "durationMs": 3456000000
+      },
+      "result": {
+        "ok": true,
+        "action": "MUTE",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 6,
+          "type": "MUTE"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Muted Alice for 1 month 1 week 3 days (case #6).",
+      "data": {
+        "caseId": 6,
+        "action": "MUTE",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "KICK",
+        "userId": "900000000000000077"
+      },
+      "result": {
+        "ok": true,
+        "action": "KICK",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 7,
+          "type": "KICK"
+        }
+      },
+      "name": "900000000000000077",
+      "activeWarns": null,
+      "message": "Kicked 900000000000000077 (case #7).",
+      "data": {
+        "caseId": 7,
+        "action": "KICK",
+        "userId": "900000000000000077"
+      }
+    },
+    {
+      "payload": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "action": "SOFTBAN",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 8,
+          "type": "SOFTBAN"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Softbanned Alice (case #8). Deleted 7 day(s) of messages.",
+      "data": {
+        "caseId": 8,
+        "action": "SOFTBAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "SOFTBAN",
+        "userId": "900000000000000003",
+        "deleteMessageSeconds": 129600
+      },
+      "result": {
+        "ok": true,
+        "action": "SOFTBAN",
+        "dm": "sent",
+        "warnings": [],
+        "infraction": {
+          "caseId": 8,
+          "type": "BAN"
+        }
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Banned Alice, but the softban's automatic unban failed (case #8).",
+      "data": {
+        "caseId": 8,
+        "action": "SOFTBAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "UNBAN",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "infraction": {
+          "caseId": 10,
+          "type": "UNBAN"
+        },
+        "cleared": 3
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Unbanned Alice (case #10). Ban records closed: 3.",
+      "data": {
+        "caseId": 10,
+        "action": "UNBAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "UNBAN",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "infraction": {
+          "caseId": 10,
+          "type": "UNBAN"
+        },
+        "cleared": 1
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Unbanned Alice (case #10).",
+      "data": {
+        "caseId": 10,
+        "action": "UNBAN",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "UNMUTE",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "infraction": {
+          "caseId": 11,
+          "type": "UNMUTE"
+        },
+        "removed": [
+          "timeout",
+          "mute role"
+        ],
+        "cleared": 1,
+        "note": "A note."
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Unmuted Alice (case #11). Removed: timeout and mute role. A note.",
+      "data": {
+        "caseId": 11,
+        "action": "UNMUTE",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "UNMUTE",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": true,
+        "infraction": {
+          "caseId": 11,
+          "type": "UNMUTE"
+        },
+        "removed": [],
+        "cleared": 0
+      },
+      "name": "Alice",
+      "activeWarns": null,
+      "message": "Unmuted Alice (case #11). Removed: nothing (records only).",
+      "data": {
+        "caseId": 11,
+        "action": "UNMUTE",
+        "userId": "900000000000000003"
+      }
+    },
+    {
+      "payload": {
+        "action": "KICK",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": false,
+        "code": "HIERARCHY",
+        "error": "That member is above you."
+      },
+      "name": "Alice",
+      "error": "That member is above you."
+    },
+    {
+      "payload": {
+        "action": "KICK",
+        "userId": "900000000000000003"
+      },
+      "result": {
+        "ok": false,
+        "code": "X"
+      },
+      "name": "Alice",
+      "error": "Something went wrong while moderating. Please try again."
+    }
+  ],
+  "xpMessages": [
+    {
+      "payload": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 100
+      },
+      "applyXpDelta": {
+        "xp": 250,
+        "oldLevel": 1,
+        "newLevel": 2,
+        "created": false
+      },
+      "handleLevelChange": {
+        "leveledUp": true,
+        "roles": {
+          "added": [
+            "900000000000000011"
+          ],
+          "removed": [],
+          "failed": []
+        }
+      },
+      "name": "Alice",
+      "message": "Gave 100 XP to Alice. Total: 250 XP (level 2). Level 1 → 2. Roles added: @Regular.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 250,
+        "level": 2
+      }
+    },
+    {
+      "payload": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 1000000
+      },
+      "applyXpDelta": {
+        "xp": 1000000000,
+        "oldLevel": 50,
+        "newLevel": 50,
+        "created": false
+      },
+      "handleLevelChange": {
+        "leveledUp": false
+      },
+      "name": "Alice",
+      "message": "Gave 1,000,000 XP to Alice. Total: 1,000,000,000 XP (level 50). XP is capped at 1,000,000,000.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 1000000000,
+        "level": 50
+      }
+    },
+    {
+      "payload": {
+        "op": "give",
+        "userId": "900000000000000003",
+        "amount": 12345
+      },
+      "applyXpDelta": {
+        "xp": 1234567,
+        "oldLevel": 3,
+        "newLevel": 9,
+        "created": true
+      },
+      "handleLevelChange": {
+        "leveledUp": true,
+        "roles": {
+          "added": [
+            "900000000000000011",
+            "900000000000000012"
+          ],
+          "removed": [
+            "900000000000000013"
+          ],
+          "failed": [
+            {
+              "roleId": "900000000000000011",
+              "reason": "x"
+            }
+          ]
+        }
+      },
+      "name": "Alice",
+      "message": "Gave 12,345 XP to Alice. Total: 1,234,567 XP (level 9). Level 3 → 9. Roles added: @Regular, 900000000000000012. Roles removed: 900000000000000013. Could not change: @Regular (check the bot's role position and Manage Roles).",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 1234567,
+        "level": 9
+      }
+    },
+    {
+      "payload": {
+        "op": "take",
+        "userId": "900000000000000003",
+        "amount": 100
+      },
+      "subtractXp": {
+        "xp": 50,
+        "oldXp": 150,
+        "oldLevel": 1,
+        "newLevel": 0
+      },
+      "handleLevelChange": {
+        "leveledUp": false,
+        "roles": {
+          "added": [],
+          "removed": [
+            "900000000000000011"
+          ],
+          "failed": []
+        }
+      },
+      "name": "Alice",
+      "message": "Removed 100 XP from Alice. Total: 50 XP (level 0). Level 1 → 0. Roles removed: @Regular.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 50,
+        "level": 0
+      }
+    },
+    {
+      "payload": {
+        "op": "take",
+        "userId": "900000000000000003",
+        "amount": 100
+      },
+      "subtractXp": {
+        "xp": 0,
+        "oldXp": 0,
+        "oldLevel": 0,
+        "newLevel": 0
+      },
+      "name": "Alice",
+      "error": "Alice has no XP in this server."
+    },
+    {
+      "payload": {
+        "op": "take",
+        "userId": "900000000000000003",
+        "amount": 100
+      },
+      "subtractXp": null,
+      "name": "Alice",
+      "error": "Alice has no XP in this server."
+    },
+    {
+      "payload": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 500
+      },
+      "setXp": {
+        "xp": 500,
+        "oldLevel": 1,
+        "newLevel": 3,
+        "created": false
+      },
+      "handleLevelChange": {
+        "leveledUp": true
+      },
+      "name": "Alice",
+      "message": "Alice now has 500 XP (level 3). Level 1 → 3.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 500,
+        "level": 3
+      }
+    },
+    {
+      "payload": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 0
+      },
+      "setXp": null,
+      "name": "Alice",
+      "error": "Alice already has 0 XP."
+    },
+    {
+      "payload": {
+        "op": "set",
+        "userId": "900000000000000003",
+        "amount": 0
+      },
+      "setXp": {
+        "xp": 0,
+        "oldLevel": 2,
+        "newLevel": 0
+      },
+      "handleLevelChange": {},
+      "name": "Alice",
+      "message": "Alice now has 0 XP (level 0). Level 2 → 0.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 0,
+        "level": 0
+      }
+    },
+    {
+      "payload": {
+        "op": "reset",
+        "userId": "900000000000000003"
+      },
+      "resetXp": {
+        "oldLevel": 4
+      },
+      "syncLevelRoles": {
+        "added": [],
+        "removed": [
+          "900000000000000011"
+        ],
+        "failed": []
+      },
+      "name": "Alice",
+      "message": "Wiped XP and level for Alice (was level 4). Roles removed: @Regular.",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 0,
+        "level": 0
+      }
+    },
+    {
+      "payload": {
+        "op": "reset",
+        "userId": "900000000000000003"
+      },
+      "resetXp": {
+        "oldLevel": 7
+      },
+      "syncLevelRoles": {
+        "added": [],
+        "removed": [],
+        "failed": []
+      },
+      "name": "Alice",
+      "message": "Wiped XP and level for Alice (was level 7).",
+      "data": {
+        "userId": "900000000000000003",
+        "xp": 0,
+        "level": 0
+      }
+    },
+    {
+      "payload": {
+        "op": "reset",
+        "userId": "900000000000000003"
+      },
+      "resetXp": null,
+      "name": "Alice",
+      "error": "Alice has no XP in this server."
+    }
+  ],
+  "execute": [
+    {
+      "kind": "__undefined__",
+      "error": "This bot version cannot do \"undefined\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": null,
+      "error": "This bot version cannot do \"null\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": 5,
+      "error": "This bot version cannot do \"5\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": "test.nope",
+      "error": "This bot version cannot do \"test.nope\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+      "error": "This bot version cannot do \"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": "test.refuse",
+      "error": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": "test.crash",
+      "error": "The bot hit an error doing that. Check its logs, then try again.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": {
+        "a": 1
+      },
+      "error": "This bot version cannot do \"[object Object]\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    },
+    {
+      "kind": [
+        "a",
+        "b"
+      ],
+      "error": "This bot version cannot do \"a,b\" yet. Update the bot.",
+      "name": "PermanentJobError"
+    }
+  ]
+}

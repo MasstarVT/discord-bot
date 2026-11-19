@@ -1,0 +1,1495 @@
+{
+  "constants": {
+    "COIN_MAX": 1000000000,
+    "COLORS": {
+      "SUCCESS": 5763719,
+      "ERROR": 15548997,
+      "WARNING": 16705372,
+      "INFO": 5793266,
+      "PRIMARY": 2829617,
+      "NEUTRAL": 10070709
+    },
+    "DEFAULT_MODULE_SETTINGS": {
+      "moderation": true,
+      "automod": false,
+      "logging": false,
+      "welcome": false,
+      "captcha": false,
+      "reactionroles": true,
+      "leveling": false,
+      "customcommands": false,
+      "automations": false,
+      "translation": false,
+      "invites": true,
+      "embeds": true,
+      "reminders": true,
+      "giveaways": true,
+      "polls": true,
+      "starboard": true,
+      "tickets": true,
+      "tempvoice": true,
+      "stats": true,
+      "birthdays": true,
+      "achievements": false,
+      "economy": true,
+      "games": true,
+      "feeds": true,
+      "search": true,
+      "liverole": false,
+      "counting": false,
+      "autotime": false,
+      "suggestions": false,
+      "modmail": false,
+      "applications": false,
+      "sticky": false,
+      "afk": false,
+      "antiraid": false,
+      "events": false,
+      "rolepersist": false,
+      "boosts": false,
+      "backups": false,
+      "confessions": false,
+      "autothreads": false,
+      "voiceroles": false,
+      "bumps": false
+    },
+    "LIMITS": {
+      "SAVED_EMBEDS": 500,
+      "REMINDERS": 100,
+      "ACTIVE_GIVEAWAYS": 100,
+      "GIVEAWAY_WINNERS": 90,
+      "ACTIVE_POLLS": 50,
+      "POLL_OPTIONS": 20,
+      "STARBOARDS": 10,
+      "TICKET_PANELS": 25,
+      "TICKET_PANEL_OPTIONS": 25,
+      "TICKET_MANAGER_ROLES": 10,
+      "TEMPVOICE_HUBS": 10,
+      "STAT_CHANNELS": 20,
+      "ROLE_STAT_CHANNELS": 8,
+      "ACHIEVEMENTS": 50,
+      "ACHIEVEMENT_TIERS": 4,
+      "AUTOMATIONS": 50,
+      "AUTOMATION_ACTIONS": 10,
+      "AUTOMATION_CONDITIONS": 10,
+      "SHOP_ITEMS": 300,
+      "ITEM_COPIES_PER_USER": 200,
+      "CUSTOM_TAGS": 500,
+      "TAG_ACTIONS": 5,
+      "TAG_RESPONSES": 10,
+      "AUTO_TRIGGERS": 100,
+      "FEEDS": 30,
+      "ESCALATION_TIERS": 10,
+      "AUTOMOD_WORDS": 500,
+      "AUTOMOD_PATTERNS": 50,
+      "AUTOMOD_DOMAINS": 200,
+      "REACTION_ROLE_PANELS": 100,
+      "LEVEL_ROLES": 100,
+      "XP_BOOST_ROLES": 10,
+      "IMMUNE_ROLES": 25,
+      "MOD_ROLES": 25,
+      "AUTOROLES": 10,
+      "AUTOMOD_EXEMPTIONS": 50,
+      "AUTOMOD_HONEYPOTS": 5,
+      "LOG_IGNORED_CHANNELS": 100,
+      "NOXP_ROLES": 100,
+      "NOXP_CHANNELS": 100,
+      "TAG_ACCESS_ENTRIES": 25,
+      "TRIGGER_SCOPE_ENTRIES": 25,
+      "TAG_PING_ROLES": 5,
+      "TRANSLATE_CHANNELS": 50,
+      "ECONOMY_GAME_CHANNELS": 25,
+      "ECONOMY_BOOSTS": 10,
+      "TIMEZONE_ROLES": 25,
+      "AUTOTIME_IGNORED_CHANNELS": 100,
+      "AUTOTIME_PER_MESSAGE": 3,
+      "SUGGESTION_LENGTH": 2000,
+      "MODMAIL_PING_ROLES": 10,
+      "MODMAIL_BLOCKED_USERS": 500,
+      "CAPTCHA_REQUIRED_ROLES": 10,
+      "APPLICATION_FORMS": 10,
+      "APPLICATION_QUESTIONS": 15,
+      "APPLICATION_ROLES": 10,
+      "STICKY_MESSAGES": 25,
+      "AFK_REASON_LENGTH": 200,
+      "AFK_PINGS_KEPT": 10,
+      "AFK_IGNORED_CHANNELS": 100,
+      "EVENTS_ACTIVE": 25,
+      "EVENTS_PER_HOST": 3,
+      "ROLEPERSIST_IGNORED_ROLES": 50,
+      "BOOSTER_ROLE_NAME": 50,
+      "BOOSTER_ROLE_ICON_BYTES": 256000,
+      "BACKUPS_MANUAL": 10,
+      "BACKUPS_AUTO_KEEP": 25,
+      "BACKUP_BYTES": 2000000,
+      "CONFESSION_LENGTH": 2000,
+      "CONFESSION_IMAGE_BYTES": 8000000,
+      "CONFESSION_BLOCKED_USERS": 500,
+      "AUTOTHREAD_CHANNELS": 25,
+      "AUTOPUBLISH_CHANNELS": 25,
+      "VOICE_ROLE_LINKS": 50,
+      "VOICE_ROLE_ANY": 5,
+      "COUNTING_MATH_LENGTH": 100,
+      "SEARCH_USER_PER_MINUTE": 6,
+      "SEARCH_GUILD_BUDGET_DIVISOR": 3
+    },
+    "PERMISSION_LEVELS": {
+      "MEMBER": 0,
+      "MODERATOR": 1,
+      "ADMIN": 2,
+      "OWNER": 3
+    },
+    "XP_DEFAULTS": {
+      "rate": 15,
+      "min": 15,
+      "max": 25,
+      "cooldown": 60,
+      "levelUpChannel": null
+    },
+    "XP_MAX": 1000000000
+  },
+  "customIds": {
+    "CUSTOM_ID_MAX_LENGTH": 100,
+    "CUSTOM_ID_PREFIXES": {
+      "rr": {
+        "owner": "reaction-roles",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "rr-select": {
+        "owner": "reaction-roles",
+        "types": [
+          "select"
+        ],
+        "kind": "persistent"
+      },
+      "paginator": {
+        "owner": "foundation-utils",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "ttt": {
+        "owner": "games-fixes",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "ttt-ch": {
+        "owner": "games-fixes",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "rps": {
+        "owner": "games-fixes",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "scrabble-rack": {
+        "owner": "games-fixes",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "scrabble-ch": {
+        "owner": "games-fixes",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "bj": {
+        "owner": "economy-casino",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "welcome-setup": {
+        "owner": "welcome",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "welcome-title": {
+        "owner": "welcome",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "welcome-description": {
+        "owner": "welcome",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "welcome-color": {
+        "owner": "welcome",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "welcome-thumbnail": {
+        "owner": "welcome",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "welcome-footer": {
+        "owner": "welcome",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "noop": {
+        "owner": "foundation-runtime",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "confirm": {
+        "owner": "foundation-utils",
+        "types": [
+          "button"
+        ],
+        "kind": "collector"
+      },
+      "tpl-content": {
+        "owner": "foundation-utils",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "tpl-title": {
+        "owner": "foundation-utils",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "tpl-description": {
+        "owner": "foundation-utils",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "tpl-color": {
+        "owner": "foundation-utils",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "tpl-footer": {
+        "owner": "foundation-utils",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "welcome-dm-setup": {
+        "owner": "welcome",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "goodbye-setup": {
+        "owner": "welcome",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "embed-modal": {
+        "owner": "embeds",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "reminder-modal": {
+        "owner": "reminders",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "giveaway": {
+        "owner": "giveaways",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "poll": {
+        "owner": "polls",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "poll-select": {
+        "owner": "polls",
+        "types": [
+          "select"
+        ],
+        "kind": "persistent"
+      },
+      "poll-modal": {
+        "owner": "polls",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "poll-question": {
+        "owner": "polls",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "poll-options": {
+        "owner": "polls",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "ticket": {
+        "owner": "tickets",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "ticket-select": {
+        "owner": "tickets",
+        "types": [
+          "select"
+        ],
+        "kind": "persistent"
+      },
+      "ticket-modal": {
+        "owner": "tickets",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "ticket-reason": {
+        "owner": "tickets",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "voice": {
+        "owner": "temp-voice",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "voice-select": {
+        "owner": "temp-voice",
+        "types": [
+          "select"
+        ],
+        "kind": "persistent"
+      },
+      "voice-modal": {
+        "owner": "temp-voice",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "voice-value": {
+        "owner": "temp-voice",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "captcha": {
+        "owner": "captcha",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "captcha-modal": {
+        "owner": "captcha",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "captcha-answer": {
+        "owner": "captcha",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "automation": {
+        "owner": "automations",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "suggestion": {
+        "owner": "suggestions",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "suggestion-modal": {
+        "owner": "suggestions",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "suggestion-text": {
+        "owner": "suggestions",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "modmail": {
+        "owner": "modmail",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "modmail-select": {
+        "owner": "modmail",
+        "types": [
+          "select"
+        ],
+        "kind": "persistent"
+      },
+      "application": {
+        "owner": "applications",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "application-modal": {
+        "owner": "applications",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "application-q1": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "application-q2": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "application-q3": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "application-q4": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "application-q5": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "application-note": {
+        "owner": "applications",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "sticky-modal": {
+        "owner": "sticky",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "sticky-content": {
+        "owner": "sticky",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "antiraid": {
+        "owner": "antiraid",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "event": {
+        "owner": "events",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "event-edit": {
+        "owner": "events",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "event-modal": {
+        "owner": "events",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "event-title": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-description": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-location": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-day": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-time": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-zone": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-duration": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-capacity": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "event-reminder": {
+        "owner": "events",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "backup": {
+        "owner": "backups",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "confession": {
+        "owner": "confessions",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      },
+      "confession-modal": {
+        "owner": "confessions",
+        "types": [
+          "modal"
+        ],
+        "kind": "persistent"
+      },
+      "confession-text": {
+        "owner": "confessions",
+        "types": [
+          "field"
+        ],
+        "kind": "field"
+      },
+      "autothread": {
+        "owner": "auto-threads",
+        "types": [
+          "button"
+        ],
+        "kind": "persistent"
+      }
+    }
+  },
+  "hookPoints": {
+    "HOOK_ORDER": {
+      "ready": [],
+      "guildReady": [
+        "invites",
+        "moderation",
+        "levels",
+        "temp-voice",
+        "stat-channels",
+        "birthdays",
+        "feeds",
+        "liverole",
+        "reminders",
+        "boosts",
+        "backups",
+        "voice-roles",
+        "reaction-roles",
+        "bot-joins"
+      ],
+      "guildDelete": [],
+      "messageCreate": [
+        "automod",
+        "counting",
+        "logging",
+        "custom-commands",
+        "levels",
+        "achievements",
+        "automations",
+        "custom-commands:triggers",
+        "translation-fixes",
+        "autotime",
+        "modmail",
+        "afk",
+        "auto-threads",
+        "sticky"
+      ],
+      "directMessage": [
+        "modmail"
+      ],
+      "botMessage": [
+        "bumps",
+        "auto-threads"
+      ],
+      "ownMessage": [
+        "sticky"
+      ],
+      "messageUpdate": [
+        "logging",
+        "automod",
+        "automations",
+        "starboard"
+      ],
+      "messageDelete": [
+        "logging",
+        "automations",
+        "starboard",
+        "giveaways",
+        "polls",
+        "reaction-roles",
+        "embeds",
+        "counting",
+        "suggestions",
+        "applications",
+        "sticky",
+        "events",
+        "confessions"
+      ],
+      "messageDeleteBulk": [
+        "logging",
+        "starboard",
+        "polls",
+        "giveaways"
+      ],
+      "messageReactionAdd": [
+        "reaction-roles",
+        "starboard",
+        "achievements",
+        "automations"
+      ],
+      "messageReactionRemove": [
+        "reaction-roles",
+        "starboard"
+      ],
+      "messageReactionRemoveAll": [
+        "reaction-roles",
+        "starboard"
+      ],
+      "messageReactionRemoveEmoji": [
+        "reaction-roles",
+        "starboard"
+      ],
+      "voiceStateUpdate": [
+        "temp-voice",
+        "levels",
+        "logging",
+        "automations",
+        "voice-roles",
+        "events"
+      ],
+      "guildMemberAdd": [
+        "invites",
+        "moderation",
+        "antiraid",
+        "logging",
+        "captcha",
+        "welcome",
+        "role-persist",
+        "automations",
+        "stat-channels"
+      ],
+      "guildMemberRemove": [
+        "invites",
+        "logging",
+        "welcome",
+        "captcha",
+        "stat-channels",
+        "role-persist",
+        "boosts"
+      ],
+      "guildMemberUpdate": [
+        "welcome",
+        "captcha",
+        "logging",
+        "achievements",
+        "automations",
+        "liverole",
+        "role-persist",
+        "boosts"
+      ],
+      "presenceUpdate": [
+        "liverole"
+      ],
+      "channelCreate": [
+        "logging"
+      ],
+      "channelUpdate": [
+        "logging"
+      ],
+      "channelDelete": [
+        "logging",
+        "temp-voice",
+        "tickets",
+        "stat-channels",
+        "starboard",
+        "feeds",
+        "reminders",
+        "polls",
+        "suggestions",
+        "modmail",
+        "applications",
+        "sticky",
+        "antiraid",
+        "events",
+        "boosts",
+        "confessions",
+        "auto-threads",
+        "voice-roles",
+        "bumps"
+      ],
+      "threadCreate": [
+        "logging",
+        "automations"
+      ],
+      "threadUpdate": [
+        "logging"
+      ],
+      "threadDelete": [
+        "logging",
+        "modmail"
+      ],
+      "roleCreate": [
+        "logging"
+      ],
+      "roleUpdate": [
+        "logging"
+      ],
+      "roleDelete": [
+        "logging",
+        "reaction-roles",
+        "levels",
+        "welcome",
+        "applications",
+        "events",
+        "role-persist",
+        "boosts",
+        "voice-roles",
+        "bumps"
+      ],
+      "guildBanAdd": [
+        "moderation",
+        "logging"
+      ],
+      "guildBanRemove": [
+        "moderation",
+        "logging"
+      ],
+      "guildUpdate": [
+        "logging"
+      ],
+      "emojiCreate": [
+        "logging"
+      ],
+      "emojiUpdate": [
+        "logging"
+      ],
+      "emojiDelete": [
+        "logging"
+      ],
+      "inviteCreate": [
+        "invites",
+        "logging"
+      ],
+      "inviteDelete": [
+        "invites",
+        "logging"
+      ],
+      "guildScheduledEventUpdate": [
+        "events"
+      ],
+      "guildScheduledEventDelete": [
+        "events"
+      ],
+      "userUpdate": [
+        "logging"
+      ],
+      "levelUp": [
+        "achievements"
+      ],
+      "economyPurchase": [
+        "achievements"
+      ]
+    },
+    "INTERNAL_HOOK_POINTS": [
+      "levelUp",
+      "economyPurchase"
+    ],
+    "SYNTHETIC_HOOK_POINTS": [
+      "guildReady"
+    ]
+  },
+  "jobTypes": {
+    "INTERACTIVE_JOB_TYPES": [
+      "dashboard.task"
+    ],
+    "JOB_TYPES": {
+      "mod.unban": {
+        "owner": "moderation",
+        "recurring": false,
+        "dedupe": "mod.unban:{guildId}:{userId}"
+      },
+      "mod.expire": {
+        "owner": "moderation",
+        "recurring": false,
+        "dedupe": "mod.expire:{infractionId}"
+      },
+      "welcome.autorole": {
+        "owner": "welcome",
+        "recurring": false,
+        "dedupe": "welcome.autorole:{guildId}:{userId}"
+      },
+      "captcha.timeout": {
+        "owner": "captcha",
+        "recurring": false,
+        "dedupe": "captcha.timeout:{guildId}:{userId}"
+      },
+      "reminder.fire": {
+        "owner": "reminders",
+        "recurring": true,
+        "dedupe": "reminder:{reminderId}"
+      },
+      "giveaway.end": {
+        "owner": "giveaways",
+        "recurring": false,
+        "dedupe": "giveaway.end:{giveawayId}"
+      },
+      "poll.end": {
+        "owner": "polls",
+        "recurring": false,
+        "dedupe": "poll.end:{pollId}"
+      },
+      "tempvoice.cleanup": {
+        "owner": "temp-voice",
+        "recurring": false,
+        "dedupe": "tempvoice.cleanup:{channelId}"
+      },
+      "stats.refresh": {
+        "owner": "stat-channels",
+        "recurring": true,
+        "dedupe": "stats.refresh:{guildId}"
+      },
+      "birthday.tick": {
+        "owner": "birthdays",
+        "recurring": true,
+        "dedupe": "birthday.tick:{guildId}"
+      },
+      "feed.poll": {
+        "owner": "feeds",
+        "recurring": true,
+        "dedupe": "feed.poll:{feedId}"
+      },
+      "levels.voiceSweep": {
+        "owner": "levels",
+        "recurring": true,
+        "dedupe": "levels.voiceSweep:{guildId}"
+      },
+      "dashboard.task": {
+        "owner": "dashboard-tasks",
+        "recurring": false,
+        "dedupe": "dashboard.task:{taskId}",
+        "interactive": true
+      },
+      "antiraid.unlock": {
+        "owner": "antiraid",
+        "recurring": false,
+        "dedupe": "antiraid.unlock:{guildId}"
+      },
+      "event.remind": {
+        "owner": "events",
+        "recurring": false,
+        "dedupe": "event.remind:{eventId}"
+      },
+      "event.end": {
+        "owner": "events",
+        "recurring": false,
+        "dedupe": "event.end:{eventId}"
+      },
+      "event.voice": {
+        "owner": "events",
+        "recurring": false,
+        "dedupe": "event.voice:{eventId}"
+      },
+      "event.cleanup": {
+        "owner": "events",
+        "recurring": false,
+        "dedupe": "event.cleanup:{eventId}"
+      },
+      "boosts.sweep": {
+        "owner": "boosts",
+        "recurring": true,
+        "dedupe": "boosts.sweep:{guildId}"
+      },
+      "backup.auto": {
+        "owner": "backups",
+        "recurring": true,
+        "dedupe": "backup.auto:{guildId}"
+      },
+      "backup.restore": {
+        "owner": "backups",
+        "recurring": false,
+        "dedupe": "backup.restore:{guildId}"
+      },
+      "bump.remind": {
+        "owner": "bumps",
+        "recurring": false,
+        "dedupe": "bump.remind:{guildId}:{site}"
+      },
+      "ticket.managersync": {
+        "owner": "tickets",
+        "recurring": false,
+        "dedupe": "ticket.managersync:{guildId}"
+      }
+    },
+    "RECURRING_JOB_TYPES": [
+      "reminder.fire",
+      "stats.refresh",
+      "birthday.tick",
+      "feed.poll",
+      "levels.voiceSweep",
+      "boosts.sweep",
+      "backup.auto"
+    ]
+  },
+  "modules": {
+    "MODULES": {
+      "moderation": {
+        "flag": "modEnabled",
+        "label": "Moderation",
+        "emoji": "🔨",
+        "mee6": "Moderator",
+        "configCommand": "/modconfig",
+        "default": true
+      },
+      "automod": {
+        "flag": "automodEnabled",
+        "label": "Auto-Moderation",
+        "emoji": "🤖",
+        "mee6": "Moderator › Auto-moderation",
+        "configCommand": "/automod",
+        "default": false
+      },
+      "logging": {
+        "flag": "loggingEnabled",
+        "label": "Audit Logs",
+        "emoji": "📜",
+        "mee6": "Moderator › Audit logging",
+        "configCommand": "/logging",
+        "default": false
+      },
+      "welcome": {
+        "flag": "welcomeEnabled",
+        "label": "Welcome & Goodbye",
+        "emoji": "👋",
+        "mee6": "Welcome & Goodbye",
+        "configCommand": "/welcome",
+        "default": false
+      },
+      "captcha": {
+        "flag": "captchaEnabled",
+        "label": "Verification",
+        "emoji": "🛡️",
+        "mee6": "Welcome › Captcha verification",
+        "configCommand": "/captcha",
+        "default": false
+      },
+      "reactionroles": {
+        "flag": "reactionRolesEnabled",
+        "label": "Reaction Roles",
+        "emoji": "🎭",
+        "mee6": "Reaction Roles",
+        "configCommand": "/reactionrole",
+        "default": true
+      },
+      "leveling": {
+        "flag": "xpEnabled",
+        "label": "Levels",
+        "emoji": "⭐",
+        "mee6": "Levels",
+        "configCommand": "/levelconfig",
+        "default": false
+      },
+      "customcommands": {
+        "flag": "customCommandsEnabled",
+        "label": "Custom Commands",
+        "emoji": "🏷️",
+        "mee6": "Custom Commands",
+        "configCommand": "/tag",
+        "default": false
+      },
+      "automations": {
+        "flag": "automationsEnabled",
+        "label": "Automations",
+        "emoji": "⚙️",
+        "mee6": "Automations",
+        "configCommand": "/automation",
+        "default": false
+      },
+      "translation": {
+        "flag": "translationEnabled",
+        "label": "Auto-Translate",
+        "emoji": "🌐",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/autotranslate",
+        "default": false
+      },
+      "invites": {
+        "flag": "invitesEnabled",
+        "label": "Invite Tracker",
+        "emoji": "📨",
+        "mee6": "Invite Tracker",
+        "configCommand": "/invites",
+        "default": true
+      },
+      "embeds": {
+        "flag": "embedsEnabled",
+        "label": "Embed Messages",
+        "emoji": "🧱",
+        "mee6": "Embed Messages",
+        "configCommand": "/embed",
+        "default": true
+      },
+      "reminders": {
+        "flag": "remindersEnabled",
+        "label": "Reminders",
+        "emoji": "⏰",
+        "mee6": "Reminder (Reminders/Timers)",
+        "configCommand": "/reminder",
+        "default": true
+      },
+      "giveaways": {
+        "flag": "giveawaysEnabled",
+        "label": "Giveaways",
+        "emoji": "🎉",
+        "mee6": "Giveaways",
+        "configCommand": "/giveaway",
+        "default": true
+      },
+      "polls": {
+        "flag": "pollsEnabled",
+        "label": "Polls",
+        "emoji": "📊",
+        "mee6": "Polls",
+        "configCommand": "/poll",
+        "default": true
+      },
+      "starboard": {
+        "flag": "starboardEnabled",
+        "label": "Starboards",
+        "emoji": "🌟",
+        "mee6": "Starboards",
+        "configCommand": "/starboard",
+        "default": true
+      },
+      "tickets": {
+        "flag": "ticketsEnabled",
+        "label": "Ticketing",
+        "emoji": "🎫",
+        "mee6": "Ticketing",
+        "configCommand": "/ticket-panel",
+        "default": true
+      },
+      "tempvoice": {
+        "flag": "tempVoiceEnabled",
+        "label": "Temporary Channels",
+        "emoji": "🔊",
+        "mee6": "Temporary Channels",
+        "configCommand": "/voice-hub",
+        "default": true
+      },
+      "stats": {
+        "flag": "statsEnabled",
+        "label": "Statistics Channels",
+        "emoji": "📈",
+        "mee6": "Statistics Channels",
+        "configCommand": "/stats",
+        "default": true
+      },
+      "birthdays": {
+        "flag": "birthdaysEnabled",
+        "label": "Birthdays",
+        "emoji": "🎂",
+        "mee6": "Birthdays",
+        "configCommand": "/birthday",
+        "default": true
+      },
+      "achievements": {
+        "flag": "achievementsEnabled",
+        "label": "Achievements",
+        "emoji": "🏆",
+        "mee6": "Achievements",
+        "configCommand": "/achievement-config",
+        "default": false
+      },
+      "economy": {
+        "flag": "economyEnabled",
+        "label": "Economy",
+        "emoji": "🪙",
+        "mee6": "Economy",
+        "configCommand": "/economy-admin",
+        "default": true
+      },
+      "games": {
+        "flag": "gamesEnabled",
+        "label": "Games",
+        "emoji": "🎮",
+        "mee6": "Economy › games (+ ours)",
+        "configCommand": "/games",
+        "default": true
+      },
+      "feeds": {
+        "flag": "feedsEnabled",
+        "label": "Social Feeds",
+        "emoji": "📰",
+        "mee6": "RSS / YouTube / Reddit / Bluesky / Podcast alerts",
+        "configCommand": "/feed",
+        "default": true
+      },
+      "search": {
+        "flag": "searchEnabled",
+        "label": "Search Anything",
+        "emoji": "🔎",
+        "mee6": "Search Anything",
+        "configCommand": "/search",
+        "default": true
+      },
+      "liverole": {
+        "flag": "liveRoleEnabled",
+        "label": "Live Role",
+        "emoji": "🔴",
+        "mee6": "Twitch Alerts › live-streaming role",
+        "configCommand": "/liverole",
+        "default": false
+      },
+      "counting": {
+        "flag": "countingEnabled",
+        "label": "Counting",
+        "emoji": "🔢",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/counting",
+        "default": false
+      },
+      "autotime": {
+        "flag": "autoTimeEnabled",
+        "label": "Auto Timestamps",
+        "emoji": "🕒",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/autotime",
+        "default": false
+      },
+      "suggestions": {
+        "flag": "suggestionsEnabled",
+        "label": "Suggestions",
+        "emoji": "💡",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/suggestion",
+        "default": false
+      },
+      "modmail": {
+        "flag": "modmailEnabled",
+        "label": "Modmail",
+        "emoji": "📬",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/modmail",
+        "default": false
+      },
+      "applications": {
+        "flag": "applicationsEnabled",
+        "label": "Applications",
+        "emoji": "📝",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/application",
+        "default": false
+      },
+      "sticky": {
+        "flag": "stickyEnabled",
+        "label": "Sticky Messages",
+        "emoji": "📌",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/sticky",
+        "default": false
+      },
+      "afk": {
+        "flag": "afkEnabled",
+        "label": "AFK",
+        "emoji": "💤",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/afk",
+        "default": false
+      },
+      "antiraid": {
+        "flag": "antiRaidEnabled",
+        "label": "Anti-Raid",
+        "emoji": "🚨",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/antiraid",
+        "default": false
+      },
+      "events": {
+        "flag": "eventsEnabled",
+        "label": "Events",
+        "emoji": "📅",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/event",
+        "default": false
+      },
+      "rolepersist": {
+        "flag": "rolePersistEnabled",
+        "label": "Role Persistence",
+        "emoji": "🔁",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/rolepersist",
+        "default": false
+      },
+      "boosts": {
+        "flag": "boostsEnabled",
+        "label": "Server Boosts",
+        "emoji": "💎",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/boost",
+        "default": false
+      },
+      "backups": {
+        "flag": "backupsEnabled",
+        "label": "Server Backups",
+        "emoji": "💾",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/backup",
+        "default": false
+      },
+      "confessions": {
+        "flag": "confessionsEnabled",
+        "label": "Confessions",
+        "emoji": "🤫",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/confession",
+        "default": false
+      },
+      "autothreads": {
+        "flag": "autoThreadsEnabled",
+        "label": "Auto Threads",
+        "emoji": "🧵",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/autothread",
+        "default": false
+      },
+      "voiceroles": {
+        "flag": "voiceRolesEnabled",
+        "label": "Voice Roles",
+        "emoji": "🎙️",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/voicerole",
+        "default": false
+      },
+      "bumps": {
+        "flag": "bumpsEnabled",
+        "label": "Bump Reminders",
+        "emoji": "📣",
+        "mee6": "(ours, beyond MEE6)",
+        "configCommand": "/bumps",
+        "default": false
+      }
+    },
+    "MODULE_FLAGS": {
+      "moderation": "modEnabled",
+      "automod": "automodEnabled",
+      "logging": "loggingEnabled",
+      "welcome": "welcomeEnabled",
+      "captcha": "captchaEnabled",
+      "reactionroles": "reactionRolesEnabled",
+      "leveling": "xpEnabled",
+      "customcommands": "customCommandsEnabled",
+      "automations": "automationsEnabled",
+      "translation": "translationEnabled",
+      "invites": "invitesEnabled",
+      "embeds": "embedsEnabled",
+      "reminders": "remindersEnabled",
+      "giveaways": "giveawaysEnabled",
+      "polls": "pollsEnabled",
+      "starboard": "starboardEnabled",
+      "tickets": "ticketsEnabled",
+      "tempvoice": "tempVoiceEnabled",
+      "stats": "statsEnabled",
+      "birthdays": "birthdaysEnabled",
+      "achievements": "achievementsEnabled",
+      "economy": "economyEnabled",
+      "games": "gamesEnabled",
+      "feeds": "feedsEnabled",
+      "search": "searchEnabled",
+      "liverole": "liveRoleEnabled",
+      "counting": "countingEnabled",
+      "autotime": "autoTimeEnabled",
+      "suggestions": "suggestionsEnabled",
+      "modmail": "modmailEnabled",
+      "applications": "applicationsEnabled",
+      "sticky": "stickyEnabled",
+      "afk": "afkEnabled",
+      "antiraid": "antiRaidEnabled",
+      "events": "eventsEnabled",
+      "rolepersist": "rolePersistEnabled",
+      "boosts": "boostsEnabled",
+      "backups": "backupsEnabled",
+      "confessions": "confessionsEnabled",
+      "autothreads": "autoThreadsEnabled",
+      "voiceroles": "voiceRolesEnabled",
+      "bumps": "bumpsEnabled"
+    },
+    "MODULE_NAMES": [
+      "moderation",
+      "automod",
+      "logging",
+      "welcome",
+      "captcha",
+      "reactionroles",
+      "leveling",
+      "customcommands",
+      "automations",
+      "translation",
+      "invites",
+      "embeds",
+      "reminders",
+      "giveaways",
+      "polls",
+      "starboard",
+      "tickets",
+      "tempvoice",
+      "stats",
+      "birthdays",
+      "achievements",
+      "economy",
+      "games",
+      "feeds",
+      "search",
+      "liverole",
+      "counting",
+      "autotime",
+      "suggestions",
+      "modmail",
+      "applications",
+      "sticky",
+      "afk",
+      "antiraid",
+      "events",
+      "rolepersist",
+      "boosts",
+      "backups",
+      "confessions",
+      "autothreads",
+      "voiceroles",
+      "bumps"
+    ]
+  }
+}

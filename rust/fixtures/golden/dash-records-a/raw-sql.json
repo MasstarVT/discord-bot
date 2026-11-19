@@ -1,0 +1,43 @@
+[
+  {
+    "name": "dashboard.lockAchievement",
+    "store": "achievements",
+    "text": "SELECT 1 AS ok FROM \"Achievement\" WHERE \"id\" = $1 AND \"guildId\" = $2 FOR UPDATE",
+    "values": [
+      "0",
+      "0"
+    ]
+  },
+  {
+    "name": "dashboard.embeds.lockGuild",
+    "store": "embeds",
+    "text": "SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext($1))) AS l",
+    "values": [
+      "savedembed:0"
+    ]
+  },
+  {
+    "name": "dashboard.feeds.lockGuild",
+    "store": "feeds",
+    "text": "SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext($1))) AS l",
+    "values": [
+      "feed-create:0"
+    ]
+  },
+  {
+    "name": "dashboard.lockGuildSettings",
+    "store": "levelRoles",
+    "text": "SELECT 1 AS ok FROM \"GuildSettings\" WHERE \"guildId\" = $1 FOR UPDATE",
+    "values": [
+      "0"
+    ]
+  },
+  {
+    "name": "dashboard.polls.voters",
+    "store": "polls",
+    "text": "SELECT \"pollId\", COUNT(DISTINCT \"userId\")::int AS voters FROM \"PollVote\"\n  WHERE \"pollId\" IN ($1) GROUP BY \"pollId\"",
+    "values": [
+      "0"
+    ]
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "feat-counting": { "wave": 0, "services": ["countingService"], "plugins": ["counting"], "commands": ["admin/counting"], "utils": [] },
+
+  "feat-moderation": { "wave": 1, "services": ["moderationService"], "plugins": ["moderation"], "commands": ["moderation/ban", "moderation/case", "moderation/kick", "moderation/modconfig", "moderation/purge", "moderation/slowmode", "moderation/softban", "moderation/timeout", "moderation/unban", "moderation/unmute", "moderation/warn"], "utils": [] },
+  "feat-logging": { "wave": 1, "services": ["loggingService", "logEvents", "inviteTracker"], "plugins": ["logging", "invites"], "commands": ["admin/logging", "utility/invites"], "utils": [] },
+  "feat-welcome": { "wave": 1, "services": ["welcomeService", "applicationService"], "plugins": ["welcome", "applications"], "commands": ["admin/welcome", "community/application"], "utils": [] },
+  "feat-levels": { "wave": 1, "services": ["xpService"], "plugins": ["levels"], "commands": ["admin/levelconfig", "leveling/rank", "leveling/leaderboard"], "utils": [] },
+  "feat-achievements": { "wave": 1, "services": ["achievementService", "birthdayService"], "plugins": ["achievements", "birthdays"], "commands": ["admin/achievement-config", "community/achievements", "community/birthday"], "utils": [] },
+  "feat-economy": { "wave": 1, "services": ["economyService"], "plugins": ["economy"], "commands": ["admin/economy-admin", "economy/balance", "economy/daily", "economy/inventory", "economy/pay", "economy/pity", "economy/richest", "economy/shop", "economy/use", "economy/work"], "utils": [] },
+  "feat-tags": { "wave": 1, "services": ["tagService"], "plugins": ["custom-commands"], "commands": ["utility/tag"], "utils": [] },
+  "feat-embeds": { "wave": 1, "services": ["embedService"], "plugins": ["embeds"], "commands": ["admin/embed"], "utils": [] },
+  "feat-reactionroles": { "wave": 1, "services": ["reactionRoleService", "roleTemplateSetup"], "plugins": ["reaction-roles"], "commands": ["admin/reactionrole"], "utils": ["roleTemplates"] },
+  "feat-tickets": { "wave": 1, "services": ["ticketService"], "plugins": ["tickets"], "commands": ["admin/ticket-panel", "community/ticket"], "utils": [] },
+  "feat-tempvoice": { "wave": 1, "services": ["tempVoiceService", "voiceRoleService"], "plugins": ["temp-voice", "voice-roles"], "commands": ["admin/voice-hub", "admin/voicerole", "community/voice"], "utils": [] },
+  "feat-giveaways-polls": { "wave": 1, "services": ["giveawayService", "pollService"], "plugins": ["giveaways", "polls"], "commands": ["community/giveaway", "community/poll"], "utils": [] },
+  "feat-starboard-stats": { "wave": 1, "services": ["starboardService", "statsService"], "plugins": ["starboard", "stat-channels"], "commands": ["admin/starboard", "admin/stats"], "utils": [] },
+  "feat-feeds": { "wave": 1, "services": ["feedService", "feedParsers", "reminderService"], "plugins": ["feeds", "reminders"], "commands": ["admin/feed", "admin/reminder"], "utils": [] },
+  "feat-translation": { "wave": 1, "services": ["translationService", "translateStatsService", "userTimezoneService"], "plugins": ["translation-fixes", "autotime"], "commands": ["admin/autotranslate", "admin/autotime", "utility/translate", "utility/timestamp", "utility/timezone"], "utils": [] },
+  "feat-search": { "wave": 1, "services": ["searchService", "afkService"], "plugins": ["liverole", "afk"], "commands": ["search/search", "admin/liverole", "community/afk"], "utils": [] },
+  "feat-community-a": { "wave": 1, "services": ["suggestionService", "confessionService", "bumpService"], "plugins": ["suggestions", "confessions", "bumps"], "commands": ["community/suggestion", "community/confession", "community/bumps"], "utils": [] },
+  "feat-community-b": { "wave": 1, "services": ["modmailService", "boostService", "autoThreadService"], "plugins": ["modmail", "boosts", "auto-threads"], "commands": ["admin/modmail", "community/boost", "admin/autothread"], "utils": [] },
+  "feat-backups": { "wave": 1, "services": ["backupService"], "plugins": ["backups"], "commands": ["admin/backup", "admin/emoji"], "utils": ["guildSnapshot"] },
+
+  "feat-automod": { "wave": 2, "services": ["automodService", "antiRaidService"], "plugins": ["automod", "antiraid"], "commands": ["admin/automod", "admin/antiraid"], "utils": [] },
+  "feat-captcha": { "wave": 2, "services": ["captchaService", "stickyService"], "plugins": ["captcha", "sticky"], "commands": ["admin/captcha", "admin/sticky"], "utils": [] },
+  "feat-automations": { "wave": 2, "services": ["automationService"], "plugins": ["automations"], "commands": ["admin/automation"], "utils": [] },
+  "feat-events": { "wave": 2, "services": ["eventService", "rolePersistService"], "plugins": ["events", "role-persist"], "commands": ["community/event", "admin/rolepersist"], "utils": ["calendar"] },
+  "feat-games": { "wave": 2, "services": ["scrabbleService"], "plugins": ["games-fixes"], "commands": ["games/blackjack", "games/games", "games/roulette", "games/scrabble", "games/slots"], "utils": [] },
+  "feat-general": { "wave": 2, "services": ["botJoinService"], "plugins": ["bot-joins"], "commands": ["utility/help", "utility/info", "utility/owner", "admin/module", "admin/settings"], "utils": [] },
+  "feat-dashboard-tasks": { "wave": 2, "services": ["dashboardTasks/channelAccess", "dashboardTasks/giveaways", "dashboardTasks/index", "dashboardTasks/members", "dashboardTasks/moderation", "dashboardTasks/polls", "dashboardTasks/reactionRoles", "dashboardTasks/shared", "dashboardTasks/tickets"], "plugins": ["dashboard-tasks"], "commands": [], "utils": [] }
+}

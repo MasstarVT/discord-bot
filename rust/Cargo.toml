@@ -1,0 +1,94 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "bins/*"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+license = "MIT"
+authors = ["MasstarVT"]
+publish = false
+
+# Keep builds small and fast: many crates, many test binaries.
+[profile.dev]
+debug = 0
+incremental = true
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+
+# One version of everything. Crates use `name.workspace = true` (adding features locally is fine).
+[workspace.dependencies]
+bot-config = { path = "crates/bot-config" }
+bot-db = { path = "crates/bot-db" }
+bot-util = { path = "crates/bot-util" }
+bot-cards = { path = "crates/bot-cards" }
+bot-core = { path = "crates/bot-core" }
+feat-counting = { path = "crates/feat-counting" }
+feat-moderation = { path = "crates/feat-moderation" }
+feat-logging = { path = "crates/feat-logging" }
+feat-welcome = { path = "crates/feat-welcome" }
+feat-levels = { path = "crates/feat-levels" }
+feat-achievements = { path = "crates/feat-achievements" }
+feat-economy = { path = "crates/feat-economy" }
+feat-tags = { path = "crates/feat-tags" }
+feat-embeds = { path = "crates/feat-embeds" }
+feat-reactionroles = { path = "crates/feat-reactionroles" }
+feat-tickets = { path = "crates/feat-tickets" }
+feat-tempvoice = { path = "crates/feat-tempvoice" }
+feat-giveaways-polls = { path = "crates/feat-giveaways-polls" }
+feat-starboard-stats = { path = "crates/feat-starboard-stats" }
+feat-feeds = { path = "crates/feat-feeds" }
+feat-translation = { path = "crates/feat-translation" }
+feat-search = { path = "crates/feat-search" }
+feat-community-a = { path = "crates/feat-community-a" }
+feat-community-b = { path = "crates/feat-community-b" }
+feat-backups = { path = "crates/feat-backups" }
+feat-automod = { path = "crates/feat-automod" }
+feat-captcha = { path = "crates/feat-captcha" }
+feat-automations = { path = "crates/feat-automations" }
+feat-events = { path = "crates/feat-events" }
+feat-games = { path = "crates/feat-games" }
+feat-general = { path = "crates/feat-general" }
+feat-dashboard-tasks = { path = "crates/feat-dashboard-tasks" }
+dash-schema = { path = "crates/dash-schema" }
+dash-auth = { path = "crates/dash-auth" }
+dash-collections = { path = "crates/dash-collections" }
+dash-server = { path = "crates/dash-server" }
+dash-records-a = { path = "crates/dash-records-a" }
+dash-records-b = { path = "crates/dash-records-b" }
+
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+futures = "0.3"
+async-trait = "0.1"
+serenity = { version = "0.12.5", default-features = false, features = ["builder", "cache", "client", "gateway", "http", "model", "utils", "rustls_backend", "collector", "chrono"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "json", "macros"] }
+redis = { version = "1", features = ["tokio-comp", "connection-manager"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+indexmap = { version = "2", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "stream", "gzip"] }
+regress = "0.12"
+regex = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+axum = "0.8"
+thiserror = "2"
+anyhow = "1"
+sha1 = "0.11"
+sha2 = "0.11"
+hex = "0.4"
+base64 = "0.23"
+rand = "0.10"
+uuid = { version = "1", features = ["v4"] }
+url = "2"
+dotenvy = "0.15"
+dashmap = "6"
+parking_lot = "0.13"
+bytes = "1"
+unicode-segmentation = "1"
+unicode-normalization = "0.1"

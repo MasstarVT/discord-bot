@@ -1,0 +1,4136 @@
+{
+ "cross": [
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {},
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 30,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "xpMin": 30
+   },
+   "out": {
+    "path": "xpMin",
+    "message": "The minimum XP per message cannot be higher than the maximum."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 10,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "xpMax": 10
+   },
+   "out": {
+    "path": "xpMax",
+    "message": "The minimum XP per message cannot be higher than the maximum."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 30,
+    "xpMax": 40,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "xpMin": 30,
+    "xpMax": 40
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 30,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "modEnabled": false
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 30,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": null,
+   "out": {
+    "path": "xpMax",
+    "message": "The minimum XP per message cannot be higher than the maximum."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 200,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "dailyMin": 200
+   },
+   "out": {
+    "path": "dailyMin",
+    "message": "The minimum daily reward cannot be higher than the maximum."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 50,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "workMax": 50
+   },
+   "out": {
+    "path": "workMax",
+    "message": "The minimum work pay cannot be higher than the maximum."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 500,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "economyMaxBalance": 500
+   },
+   "out": {
+    "path": "economyMaxBalance",
+    "message": "The starting balance cannot be higher than the maximum balance."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CHANNEL",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "levelUpMode": "CHANNEL"
+   },
+   "out": {
+    "path": "levelUpMode",
+    "message": "Pick the announcement channel for \"Custom channel\"."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CHANNEL",
+    "levelUpChannelId": "300000000000000001",
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "levelUpMode": "CHANNEL",
+    "levelUpChannelId": "300000000000000001"
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CHANNEL",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "achievementAnnounceMode": "CHANNEL"
+   },
+   "out": {
+    "path": "achievementAnnounceMode",
+    "message": "Pick the announcement channel for \"Custom channel\"."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CHANNEL",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "achievementChannelId": null
+   },
+   "out": {
+    "path": "achievementChannelId",
+    "message": "Pick the announcement channel for \"Custom channel\"."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "captchaRoleId": "400000000000000002"
+   },
+   "changes": {
+    "captchaRoleId": "400000000000000002"
+   },
+   "out": {
+    "path": "captchaRoleId",
+    "message": "The verified role cannot also be a moderator, immune or mute role."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": "400000000000000001",
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "captchaRoleId": "400000000000000001"
+   },
+   "changes": {
+    "captchaRoleId": "400000000000000001"
+   },
+   "out": {
+    "path": "captchaRoleId",
+    "message": "The verified role cannot also be a moderator, immune or mute role."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "captchaRoleId": "400000000000000001"
+   },
+   "changes": {
+    "captchaRoleId": "400000000000000001"
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [
+     "400000000000000001"
+    ],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "captchaRoleId": "400000000000000001"
+   },
+   "changes": {
+    "captchaRoleId": "400000000000000001"
+   },
+   "out": {
+    "path": "captchaRoleId",
+    "message": "The verified role cannot also be a moderator, immune or mute role."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "captchaRoleId": "400000000000000001",
+    "captchaRequiredRoleIds": [
+     "400000000000000001"
+    ]
+   },
+   "changes": {
+    "captchaRequiredRoleIds": [
+     "400000000000000001"
+    ]
+   },
+   "out": {
+    "path": "captchaRequiredRoleIds",
+    "message": "The verified role cannot also be a required role."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": "400000000000000001"
+   },
+   "changes": {
+    "liveRoleRequiredRoleId": "400000000000000001"
+   },
+   "out": {
+    "path": "liveRoleRequiredRoleId",
+    "message": "The live role and the required role must be different roles."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": "400000000000000001"
+   },
+   "changes": {
+    "liveRoleId": "400000000000000001"
+   },
+   "out": {
+    "path": "liveRoleId",
+    "message": "The live role and the required role must be different roles."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": null
+     }
+    ]
+   },
+   "changes": {
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": null
+     }
+    ]
+   },
+   "out": {
+    "path": "infractionEscalation.0.action",
+    "message": "A mute without a duration or longer than 28 days needs a mute role. Set one first."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": "400000000000000001",
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": null
+     }
+    ]
+   },
+   "changes": {
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": null
+     }
+    ]
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": 3600
+     }
+    ]
+   },
+   "changes": {
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": 3600
+     }
+    ]
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": 3000000
+     }
+    ]
+   },
+   "changes": {
+    "infractionEscalation": [
+     {
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "MUTE",
+      "durationSeconds": 3000000
+     }
+    ]
+   },
+   "out": {
+    "path": "infractionEscalation.0.action",
+    "message": "A mute without a duration or longer than 28 days needs a mute role. Set one first."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "id": 1,
+      "warnCount": 2,
+      "action": "MUTE",
+      "withinSeconds": null,
+      "durationSeconds": null
+     }
+    ]
+   },
+   "changes": {
+    "modEnabled": true
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "infractionEscalation": [
+     {
+      "id": 1,
+      "warnCount": 2,
+      "action": "MUTE",
+      "withinSeconds": null,
+      "durationSeconds": null
+     }
+    ]
+   },
+   "changes": null,
+   "out": {
+    "path": "infractionEscalation.0.action",
+    "message": "A mute without a duration or longer than 28 days needs a mute role. Set one first."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "automodConfig": {
+     "version": 2,
+     "blockedDomains": [
+      "a.com"
+     ],
+     "allowedDomains": [
+      "a.com"
+     ]
+    }
+   },
+   "changes": {
+    "automodBlockedDomains": [
+     "a.com"
+    ],
+    "automodAllowedDomains": [
+     "a.com"
+    ]
+   },
+   "out": {
+    "path": "automodAllowedDomains",
+    "message": "a.com is in both the blocked and the allowed domains."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "automodConfig": {
+     "version": 2,
+     "blockedDomains": [
+      "a.com"
+     ],
+     "allowedDomains": [
+      "b.com"
+     ]
+    }
+   },
+   "changes": {
+    "automodAllowedDomains": [
+     "b.com"
+    ]
+   },
+   "out": null
+  },
+  {
+   "row": {
+    "xpMin": 15,
+    "xpMax": 25,
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null,
+    "automodConfig": {
+     "version": 2,
+     "blockedDomains": [
+      "tenor.com"
+     ]
+    }
+   },
+   "changes": {
+    "automodBlockedDomains": [
+     "tenor.com"
+    ]
+   },
+   "out": {
+    "path": "automodAllowedDomains",
+    "message": "tenor.com is in both the blocked and the allowed domains."
+   }
+  },
+  {
+   "row": {
+    "xpMin": 30,
+    "xpMax": "x",
+    "dailyMin": 50,
+    "dailyMax": 120,
+    "workMin": 100,
+    "workMax": 300,
+    "economyStartingBalance": 1000,
+    "economyMaxBalance": 1000000000,
+    "levelUpMode": "CURRENT",
+    "levelUpChannelId": null,
+    "achievementAnnounceMode": "CURRENT",
+    "achievementChannelId": null,
+    "modRoleIds": [
+     "400000000000000002"
+    ],
+    "immuneRoleIds": [],
+    "muteRoleId": null,
+    "liveRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": null
+   },
+   "changes": {
+    "xpMin": 30
+   },
+   "out": null
+  }
+ ],
+ "resources": {
+  "channels": [
+   [
+    "300000000000000001",
+    {
+     "kind": "text"
+    }
+   ],
+   [
+    "300000000000000002",
+    {
+     "kind": "voice"
+    }
+   ],
+   [
+    "300000000000000003",
+    {
+     "kind": "category"
+    }
+   ]
+  ],
+  "roles": [
+   [
+    "400000000000000000",
+    {
+     "everyone": true,
+     "managed": false,
+     "assignable": true
+    }
+   ],
+   [
+    "400000000000000001",
+    {
+     "everyone": false,
+     "managed": false,
+     "assignable": true
+    }
+   ],
+   [
+    "400000000000000002",
+    {
+     "everyone": false,
+     "managed": true,
+     "assignable": true
+    }
+   ],
+   [
+    "400000000000000003",
+    {
+     "everyone": false,
+     "managed": false,
+     "assignable": false
+    }
+   ]
+  ]
+ },
+ "refs": [
+  {
+   "refs": {
+    "channels": [],
+    "roles": []
+   },
+   "keep": {},
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000001",
+      "path": "p",
+      "kinds": [
+       "text"
+      ]
+     }
+    ],
+    "roles": []
+   },
+   "keep": {},
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000002",
+      "path": "p",
+      "kinds": [
+       "text",
+       "announcement"
+      ]
+     }
+    ],
+    "roles": []
+   },
+   "keep": {},
+   "out": {
+    "path": "p",
+    "message": "That channel is the wrong kind here (expected text or announcement)."
+   }
+  },
+  {
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000099",
+      "path": "p",
+      "kinds": [
+       "text"
+      ]
+     }
+    ],
+    "roles": []
+   },
+   "keep": {},
+   "out": {
+    "path": "p",
+    "message": "That channel does not exist in this server any more. Pick another one."
+   }
+  },
+  {
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000099",
+      "path": "p",
+      "kinds": [
+       "text"
+      ]
+     }
+    ],
+    "roles": []
+   },
+   "keep": {
+    "keepChannels": [
+     "300000000000000099"
+    ]
+   },
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000001",
+      "path": "p",
+      "kinds": [
+       "text"
+      ]
+     }
+    ],
+    "roles": [
+     {
+      "id": "400000000000000000",
+      "path": "r",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": {
+    "path": "r",
+    "message": "@everyone cannot be used here."
+   }
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000000",
+      "path": "r",
+      "assignable": false,
+      "allowEveryone": true,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000002",
+      "path": "r",
+      "assignable": true,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": {
+    "path": "r",
+    "message": "That role is managed by an integration and cannot be given by the bot."
+   }
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000002",
+      "path": "r",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000003",
+      "path": "r",
+      "assignable": true,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": {
+    "path": "r",
+    "message": "That role is above the bot's highest role. Move the bot's role higher in Server Settings → Roles, or pick a lower role."
+   }
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000099",
+      "path": "r",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {
+    "keepRoles": [
+     "400000000000000099"
+    ]
+   },
+   "out": null
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000099",
+      "path": "r",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": {
+    "path": "r",
+    "message": "That role does not exist in this server any more. Pick another one."
+   }
+  },
+  {
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000001",
+      "path": "r",
+      "assignable": true,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "keep": {},
+   "out": null
+  }
+ ],
+ "assignable": [
+  {
+   "fields": [
+    "modEnabled",
+    "automodEnabled",
+    "loggingEnabled",
+    "welcomeEnabled",
+    "captchaEnabled",
+    "reactionRolesEnabled",
+    "xpEnabled",
+    "customCommandsEnabled",
+    "automationsEnabled",
+    "translationEnabled",
+    "invitesEnabled",
+    "embedsEnabled",
+    "remindersEnabled",
+    "giveawaysEnabled",
+    "pollsEnabled",
+    "starboardEnabled",
+    "ticketsEnabled",
+    "tempVoiceEnabled",
+    "statsEnabled",
+    "birthdaysEnabled",
+    "achievementsEnabled",
+    "economyEnabled",
+    "gamesEnabled",
+    "feedsEnabled",
+    "searchEnabled",
+    "liveRoleEnabled",
+    "countingEnabled",
+    "autoTimeEnabled",
+    "suggestionsEnabled",
+    "modmailEnabled",
+    "applicationsEnabled",
+    "stickyEnabled",
+    "afkEnabled",
+    "antiRaidEnabled",
+    "eventsEnabled",
+    "rolePersistEnabled",
+    "boostsEnabled",
+    "backupsEnabled",
+    "confessionsEnabled",
+    "autoThreadsEnabled",
+    "voiceRolesEnabled",
+    "bumpsEnabled",
+    "timezone",
+    "embedColor",
+    "customPrefix",
+    "timezoneRoles",
+    "modLogChannelId",
+    "modDmTargets",
+    "modVisibility",
+    "modRoleIds",
+    "immuneRoleIds",
+    "muteRoleId",
+    "infractionEscalation",
+    "automodRuleBadWords",
+    "automodBadWords",
+    "automodBadWordPatterns",
+    "automodRuleInvites",
+    "automodRuleLinks",
+    "automodBlockedDomains",
+    "automodAllowedDomains",
+    "automodRuleSpam",
+    "automodRuleRepeatedText",
+    "automodRuleCaps",
+    "automodRuleEmojis",
+    "automodRuleSpoilers",
+    "automodRuleMentions",
+    "automodRuleZalgo",
+    "automodHoneypot",
+    "automodExemptRoleIds",
+    "automodExemptChannelIds",
+    "messageLogChannelId",
+    "memberLogChannelId",
+    "serverLogChannelId",
+    "voiceLogChannelId",
+    "joinLeaveChannelId",
+    "logEvents",
+    "logIgnoredChannelIds",
+    "welcomeMessageEnabled",
+    "welcomeChannelId",
+    "welcomeUseEmbed",
+    "welcomeMessage",
+    "welcomeEmbed",
+    "welcomeCardStyle",
+    "welcomeDmEnabled",
+    "welcomeDmMessage",
+    "welcomeDmEmbed",
+    "welcomeDmCard",
+    "goodbyeEnabled",
+    "goodbyeChannelId",
+    "goodbyeUseEmbed",
+    "goodbyeMessage",
+    "goodbyeEmbed",
+    "autoroleIds",
+    "autoroleDelay",
+    "captchaRoleId",
+    "captchaRequiredRoleIds",
+    "captchaMode",
+    "captchaTimeoutMinutes",
+    "captchaTemplate",
+    "captchaVerifyButton",
+    "xpMin",
+    "xpMax",
+    "xpCooldown",
+    "xpMultiplier",
+    "levelUpMode",
+    "levelUpChannelId",
+    "levelUpUseEmbed",
+    "levelUpMessage",
+    "voiceXpEnabled",
+    "voiceXpRate",
+    "noXpRoleIds",
+    "noXpChannelIds",
+    "levelRolesStack",
+    "levelRolesSyncOnDemotion",
+    "xpBoostRoles",
+    "rankCardStyle",
+    "autoTriggersEnabled",
+    "statsCategoryId",
+    "birthdayChannelId",
+    "birthdayHour",
+    "birthdayMessage",
+    "birthdayMessageAge",
+    "birthdayRoleId",
+    "birthdayRequireYear",
+    "achievementAnnounceMode",
+    "achievementChannelId",
+    "achievementUseEmbed",
+    "achievementMessage",
+    "currencyName",
+    "currencyEmoji",
+    "economyStartingBalance",
+    "economyMaxBalance",
+    "economyMaxBet",
+    "economyMaxPayout",
+    "economyImportGlobal",
+    "dailyMin",
+    "dailyMax",
+    "workMin",
+    "workMax",
+    "workCooldownMinutes",
+    "economyGameChannelMode",
+    "economyGameChannelIds",
+    "urbanNsfwOnly",
+    "liveRoleId",
+    "liveRoleRequiredRoleId",
+    "liveRoleAnnounceChannelId",
+    "liveRoleAnnounceMessage",
+    "liveRoleAnnouncePingRoleId",
+    "countingChannelId",
+    "autoTimeIgnoredChannelIds",
+    "suggestionChannelId",
+    "suggestionThreads",
+    "suggestionAllowAnonymous",
+    "suggestionDmOnUpdate",
+    "suggestionCooldownSeconds",
+    "modmailChannelId",
+    "modmailPingRoleIds",
+    "modmailGreeting",
+    "modmailAnonymousReplies",
+    "afkNicknamePrefix",
+    "afkIgnoredChannelIds",
+    "antiRaidJoinThreshold",
+    "antiRaidJoinSeconds",
+    "antiRaidAction",
+    "antiRaidAlertChannelId",
+    "antiRaidPauseInvites",
+    "antiRaidLockChat",
+    "antiRaidLockdownMinutes",
+    "antiRaidMinAccountAgeDays",
+    "antiRaidYoungAction",
+    "eventChannelId",
+    "eventCreateDiscordEvent",
+    "eventReminderMinutes",
+    "eventChannelsEnabled",
+    "eventCategoryId",
+    "eventVoiceLeadMinutes",
+    "rolePersistNicknames",
+    "rolePersistIgnoredRoleIds",
+    "rolePersistDays",
+    "boostChannelId",
+    "boostMessage",
+    "boostCustomRoles",
+    "boostRoleAnchorId",
+    "boostRoleGraceDays",
+    "backupIntervalHours",
+    "backupKeep",
+    "confessionChannelId",
+    "confessionReviewChannelId",
+    "confessionAllowImages",
+    "confessionBlockLinks",
+    "confessionCooldownSeconds",
+    "autoThreadChannels",
+    "autoPublishChannelIds",
+    "voiceRoleLinks",
+    "voiceRoleAnyRoleIds",
+    "voiceRoleIgnoreAfk",
+    "bumpChannelId",
+    "bumpRoleId",
+    "bumpReminderMessage",
+    "bumpThanks",
+    "bumpThanksMessage",
+    "bumpRewardCoins"
+   ],
+   "synthetic": false,
+   "record": {
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "caps": {
+       "action": "kick",
+       "threshold": 80
+      }
+     },
+     "badWords": [
+      "old"
+     ],
+     "allowedDomains": [
+      "tenor.com",
+      "b.com"
+     ],
+     "honeypot": {
+      "channelIds": [
+       "300000000000000001"
+      ],
+      "action": "ban",
+      "timeoutSeconds": 600
+     }
+    },
+    "infractionEscalation": [
+     {
+      "id": 4,
+      "warnCount": 3,
+      "withinSeconds": null,
+      "action": "TIMEOUT",
+      "durationSeconds": 600,
+      "countFrom": "2026-01-01T00:00:00.000Z"
+     },
+     {
+      "id": 7,
+      "warnCount": 9,
+      "withinSeconds": null,
+      "action": "BAN",
+      "durationSeconds": null,
+      "countFrom": null
+     }
+    ],
+    "captchaTemplate": {
+     "content": "Hello",
+     "embed": null,
+     "buttons": [],
+     "verifyButton": {
+      "label": "Go",
+      "style": "DANGER"
+     }
+    },
+    "modLogChannelId": "300000000000000001",
+    "modRoleIds": [
+     "400000000000000001",
+     "nope"
+    ],
+    "muteRoleId": "400000000000000002",
+    "autoroleIds": [
+     "400000000000000001"
+    ],
+    "timezoneRoles": [
+     {
+      "roleId": "400000000000000001",
+      "zone": "UTC"
+     },
+     "junk"
+    ],
+    "xpBoostRoles": [
+     {
+      "roleId": "400000000000000002",
+      "multiplier": 2
+     }
+    ],
+    "voiceRoleLinks": [
+     {
+      "channelId": "300000000000000002",
+      "roleId": "400000000000000001"
+     }
+    ],
+    "autoThreadChannels": [
+     {
+      "channelId": "300000000000000001",
+      "name": "x",
+      "archiveMinutes": "60",
+      "closeButton": true
+     },
+     {
+      "nope": 1
+     }
+    ],
+    "welcomeCardStyle": {
+     "v": 1,
+     "enabled": false,
+     "background": "#aabbcc",
+     "overlayOpacity": 0.456,
+     "backgroundUrl": "https://x.example/a.png"
+    },
+    "rankCardStyle": {
+     "background": "#000000",
+     "overlayOpacity": 2
+    },
+    "welcomeEmbed": {
+     "title": ""
+    },
+    "welcomeDmEmbed": {
+     "description": "dm"
+    },
+    "goodbyeEmbed": {
+     "title": "Bye",
+     "color": 123
+    },
+    "embedColor": 0,
+    "customPrefix": "?",
+    "timezone": "Asia/Calcutta",
+    "xpMultiplier": 1.5,
+    "logIgnoredChannelIds": [
+     "300000000000000001",
+     5
+    ],
+    "birthdayMessage": "Hi",
+    "birthdayMessageAge": " ",
+    "welcomeMessage": "  spaced ",
+    "welcomeDmMessage": null,
+    "goodbyeMessage": "Bye {user}",
+    "levelUpMode": "NOPE",
+    "currencyEmoji": "<:c:111111111111111111>"
+   },
+   "out": [
+    {
+     "id": "400000000000000002",
+     "path": "muteRoleId"
+    },
+    {
+     "id": "400000000000000001",
+     "path": "autoroleIds.0"
+    },
+    {
+     "id": "400000000000000001",
+     "path": "voiceRoleLinks.0.roleId"
+    }
+   ]
+  },
+  {
+   "fields": [
+    "modEnabled",
+    "automodEnabled",
+    "loggingEnabled",
+    "welcomeEnabled",
+    "captchaEnabled",
+    "reactionRolesEnabled",
+    "xpEnabled",
+    "customCommandsEnabled",
+    "automationsEnabled",
+    "translationEnabled",
+    "invitesEnabled",
+    "embedsEnabled",
+    "remindersEnabled",
+    "giveawaysEnabled",
+    "pollsEnabled",
+    "starboardEnabled",
+    "ticketsEnabled",
+    "tempVoiceEnabled",
+    "statsEnabled",
+    "birthdaysEnabled",
+    "achievementsEnabled",
+    "economyEnabled",
+    "gamesEnabled",
+    "feedsEnabled",
+    "searchEnabled",
+    "liveRoleEnabled",
+    "countingEnabled",
+    "autoTimeEnabled",
+    "suggestionsEnabled",
+    "modmailEnabled",
+    "applicationsEnabled",
+    "stickyEnabled",
+    "afkEnabled",
+    "antiRaidEnabled",
+    "eventsEnabled",
+    "rolePersistEnabled",
+    "boostsEnabled",
+    "backupsEnabled",
+    "confessionsEnabled",
+    "autoThreadsEnabled",
+    "voiceRolesEnabled",
+    "bumpsEnabled",
+    "timezone",
+    "embedColor",
+    "customPrefix",
+    "timezoneRoles",
+    "modLogChannelId",
+    "modDmTargets",
+    "modVisibility",
+    "modRoleIds",
+    "immuneRoleIds",
+    "muteRoleId",
+    "infractionEscalation",
+    "automodRuleBadWords",
+    "automodBadWords",
+    "automodBadWordPatterns",
+    "automodRuleInvites",
+    "automodRuleLinks",
+    "automodBlockedDomains",
+    "automodAllowedDomains",
+    "automodRuleSpam",
+    "automodRuleRepeatedText",
+    "automodRuleCaps",
+    "automodRuleEmojis",
+    "automodRuleSpoilers",
+    "automodRuleMentions",
+    "automodRuleZalgo",
+    "automodHoneypot",
+    "automodExemptRoleIds",
+    "automodExemptChannelIds",
+    "messageLogChannelId",
+    "memberLogChannelId",
+    "serverLogChannelId",
+    "voiceLogChannelId",
+    "joinLeaveChannelId",
+    "logEvents",
+    "logIgnoredChannelIds",
+    "welcomeMessageEnabled",
+    "welcomeChannelId",
+    "welcomeUseEmbed",
+    "welcomeMessage",
+    "welcomeEmbed",
+    "welcomeCardStyle",
+    "welcomeDmEnabled",
+    "welcomeDmMessage",
+    "welcomeDmEmbed",
+    "welcomeDmCard",
+    "goodbyeEnabled",
+    "goodbyeChannelId",
+    "goodbyeUseEmbed",
+    "goodbyeMessage",
+    "goodbyeEmbed",
+    "autoroleIds",
+    "autoroleDelay",
+    "captchaRoleId",
+    "captchaRequiredRoleIds",
+    "captchaMode",
+    "captchaTimeoutMinutes",
+    "captchaTemplate",
+    "captchaVerifyButton",
+    "xpMin",
+    "xpMax",
+    "xpCooldown",
+    "xpMultiplier",
+    "levelUpMode",
+    "levelUpChannelId",
+    "levelUpUseEmbed",
+    "levelUpMessage",
+    "voiceXpEnabled",
+    "voiceXpRate",
+    "noXpRoleIds",
+    "noXpChannelIds",
+    "levelRolesStack",
+    "levelRolesSyncOnDemotion",
+    "xpBoostRoles",
+    "rankCardStyle",
+    "autoTriggersEnabled",
+    "statsCategoryId",
+    "birthdayChannelId",
+    "birthdayHour",
+    "birthdayMessage",
+    "birthdayMessageAge",
+    "birthdayRoleId",
+    "birthdayRequireYear",
+    "achievementAnnounceMode",
+    "achievementChannelId",
+    "achievementUseEmbed",
+    "achievementMessage",
+    "currencyName",
+    "currencyEmoji",
+    "economyStartingBalance",
+    "economyMaxBalance",
+    "economyMaxBet",
+    "economyMaxPayout",
+    "economyImportGlobal",
+    "dailyMin",
+    "dailyMax",
+    "workMin",
+    "workMax",
+    "workCooldownMinutes",
+    "economyGameChannelMode",
+    "economyGameChannelIds",
+    "urbanNsfwOnly",
+    "liveRoleId",
+    "liveRoleRequiredRoleId",
+    "liveRoleAnnounceChannelId",
+    "liveRoleAnnounceMessage",
+    "liveRoleAnnouncePingRoleId",
+    "countingChannelId",
+    "autoTimeIgnoredChannelIds",
+    "suggestionChannelId",
+    "suggestionThreads",
+    "suggestionAllowAnonymous",
+    "suggestionDmOnUpdate",
+    "suggestionCooldownSeconds",
+    "modmailChannelId",
+    "modmailPingRoleIds",
+    "modmailGreeting",
+    "modmailAnonymousReplies",
+    "afkNicknamePrefix",
+    "afkIgnoredChannelIds",
+    "antiRaidJoinThreshold",
+    "antiRaidJoinSeconds",
+    "antiRaidAction",
+    "antiRaidAlertChannelId",
+    "antiRaidPauseInvites",
+    "antiRaidLockChat",
+    "antiRaidLockdownMinutes",
+    "antiRaidMinAccountAgeDays",
+    "antiRaidYoungAction",
+    "eventChannelId",
+    "eventCreateDiscordEvent",
+    "eventReminderMinutes",
+    "eventChannelsEnabled",
+    "eventCategoryId",
+    "eventVoiceLeadMinutes",
+    "rolePersistNicknames",
+    "rolePersistIgnoredRoleIds",
+    "rolePersistDays",
+    "boostChannelId",
+    "boostMessage",
+    "boostCustomRoles",
+    "boostRoleAnchorId",
+    "boostRoleGraceDays",
+    "backupIntervalHours",
+    "backupKeep",
+    "confessionChannelId",
+    "confessionReviewChannelId",
+    "confessionAllowImages",
+    "confessionBlockLinks",
+    "confessionCooldownSeconds",
+    "autoThreadChannels",
+    "autoPublishChannelIds",
+    "voiceRoleLinks",
+    "voiceRoleAnyRoleIds",
+    "voiceRoleIgnoreAfk",
+    "bumpChannelId",
+    "bumpRoleId",
+    "bumpReminderMessage",
+    "bumpThanks",
+    "bumpThanksMessage",
+    "bumpRewardCoins"
+   ],
+   "synthetic": false,
+   "record": {
+    "voiceRoleLinks": [
+     {
+      "channelId": "300000000000000001",
+      "roleId": "400000000000000001"
+     },
+     {
+      "roleId": "x"
+     },
+     "x"
+    ],
+    "autoroleIds": [
+     "400000000000000001",
+     5,
+     "400000000000000002"
+    ],
+    "captchaRoleId": "400000000000000001",
+    "liveRoleRequiredRoleId": "400000000000000002"
+   },
+   "out": [
+    {
+     "id": "400000000000000001",
+     "path": "autoroleIds.0"
+    },
+    {
+     "id": "400000000000000002",
+     "path": "autoroleIds.2"
+    },
+    {
+     "id": "400000000000000001",
+     "path": "captchaRoleId"
+    },
+    {
+     "id": "400000000000000001",
+     "path": "voiceRoleLinks.0.roleId"
+    }
+   ]
+  },
+  {
+   "fields": [
+    "name",
+    "nick",
+    "code",
+    "plain",
+    "memo",
+    "who",
+    "whoMaybe",
+    "when",
+    "at",
+    "link",
+    "linkShort",
+    "icon",
+    "msg",
+    "msgReq",
+    "emb",
+    "hexOnly",
+    "tags",
+    "words",
+    "lowerWords",
+    "picks",
+    "picksMax",
+    "items",
+    "items2",
+    "anyChannel",
+    "dangerRoles",
+    "noLabel",
+    "ratio"
+   ],
+   "synthetic": true,
+   "record": {
+    "items": [
+     {
+      "roleId": "400000000000000001"
+     },
+     {
+      "roleId": "400000000000000002"
+     }
+    ],
+    "dangerRoles": [
+     "400000000000000001"
+    ]
+   },
+   "out": [
+    {
+     "id": "400000000000000001",
+     "path": "items.0.roleId"
+    },
+    {
+     "id": "400000000000000002",
+     "path": "items.1.roleId"
+    },
+    {
+     "id": "400000000000000001",
+     "path": "dangerRoles.0"
+    }
+   ]
+  },
+  {
+   "fields": [],
+   "synthetic": false,
+   "record": null,
+   "out": []
+  }
+ ],
+ "lint": [
+  {
+   "fields": [
+    {
+     "field": "a",
+     "type": "int",
+     "label": "A"
+    }
+   ],
+   "out": [
+    "w/a: int needs min",
+    "w/a: int needs max"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "a",
+     "type": "int",
+     "label": "A",
+     "min": 0,
+     "max": 5,
+     "default": 9
+    },
+    {
+     "field": "a",
+     "type": "nope"
+    }
+   ],
+   "out": [
+    "w/a: the default does not validate (\"A\" must be between 0 and 5.)",
+    "w/a: duplicate field",
+    "w/a: unknown type nope"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "type": "text",
+     "label": "",
+     "maxLength": 5
+    }
+   ],
+   "out": [
+    "w/: a descriptor has no field",
+    "w/undefined: no label"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "c",
+     "type": "channel",
+     "label": "C",
+     "channelTypes": [
+      "text",
+      "thread"
+     ]
+    },
+    {
+     "field": "d",
+     "type": "roles",
+     "label": "D"
+    }
+   ],
+   "out": [
+    "w/c: unknown channel kind thread",
+    "w/d: roles needs maxItems"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "o",
+     "type": "object",
+     "label": "O",
+     "fields": [
+      {
+       "field": "x",
+       "type": "enum",
+       "label": "X"
+      }
+     ],
+     "default": {}
+    }
+   ],
+   "out": [
+    "w/o.x: enum needs options"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "l",
+     "type": "objectList",
+     "label": "L",
+     "maxItems": 2,
+     "itemFields": [
+      {
+       "field": "y",
+       "type": "stringList",
+       "label": "Y"
+      }
+     ]
+    }
+   ],
+   "out": [
+    "w/l[].y: stringList needs maxItems",
+    "w/l[].y: stringList needs itemMaxLength"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "e",
+     "type": "embed",
+     "label": "E",
+     "default": 7
+    },
+    {
+     "field": "t",
+     "type": "text",
+     "label": "T",
+     "maxLength": 3,
+     "default": "toolong"
+    }
+   ],
+   "out": [
+    "w/t: the default does not validate (\"T\" can be at most 3 characters.)"
+   ]
+  },
+  {
+   "fields": [
+    {
+     "field": "name",
+     "type": "text",
+     "label": "Name",
+     "maxLength": 50
+    },
+    {
+     "field": "nick",
+     "type": "text",
+     "label": "Nick",
+     "maxLength": 20,
+     "minLength": 3,
+     "nullable": true
+    },
+    {
+     "field": "code",
+     "type": "text",
+     "maxLength": 10,
+     "pattern": "[a-z]+",
+     "patternMessage": "Lower-case letters only."
+    },
+    {
+     "field": "plain",
+     "type": "text",
+     "maxLength": 10,
+     "pattern": "\\d{2}"
+    },
+    {
+     "field": "memo",
+     "type": "text",
+     "label": "Memo",
+     "maxLength": 20,
+     "multiline": true,
+     "minLength": 1
+    },
+    {
+     "field": "who",
+     "type": "user",
+     "label": "Member"
+    },
+    {
+     "field": "whoMaybe",
+     "type": "user",
+     "label": "Member",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "field": "when",
+     "type": "datetime",
+     "label": "When"
+    },
+    {
+     "field": "at",
+     "type": "time",
+     "label": "At",
+     "default": "09:30"
+    },
+    {
+     "field": "link",
+     "type": "url",
+     "label": "Link"
+    },
+    {
+     "field": "linkShort",
+     "type": "url",
+     "label": "Link",
+     "maxLength": 20,
+     "nullable": true
+    },
+    {
+     "field": "icon",
+     "type": "emoji",
+     "label": "Icon",
+     "default": "⭐"
+    },
+    {
+     "field": "msg",
+     "type": "template",
+     "label": "Message",
+     "requireContent": false
+    },
+    {
+     "field": "msgReq",
+     "type": "template",
+     "label": "Message"
+    },
+    {
+     "field": "emb",
+     "type": "embed",
+     "label": "Embed"
+    },
+    {
+     "field": "hexOnly",
+     "type": "color",
+     "format": "hex",
+     "label": "Colour",
+     "default": "#FFFFFF"
+    },
+    {
+     "field": "tags",
+     "type": "stringList",
+     "label": "Tags",
+     "maxItems": 3,
+     "itemMaxLength": 8,
+     "itemMinLength": 2,
+     "itemPattern": "[a-z0-9-]+",
+     "itemPatternMessage": "may only use a-z, 0-9 and -."
+    },
+    {
+     "field": "words",
+     "type": "stringList",
+     "label": "Words",
+     "maxItems": 5,
+     "itemMaxLength": 10
+    },
+    {
+     "field": "lowerWords",
+     "type": "stringList",
+     "label": "Words",
+     "maxItems": 5,
+     "itemMaxLength": 10,
+     "lowercase": true
+    },
+    {
+     "field": "picks",
+     "type": "multiEnum",
+     "label": "Picks",
+     "options": [
+      {
+       "value": "a",
+       "label": "A"
+      },
+      {
+       "value": "b",
+       "label": "B"
+      }
+     ]
+    },
+    {
+     "field": "picksMax",
+     "type": "multiEnum",
+     "label": "Picks",
+     "maxItems": 1,
+     "options": [
+      {
+       "value": "voiceJoin",
+       "label": "A"
+      },
+      {
+       "value": "b",
+       "label": "B"
+      }
+     ]
+    },
+    {
+     "field": "items",
+     "type": "objectList",
+     "label": "Items",
+     "maxItems": 3,
+     "minItems": 1,
+     "itemFields": [
+      {
+       "field": "channelId",
+       "type": "channel",
+       "label": "Channel",
+       "required": true,
+       "channelTypes": [
+        "text"
+       ]
+      },
+      {
+       "field": "roleId",
+       "type": "role",
+       "label": "Role",
+       "assignable": true,
+       "allowEveryone": true,
+       "default": null,
+       "nullable": true
+      },
+      {
+       "field": "name",
+       "type": "text",
+       "label": "Name",
+       "maxLength": 100,
+       "minLength": 1,
+       "default": "{content}"
+      }
+     ]
+    },
+    {
+     "field": "items2",
+     "type": "objectList",
+     "label": "Items",
+     "maxItems": 3,
+     "minItems": 2,
+     "itemFields": [
+      {
+       "field": "name",
+       "type": "text",
+       "maxLength": 5
+      }
+     ]
+    },
+    {
+     "field": "anyChannel",
+     "type": "channel",
+     "label": "Channel"
+    },
+    {
+     "field": "dangerRoles",
+     "type": "roles",
+     "label": "Roles",
+     "maxItems": 2,
+     "assignable": true,
+     "allowDangerous": true,
+     "allowEveryone": true
+    },
+    {
+     "field": "noLabel",
+     "type": "int",
+     "min": 0,
+     "max": 5
+    },
+    {
+     "field": "mystery",
+     "type": "banana",
+     "label": "Mystery"
+    },
+    {
+     "field": "ratio",
+     "type": "float",
+     "label": "Ratio",
+     "min": -1,
+     "max": 1
+    }
+   ],
+   "out": [
+    "w/code: no label",
+    "w/plain: no label",
+    "w/items2[].name: no label",
+    "w/anyChannel: channel needs channelTypes",
+    "w/noLabel: no label",
+    "w/mystery: unknown type banana"
+   ]
+  }
+ ],
+ "bodies": [
+  {
+   "body": null,
+   "ok": false,
+   "message": "The body must be a JSON object.",
+   "path": null
+  },
+  {
+   "body": [],
+   "ok": false,
+   "message": "The body must be a JSON object.",
+   "path": null
+  },
+  {
+   "body": {},
+   "ok": false,
+   "message": "\"changes\" must be an object of field: value.",
+   "path": null
+  },
+  {
+   "body": {
+    "changes": []
+   },
+   "ok": false,
+   "message": "\"changes\" must be an object of field: value.",
+   "path": null
+  },
+  {
+   "body": {
+    "changes": {}
+   },
+   "ok": false,
+   "message": "\"changes\" is empty.",
+   "path": null
+  },
+  {
+   "body": {
+    "changes": {
+     "modEnabled": true
+    },
+    "extra": 1
+   },
+   "ok": false,
+   "message": "The body may only contain \"changes\".",
+   "path": null
+  },
+  {
+   "body": {
+    "changes": {
+     "__proto__": true
+    }
+   },
+   "ok": false,
+   "message": "\"__proto__\" is not a setting the dashboard can change.",
+   "path": "__proto__"
+  },
+  {
+   "body": {
+    "changes": {
+     "constructor": 1
+    }
+   },
+   "ok": false,
+   "message": "\"constructor\" is not a setting the dashboard can change.",
+   "path": "constructor"
+  },
+  {
+   "body": {
+    "changes": {
+     "levelingEnabled": true
+    }
+   },
+   "ok": false,
+   "message": "\"levelingEnabled\" is not a setting the dashboard can change.",
+   "path": "levelingEnabled"
+  },
+  {
+   "body": {
+    "changes": {
+     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": 1
+    }
+   },
+   "ok": false,
+   "message": "\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is not a setting the dashboard can change.",
+   "path": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "body": {
+    "changes": {
+     "f0": 1,
+     "f1": 1,
+     "f2": 1,
+     "f3": 1,
+     "f4": 1,
+     "f5": 1,
+     "f6": 1,
+     "f7": 1,
+     "f8": 1,
+     "f9": 1,
+     "f10": 1,
+     "f11": 1,
+     "f12": 1,
+     "f13": 1,
+     "f14": 1,
+     "f15": 1,
+     "f16": 1,
+     "f17": 1,
+     "f18": 1,
+     "f19": 1,
+     "f20": 1,
+     "f21": 1,
+     "f22": 1,
+     "f23": 1,
+     "f24": 1,
+     "f25": 1,
+     "f26": 1,
+     "f27": 1,
+     "f28": 1,
+     "f29": 1,
+     "f30": 1,
+     "f31": 1,
+     "f32": 1,
+     "f33": 1,
+     "f34": 1,
+     "f35": 1,
+     "f36": 1,
+     "f37": 1,
+     "f38": 1,
+     "f39": 1,
+     "f40": 1,
+     "f41": 1,
+     "f42": 1,
+     "f43": 1,
+     "f44": 1,
+     "f45": 1,
+     "f46": 1,
+     "f47": 1,
+     "f48": 1,
+     "f49": 1,
+     "f50": 1,
+     "f51": 1,
+     "f52": 1,
+     "f53": 1,
+     "f54": 1,
+     "f55": 1,
+     "f56": 1,
+     "f57": 1,
+     "f58": 1,
+     "f59": 1,
+     "f60": 1,
+     "f61": 1,
+     "f62": 1,
+     "f63": 1,
+     "f64": 1,
+     "f65": 1,
+     "f66": 1,
+     "f67": 1,
+     "f68": 1,
+     "f69": 1,
+     "f70": 1,
+     "f71": 1,
+     "f72": 1,
+     "f73": 1,
+     "f74": 1,
+     "f75": 1,
+     "f76": 1,
+     "f77": 1,
+     "f78": 1,
+     "f79": 1,
+     "f80": 1,
+     "f81": 1,
+     "f82": 1,
+     "f83": 1,
+     "f84": 1,
+     "f85": 1,
+     "f86": 1,
+     "f87": 1,
+     "f88": 1,
+     "f89": 1,
+     "f90": 1,
+     "f91": 1,
+     "f92": 1,
+     "f93": 1,
+     "f94": 1,
+     "f95": 1,
+     "f96": 1,
+     "f97": 1,
+     "f98": 1,
+     "f99": 1,
+     "f100": 1,
+     "f101": 1,
+     "f102": 1,
+     "f103": 1,
+     "f104": 1,
+     "f105": 1,
+     "f106": 1,
+     "f107": 1,
+     "f108": 1,
+     "f109": 1,
+     "f110": 1,
+     "f111": 1,
+     "f112": 1,
+     "f113": 1,
+     "f114": 1,
+     "f115": 1,
+     "f116": 1,
+     "f117": 1,
+     "f118": 1,
+     "f119": 1,
+     "f120": 1,
+     "f121": 1,
+     "f122": 1,
+     "f123": 1,
+     "f124": 1,
+     "f125": 1,
+     "f126": 1,
+     "f127": 1,
+     "f128": 1,
+     "f129": 1,
+     "f130": 1,
+     "f131": 1,
+     "f132": 1,
+     "f133": 1,
+     "f134": 1,
+     "f135": 1,
+     "f136": 1,
+     "f137": 1,
+     "f138": 1,
+     "f139": 1,
+     "f140": 1,
+     "f141": 1,
+     "f142": 1,
+     "f143": 1,
+     "f144": 1,
+     "f145": 1,
+     "f146": 1,
+     "f147": 1,
+     "f148": 1,
+     "f149": 1,
+     "f150": 1,
+     "f151": 1,
+     "f152": 1,
+     "f153": 1,
+     "f154": 1,
+     "f155": 1,
+     "f156": 1,
+     "f157": 1,
+     "f158": 1,
+     "f159": 1,
+     "f160": 1,
+     "f161": 1,
+     "f162": 1,
+     "f163": 1,
+     "f164": 1,
+     "f165": 1,
+     "f166": 1,
+     "f167": 1,
+     "f168": 1,
+     "f169": 1,
+     "f170": 1,
+     "f171": 1,
+     "f172": 1,
+     "f173": 1,
+     "f174": 1,
+     "f175": 1,
+     "f176": 1,
+     "f177": 1,
+     "f178": 1,
+     "f179": 1,
+     "f180": 1,
+     "f181": 1,
+     "f182": 1,
+     "f183": 1,
+     "f184": 1,
+     "f185": 1,
+     "f186": 1,
+     "f187": 1,
+     "f188": 1,
+     "f189": 1,
+     "f190": 1,
+     "f191": 1,
+     "f192": 1,
+     "f193": 1,
+     "f194": 1,
+     "f195": 1,
+     "f196": 1,
+     "f197": 1,
+     "f198": 1,
+     "f199": 1,
+     "f200": 1,
+     "f201": 1,
+     "f202": 1,
+     "f203": 1,
+     "f204": 1,
+     "f205": 1,
+     "f206": 1,
+     "f207": 1,
+     "f208": 1,
+     "f209": 1,
+     "f210": 1,
+     "f211": 1,
+     "f212": 1,
+     "f213": 1,
+     "f214": 1,
+     "f215": 1,
+     "f216": 1,
+     "f217": 1,
+     "f218": 1,
+     "f219": 1,
+     "f220": 1,
+     "f221": 1,
+     "f222": 1,
+     "f223": 1,
+     "f224": 1,
+     "f225": 1,
+     "f226": 1,
+     "f227": 1,
+     "f228": 1,
+     "f229": 1,
+     "f230": 1,
+     "f231": 1,
+     "f232": 1,
+     "f233": 1,
+     "f234": 1,
+     "f235": 1,
+     "f236": 1,
+     "f237": 1,
+     "f238": 1,
+     "f239": 1,
+     "f240": 1,
+     "f241": 1,
+     "f242": 1,
+     "f243": 1,
+     "f244": 1,
+     "f245": 1,
+     "f246": 1,
+     "f247": 1,
+     "f248": 1,
+     "f249": 1,
+     "f250": 1,
+     "f251": 1,
+     "f252": 1,
+     "f253": 1,
+     "f254": 1,
+     "f255": 1,
+     "f256": 1,
+     "f257": 1,
+     "f258": 1,
+     "f259": 1,
+     "f260": 1,
+     "f261": 1,
+     "f262": 1,
+     "f263": 1,
+     "f264": 1,
+     "f265": 1,
+     "f266": 1,
+     "f267": 1,
+     "f268": 1,
+     "f269": 1,
+     "f270": 1,
+     "f271": 1,
+     "f272": 1,
+     "f273": 1,
+     "f274": 1,
+     "f275": 1,
+     "f276": 1,
+     "f277": 1,
+     "f278": 1,
+     "f279": 1,
+     "f280": 1,
+     "f281": 1,
+     "f282": 1,
+     "f283": 1,
+     "f284": 1,
+     "f285": 1,
+     "f286": 1,
+     "f287": 1,
+     "f288": 1,
+     "f289": 1,
+     "f290": 1,
+     "f291": 1,
+     "f292": 1,
+     "f293": 1,
+     "f294": 1,
+     "f295": 1,
+     "f296": 1,
+     "f297": 1,
+     "f298": 1,
+     "f299": 1,
+     "f300": 1
+    }
+   },
+   "ok": false,
+   "message": "At most 300 changes per request.",
+   "path": null
+  },
+  {
+   "body": {
+    "changes": {
+     "xpMin": 20,
+     "xpMax": 30,
+     "modRoleIds": [
+      "400000000000000001",
+      "400000000000000002"
+     ],
+     "welcomeChannelId": "300000000000000001",
+     "automodRuleCaps": {
+      "action": "timeout",
+      "roleIds": [
+       "400000000000000001"
+      ],
+      "channelIds": [
+       "300000000000000002"
+      ]
+     }
+    }
+   },
+   "ok": true,
+   "changes": {
+    "xpMin": 20,
+    "xpMax": 30,
+    "modRoleIds": [
+     "400000000000000001",
+     "400000000000000002"
+    ],
+    "welcomeChannelId": "300000000000000001",
+    "automodRuleCaps": {
+     "action": "timeout",
+     "threshold": 70,
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [
+      "400000000000000001"
+     ],
+     "channelMode": "except",
+     "channelIds": [
+      "300000000000000002"
+     ]
+    }
+   },
+   "refs": {
+    "channels": [
+     {
+      "id": "300000000000000001",
+      "path": "welcomeChannelId",
+      "kinds": [
+       "text",
+       "announcement"
+      ]
+     },
+     {
+      "id": "300000000000000002",
+      "path": "automodRuleCaps.channelIds.0",
+      "kinds": [
+       "text",
+       "announcement",
+       "forum",
+       "media",
+       "voice",
+       "stage",
+       "category"
+      ]
+     }
+    ],
+    "roles": [
+     {
+      "id": "400000000000000001",
+      "path": "modRoleIds.0",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     },
+     {
+      "id": "400000000000000002",
+      "path": "modRoleIds.1",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     },
+     {
+      "id": "400000000000000001",
+      "path": "automodRuleCaps.roleIds.0",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "stored": {
+    "xpMin": 20,
+    "xpMax": 30,
+    "modRoleIds": [
+     "400000000000000001",
+     "400000000000000002"
+    ],
+    "welcomeChannelId": "300000000000000001",
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "timeout",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [
+        "400000000000000001"
+       ],
+       "channelMode": "except",
+       "channelIds": [
+        "300000000000000002"
+       ]
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [],
+     "badWordPatterns": [],
+     "blockedDomains": [],
+     "allowedDomains": [
+      "tenor.com",
+      "giphy.com",
+      "discord.com",
+      "discordapp.com",
+      "discordapp.net"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [],
+      "action": "softban",
+      "timeoutSeconds": 86400
+     }
+    }
+   },
+   "storedOnRow": {
+    "xpMin": 20,
+    "xpMax": 30,
+    "modRoleIds": [
+     "400000000000000001",
+     "400000000000000002"
+    ],
+    "welcomeChannelId": "300000000000000001",
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "timeout",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [
+        "400000000000000001"
+       ],
+       "channelMode": "except",
+       "channelIds": [
+        "300000000000000002"
+       ]
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [
+      "old"
+     ],
+     "badWordPatterns": [],
+     "blockedDomains": [],
+     "allowedDomains": [
+      "tenor.com",
+      "b.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [
+       "300000000000000001"
+      ],
+      "action": "ban",
+      "timeoutSeconds": 600
+     }
+    }
+   },
+   "cross": null
+  },
+  {
+   "body": {
+    "changes": {
+     "modEnabled": true,
+     "xpMin": 0
+    }
+   },
+   "ok": false,
+   "message": "\"Minimum XP per message\" must be between 1 and 1000.",
+   "path": "xpMin"
+  },
+  {
+   "body": {
+    "changes": {
+     "timezone": "america/new_york",
+     "customPrefix": "OFF",
+     "embedColor": "#5865f2",
+     "xpMultiplier": 1.234,
+     "automodBadWords": [
+      "  BAD   word ",
+      "bad word",
+      "ｆｕｌｌ"
+     ],
+     "automodBlockedDomains": [
+      "https://www.Example.com/x",
+      "example.com"
+     ],
+     "logEvents": [
+      "voiceJoin",
+      "messageDelete"
+     ],
+     "currencyName": "gold    bars",
+     "levelUpMessage": "  ",
+     "birthdayMessage": "  Hi {user}  ",
+     "welcomeMessage": "  keep spaces  ",
+     "welcomeEmbed": {
+      "title": "",
+      "description": ""
+     },
+     "welcomeCardStyle": {
+      "enabled": true,
+      "background": "#AABBCC",
+      "backgroundUrl": null,
+      "textColor": null,
+      "accentColor": null,
+      "overlayOpacity": 0.456
+     },
+     "xpBoostRoles": [
+      {
+       "roleId": "400000000000000001",
+       "multiplier": 1.255
+      }
+     ],
+     "timezoneRoles": [
+      {
+       "roleId": "400000000000000002",
+       "zone": "america/chicago"
+      },
+      {
+       "roleId": "400000000000000001",
+       "zone": "Asia/Calcutta"
+      }
+     ]
+    }
+   },
+   "ok": true,
+   "changes": {
+    "timezone": "America/New_York",
+    "customPrefix": "",
+    "embedColor": 5793266,
+    "xpMultiplier": 1.23,
+    "automodBadWords": [
+     "bad word",
+     "full"
+    ],
+    "automodBlockedDomains": [
+     "example.com"
+    ],
+    "logEvents": [
+     "messageDelete",
+     "voiceJoin"
+    ],
+    "currencyName": "gold bars",
+    "levelUpMessage": null,
+    "birthdayMessage": "Hi {user}",
+    "welcomeMessage": "  keep spaces  ",
+    "welcomeEmbed": null,
+    "welcomeCardStyle": {
+     "enabled": true,
+     "background": "#AABBCC",
+     "backgroundUrl": null,
+     "textColor": null,
+     "accentColor": null,
+     "overlayOpacity": 0.456
+    },
+    "xpBoostRoles": [
+     {
+      "roleId": "400000000000000001",
+      "multiplier": 1.25
+     }
+    ],
+    "timezoneRoles": [
+     {
+      "roleId": "400000000000000002",
+      "zone": "America/Chicago"
+     },
+     {
+      "roleId": "400000000000000001",
+      "zone": "Asia/Kolkata"
+     }
+    ]
+   },
+   "refs": {
+    "channels": [],
+    "roles": [
+     {
+      "id": "400000000000000001",
+      "path": "xpBoostRoles.0.roleId",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     },
+     {
+      "id": "400000000000000002",
+      "path": "timezoneRoles.0.roleId",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     },
+     {
+      "id": "400000000000000001",
+      "path": "timezoneRoles.1.roleId",
+      "assignable": false,
+      "allowEveryone": false,
+      "allowDangerous": false
+     }
+    ]
+   },
+   "stored": {
+    "timezone": "America/New_York",
+    "customPrefix": "",
+    "embedColor": 5793266,
+    "xpMultiplier": 1.23,
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "off",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [
+      "bad word",
+      "full"
+     ],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "example.com"
+     ],
+     "allowedDomains": [
+      "tenor.com",
+      "giphy.com",
+      "discord.com",
+      "discordapp.com",
+      "discordapp.net"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [],
+      "action": "softban",
+      "timeoutSeconds": 86400
+     }
+    },
+    "disabledLogEvents": [
+     "messageEdit",
+     "messageBulkDelete",
+     "invitePosted",
+     "memberRoles",
+     "memberNickname",
+     "memberTimeout",
+     "memberAvatar",
+     "userUpdate",
+     "memberBan",
+     "memberUnban",
+     "memberJoin",
+     "memberLeave",
+     "voiceLeave",
+     "voiceMove",
+     "voiceState",
+     "channelCreate",
+     "channelUpdate",
+     "channelDelete",
+     "threadCreate",
+     "threadUpdate",
+     "threadDelete",
+     "roleCreate",
+     "roleUpdate",
+     "roleDelete",
+     "serverUpdate",
+     "emojiCreate",
+     "emojiUpdate",
+     "emojiDelete",
+     "inviteCreate",
+     "inviteDelete"
+    ],
+    "currencyName": "gold bars",
+    "levelUpMessage": null,
+    "birthdayMessage": "Hi {user}",
+    "welcomeMessage": "  keep spaces  ",
+    "welcomeEmbed": null,
+    "welcomeCardStyle": {
+     "v": 1,
+     "enabled": true,
+     "background": "#aabbcc",
+     "backgroundUrl": null,
+     "textColor": null,
+     "accentColor": null,
+     "overlayOpacity": 0.46
+    },
+    "xpBoostRoles": [
+     {
+      "roleId": "400000000000000001",
+      "multiplier": 1.25
+     }
+    ],
+    "timezoneRoles": [
+     {
+      "roleId": "400000000000000002",
+      "zone": "America/Chicago"
+     },
+     {
+      "roleId": "400000000000000001",
+      "zone": "Asia/Kolkata"
+     }
+    ]
+   },
+   "storedOnRow": {
+    "timezone": "America/New_York",
+    "customPrefix": "",
+    "embedColor": 5793266,
+    "xpMultiplier": 1.23,
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "kick",
+       "threshold": 80,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [
+      "bad word",
+      "full"
+     ],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "example.com"
+     ],
+     "allowedDomains": [
+      "tenor.com",
+      "b.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [
+       "300000000000000001"
+      ],
+      "action": "ban",
+      "timeoutSeconds": 600
+     }
+    },
+    "disabledLogEvents": [
+     "messageEdit",
+     "messageBulkDelete",
+     "invitePosted",
+     "memberRoles",
+     "memberNickname",
+     "memberTimeout",
+     "memberAvatar",
+     "userUpdate",
+     "memberBan",
+     "memberUnban",
+     "memberJoin",
+     "memberLeave",
+     "voiceLeave",
+     "voiceMove",
+     "voiceState",
+     "channelCreate",
+     "channelUpdate",
+     "channelDelete",
+     "threadCreate",
+     "threadUpdate",
+     "threadDelete",
+     "roleCreate",
+     "roleUpdate",
+     "roleDelete",
+     "serverUpdate",
+     "emojiCreate",
+     "emojiUpdate",
+     "emojiDelete",
+     "inviteCreate",
+     "inviteDelete"
+    ],
+    "currencyName": "gold bars",
+    "levelUpMessage": null,
+    "birthdayMessage": "Hi {user}",
+    "welcomeMessage": "  keep spaces  ",
+    "welcomeEmbed": null,
+    "welcomeCardStyle": {
+     "v": 1,
+     "enabled": true,
+     "background": "#aabbcc",
+     "backgroundUrl": null,
+     "textColor": null,
+     "accentColor": null,
+     "overlayOpacity": 0.46
+    },
+    "xpBoostRoles": [
+     {
+      "roleId": "400000000000000001",
+      "multiplier": 1.25
+     }
+    ],
+    "timezoneRoles": [
+     {
+      "roleId": "400000000000000002",
+      "zone": "America/Chicago"
+     },
+     {
+      "roleId": "400000000000000001",
+      "zone": "Asia/Kolkata"
+     }
+    ]
+   },
+   "cross": null
+  },
+  {
+   "body": {
+    "changes": {
+     "automodBlockedDomains": [
+      "b.com"
+     ],
+     "automodAllowedDomains": [
+      "b.com",
+      "c.com"
+     ],
+     "automodRuleCaps": {
+      "action": "delete"
+     }
+    }
+   },
+   "ok": true,
+   "changes": {
+    "automodBlockedDomains": [
+     "b.com"
+    ],
+    "automodAllowedDomains": [
+     "b.com",
+     "c.com"
+    ],
+    "automodRuleCaps": {
+     "action": "delete",
+     "threshold": 70,
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    }
+   },
+   "refs": {
+    "channels": [],
+    "roles": []
+   },
+   "stored": {
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "delete",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "b.com"
+     ],
+     "allowedDomains": [
+      "b.com",
+      "c.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [],
+      "action": "softban",
+      "timeoutSeconds": 86400
+     }
+    }
+   },
+   "storedOnRow": {
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "delete",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [
+      "old"
+     ],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "b.com"
+     ],
+     "allowedDomains": [
+      "b.com",
+      "c.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [
+       "300000000000000001"
+      ],
+      "action": "ban",
+      "timeoutSeconds": 600
+     }
+    }
+   },
+   "cross": {
+    "path": "automodAllowedDomains",
+    "message": "b.com is in both the blocked and the allowed domains."
+   }
+  },
+  {
+   "body": {
+    "changes": {
+     "automodAllowedDomains": [
+      "x.com"
+     ],
+     "automodBlockedDomains": [
+      "x.com"
+     ]
+    }
+   },
+   "ok": true,
+   "changes": {
+    "automodAllowedDomains": [
+     "x.com"
+    ],
+    "automodBlockedDomains": [
+     "x.com"
+    ]
+   },
+   "refs": {
+    "channels": [],
+    "roles": []
+   },
+   "stored": {
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "off",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "x.com"
+     ],
+     "allowedDomains": [
+      "x.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [],
+      "action": "softban",
+      "timeoutSeconds": 86400
+     }
+    }
+   },
+   "storedOnRow": {
+    "automodConfig": {
+     "version": 2,
+     "rules": {
+      "badWords": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "repeatedText": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "invites": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "caps": {
+       "action": "kick",
+       "threshold": 80,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "emojis": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spoilers": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "mentions": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "zalgo": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "spam": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      }
+     },
+     "badWords": [
+      "old"
+     ],
+     "badWordPatterns": [],
+     "blockedDomains": [
+      "x.com"
+     ],
+     "allowedDomains": [
+      "x.com"
+     ],
+     "exemptRoleIds": [],
+     "exemptChannelIds": [],
+     "honeypot": {
+      "channelIds": [
+       "300000000000000001"
+      ],
+      "action": "ban",
+      "timeoutSeconds": 600
+     }
+    }
+   },
+   "cross": {
+    "path": "automodAllowedDomains",
+    "message": "x.com is in both the blocked and the allowed domains."
+   }
+  },
+  {
+   "body": {
+    "changes": {
+     "captchaVerifyButton": {
+      "label": "Verify me",
+      "style": "PRIMARY"
+     },
+     "captchaTemplate": {
+      "content": "New text",
+      "embed": null,
+      "buttons": []
+     }
+    }
+   },
+   "ok": true,
+   "changes": {
+    "captchaVerifyButton": {
+     "label": "Verify me",
+     "style": "PRIMARY"
+    },
+    "captchaTemplate": {
+     "content": "New text",
+     "embed": null,
+     "buttons": []
+    }
+   },
+   "refs": {
+    "channels": [],
+    "roles": []
+   },
+   "stored": {
+    "captchaTemplate": {
+     "content": "New text",
+     "embed": null,
+     "buttons": [],
+     "verifyButton": {
+      "label": "Verify me",
+      "style": "PRIMARY"
+     }
+    }
+   },
+   "storedOnRow": {
+    "captchaTemplate": {
+     "content": "New text",
+     "embed": null,
+     "buttons": [],
+     "verifyButton": {
+      "label": "Verify me",
+      "style": "PRIMARY"
+     }
+    }
+   },
+   "cross": null
+  }
+ ]
+}

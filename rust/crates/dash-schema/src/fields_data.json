@@ -1,0 +1,5361 @@
+{
+ "settingsFieldOrder": [
+  "modEnabled",
+  "automodEnabled",
+  "loggingEnabled",
+  "welcomeEnabled",
+  "captchaEnabled",
+  "reactionRolesEnabled",
+  "xpEnabled",
+  "customCommandsEnabled",
+  "automationsEnabled",
+  "translationEnabled",
+  "invitesEnabled",
+  "embedsEnabled",
+  "remindersEnabled",
+  "giveawaysEnabled",
+  "pollsEnabled",
+  "starboardEnabled",
+  "ticketsEnabled",
+  "tempVoiceEnabled",
+  "statsEnabled",
+  "birthdaysEnabled",
+  "achievementsEnabled",
+  "economyEnabled",
+  "gamesEnabled",
+  "feedsEnabled",
+  "searchEnabled",
+  "liveRoleEnabled",
+  "countingEnabled",
+  "autoTimeEnabled",
+  "suggestionsEnabled",
+  "modmailEnabled",
+  "applicationsEnabled",
+  "stickyEnabled",
+  "afkEnabled",
+  "antiRaidEnabled",
+  "eventsEnabled",
+  "rolePersistEnabled",
+  "boostsEnabled",
+  "backupsEnabled",
+  "confessionsEnabled",
+  "autoThreadsEnabled",
+  "voiceRolesEnabled",
+  "bumpsEnabled",
+  "timezone",
+  "embedColor",
+  "customPrefix",
+  "timezoneRoles",
+  "modLogChannelId",
+  "modDmTargets",
+  "modVisibility",
+  "modRoleIds",
+  "immuneRoleIds",
+  "muteRoleId",
+  "infractionEscalation",
+  "automodRuleBadWords",
+  "automodBadWords",
+  "automodBadWordPatterns",
+  "automodRuleInvites",
+  "automodRuleLinks",
+  "automodBlockedDomains",
+  "automodAllowedDomains",
+  "automodRuleSpam",
+  "automodRuleRepeatedText",
+  "automodRuleCaps",
+  "automodRuleEmojis",
+  "automodRuleSpoilers",
+  "automodRuleMentions",
+  "automodRuleZalgo",
+  "automodHoneypot",
+  "automodExemptRoleIds",
+  "automodExemptChannelIds",
+  "messageLogChannelId",
+  "memberLogChannelId",
+  "serverLogChannelId",
+  "voiceLogChannelId",
+  "joinLeaveChannelId",
+  "logEvents",
+  "logIgnoredChannelIds",
+  "welcomeMessageEnabled",
+  "welcomeChannelId",
+  "welcomeUseEmbed",
+  "welcomeMessage",
+  "welcomeEmbed",
+  "welcomeCardStyle",
+  "welcomeDmEnabled",
+  "welcomeDmMessage",
+  "welcomeDmEmbed",
+  "welcomeDmCard",
+  "goodbyeEnabled",
+  "goodbyeChannelId",
+  "goodbyeUseEmbed",
+  "goodbyeMessage",
+  "goodbyeEmbed",
+  "autoroleIds",
+  "autoroleDelay",
+  "captchaRoleId",
+  "captchaRequiredRoleIds",
+  "captchaMode",
+  "captchaTimeoutMinutes",
+  "captchaTemplate",
+  "captchaVerifyButton",
+  "xpMin",
+  "xpMax",
+  "xpCooldown",
+  "xpMultiplier",
+  "levelUpMode",
+  "levelUpChannelId",
+  "levelUpUseEmbed",
+  "levelUpMessage",
+  "voiceXpEnabled",
+  "voiceXpRate",
+  "noXpRoleIds",
+  "noXpChannelIds",
+  "levelRolesStack",
+  "levelRolesSyncOnDemotion",
+  "xpBoostRoles",
+  "rankCardStyle",
+  "autoTriggersEnabled",
+  "statsCategoryId",
+  "birthdayChannelId",
+  "birthdayHour",
+  "birthdayMessage",
+  "birthdayMessageAge",
+  "birthdayRoleId",
+  "birthdayRequireYear",
+  "achievementAnnounceMode",
+  "achievementChannelId",
+  "achievementUseEmbed",
+  "achievementMessage",
+  "currencyName",
+  "currencyEmoji",
+  "economyStartingBalance",
+  "economyMaxBalance",
+  "economyMaxBet",
+  "economyMaxPayout",
+  "economyImportGlobal",
+  "dailyMin",
+  "dailyMax",
+  "workMin",
+  "workMax",
+  "workCooldownMinutes",
+  "economyGameChannelMode",
+  "economyGameChannelIds",
+  "urbanNsfwOnly",
+  "liveRoleId",
+  "liveRoleRequiredRoleId",
+  "liveRoleAnnounceChannelId",
+  "liveRoleAnnounceMessage",
+  "liveRoleAnnouncePingRoleId",
+  "countingChannelId",
+  "autoTimeIgnoredChannelIds",
+  "suggestionChannelId",
+  "suggestionThreads",
+  "suggestionAllowAnonymous",
+  "suggestionDmOnUpdate",
+  "suggestionCooldownSeconds",
+  "modmailChannelId",
+  "modmailPingRoleIds",
+  "modmailGreeting",
+  "modmailAnonymousReplies",
+  "afkNicknamePrefix",
+  "afkIgnoredChannelIds",
+  "antiRaidJoinThreshold",
+  "antiRaidJoinSeconds",
+  "antiRaidAction",
+  "antiRaidAlertChannelId",
+  "antiRaidPauseInvites",
+  "antiRaidLockChat",
+  "antiRaidLockdownMinutes",
+  "antiRaidMinAccountAgeDays",
+  "antiRaidYoungAction",
+  "eventChannelId",
+  "eventCreateDiscordEvent",
+  "eventReminderMinutes",
+  "eventChannelsEnabled",
+  "eventCategoryId",
+  "eventVoiceLeadMinutes",
+  "rolePersistNicknames",
+  "rolePersistIgnoredRoleIds",
+  "rolePersistDays",
+  "boostChannelId",
+  "boostMessage",
+  "boostCustomRoles",
+  "boostRoleAnchorId",
+  "boostRoleGraceDays",
+  "backupIntervalHours",
+  "backupKeep",
+  "confessionChannelId",
+  "confessionReviewChannelId",
+  "confessionAllowImages",
+  "confessionBlockLinks",
+  "confessionCooldownSeconds",
+  "autoThreadChannels",
+  "autoPublishChannelIds",
+  "voiceRoleLinks",
+  "voiceRoleAnyRoleIds",
+  "voiceRoleIgnoreAfk",
+  "bumpChannelId",
+  "bumpRoleId",
+  "bumpReminderMessage",
+  "bumpThanks",
+  "bumpThanksMessage",
+  "bumpRewardCoins"
+ ],
+ "flagFields": [
+  {
+   "field": "modEnabled",
+   "type": "boolean",
+   "label": "Moderation",
+   "description": "Turns the Moderation module on or off.",
+   "default": true
+  },
+  {
+   "field": "automodEnabled",
+   "type": "boolean",
+   "label": "Auto-Moderation",
+   "description": "Turns the Auto-Moderation module on or off.",
+   "default": false
+  },
+  {
+   "field": "loggingEnabled",
+   "type": "boolean",
+   "label": "Audit Logs",
+   "description": "Turns the Audit Logs module on or off.",
+   "default": false
+  },
+  {
+   "field": "welcomeEnabled",
+   "type": "boolean",
+   "label": "Welcome & Goodbye",
+   "description": "Turns the Welcome & Goodbye module on or off.",
+   "default": false
+  },
+  {
+   "field": "captchaEnabled",
+   "type": "boolean",
+   "label": "Verification",
+   "description": "Turns the Verification module on or off.",
+   "default": false
+  },
+  {
+   "field": "reactionRolesEnabled",
+   "type": "boolean",
+   "label": "Reaction Roles",
+   "description": "Turns the Reaction Roles module on or off.",
+   "default": true
+  },
+  {
+   "field": "xpEnabled",
+   "type": "boolean",
+   "label": "Levels",
+   "description": "Turns the Levels module on or off.",
+   "default": false
+  },
+  {
+   "field": "customCommandsEnabled",
+   "type": "boolean",
+   "label": "Custom Commands",
+   "description": "Turns the Custom Commands module on or off.",
+   "default": false
+  },
+  {
+   "field": "automationsEnabled",
+   "type": "boolean",
+   "label": "Automations",
+   "description": "Turns the Automations module on or off.",
+   "default": false
+  },
+  {
+   "field": "translationEnabled",
+   "type": "boolean",
+   "label": "Auto-Translate",
+   "description": "Turns the Auto-Translate module on or off.",
+   "default": false
+  },
+  {
+   "field": "invitesEnabled",
+   "type": "boolean",
+   "label": "Invite Tracker",
+   "description": "Turns the Invite Tracker module on or off.",
+   "default": true
+  },
+  {
+   "field": "embedsEnabled",
+   "type": "boolean",
+   "label": "Embed Messages",
+   "description": "Turns the Embed Messages module on or off.",
+   "default": true
+  },
+  {
+   "field": "remindersEnabled",
+   "type": "boolean",
+   "label": "Reminders",
+   "description": "Turns the Reminders module on or off.",
+   "default": true
+  },
+  {
+   "field": "giveawaysEnabled",
+   "type": "boolean",
+   "label": "Giveaways",
+   "description": "Turns the Giveaways module on or off.",
+   "default": true
+  },
+  {
+   "field": "pollsEnabled",
+   "type": "boolean",
+   "label": "Polls",
+   "description": "Turns the Polls module on or off.",
+   "default": true
+  },
+  {
+   "field": "starboardEnabled",
+   "type": "boolean",
+   "label": "Starboards",
+   "description": "Turns the Starboards module on or off.",
+   "default": true
+  },
+  {
+   "field": "ticketsEnabled",
+   "type": "boolean",
+   "label": "Ticketing",
+   "description": "Turns the Ticketing module on or off.",
+   "default": true
+  },
+  {
+   "field": "tempVoiceEnabled",
+   "type": "boolean",
+   "label": "Temporary Channels",
+   "description": "Turns the Temporary Channels module on or off.",
+   "default": true
+  },
+  {
+   "field": "statsEnabled",
+   "type": "boolean",
+   "label": "Statistics Channels",
+   "description": "Turns the Statistics Channels module on or off.",
+   "default": true
+  },
+  {
+   "field": "birthdaysEnabled",
+   "type": "boolean",
+   "label": "Birthdays",
+   "description": "Turns the Birthdays module on or off.",
+   "default": true
+  },
+  {
+   "field": "achievementsEnabled",
+   "type": "boolean",
+   "label": "Achievements",
+   "description": "Turns the Achievements module on or off.",
+   "default": false
+  },
+  {
+   "field": "economyEnabled",
+   "type": "boolean",
+   "label": "Economy",
+   "description": "Turns the Economy module on or off.",
+   "default": true
+  },
+  {
+   "field": "gamesEnabled",
+   "type": "boolean",
+   "label": "Games",
+   "description": "Turns the Games module on or off.",
+   "default": true
+  },
+  {
+   "field": "feedsEnabled",
+   "type": "boolean",
+   "label": "Social Feeds",
+   "description": "Turns the Social Feeds module on or off.",
+   "default": true
+  },
+  {
+   "field": "searchEnabled",
+   "type": "boolean",
+   "label": "Search Anything",
+   "description": "Turns the Search Anything module on or off.",
+   "default": true
+  },
+  {
+   "field": "liveRoleEnabled",
+   "type": "boolean",
+   "label": "Live Role",
+   "description": "Turns the Live Role module on or off.",
+   "default": false
+  },
+  {
+   "field": "countingEnabled",
+   "type": "boolean",
+   "label": "Counting",
+   "description": "Turns the Counting module on or off.",
+   "default": false
+  },
+  {
+   "field": "autoTimeEnabled",
+   "type": "boolean",
+   "label": "Auto Timestamps",
+   "description": "Turns the Auto Timestamps module on or off.",
+   "default": false
+  },
+  {
+   "field": "suggestionsEnabled",
+   "type": "boolean",
+   "label": "Suggestions",
+   "description": "Turns the Suggestions module on or off.",
+   "default": false
+  },
+  {
+   "field": "modmailEnabled",
+   "type": "boolean",
+   "label": "Modmail",
+   "description": "Turns the Modmail module on or off.",
+   "default": false
+  },
+  {
+   "field": "applicationsEnabled",
+   "type": "boolean",
+   "label": "Applications",
+   "description": "Turns the Applications module on or off.",
+   "default": false
+  },
+  {
+   "field": "stickyEnabled",
+   "type": "boolean",
+   "label": "Sticky Messages",
+   "description": "Turns the Sticky Messages module on or off.",
+   "default": false
+  },
+  {
+   "field": "afkEnabled",
+   "type": "boolean",
+   "label": "AFK",
+   "description": "Turns the AFK module on or off.",
+   "default": false
+  },
+  {
+   "field": "antiRaidEnabled",
+   "type": "boolean",
+   "label": "Anti-Raid",
+   "description": "Turns the Anti-Raid module on or off.",
+   "default": false
+  },
+  {
+   "field": "eventsEnabled",
+   "type": "boolean",
+   "label": "Events",
+   "description": "Turns the Events module on or off.",
+   "default": false
+  },
+  {
+   "field": "rolePersistEnabled",
+   "type": "boolean",
+   "label": "Role Persistence",
+   "description": "Turns the Role Persistence module on or off.",
+   "default": false
+  },
+  {
+   "field": "boostsEnabled",
+   "type": "boolean",
+   "label": "Server Boosts",
+   "description": "Turns the Server Boosts module on or off.",
+   "default": false
+  },
+  {
+   "field": "backupsEnabled",
+   "type": "boolean",
+   "label": "Server Backups",
+   "description": "Turns the Server Backups module on or off.",
+   "default": false
+  },
+  {
+   "field": "confessionsEnabled",
+   "type": "boolean",
+   "label": "Confessions",
+   "description": "Turns the Confessions module on or off.",
+   "default": false
+  },
+  {
+   "field": "autoThreadsEnabled",
+   "type": "boolean",
+   "label": "Auto Threads",
+   "description": "Turns the Auto Threads module on or off.",
+   "default": false
+  },
+  {
+   "field": "voiceRolesEnabled",
+   "type": "boolean",
+   "label": "Voice Roles",
+   "description": "Turns the Voice Roles module on or off.",
+   "default": false
+  },
+  {
+   "field": "bumpsEnabled",
+   "type": "boolean",
+   "label": "Bump Reminders",
+   "description": "Turns the Bump Reminders module on or off.",
+   "default": false
+  }
+ ],
+ "generalGroups": [
+  {
+   "id": "general",
+   "title": "Server settings",
+   "description": "Settings every module uses.",
+   "fields": [
+    {
+     "field": "timezone",
+     "type": "timezone",
+     "label": "Time zone",
+     "default": "UTC",
+     "description": "Used for reminders, birthdays and every other schedule. Changes apply from the next run of each schedule."
+    },
+    {
+     "field": "embedColor",
+     "type": "color",
+     "format": "int",
+     "nullable": true,
+     "min": 1,
+     "default": null,
+     "label": "Embed colour",
+     "description": "Colour of the bot's informational embeds. Empty uses the default blurple."
+    },
+    {
+     "field": "customPrefix",
+     "type": "text",
+     "label": "Custom command prefix",
+     "default": "!",
+     "maxLength": 10,
+     "minLength": 0,
+     "description": "Members run custom commands as <prefix>name, e.g. !rules. Empty (or \"off\") turns prefix commands off; /tag use still works.",
+     "pattern": "[^\\s`<>@#:\\\\/\\p{C}]{0,5}",
+     "patternMessage": "The prefix can be at most 5 characters, without spaces or any of ` < > @ # : \\ /."
+    }
+   ]
+  },
+  {
+   "id": "timezone-roles",
+   "title": "Timezone roles",
+   "description": "Roles such as @CST that give members a time zone in /timestamp (/settings timezone-role).",
+   "fields": [
+    {
+     "field": "timezoneRoles",
+     "type": "objectList",
+     "label": "Timezone roles",
+     "maxItems": 25,
+     "default": [],
+     "description": "Members with one of these roles get its time zone in /timestamp, unless they saved their own with /timezone set; with several, the highest role wins. Hand the roles out with a Unique reaction-role panel.",
+     "itemFields": [
+      {
+       "field": "roleId",
+       "type": "role",
+       "label": "Role",
+       "required": true,
+       "default": null
+      },
+      {
+       "field": "zone",
+       "type": "timezone",
+       "label": "Time zone",
+       "default": "UTC"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "moduleGroups": {
+  "moderation": [
+   {
+    "id": "case-log",
+    "title": "Moderation log & notices",
+    "fields": [
+     {
+      "field": "modLogChannelId",
+      "type": "channel",
+      "label": "Moderation log channel",
+      "description": "Every case (warn, timeout, kick, ban, ...) is posted here, even while the Audit Logs module is off. Empty turns case logging off.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "modDmTargets",
+      "type": "boolean",
+      "label": "DM members when punished",
+      "description": "Members get a direct message when they are warned, timed out, kicked or banned.",
+      "default": true
+     },
+     {
+      "field": "modVisibility",
+      "type": "enum",
+      "label": "Command visibility",
+      "default": "PUBLIC",
+      "description": "Who sees the confirmation of a moderation command.",
+      "options": [
+       {
+        "value": "PUBLIC",
+        "label": "Public"
+       },
+       {
+        "value": "ANONYMOUS",
+        "label": "Anonymous (moderator hidden)"
+       },
+       {
+        "value": "PRIVATE",
+        "label": "Private (only the moderator)"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "roles",
+    "title": "Moderator roles",
+    "fields": [
+     {
+      "field": "modRoleIds",
+      "type": "roles",
+      "label": "Moderator roles",
+      "maxItems": 25,
+      "default": [],
+      "description": "Members with one of these roles can use the bot's moderator commands."
+     },
+     {
+      "field": "immuneRoleIds",
+      "type": "roles",
+      "label": "Immune roles",
+      "maxItems": 25,
+      "default": [],
+      "description": "Members with one of these roles are never punished by the bot or by Auto-Moderation."
+     },
+     {
+      "field": "muteRoleId",
+      "type": "role",
+      "label": "Mute role",
+      "nullable": true,
+      "assignable": true,
+      "default": null,
+      "description": "Used for mutes longer than 28 days (Discord timeouts cover the rest). /modconfig muterole setup:true creates one and locks it out of every channel."
+     }
+    ]
+   },
+   {
+    "id": "escalation",
+    "title": "Automatic punishments",
+    "fields": [
+     {
+      "field": "infractionEscalation",
+      "type": "objectList",
+      "label": "Warning escalation",
+      "maxItems": 10,
+      "default": [],
+      "description": "Punishes a member automatically once they collect a number of warnings (optionally within a time window).",
+      "itemFields": [
+       {
+        "field": "warnCount",
+        "type": "int",
+        "label": "Warnings",
+        "description": "How many warnings trigger this step.",
+        "default": 3,
+        "min": 1,
+        "max": 100
+       },
+       {
+        "field": "withinSeconds",
+        "type": "int",
+        "label": "Within (seconds)",
+        "description": "Only warnings from this many seconds count. Empty counts every warning.",
+        "default": null,
+        "min": 60,
+        "max": 31536000,
+        "nullable": true,
+        "unit": "seconds"
+       },
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Punishment",
+        "options": [
+         {
+          "value": "TIMEOUT",
+          "label": "Timeout"
+         },
+         {
+          "value": "MUTE",
+          "label": "Mute (mute role)"
+         },
+         {
+          "value": "KICK",
+          "label": "Kick"
+         },
+         {
+          "value": "TEMPBAN",
+          "label": "Temporary ban"
+         },
+         {
+          "value": "BAN",
+          "label": "Permanent ban"
+         }
+        ],
+        "default": "TIMEOUT"
+       },
+       {
+        "field": "durationSeconds",
+        "type": "int",
+        "label": "Duration (seconds)",
+        "description": "Required for Timeout (at most 28 days) and Temporary ban; optional for Mute; not used for Kick and Ban.",
+        "default": 3600,
+        "min": 60,
+        "max": 31536000,
+        "nullable": true,
+        "unit": "seconds"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "automod": [
+   {
+    "id": "bad-words",
+    "title": "Bad words",
+    "description": "Removes or punishes messages with words you do not want in the server.",
+    "fields": [
+     {
+      "field": "automodRuleBadWords",
+      "type": "object",
+      "label": "Bad Words",
+      "description": "Removes messages that contain a listed word, phrase or pattern.",
+      "default": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodBadWords",
+      "type": "stringList",
+      "label": "Bad words and phrases",
+      "default": [],
+      "description": "Whole words or phrases, matched case-insensitively (also through spacing and markdown tricks).",
+      "maxItems": 500,
+      "itemMaxLength": 64,
+      "itemMinLength": 2,
+      "lowercase": true
+     },
+     {
+      "field": "automodBadWordPatterns",
+      "type": "stringList",
+      "label": "Bad word patterns",
+      "default": [],
+      "description": "Regular expressions (case-insensitive) for words the list cannot catch. Unsafe or catch-all patterns are refused.",
+      "maxItems": 50,
+      "itemMaxLength": 200,
+      "commaSeparated": false
+     }
+    ]
+   },
+   {
+    "id": "links",
+    "title": "Invites & links",
+    "fields": [
+     {
+      "field": "automodRuleInvites",
+      "type": "object",
+      "label": "Server Invites",
+      "description": "Catches invite links to other Discord servers.",
+      "default": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleLinks",
+      "type": "object",
+      "label": "External Links",
+      "description": "Catches links that are blocked, or not allowed when no domain is blocked.",
+      "default": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodBlockedDomains",
+      "type": "stringList",
+      "label": "Blocked domains",
+      "default": [],
+      "description": "Links to these sites are caught. While this list is empty, every link outside the allowed domains is caught.",
+      "maxItems": 200,
+      "itemMaxLength": 512
+     },
+     {
+      "field": "automodAllowedDomains",
+      "type": "stringList",
+      "label": "Allowed domains",
+      "default": [
+       "tenor.com",
+       "giphy.com",
+       "discord.com",
+       "discordapp.com",
+       "discordapp.net"
+      ],
+      "description": "Links to these sites are always fine. Adding a domain to one list takes it off the other.",
+      "maxItems": 200,
+      "itemMaxLength": 512
+     }
+    ]
+   },
+   {
+    "id": "spam",
+    "title": "Spam",
+    "fields": [
+     {
+      "field": "automodRuleSpam",
+      "type": "object",
+      "label": "Anti-Spam",
+      "description": "Catches members who send messages too fast.",
+      "default": {
+       "action": "off",
+       "threshold": 6,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 3 to 30 messages within 5 s.",
+        "default": 6,
+        "min": 3,
+        "max": 30,
+        "unit": "messages within 5 s",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleRepeatedText",
+      "type": "object",
+      "label": "Repeated Text",
+      "description": "Catches the same message sent over and over.",
+      "default": {
+       "action": "off",
+       "threshold": 3,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 2 to 20 identical messages within 30 s.",
+        "default": 3,
+        "min": 2,
+        "max": 20,
+        "unit": "identical messages within 30 s",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "content",
+    "title": "Message content",
+    "fields": [
+     {
+      "field": "automodRuleCaps",
+      "type": "object",
+      "label": "Excessive Caps",
+      "description": "Catches messages that are mostly capital letters.",
+      "default": {
+       "action": "off",
+       "threshold": 70,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 50 to 100 % capitals, messages with at least 10 letters.",
+        "default": 70,
+        "min": 50,
+        "max": 100,
+        "unit": "% capitals, messages with at least 10 letters",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleEmojis",
+      "type": "object",
+      "label": "Excessive Emojis",
+      "description": "Catches messages with too many emojis.",
+      "default": {
+       "action": "off",
+       "threshold": 10,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 1 to 50 emojis.",
+        "default": 10,
+        "min": 1,
+        "max": 50,
+        "unit": "emojis",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleSpoilers",
+      "type": "object",
+      "label": "Excessive Spoilers",
+      "description": "Catches messages with too many spoiler tags or spoiler attachments.",
+      "default": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 1 to 50 spoilers.",
+        "default": 5,
+        "min": 1,
+        "max": 50,
+        "unit": "spoilers",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleMentions",
+      "type": "object",
+      "label": "Excessive Mentions",
+      "description": "Catches messages that ping too many members or roles.",
+      "default": {
+       "action": "off",
+       "threshold": 5,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 2 to 50 mentions.",
+        "default": 5,
+        "min": 2,
+        "max": 50,
+        "unit": "mentions",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "field": "automodRuleZalgo",
+      "type": "object",
+      "label": "Zalgo",
+      "description": "Catches glitch text with piles of combining marks.",
+      "default": {
+       "action": "off",
+       "threshold": 4,
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "threshold",
+        "type": "int",
+        "label": "Threshold",
+        "description": "Triggers at 3 to 20 stacked combining marks.",
+        "default": 4,
+        "min": 3,
+        "max": 20,
+        "unit": "stacked combining marks",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "honeypot",
+    "title": "Honeypot",
+    "description": "Works even while every rule is off, and an exempt channel does not shield it.",
+    "fields": [
+     {
+      "field": "automodHoneypot",
+      "type": "object",
+      "label": "Honeypot channels",
+      "description": "Trap channels nobody should type in. Spam bots and hacked accounts post everywhere, so whoever posts in one is punished at once. Staff and exempt roles are never caught. /automod honeypot add can create the channel and post a warning in it.",
+      "default": {
+       "channelIds": [],
+       "action": "softban",
+       "timeoutSeconds": 86400
+      },
+      "fields": [
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement"
+        ],
+        "maxItems": 5,
+        "default": []
+       },
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "softban",
+          "label": "Softban (kick and clear their messages)"
+         },
+         {
+          "value": "ban",
+          "label": "Ban and clear their messages"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         }
+        ],
+        "default": "softban",
+        "description": "Softban and ban also delete their messages from the last day in every channel."
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 86400,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "exemptions",
+    "title": "Exemptions",
+    "description": "Staff (moderators, Manage Messages and immune roles) are always exempt.",
+    "fields": [
+     {
+      "field": "automodExemptRoleIds",
+      "type": "roles",
+      "label": "Exempt roles",
+      "default": [],
+      "description": "Members with one of these roles are never checked by any rule.",
+      "maxItems": 50
+     },
+     {
+      "field": "automodExemptChannelIds",
+      "type": "channels",
+      "label": "Exempt channels",
+      "default": [],
+      "description": "Messages in these channels (or categories) are never checked.",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "forum",
+       "media",
+       "voice",
+       "stage",
+       "category"
+      ],
+      "maxItems": 50
+     }
+    ]
+   }
+  ],
+  "logging": [
+   {
+    "id": "channels",
+    "title": "Log channels",
+    "description": "Each kind of event goes to its own channel. Empty turns that kind off.",
+    "fields": [
+     {
+      "field": "messageLogChannelId",
+      "type": "channel",
+      "label": "Message log",
+      "description": "Deleted, edited and bulk-deleted messages, and posted invites.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "memberLogChannelId",
+      "type": "channel",
+      "label": "Member log",
+      "description": "Role, nickname, avatar and timeout changes, bans and unbans.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "serverLogChannelId",
+      "type": "channel",
+      "label": "Server log",
+      "description": "Channels, threads, roles, emojis, invites and server edits.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "voiceLogChannelId",
+      "type": "channel",
+      "label": "Voice log",
+      "description": "Members joining, leaving and switching voice channels.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "joinLeaveChannelId",
+      "type": "channel",
+      "label": "Joins & leaves log",
+      "description": "Members joining and leaving the server.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     }
+    ]
+   },
+   {
+    "id": "events",
+    "title": "Logged events",
+    "fields": [
+     {
+      "field": "logEvents",
+      "type": "multiEnum",
+      "label": "Logged events",
+      "default": [
+       "messageDelete",
+       "messageEdit",
+       "messageBulkDelete",
+       "invitePosted",
+       "memberRoles",
+       "memberNickname",
+       "memberTimeout",
+       "memberAvatar",
+       "userUpdate",
+       "memberBan",
+       "memberUnban",
+       "memberJoin",
+       "memberLeave",
+       "voiceJoin",
+       "voiceLeave",
+       "voiceMove",
+       "voiceState",
+       "channelCreate",
+       "channelUpdate",
+       "channelDelete",
+       "threadCreate",
+       "threadUpdate",
+       "threadDelete",
+       "roleCreate",
+       "roleUpdate",
+       "roleDelete",
+       "serverUpdate",
+       "emojiCreate",
+       "emojiUpdate",
+       "emojiDelete",
+       "inviteCreate",
+       "inviteDelete"
+      ],
+      "description": "Checked events are logged. Unchecked ones are not.",
+      "options": [
+       {
+        "value": "messageDelete",
+        "label": "Message deleted"
+       },
+       {
+        "value": "messageEdit",
+        "label": "Message edited"
+       },
+       {
+        "value": "messageBulkDelete",
+        "label": "Messages bulk-deleted"
+       },
+       {
+        "value": "invitePosted",
+        "label": "Invite posted"
+       },
+       {
+        "value": "memberRoles",
+        "label": "Member roles changed"
+       },
+       {
+        "value": "memberNickname",
+        "label": "Nickname changed"
+       },
+       {
+        "value": "memberTimeout",
+        "label": "Member timed out / untimed"
+       },
+       {
+        "value": "memberAvatar",
+        "label": "Server avatar changed"
+       },
+       {
+        "value": "userUpdate",
+        "label": "User updated (name / avatar)"
+       },
+       {
+        "value": "memberBan",
+        "label": "Member banned"
+       },
+       {
+        "value": "memberUnban",
+        "label": "Member unbanned"
+       },
+       {
+        "value": "memberJoin",
+        "label": "Member joined"
+       },
+       {
+        "value": "memberLeave",
+        "label": "Member left"
+       },
+       {
+        "value": "voiceJoin",
+        "label": "Voice channel joined"
+       },
+       {
+        "value": "voiceLeave",
+        "label": "Voice channel left"
+       },
+       {
+        "value": "voiceMove",
+        "label": "Voice channel switched"
+       },
+       {
+        "value": "voiceState",
+        "label": "Voice mute / deafen / stream"
+       },
+       {
+        "value": "channelCreate",
+        "label": "Channel created"
+       },
+       {
+        "value": "channelUpdate",
+        "label": "Channel updated"
+       },
+       {
+        "value": "channelDelete",
+        "label": "Channel deleted"
+       },
+       {
+        "value": "threadCreate",
+        "label": "Thread created"
+       },
+       {
+        "value": "threadUpdate",
+        "label": "Thread updated"
+       },
+       {
+        "value": "threadDelete",
+        "label": "Thread deleted"
+       },
+       {
+        "value": "roleCreate",
+        "label": "Role created"
+       },
+       {
+        "value": "roleUpdate",
+        "label": "Role updated"
+       },
+       {
+        "value": "roleDelete",
+        "label": "Role deleted"
+       },
+       {
+        "value": "serverUpdate",
+        "label": "Server edited"
+       },
+       {
+        "value": "emojiCreate",
+        "label": "Emoji created"
+       },
+       {
+        "value": "emojiUpdate",
+        "label": "Emoji updated"
+       },
+       {
+        "value": "emojiDelete",
+        "label": "Emoji deleted"
+       },
+       {
+        "value": "inviteCreate",
+        "label": "Invite created"
+       },
+       {
+        "value": "inviteDelete",
+        "label": "Invite deleted / expired"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "ignored",
+    "title": "Ignored channels",
+    "fields": [
+     {
+      "field": "logIgnoredChannelIds",
+      "type": "channels",
+      "label": "Ignored channels",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "voice",
+       "stage",
+       "forum",
+       "media",
+       "category"
+      ],
+      "maxItems": 100,
+      "default": [],
+      "description": "Message events in these channels are never logged. A category covers its channels and threads."
+     }
+    ]
+   }
+  ],
+  "welcome": [
+   {
+    "id": "welcome-message",
+    "title": "Welcome message",
+    "description": "Posted in a channel when someone joins.",
+    "fields": [
+     {
+      "field": "welcomeMessageEnabled",
+      "type": "boolean",
+      "label": "Welcome message in a channel",
+      "description": "Posts the welcome message in the welcome channel when someone joins.",
+      "default": true
+     },
+     {
+      "field": "welcomeChannelId",
+      "type": "channel",
+      "label": "Welcome channel",
+      "description": "Where the welcome message and card are posted.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ]
+     },
+     {
+      "field": "welcomeUseEmbed",
+      "type": "boolean",
+      "label": "Welcome message as an embed",
+      "description": "Sends the channel welcome as an embed; off sends plain text.",
+      "default": true
+     },
+     {
+      "field": "welcomeMessage",
+      "type": "text",
+      "label": "Message text",
+      "description": "The text line (pings work here). Leave it empty to send only the embed.",
+      "default": "Hey {user}, welcome to **{server}**!",
+      "maxLength": 2000,
+      "multiline": true,
+      "minLength": 0
+     },
+     {
+      "field": "welcomeEmbed",
+      "type": "embed",
+      "label": "Embed",
+      "description": "Shown when \"Welcome message as an embed\" is on. Clear it to use the default embed.",
+      "nullable": true,
+      "default": {
+       "title": "👋 Welcome to {server}!",
+       "description": "You are our **{server.member_count.ordinal}** member. Enjoy your stay!",
+       "thumbnail": "{user.avatar}",
+       "color": 5763719,
+       "timestamp": true
+      },
+      "showWhen": {
+       "field": "welcomeUseEmbed",
+       "in": [
+        true
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "welcome-card",
+    "title": "Welcome card",
+    "description": "An image with the member's avatar and name, attached to the welcome message.",
+    "fields": [
+     {
+      "field": "welcomeCardStyle",
+      "type": "object",
+      "label": "Welcome card",
+      "default": {
+       "enabled": true,
+       "background": null,
+       "backgroundUrl": null,
+       "textColor": null,
+       "accentColor": null,
+       "overlayOpacity": null
+      },
+      "description": "Whether the card is sent, and its colours and background.",
+      "fields": [
+       {
+        "field": "enabled",
+        "type": "boolean",
+        "label": "Send a welcome card",
+        "description": "Attaches the welcome card image to the welcome message.",
+        "default": true
+       },
+       {
+        "field": "background",
+        "type": "color",
+        "format": "hex",
+        "nullable": true,
+        "default": null,
+        "label": "Background colour",
+        "description": "Empty uses the default background."
+       },
+       {
+        "field": "backgroundUrl",
+        "type": "url",
+        "nullable": true,
+        "maxLength": 2048,
+        "default": null,
+        "label": "Background image",
+        "description": "An http(s) link to a PNG, JPEG or WebP image (at most 5 MB). The bot downloads it once to check it."
+       },
+       {
+        "field": "textColor",
+        "type": "color",
+        "format": "hex",
+        "nullable": true,
+        "default": null,
+        "label": "Text colour"
+       },
+       {
+        "field": "accentColor",
+        "type": "color",
+        "format": "hex",
+        "nullable": true,
+        "default": null,
+        "label": "Accent colour"
+       },
+       {
+        "field": "overlayOpacity",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "nullable": true,
+        "default": null,
+        "label": "Overlay opacity",
+        "description": "How much the background image is darkened (0 to 1). Empty uses the default."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "welcome-dm",
+    "title": "Welcome DM",
+    "description": "A private message to every new member.",
+    "fields": [
+     {
+      "field": "welcomeDmEnabled",
+      "type": "boolean",
+      "label": "Welcome DM",
+      "description": "Also sends new members a private welcome message.",
+      "default": false
+     },
+     {
+      "field": "welcomeDmMessage",
+      "type": "text",
+      "label": "DM text",
+      "description": "Leave it empty to send only the embed.",
+      "default": "Have a great time here in **{server}**!",
+      "maxLength": 2000,
+      "multiline": true,
+      "minLength": 0
+     },
+     {
+      "field": "welcomeDmEmbed",
+      "type": "embed",
+      "label": "DM embed",
+      "nullable": true,
+      "default": null,
+      "description": "Optional. Clear it to send the text only."
+     },
+     {
+      "field": "welcomeDmCard",
+      "type": "boolean",
+      "label": "Welcome card in the DM",
+      "description": "Attaches the welcome card image to the welcome DM.",
+      "default": false
+     }
+    ]
+   },
+   {
+    "id": "goodbye",
+    "title": "Goodbye message",
+    "description": "Posted in a channel when a member leaves.",
+    "fields": [
+     {
+      "field": "goodbyeEnabled",
+      "type": "boolean",
+      "label": "Goodbye message",
+      "description": "Posts a message in the goodbye channel when a member leaves.",
+      "default": false
+     },
+     {
+      "field": "goodbyeChannelId",
+      "type": "channel",
+      "label": "Goodbye channel",
+      "description": "Where the goodbye message is posted.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ]
+     },
+     {
+      "field": "goodbyeUseEmbed",
+      "type": "boolean",
+      "label": "Goodbye message as an embed",
+      "description": "Sends the goodbye message as an embed; off sends plain text.",
+      "default": false
+     },
+     {
+      "field": "goodbyeMessage",
+      "type": "text",
+      "label": "Message text",
+      "description": "The text line. Leave it empty to send only the embed.",
+      "default": "**{user.idname}** just left the server",
+      "maxLength": 2000,
+      "multiline": true,
+      "minLength": 0
+     },
+     {
+      "field": "goodbyeEmbed",
+      "type": "embed",
+      "label": "Embed",
+      "description": "Shown when \"Goodbye message as an embed\" is on. Clear it to use the default embed.",
+      "nullable": true,
+      "default": {
+       "description": "**{user.idname}** just left the server",
+       "thumbnail": "{user.avatar}",
+       "color": 10070709,
+       "timestamp": true
+      },
+      "showWhen": {
+       "field": "goodbyeUseEmbed",
+       "in": [
+        true
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "autoroles",
+    "title": "Autoroles",
+    "description": "Roles every new member gets.",
+    "fields": [
+     {
+      "field": "autoroleIds",
+      "type": "roles",
+      "label": "Autoroles",
+      "assignable": true,
+      "maxItems": 10,
+      "default": [],
+      "description": "Given to every member who joins (after verification and Rules Screening). Roles must be below the bot's highest role."
+     },
+     {
+      "field": "autoroleDelay",
+      "type": "int",
+      "label": "Delay (seconds)",
+      "description": "Wait this long after the join before giving the autoroles (0 = immediately, at most 7 days). Members already waiting keep their time.",
+      "default": 0,
+      "min": 0,
+      "max": 604800,
+      "unit": "seconds"
+     }
+    ]
+   }
+  ],
+  "captcha": [
+   {
+    "id": "verification",
+    "title": "Verification",
+    "description": "Post or move the verification panel with /captcha setup or /captcha channel in Discord.",
+    "fields": [
+     {
+      "field": "captchaRoleId",
+      "type": "role",
+      "label": "Verified role",
+      "assignable": true,
+      "default": null,
+      "description": "Given to members who pass. It cannot be a moderator, immune or mute role."
+     },
+     {
+      "field": "captchaRequiredRoleIds",
+      "type": "roles",
+      "label": "Required roles",
+      "maxItems": 10,
+      "default": [],
+      "description": "Members need any one of these before Verify works (a Linked Role fits). Empty means no requirement. Pick the fallback form with /captcha require in Discord."
+     },
+     {
+      "field": "captchaMode",
+      "type": "enum",
+      "label": "Captcha type",
+      "default": "IMAGE",
+      "description": "Image: type the code from a picture. Button: one click.",
+      "options": [
+       {
+        "value": "IMAGE",
+        "label": "Image code"
+       },
+       {
+        "value": "BUTTON",
+        "label": "Button only"
+       }
+      ]
+     },
+     {
+      "field": "captchaTimeoutMinutes",
+      "type": "int",
+      "label": "Kick unverified members after (minutes)",
+      "description": "0 never kicks; otherwise 5 to 10080 minutes (7 days). Setting 0 cancels the kicks already scheduled.",
+      "default": 0,
+      "min": 0,
+      "max": 10080,
+      "unit": "minutes"
+     }
+    ]
+   },
+   {
+    "id": "panel",
+    "title": "Verification panel",
+    "description": "The message with the Verify button. Saving here also updates the posted panel.",
+    "fields": [
+     {
+      "field": "captchaTemplate",
+      "type": "template",
+      "label": "Panel message",
+      "default": {
+       "content": null,
+       "embed": {
+        "title": "🛡️ Verification required",
+        "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+        "footer": {
+         "text": "Only you can see your captcha.",
+         "iconUrl": null
+        }
+       },
+       "buttons": []
+      },
+      "description": "Text, embed and link buttons of the panel. {user} tokens stay as they are: the panel has no member."
+     },
+     {
+      "field": "captchaVerifyButton",
+      "type": "object",
+      "label": "Verify button",
+      "default": {
+       "label": "Verify",
+       "style": "SUCCESS"
+      },
+      "description": "Label and colour of the button that starts the verification.",
+      "fields": [
+       {
+        "field": "label",
+        "type": "text",
+        "label": "Label",
+        "maxLength": 80,
+        "minLength": 1,
+        "default": "Verify"
+       },
+       {
+        "field": "style",
+        "type": "enum",
+        "label": "Colour",
+        "default": "SUCCESS",
+        "options": [
+         {
+          "value": "SUCCESS",
+          "label": "Green"
+         },
+         {
+          "value": "PRIMARY",
+          "label": "Blurple"
+         },
+         {
+          "value": "SECONDARY",
+          "label": "Grey"
+         },
+         {
+          "value": "DANGER",
+          "label": "Red"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "reactionroles": [],
+  "leveling": [
+   {
+    "id": "xp",
+    "title": "XP",
+    "description": "Members earn a random amount of XP per message, at most once per cooldown.",
+    "fields": [
+     {
+      "field": "xpMin",
+      "type": "int",
+      "label": "Minimum XP per message",
+      "description": "MEE6 uses 15.",
+      "default": 15,
+      "min": 1,
+      "max": 1000
+     },
+     {
+      "field": "xpMax",
+      "type": "int",
+      "label": "Maximum XP per message",
+      "description": "MEE6 uses 25. Must be at least the minimum.",
+      "default": 25,
+      "min": 1,
+      "max": 1000
+     },
+     {
+      "field": "xpCooldown",
+      "type": "int",
+      "label": "Cooldown (seconds)",
+      "description": "Messages within this time after the last rewarded one earn nothing.",
+      "default": 60,
+      "min": 5,
+      "max": 3600,
+      "unit": "seconds"
+     },
+     {
+      "field": "xpMultiplier",
+      "type": "float",
+      "label": "Server XP multiplier",
+      "default": 1,
+      "min": 0.1,
+      "max": 10,
+      "step": 0.01,
+      "description": "Multiplies every XP gain (0.1 to 10)."
+     }
+    ]
+   },
+   {
+    "id": "level-up",
+    "title": "Level-up announcement",
+    "fields": [
+     {
+      "field": "levelUpMode",
+      "type": "enum",
+      "label": "Announce level-ups",
+      "default": "CURRENT",
+      "description": "Where the level-up message goes.",
+      "options": [
+       {
+        "value": "OFF",
+        "label": "Disabled"
+       },
+       {
+        "value": "CURRENT",
+        "label": "Current channel"
+       },
+       {
+        "value": "DM",
+        "label": "Private message"
+       },
+       {
+        "value": "CHANNEL",
+        "label": "Custom channel"
+       }
+      ]
+     },
+     {
+      "field": "levelUpChannelId",
+      "type": "channel",
+      "label": "Announcement channel",
+      "description": "Used when \"Custom channel\" is selected.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "showWhen": {
+       "field": "levelUpMode",
+       "in": [
+        "CHANNEL"
+       ]
+      }
+     },
+     {
+      "field": "levelUpUseEmbed",
+      "type": "boolean",
+      "label": "Level-up message as an embed",
+      "description": "Sends level-up announcements as an embed; off sends plain text.",
+      "default": false
+     },
+     {
+      "field": "levelUpMessage",
+      "type": "text",
+      "label": "Level-up message",
+      "description": "Empty uses the default message.",
+      "default": "GG {player}, you just advanced to level {level}!",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{player}",
+       "{player.name}",
+       "{level}",
+       "{rank}",
+       "{xp}",
+       "{mention}"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "voice-xp",
+    "title": "Voice XP",
+    "fields": [
+     {
+      "field": "voiceXpEnabled",
+      "type": "boolean",
+      "label": "Voice XP",
+      "description": "Members also earn XP for time spent in voice channels (not while alone, muted or AFK). Switching it off drops open voice sessions without credit.",
+      "default": false
+     },
+     {
+      "field": "voiceXpRate",
+      "type": "int",
+      "label": "XP per minute in voice",
+      "description": "How much XP a minute in voice is worth.",
+      "default": 5,
+      "min": 1,
+      "max": 50,
+      "unit": "XP per minute"
+     }
+    ]
+   },
+   {
+    "id": "no-xp",
+    "title": "No-XP roles & channels",
+    "fields": [
+     {
+      "field": "noXpRoleIds",
+      "type": "roles",
+      "label": "No-XP roles",
+      "maxItems": 100,
+      "default": [],
+      "description": "Members with one of these roles earn no XP."
+     },
+     {
+      "field": "noXpChannelIds",
+      "type": "channels",
+      "label": "No-XP channels",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "voice",
+       "stage",
+       "forum",
+       "media",
+       "category"
+      ],
+      "maxItems": 100,
+      "default": [],
+      "description": "No XP is earned in these channels, their threads, or the channels of a listed category."
+     }
+    ]
+   },
+   {
+    "id": "role-rewards",
+    "title": "Role rewards behaviour",
+    "description": "Pick the reward roles themselves in the list below. Run /levelconfig role sync in Discord to apply a change to every member.",
+    "fields": [
+     {
+      "field": "levelRolesStack",
+      "type": "boolean",
+      "label": "Keep lower reward roles",
+      "description": "Members keep earlier reward roles when they earn a higher one; off keeps only the highest.",
+      "default": true
+     },
+     {
+      "field": "levelRolesSyncOnDemotion",
+      "type": "boolean",
+      "label": "Remove rewards on XP loss",
+      "description": "Members who lose XP also lose the reward roles above their new level.",
+      "default": true
+     }
+    ]
+   },
+   {
+    "id": "boosts",
+    "title": "XP boost roles",
+    "fields": [
+     {
+      "field": "xpBoostRoles",
+      "type": "objectList",
+      "label": "XP boost roles",
+      "maxItems": 10,
+      "default": [],
+      "description": "Members with one of these roles earn more XP; the highest multiplier applies.",
+      "itemFields": [
+       {
+        "field": "roleId",
+        "type": "role",
+        "label": "Role",
+        "required": true,
+        "default": null
+       },
+       {
+        "field": "multiplier",
+        "type": "float",
+        "label": "Multiplier",
+        "min": 1.1,
+        "max": 5,
+        "step": 0.01,
+        "default": 1.5
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "rank-card",
+    "title": "Rank card",
+    "description": "The look of the /rank card.",
+    "fields": [
+     {
+      "field": "rankCardStyle",
+      "type": "object",
+      "label": "Rank card",
+      "default": {
+       "background": "#2B2D31",
+       "backgroundUrl": null,
+       "accentColor": "#5865F2",
+       "textColor": "#FFFFFF",
+       "overlayOpacity": 0.5
+      },
+      "description": "Colours and background of the /rank card.",
+      "fields": [
+       {
+        "field": "background",
+        "type": "color",
+        "format": "hex",
+        "label": "Background colour",
+        "default": "#2B2D31"
+       },
+       {
+        "field": "backgroundUrl",
+        "type": "url",
+        "nullable": true,
+        "maxLength": 500,
+        "default": null,
+        "label": "Background image",
+        "description": "An http(s) link to an image (at most 8 MB). The bot downloads it once to check it."
+       },
+       {
+        "field": "accentColor",
+        "type": "color",
+        "format": "hex",
+        "label": "Accent colour",
+        "default": "#5865F2"
+       },
+       {
+        "field": "textColor",
+        "type": "color",
+        "format": "hex",
+        "label": "Text colour",
+        "default": "#FFFFFF"
+       },
+       {
+        "field": "overlayOpacity",
+        "type": "float",
+        "min": 0,
+        "max": 0.9,
+        "step": 0.01,
+        "label": "Overlay opacity",
+        "default": 0.5,
+        "description": "How much the background image is darkened (0 to 0.9)."
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "customcommands": [
+   {
+    "id": "triggers",
+    "title": "Auto-responders",
+    "fields": [
+     {
+      "field": "autoTriggersEnabled",
+      "type": "boolean",
+      "label": "Auto-responder triggers",
+      "description": "Replies automatically when a message matches one of your triggers (needs the Custom Commands module on).",
+      "default": true
+     }
+    ]
+   }
+  ],
+  "automations": [],
+  "translation": [],
+  "invites": [],
+  "embeds": [],
+  "reminders": [],
+  "giveaways": [],
+  "polls": [],
+  "starboard": [],
+  "tickets": [],
+  "tempvoice": [],
+  "stats": [
+   {
+    "id": "stats",
+    "title": "Statistics channels",
+    "fields": [
+     {
+      "field": "statsCategoryId",
+      "type": "channel",
+      "label": "Category for new stat channels",
+      "description": "New statistics channels are created in this category (the bot needs Manage Channels there). Empty creates them at the top.",
+      "default": null,
+      "channelTypes": [
+       "category"
+      ],
+      "nullable": true
+     }
+    ]
+   }
+  ],
+  "birthdays": [
+   {
+    "id": "announcement",
+    "title": "Birthday announcement",
+    "fields": [
+     {
+      "field": "birthdayChannelId",
+      "type": "channel",
+      "label": "Announcement channel",
+      "description": "Where birthdays are announced. Empty turns announcements off.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "birthdayHour",
+      "type": "int",
+      "label": "Announcement hour",
+      "description": "The hour (0-23) in the server time zone when birthdays are announced.",
+      "default": 9,
+      "min": 0,
+      "max": 23,
+      "unit": "hour"
+     },
+     {
+      "field": "birthdayMessage",
+      "type": "text",
+      "label": "Message",
+      "description": "Used when the birth year is unknown. Empty uses the default.",
+      "default": "Happy birthday {user}! 🎂",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true
+     },
+     {
+      "field": "birthdayMessageAge",
+      "type": "text",
+      "label": "Message with age",
+      "description": "Used when the birth year is known. Empty uses the default.",
+      "default": "Happy birthday {user}! They are now {age}! 🎂",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{age}"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "role",
+    "title": "Birthday role",
+    "fields": [
+     {
+      "field": "birthdayRoleId",
+      "type": "role",
+      "label": "Birthday role",
+      "nullable": true,
+      "assignable": true,
+      "default": null,
+      "description": "Given for the member's birthday and removed the next day. Changing it here does not take the old role off members celebrating today; /birthday config role in Discord does."
+     }
+    ]
+   },
+   {
+    "id": "members",
+    "title": "Saving birthdays",
+    "fields": [
+     {
+      "field": "birthdayRequireYear",
+      "type": "boolean",
+      "label": "Require birth year",
+      "description": "Members must include the year when they save their birthday.",
+      "default": false
+     }
+    ]
+   }
+  ],
+  "achievements": [
+   {
+    "id": "announcement",
+    "title": "Unlock announcements",
+    "description": "Create and edit the achievements themselves in the list below.",
+    "fields": [
+     {
+      "field": "achievementAnnounceMode",
+      "type": "enum",
+      "label": "Announce unlocks",
+      "default": "CURRENT",
+      "description": "Where unlocks are announced. Boosts and purchases have no channel of their own and use the announcement channel.",
+      "options": [
+       {
+        "value": "OFF",
+        "label": "Disabled"
+       },
+       {
+        "value": "CURRENT",
+        "label": "Current channel"
+       },
+       {
+        "value": "DM",
+        "label": "Private message"
+       },
+       {
+        "value": "CHANNEL",
+        "label": "Custom channel"
+       }
+      ]
+     },
+     {
+      "field": "achievementChannelId",
+      "type": "channel",
+      "label": "Announcement channel",
+      "description": "Used by \"Custom channel\", and for unlocks that happen outside a channel.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ]
+     },
+     {
+      "field": "achievementUseEmbed",
+      "type": "boolean",
+      "label": "Announcement as an embed",
+      "description": "Sends achievement unlock announcements as an embed; off sends plain text.",
+      "default": false
+     },
+     {
+      "field": "achievementMessage",
+      "type": "text",
+      "label": "Announcement message",
+      "description": "Empty uses the default message.",
+      "default": "🏆 {player} unlocked **{achievement}**!",
+      "maxLength": 1500,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{player}",
+       "{player.name}",
+       "{achievement}",
+       "{achievement.name}",
+       "{achievement.description}",
+       "{tier}",
+       "{tier.emoji}",
+       "{goal}",
+       "{progress}",
+       "{rewards}"
+      ]
+     }
+    ]
+   }
+  ],
+  "economy": [
+   {
+    "id": "currency",
+    "title": "Currency",
+    "fields": [
+     {
+      "field": "currencyName",
+      "type": "text",
+      "label": "Currency name",
+      "default": "coins",
+      "maxLength": 32,
+      "minLength": 1,
+      "description": "Shown after every amount, e.g. \"250 coins\".",
+      "pattern": "[^\\r\\n`*_~|<>@#\\\\]+",
+      "patternMessage": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+     },
+     {
+      "field": "currencyEmoji",
+      "type": "emoji",
+      "label": "Currency emoji",
+      "default": "🪙",
+      "description": "A standard emoji or a custom emoji of this server."
+     }
+    ]
+   },
+   {
+    "id": "balances",
+    "title": "Balances & limits",
+    "fields": [
+     {
+      "field": "economyStartingBalance",
+      "type": "int",
+      "label": "Starting balance",
+      "description": "What a brand-new account starts with. At most the maximum balance.",
+      "default": 1000,
+      "min": 0,
+      "max": 1000000000
+     },
+     {
+      "field": "economyMaxBalance",
+      "type": "int",
+      "label": "Maximum balance",
+      "description": "No account can hold more. Lowering it also lowers every balance above the new maximum.",
+      "default": 1000000000,
+      "min": 1,
+      "max": 1000000000
+     },
+     {
+      "field": "economyMaxBet",
+      "type": "int",
+      "label": "Maximum bet",
+      "description": "The highest bet of a casino game. 0 = no limit beyond the balance.",
+      "default": 0,
+      "min": 0,
+      "max": 1000000000
+     },
+     {
+      "field": "economyMaxPayout",
+      "type": "int",
+      "label": "Maximum winnings",
+      "description": "The highest net win of one casino game. 0 = no limit.",
+      "default": 0,
+      "min": 0,
+      "max": 1000000000
+     },
+     {
+      "field": "economyImportGlobal",
+      "type": "boolean",
+      "label": "Copy the legacy global balance",
+      "description": "New accounts start once with the member's balance from the old global wallet.",
+      "default": true
+     }
+    ]
+   },
+   {
+    "id": "daily",
+    "title": "Daily reward",
+    "fields": [
+     {
+      "field": "dailyMin",
+      "type": "int",
+      "label": "Minimum daily reward",
+      "description": "The smallest /daily payout.",
+      "default": 50,
+      "min": 1,
+      "max": 1000000
+     },
+     {
+      "field": "dailyMax",
+      "type": "int",
+      "label": "Maximum daily reward",
+      "description": "The largest /daily payout. At least the minimum.",
+      "default": 120,
+      "min": 1,
+      "max": 1000000
+     }
+    ]
+   },
+   {
+    "id": "work",
+    "title": "Work",
+    "fields": [
+     {
+      "field": "workMin",
+      "type": "int",
+      "label": "Minimum work pay",
+      "description": "The smallest /work payout.",
+      "default": 100,
+      "min": 1,
+      "max": 1000000
+     },
+     {
+      "field": "workMax",
+      "type": "int",
+      "label": "Maximum work pay",
+      "description": "The largest /work payout. At least the minimum.",
+      "default": 300,
+      "min": 1,
+      "max": 1000000
+     },
+     {
+      "field": "workCooldownMinutes",
+      "type": "int",
+      "label": "Work cooldown (minutes)",
+      "description": "How long a member waits between two /work.",
+      "default": 60,
+      "min": 1,
+      "max": 10080,
+      "unit": "minutes"
+     }
+    ]
+   },
+   {
+    "id": "games",
+    "title": "Casino channels",
+    "fields": [
+     {
+      "field": "economyGameChannelMode",
+      "type": "enum",
+      "label": "Casino games are allowed",
+      "default": "ALLOW",
+      "description": "With an empty list the games work everywhere.",
+      "options": [
+       {
+        "value": "ALLOW",
+        "label": "Only in the listed channels"
+       },
+       {
+        "value": "DENY",
+        "label": "Everywhere except the listed channels"
+       }
+      ]
+     },
+     {
+      "field": "economyGameChannelIds",
+      "type": "channels",
+      "label": "Channels",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "voice",
+       "forum"
+      ],
+      "maxItems": 25,
+      "default": [],
+      "description": "Threads count as their parent channel."
+     }
+    ]
+   }
+  ],
+  "games": [],
+  "feeds": [],
+  "search": [
+   {
+    "id": "urban",
+    "title": "Urban Dictionary",
+    "fields": [
+     {
+      "field": "urbanNsfwOnly",
+      "type": "boolean",
+      "label": "/search urban only in age-restricted channels",
+      "description": "Urban Dictionary lookups only work in age-restricted channels.",
+      "default": true
+     }
+    ]
+   }
+  ],
+  "liverole": [
+   {
+    "id": "liverole",
+    "title": "Live role",
+    "description": "Changes here apply as members start or stop streaming. /liverole set and require in Discord also update current streamers at once.",
+    "fields": [
+     {
+      "field": "liveRoleId",
+      "type": "role",
+      "label": "Live role",
+      "assignable": true,
+      "default": null,
+      "description": "Given while a member streams. Use a role only the bot hands out: members without a stream lose it."
+     },
+     {
+      "field": "liveRoleRequiredRoleId",
+      "type": "role",
+      "label": "Only for members with",
+      "nullable": true,
+      "default": null,
+      "description": "Only members with this role get the live role. Empty = everyone who streams."
+     }
+    ]
+   },
+   {
+    "id": "announce",
+    "title": "Go-live posts",
+    "description": "Posted when a member goes live and gets the live role, at most once an hour per member. Only the ping role is notified.",
+    "fields": [
+     {
+      "field": "liveRoleAnnounceChannelId",
+      "type": "channel",
+      "label": "Post channel",
+      "description": "Where go-live posts go. Empty turns them off.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "liveRoleAnnounceMessage",
+      "type": "text",
+      "label": "Message",
+      "description": "{url} is the stream link. Empty uses the default.",
+      "default": "🔴 {user} is now live on {platform}!\n{url}",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{url}",
+       "{platform}",
+       "{title}",
+       "{game}"
+      ]
+     },
+     {
+      "field": "liveRoleAnnouncePingRoleId",
+      "type": "role",
+      "label": "Role to ping",
+      "nullable": true,
+      "default": null,
+      "description": "Mentioned at the start of each post. It only pings if the role is mentionable or the bot has Mention Everyone."
+     }
+    ]
+   }
+  ],
+  "counting": [
+   {
+    "id": "counting",
+    "title": "Counting channel",
+    "description": "A new channel starts from 1 at the next count. /counting set in Discord also posts the rules there.",
+    "fields": [
+     {
+      "field": "countingChannelId",
+      "type": "channel",
+      "label": "Counting channel",
+      "description": "Members count up here, one number per message.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     }
+    ]
+   }
+  ],
+  "autotime": [
+   {
+    "id": "autotime",
+    "title": "Ignored channels",
+    "description": "Times are read in the zone of the member who typed them: their own (/timezone set) or their timezone role.",
+    "fields": [
+     {
+      "field": "autoTimeIgnoredChannelIds",
+      "type": "channels",
+      "label": "Ignored channels",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "voice",
+       "stage",
+       "forum",
+       "media",
+       "category"
+      ],
+      "maxItems": 100,
+      "default": [],
+      "description": "Times typed in these channels are never answered. A category covers its channels and threads."
+     }
+    ]
+   }
+  ],
+  "suggestions": [
+   {
+    "id": "suggestions",
+    "title": "Suggestions",
+    "description": "/suggestion submit posts here; members vote with the buttons and staff review with /suggestion.",
+    "fields": [
+     {
+      "field": "suggestionChannelId",
+      "type": "channel",
+      "label": "Suggestion channel",
+      "description": "New suggestions are posted here with voting buttons.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "suggestionThreads",
+      "type": "boolean",
+      "label": "Open a thread on each suggestion",
+      "description": "Starts a discussion thread on every new suggestion (the bot needs Create Public Threads).",
+      "default": true
+     },
+     {
+      "field": "suggestionAllowAnonymous",
+      "type": "boolean",
+      "label": "Allow anonymous suggestions",
+      "description": "Members may hide their name on a suggestion. Staff can still look up who wrote it.",
+      "default": false
+     },
+     {
+      "field": "suggestionDmOnUpdate",
+      "type": "boolean",
+      "label": "DM the author on review",
+      "description": "The author gets a direct message when staff approve, deny or otherwise update their suggestion.",
+      "default": true
+     },
+     {
+      "field": "suggestionCooldownSeconds",
+      "type": "int",
+      "label": "Cooldown between suggestions",
+      "description": "Seconds a member waits between two suggestions. 0 = no cooldown.",
+      "default": 300,
+      "min": 0,
+      "max": 86400,
+      "unit": "seconds"
+     }
+    ]
+   }
+  ],
+  "modmail": [
+   {
+    "id": "modmail",
+    "title": "Modmail",
+    "description": "Members DM the bot; each conversation opens a thread in the staff channel. Block members with /modmail block.",
+    "fields": [
+     {
+      "field": "modmailChannelId",
+      "type": "channel",
+      "label": "Staff channel",
+      "description": "Conversations open as threads here. Keep it hidden from members; the bot needs Create Private Threads.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "modmailPingRoleIds",
+      "type": "roles",
+      "label": "Roles to ping",
+      "maxItems": 10,
+      "default": [],
+      "description": "Pinged in the new thread when a conversation opens."
+     },
+     {
+      "field": "modmailGreeting",
+      "type": "text",
+      "label": "Greeting",
+      "description": "Sent to the member when their conversation opens.",
+      "default": "Thanks for your message! The staff of **{server}** will answer you here soon.",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true
+     },
+     {
+      "field": "modmailAnonymousReplies",
+      "type": "boolean",
+      "label": "Anonymous staff replies",
+      "description": "Replies reach the member as \"Staff\" instead of the name of the staff member.",
+      "default": false
+     }
+    ]
+   }
+  ],
+  "applications": [],
+  "sticky": [],
+  "afk": [
+   {
+    "id": "afk",
+    "title": "AFK",
+    "description": "Members go AFK with /afk set; it clears on their next message.",
+    "fields": [
+     {
+      "field": "afkNicknamePrefix",
+      "type": "boolean",
+      "label": "Add [AFK] to nicknames",
+      "description": "Puts \"[AFK] \" in front of the nickname while a member is AFK (the bot needs Manage Nicknames).",
+      "default": true
+     },
+     {
+      "field": "afkIgnoredChannelIds",
+      "type": "channels",
+      "label": "Ignored channels",
+      "channelTypes": [
+       "text",
+       "announcement",
+       "voice",
+       "stage",
+       "forum",
+       "media",
+       "category"
+      ],
+      "maxItems": 100,
+      "default": [],
+      "description": "Messages here neither end an AFK nor answer mentions of AFK members. A category covers its channels."
+     }
+    ]
+   }
+  ],
+  "antiraid": [
+   {
+    "id": "detection",
+    "title": "Raid detection",
+    "description": "A raid is this many joins within this many seconds.",
+    "fields": [
+     {
+      "field": "antiRaidJoinThreshold",
+      "type": "int",
+      "label": "Joins",
+      "description": "How many joins in the window count as a raid.",
+      "default": 10,
+      "min": 3,
+      "max": 100
+     },
+     {
+      "field": "antiRaidJoinSeconds",
+      "type": "int",
+      "label": "Window",
+      "description": "The window the joins are counted in.",
+      "default": 10,
+      "min": 3,
+      "max": 300,
+      "unit": "seconds"
+     },
+     {
+      "field": "antiRaidAction",
+      "type": "enum",
+      "label": "Members who join during a raid",
+      "default": "ALERT",
+      "description": "What happens to members who join while a raid lockdown lasts.",
+      "options": [
+       {
+        "value": "ALERT",
+        "label": "Only alert the moderators"
+       },
+       {
+        "value": "KICK",
+        "label": "Kick them"
+       },
+       {
+        "value": "BAN",
+        "label": "Ban them"
+       }
+      ]
+     },
+     {
+      "field": "antiRaidAlertChannelId",
+      "type": "channel",
+      "label": "Alert channel",
+      "description": "Raid alerts go here. Empty uses the moderation log channel.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     }
+    ]
+   },
+   {
+    "id": "lockdown",
+    "title": "Lockdown",
+    "description": "What the bot does while a raid lasts. /antiraid lockdown starts or ends one by hand.",
+    "fields": [
+     {
+      "field": "antiRaidPauseInvites",
+      "type": "boolean",
+      "label": "Pause invites",
+      "description": "Pauses every invite while the lockdown lasts (the bot needs Manage Server).",
+      "default": true
+     },
+     {
+      "field": "antiRaidLockChat",
+      "type": "boolean",
+      "label": "Lock chat",
+      "description": "Takes Send Messages from @everyone while the lockdown lasts and gives it back afterwards (the bot needs Manage Roles).",
+      "default": false
+     },
+     {
+      "field": "antiRaidLockdownMinutes",
+      "type": "int",
+      "label": "Lockdown length",
+      "description": "The lockdown lifts itself after this long.",
+      "default": 30,
+      "min": 5,
+      "max": 1440,
+      "unit": "minutes"
+     }
+    ]
+   },
+   {
+    "id": "account-age",
+    "title": "New accounts",
+    "fields": [
+     {
+      "field": "antiRaidMinAccountAgeDays",
+      "type": "int",
+      "label": "Minimum account age",
+      "description": "Accounts younger than this get the action below. 0 = off.",
+      "default": 0,
+      "min": 0,
+      "max": 365,
+      "unit": "days"
+     },
+     {
+      "field": "antiRaidYoungAction",
+      "type": "enum",
+      "label": "Action for new accounts",
+      "default": "KICK",
+      "description": "What happens to accounts younger than the minimum age when they join.",
+      "options": [
+       {
+        "value": "ALERT",
+        "label": "Only alert the moderators"
+       },
+       {
+        "value": "KICK",
+        "label": "Kick them"
+       },
+       {
+        "value": "BAN",
+        "label": "Ban them"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "events": [
+   {
+    "id": "events",
+    "title": "Events",
+    "fields": [
+     {
+      "field": "eventChannelId",
+      "type": "channel",
+      "label": "Announcement channel",
+      "description": "Where /event create posts. Empty posts in the channel the command runs in.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "eventCreateDiscordEvent",
+      "type": "boolean",
+      "label": "Also create a Discord event",
+      "description": "Adds each event to the Events list of the server too (the bot needs Manage Events).",
+      "default": true
+     },
+     {
+      "field": "eventReminderMinutes",
+      "type": "int",
+      "label": "Reminder",
+      "description": "Minutes before the start to ping members who are going. 0 = no reminder.",
+      "default": 15,
+      "min": 0,
+      "max": 1440,
+      "unit": "minutes"
+     }
+    ]
+   },
+   {
+    "id": "event-channels",
+    "title": "Event channels",
+    "description": "Private text and voice channels for each new event. Only members who answer Going or Maybe, the host and administrators can see them. The bot needs Manage Channels and Manage Roles.",
+    "fields": [
+     {
+      "field": "eventChannelsEnabled",
+      "type": "boolean",
+      "label": "Create channels for events",
+      "description": "A text chat when the event is created and a voice channel before it starts. When the event is over and the voice channel is empty, both are deleted, along with the event post and its reminders.",
+      "default": false
+     },
+     {
+      "field": "eventCategoryId",
+      "type": "channel",
+      "label": "Category",
+      "description": "Where the channels go. Empty uses a category called Events and makes it if needed.",
+      "default": null,
+      "channelTypes": [
+       "category"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "eventVoiceLeadMinutes",
+      "type": "int",
+      "label": "Open the voice channel early",
+      "description": "Minutes before the start. 0 = at the start.",
+      "default": 30,
+      "min": 0,
+      "max": 1440,
+      "unit": "minutes"
+     }
+    ]
+   }
+  ],
+  "rolepersist": [
+   {
+    "id": "rolepersist",
+    "title": "Role persistence",
+    "description": "Roles with powerful permissions, managed roles and roles above the bot are never given back.",
+    "fields": [
+     {
+      "field": "rolePersistNicknames",
+      "type": "boolean",
+      "label": "Give back nicknames",
+      "description": "Also restores the nickname a member had when they left.",
+      "default": true
+     },
+     {
+      "field": "rolePersistIgnoredRoleIds",
+      "type": "roles",
+      "label": "Never give back",
+      "maxItems": 50,
+      "default": [],
+      "description": "These roles are not saved when a member leaves."
+     },
+     {
+      "field": "rolePersistDays",
+      "type": "int",
+      "label": "Keep for",
+      "description": "Saved roles of members who left longer ago than this are dropped.",
+      "default": 90,
+      "min": 1,
+      "max": 365,
+      "unit": "days"
+     }
+    ]
+   }
+  ],
+  "boosts": [
+   {
+    "id": "boost-thanks",
+    "title": "Boost thank-you",
+    "fields": [
+     {
+      "field": "boostChannelId",
+      "type": "channel",
+      "label": "Thank-you channel",
+      "description": "A thank-you is posted here when a member boosts the server. Empty = none.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "boostMessage",
+      "type": "text",
+      "label": "Thank-you message",
+      "description": "Posted when a member starts boosting.",
+      "default": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts.",
+      "maxLength": 2000,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{boosts}",
+       "{tier}"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "booster-roles",
+    "title": "Booster roles",
+    "description": "Boosters make a role of their own with /boost role. Booster roles never get any permissions.",
+    "fields": [
+     {
+      "field": "boostCustomRoles",
+      "type": "boolean",
+      "label": "Let boosters make their own role",
+      "description": "Boosters can create a role with their own name, colour and icon (the bot needs Manage Roles).",
+      "default": false
+     },
+     {
+      "field": "boostRoleAnchorId",
+      "type": "role",
+      "label": "Place booster roles below",
+      "nullable": true,
+      "assignable": true,
+      "default": null,
+      "description": "Booster roles go just below this role. Empty = just above the Nitro Booster role (or at the bottom), so moderators keep power over boosters."
+     },
+     {
+      "field": "boostRoleGraceDays",
+      "type": "int",
+      "label": "Keep the role after a boost ends",
+      "description": "Days a member keeps their role after they stop boosting. 0 = removed at once.",
+      "default": 0,
+      "min": 0,
+      "max": 30,
+      "unit": "days"
+     }
+    ]
+   }
+  ],
+  "backups": [
+   {
+    "id": "backups",
+    "title": "Automatic backups",
+    "description": "Make, restore and download backups with /backup. Only the server owner can restore or delete a backup.",
+    "fields": [
+     {
+      "field": "backupIntervalHours",
+      "type": "int",
+      "label": "Back up every",
+      "description": "Hours between automatic backups. 0 = off.",
+      "default": 0,
+      "min": 0,
+      "max": 720,
+      "unit": "hours"
+     },
+     {
+      "field": "backupKeep",
+      "type": "int",
+      "label": "Automatic backups kept",
+      "description": "When a new automatic backup would go over this, the oldest one is deleted.",
+      "default": 7,
+      "min": 1,
+      "max": 25
+     }
+    ]
+   }
+  ],
+  "confessions": [
+   {
+    "id": "confessions",
+    "title": "Confessions",
+    "description": "Members confess with /confession submit. Staff never see who wrote one; only admins can reveal an author with /confession reveal, and that is written to the moderation log.",
+    "fields": [
+     {
+      "field": "confessionChannelId",
+      "type": "channel",
+      "label": "Confession channel",
+      "description": "Confessions are posted here.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "confessionReviewChannelId",
+      "type": "channel",
+      "label": "Review channel",
+      "description": "Confessions wait here for a moderator to approve them. Empty = posted at once. Keep it hidden from members.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "confessionAllowImages",
+      "type": "boolean",
+      "label": "Allow an image",
+      "description": "Members may attach one image to a confession.",
+      "default": false
+     },
+     {
+      "field": "confessionBlockLinks",
+      "type": "boolean",
+      "label": "Refuse links",
+      "description": "Confessions that contain a link are refused.",
+      "default": true
+     },
+     {
+      "field": "confessionCooldownSeconds",
+      "type": "int",
+      "label": "Cooldown between confessions",
+      "description": "Seconds a member waits between two confessions. 0 = no cooldown.",
+      "default": 300,
+      "min": 0,
+      "max": 86400,
+      "unit": "seconds"
+     }
+    ]
+   }
+  ],
+  "autothreads": [
+   {
+    "id": "auto-threads",
+    "title": "Auto threads",
+    "description": "Every member message in these channels gets its own thread (the bot needs Create Public Threads).",
+    "fields": [
+     {
+      "field": "autoThreadChannels",
+      "type": "objectList",
+      "label": "Channels",
+      "maxItems": 25,
+      "default": [],
+      "description": "Thread names may use {user} (display name), {content} (the start of the message), {channel} and {date}.",
+      "itemFields": [
+       {
+        "field": "channelId",
+        "type": "channel",
+        "label": "Channel",
+        "required": true,
+        "channelTypes": [
+         "text",
+         "announcement"
+        ],
+        "default": null
+       },
+       {
+        "field": "name",
+        "type": "text",
+        "label": "Thread name",
+        "maxLength": 100,
+        "minLength": 1,
+        "default": "{content}"
+       },
+       {
+        "field": "archiveMinutes",
+        "type": "enum",
+        "label": "Archive after",
+        "default": "1440",
+        "options": [
+         {
+          "value": "60",
+          "label": "1 hour without messages"
+         },
+         {
+          "value": "1440",
+          "label": "1 day without messages"
+         },
+         {
+          "value": "4320",
+          "label": "3 days without messages"
+         },
+         {
+          "value": "10080",
+          "label": "1 week without messages"
+         }
+        ]
+       },
+       {
+        "field": "closeButton",
+        "type": "boolean",
+        "label": "Close button",
+        "default": false,
+        "description": "Posts a button in each thread that its starter or a moderator can use to close it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "auto-publish",
+    "title": "Auto publish",
+    "fields": [
+     {
+      "field": "autoPublishChannelIds",
+      "type": "channels",
+      "label": "Announcement channels",
+      "channelTypes": [
+       "announcement"
+      ],
+      "maxItems": 25,
+      "default": [],
+      "description": "New posts here, by members, bots or webhooks, are published to the servers that follow the channel (the bot needs Manage Messages). Discord allows 10 per channel per hour; the rest stay unpublished."
+     }
+    ]
+   }
+  ],
+  "voiceroles": [
+   {
+    "id": "voice-roles",
+    "title": "Voice roles",
+    "description": "Use roles made only for this: the bot takes them away from anyone who is not in a linked voice channel.",
+    "fields": [
+     {
+      "field": "voiceRoleLinks",
+      "type": "objectList",
+      "label": "Channel roles",
+      "maxItems": 50,
+      "default": [],
+      "description": "Members in the channel, or in any voice channel of the category, have the role.",
+      "itemFields": [
+       {
+        "field": "channelId",
+        "type": "channel",
+        "label": "Voice channel or category",
+        "required": true,
+        "channelTypes": [
+         "voice",
+         "stage",
+         "category"
+        ],
+        "default": null
+       },
+       {
+        "field": "roleId",
+        "type": "role",
+        "label": "Role",
+        "required": true,
+        "assignable": true,
+        "default": null
+       }
+      ]
+     },
+     {
+      "field": "voiceRoleAnyRoleIds",
+      "type": "roles",
+      "label": "Roles for any voice channel",
+      "maxItems": 5,
+      "assignable": true,
+      "default": [],
+      "description": "Members in any voice channel of the server have these roles."
+     },
+     {
+      "field": "voiceRoleIgnoreAfk",
+      "type": "boolean",
+      "label": "None in the AFK channel",
+      "description": "Members in the server's AFK channel get no voice roles.",
+      "default": true
+     }
+    ]
+   }
+  ],
+  "bumps": [
+   {
+    "id": "bump-reminders",
+    "title": "Bump reminders",
+    "description": "Works with Disboard: the bot sees each successful /bump and reminds the server when it can bump again.",
+    "fields": [
+     {
+      "field": "bumpChannelId",
+      "type": "channel",
+      "label": "Reminder channel",
+      "description": "Reminders are posted here. Empty = the channel of the last bump.",
+      "default": null,
+      "channelTypes": [
+       "text",
+       "announcement"
+      ],
+      "nullable": true
+     },
+     {
+      "field": "bumpRoleId",
+      "type": "role",
+      "label": "Role to ping",
+      "nullable": true,
+      "default": null,
+      "description": "Pinged with each reminder. Empty = no ping."
+     },
+     {
+      "field": "bumpReminderMessage",
+      "type": "text",
+      "label": "Reminder message",
+      "description": "Posted when the server can be bumped again.",
+      "default": "📣 The server can be bumped again! Use `/bump` to keep us near the top of Disboard.",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true
+     },
+     {
+      "field": "bumpThanks",
+      "type": "boolean",
+      "label": "Thank the bumper",
+      "description": "Replies with a thank-you right after a successful bump.",
+      "default": true
+     },
+     {
+      "field": "bumpThanksMessage",
+      "type": "text",
+      "label": "Thank-you message",
+      "description": "Sent after each successful bump.",
+      "default": "📣 Thanks for bumping, {user}! The next bump is possible {next}.",
+      "maxLength": 1000,
+      "multiline": true,
+      "nullable": true,
+      "placeholders": [
+       "{next}",
+       "{count}"
+      ]
+     },
+     {
+      "field": "bumpRewardCoins",
+      "type": "int",
+      "label": "Coins per bump",
+      "description": "Coins given for each bump while Economy is on. 0 = none.",
+      "default": 0,
+      "min": 0,
+      "max": 100000
+     }
+    ]
+   }
+  ]
+ },
+ "hooks": {
+  "timezone": [
+   "normalize"
+  ],
+  "customPrefix": [
+   "normalize"
+  ],
+  "timezoneRoles": [
+   "read",
+   "check",
+   "normalize"
+  ],
+  "infractionEscalation": [
+   "read",
+   "check",
+   "write"
+  ],
+  "automodRuleBadWords": [
+   "read",
+   "write"
+  ],
+  "automodBadWords": [
+   "read",
+   "check",
+   "normalize",
+   "write"
+  ],
+  "automodBadWordPatterns": [
+   "read",
+   "check",
+   "write"
+  ],
+  "automodRuleInvites": [
+   "read",
+   "write"
+  ],
+  "automodRuleLinks": [
+   "read",
+   "write"
+  ],
+  "automodBlockedDomains": [
+   "read",
+   "check",
+   "normalize",
+   "write"
+  ],
+  "automodAllowedDomains": [
+   "read",
+   "check",
+   "normalize",
+   "write"
+  ],
+  "automodRuleSpam": [
+   "read",
+   "write"
+  ],
+  "automodRuleRepeatedText": [
+   "read",
+   "write"
+  ],
+  "automodRuleCaps": [
+   "read",
+   "write"
+  ],
+  "automodRuleEmojis": [
+   "read",
+   "write"
+  ],
+  "automodRuleSpoilers": [
+   "read",
+   "write"
+  ],
+  "automodRuleMentions": [
+   "read",
+   "write"
+  ],
+  "automodRuleZalgo": [
+   "read",
+   "write"
+  ],
+  "automodHoneypot": [
+   "read",
+   "write"
+  ],
+  "automodExemptRoleIds": [
+   "read",
+   "write"
+  ],
+  "automodExemptChannelIds": [
+   "read",
+   "write"
+  ],
+  "logEvents": [
+   "read",
+   "normalize",
+   "write"
+  ],
+  "welcomeMessage": [
+   "read"
+  ],
+  "welcomeEmbed": [
+   "read",
+   "normalize"
+  ],
+  "welcomeCardStyle": [
+   "read",
+   "write"
+  ],
+  "welcomeDmMessage": [
+   "read"
+  ],
+  "welcomeDmEmbed": [
+   "read",
+   "normalize"
+  ],
+  "goodbyeMessage": [
+   "read"
+  ],
+  "goodbyeEmbed": [
+   "read",
+   "normalize"
+  ],
+  "captchaTimeoutMinutes": [
+   "check"
+  ],
+  "captchaTemplate": [
+   "read",
+   "write"
+  ],
+  "captchaVerifyButton": [
+   "read",
+   "write"
+  ],
+  "xpMultiplier": [
+   "normalize"
+  ],
+  "levelUpMessage": [
+   "read",
+   "normalize"
+  ],
+  "xpBoostRoles": [
+   "read",
+   "check",
+   "normalize"
+  ],
+  "rankCardStyle": [
+   "normalize"
+  ],
+  "birthdayMessage": [
+   "read",
+   "normalize"
+  ],
+  "birthdayMessageAge": [
+   "read",
+   "normalize"
+  ],
+  "achievementMessage": [
+   "read",
+   "check",
+   "normalize"
+  ],
+  "currencyName": [
+   "normalize"
+  ],
+  "currencyEmoji": [
+   "check"
+  ],
+  "liveRoleAnnounceMessage": [
+   "read",
+   "normalize"
+  ],
+  "modmailGreeting": [
+   "read",
+   "normalize"
+  ],
+  "boostMessage": [
+   "read",
+   "normalize"
+  ],
+  "autoThreadChannels": [
+   "read",
+   "check"
+  ],
+  "voiceRoleLinks": [
+   "read",
+   "check"
+  ],
+  "bumpReminderMessage": [
+   "read",
+   "normalize"
+  ],
+  "bumpThanksMessage": [
+   "read",
+   "normalize"
+  ]
+ },
+ "settingsColumns": {
+  "modEnabled": "modEnabled",
+  "automodEnabled": "automodEnabled",
+  "loggingEnabled": "loggingEnabled",
+  "welcomeEnabled": "welcomeEnabled",
+  "captchaEnabled": "captchaEnabled",
+  "reactionRolesEnabled": "reactionRolesEnabled",
+  "xpEnabled": "xpEnabled",
+  "customCommandsEnabled": "customCommandsEnabled",
+  "automationsEnabled": "automationsEnabled",
+  "translationEnabled": "translationEnabled",
+  "invitesEnabled": "invitesEnabled",
+  "embedsEnabled": "embedsEnabled",
+  "remindersEnabled": "remindersEnabled",
+  "giveawaysEnabled": "giveawaysEnabled",
+  "pollsEnabled": "pollsEnabled",
+  "starboardEnabled": "starboardEnabled",
+  "ticketsEnabled": "ticketsEnabled",
+  "tempVoiceEnabled": "tempVoiceEnabled",
+  "statsEnabled": "statsEnabled",
+  "birthdaysEnabled": "birthdaysEnabled",
+  "achievementsEnabled": "achievementsEnabled",
+  "economyEnabled": "economyEnabled",
+  "gamesEnabled": "gamesEnabled",
+  "feedsEnabled": "feedsEnabled",
+  "searchEnabled": "searchEnabled",
+  "liveRoleEnabled": "liveRoleEnabled",
+  "countingEnabled": "countingEnabled",
+  "autoTimeEnabled": "autoTimeEnabled",
+  "suggestionsEnabled": "suggestionsEnabled",
+  "modmailEnabled": "modmailEnabled",
+  "applicationsEnabled": "applicationsEnabled",
+  "stickyEnabled": "stickyEnabled",
+  "afkEnabled": "afkEnabled",
+  "antiRaidEnabled": "antiRaidEnabled",
+  "eventsEnabled": "eventsEnabled",
+  "rolePersistEnabled": "rolePersistEnabled",
+  "boostsEnabled": "boostsEnabled",
+  "backupsEnabled": "backupsEnabled",
+  "confessionsEnabled": "confessionsEnabled",
+  "autoThreadsEnabled": "autoThreadsEnabled",
+  "voiceRolesEnabled": "voiceRolesEnabled",
+  "bumpsEnabled": "bumpsEnabled",
+  "timezone": "timezone",
+  "embedColor": "embedColor",
+  "customPrefix": "customPrefix",
+  "timezoneRoles": "timezoneRoles",
+  "modLogChannelId": "modLogChannelId",
+  "modDmTargets": "modDmTargets",
+  "modVisibility": "modVisibility",
+  "modRoleIds": "modRoleIds",
+  "immuneRoleIds": "immuneRoleIds",
+  "muteRoleId": "muteRoleId",
+  "infractionEscalation": "infractionEscalation",
+  "automodRuleBadWords": "automodConfig",
+  "automodBadWords": "automodConfig",
+  "automodBadWordPatterns": "automodConfig",
+  "automodRuleInvites": "automodConfig",
+  "automodRuleLinks": "automodConfig",
+  "automodBlockedDomains": "automodConfig",
+  "automodAllowedDomains": "automodConfig",
+  "automodRuleSpam": "automodConfig",
+  "automodRuleRepeatedText": "automodConfig",
+  "automodRuleCaps": "automodConfig",
+  "automodRuleEmojis": "automodConfig",
+  "automodRuleSpoilers": "automodConfig",
+  "automodRuleMentions": "automodConfig",
+  "automodRuleZalgo": "automodConfig",
+  "automodHoneypot": "automodConfig",
+  "automodExemptRoleIds": "automodConfig",
+  "automodExemptChannelIds": "automodConfig",
+  "messageLogChannelId": "messageLogChannelId",
+  "memberLogChannelId": "memberLogChannelId",
+  "serverLogChannelId": "serverLogChannelId",
+  "voiceLogChannelId": "voiceLogChannelId",
+  "joinLeaveChannelId": "joinLeaveChannelId",
+  "logEvents": "disabledLogEvents",
+  "logIgnoredChannelIds": "logIgnoredChannelIds",
+  "welcomeMessageEnabled": "welcomeMessageEnabled",
+  "welcomeChannelId": "welcomeChannelId",
+  "welcomeUseEmbed": "welcomeUseEmbed",
+  "welcomeMessage": "welcomeMessage",
+  "welcomeEmbed": "welcomeEmbed",
+  "welcomeCardStyle": "welcomeCardStyle",
+  "welcomeDmEnabled": "welcomeDmEnabled",
+  "welcomeDmMessage": "welcomeDmMessage",
+  "welcomeDmEmbed": "welcomeDmEmbed",
+  "welcomeDmCard": "welcomeDmCard",
+  "goodbyeEnabled": "goodbyeEnabled",
+  "goodbyeChannelId": "goodbyeChannelId",
+  "goodbyeUseEmbed": "goodbyeUseEmbed",
+  "goodbyeMessage": "goodbyeMessage",
+  "goodbyeEmbed": "goodbyeEmbed",
+  "autoroleIds": "autoroleIds",
+  "autoroleDelay": "autoroleDelay",
+  "captchaRoleId": "captchaRoleId",
+  "captchaRequiredRoleIds": "captchaRequiredRoleIds",
+  "captchaMode": "captchaMode",
+  "captchaTimeoutMinutes": "captchaTimeoutMinutes",
+  "captchaTemplate": "captchaTemplate",
+  "captchaVerifyButton": "captchaTemplate",
+  "xpMin": "xpMin",
+  "xpMax": "xpMax",
+  "xpCooldown": "xpCooldown",
+  "xpMultiplier": "xpMultiplier",
+  "levelUpMode": "levelUpMode",
+  "levelUpChannelId": "levelUpChannelId",
+  "levelUpUseEmbed": "levelUpUseEmbed",
+  "levelUpMessage": "levelUpMessage",
+  "voiceXpEnabled": "voiceXpEnabled",
+  "voiceXpRate": "voiceXpRate",
+  "noXpRoleIds": "noXpRoleIds",
+  "noXpChannelIds": "noXpChannelIds",
+  "levelRolesStack": "levelRolesStack",
+  "levelRolesSyncOnDemotion": "levelRolesSyncOnDemotion",
+  "xpBoostRoles": "xpBoostRoles",
+  "rankCardStyle": "rankCardStyle",
+  "autoTriggersEnabled": "autoTriggersEnabled",
+  "statsCategoryId": "statsCategoryId",
+  "birthdayChannelId": "birthdayChannelId",
+  "birthdayHour": "birthdayHour",
+  "birthdayMessage": "birthdayMessage",
+  "birthdayMessageAge": "birthdayMessageAge",
+  "birthdayRoleId": "birthdayRoleId",
+  "birthdayRequireYear": "birthdayRequireYear",
+  "achievementAnnounceMode": "achievementAnnounceMode",
+  "achievementChannelId": "achievementChannelId",
+  "achievementUseEmbed": "achievementUseEmbed",
+  "achievementMessage": "achievementMessage",
+  "currencyName": "currencyName",
+  "currencyEmoji": "currencyEmoji",
+  "economyStartingBalance": "economyStartingBalance",
+  "economyMaxBalance": "economyMaxBalance",
+  "economyMaxBet": "economyMaxBet",
+  "economyMaxPayout": "economyMaxPayout",
+  "economyImportGlobal": "economyImportGlobal",
+  "dailyMin": "dailyMin",
+  "dailyMax": "dailyMax",
+  "workMin": "workMin",
+  "workMax": "workMax",
+  "workCooldownMinutes": "workCooldownMinutes",
+  "economyGameChannelMode": "economyGameChannelMode",
+  "economyGameChannelIds": "economyGameChannelIds",
+  "urbanNsfwOnly": "urbanNsfwOnly",
+  "liveRoleId": "liveRoleId",
+  "liveRoleRequiredRoleId": "liveRoleRequiredRoleId",
+  "liveRoleAnnounceChannelId": "liveRoleAnnounceChannelId",
+  "liveRoleAnnounceMessage": "liveRoleAnnounceMessage",
+  "liveRoleAnnouncePingRoleId": "liveRoleAnnouncePingRoleId",
+  "countingChannelId": "countingChannelId",
+  "autoTimeIgnoredChannelIds": "autoTimeIgnoredChannelIds",
+  "suggestionChannelId": "suggestionChannelId",
+  "suggestionThreads": "suggestionThreads",
+  "suggestionAllowAnonymous": "suggestionAllowAnonymous",
+  "suggestionDmOnUpdate": "suggestionDmOnUpdate",
+  "suggestionCooldownSeconds": "suggestionCooldownSeconds",
+  "modmailChannelId": "modmailChannelId",
+  "modmailPingRoleIds": "modmailPingRoleIds",
+  "modmailGreeting": "modmailGreeting",
+  "modmailAnonymousReplies": "modmailAnonymousReplies",
+  "afkNicknamePrefix": "afkNicknamePrefix",
+  "afkIgnoredChannelIds": "afkIgnoredChannelIds",
+  "antiRaidJoinThreshold": "antiRaidJoinThreshold",
+  "antiRaidJoinSeconds": "antiRaidJoinSeconds",
+  "antiRaidAction": "antiRaidAction",
+  "antiRaidAlertChannelId": "antiRaidAlertChannelId",
+  "antiRaidPauseInvites": "antiRaidPauseInvites",
+  "antiRaidLockChat": "antiRaidLockChat",
+  "antiRaidLockdownMinutes": "antiRaidLockdownMinutes",
+  "antiRaidMinAccountAgeDays": "antiRaidMinAccountAgeDays",
+  "antiRaidYoungAction": "antiRaidYoungAction",
+  "eventChannelId": "eventChannelId",
+  "eventCreateDiscordEvent": "eventCreateDiscordEvent",
+  "eventReminderMinutes": "eventReminderMinutes",
+  "eventChannelsEnabled": "eventChannelsEnabled",
+  "eventCategoryId": "eventCategoryId",
+  "eventVoiceLeadMinutes": "eventVoiceLeadMinutes",
+  "rolePersistNicknames": "rolePersistNicknames",
+  "rolePersistIgnoredRoleIds": "rolePersistIgnoredRoleIds",
+  "rolePersistDays": "rolePersistDays",
+  "boostChannelId": "boostChannelId",
+  "boostMessage": "boostMessage",
+  "boostCustomRoles": "boostCustomRoles",
+  "boostRoleAnchorId": "boostRoleAnchorId",
+  "boostRoleGraceDays": "boostRoleGraceDays",
+  "backupIntervalHours": "backupIntervalHours",
+  "backupKeep": "backupKeep",
+  "confessionChannelId": "confessionChannelId",
+  "confessionReviewChannelId": "confessionReviewChannelId",
+  "confessionAllowImages": "confessionAllowImages",
+  "confessionBlockLinks": "confessionBlockLinks",
+  "confessionCooldownSeconds": "confessionCooldownSeconds",
+  "autoThreadChannels": "autoThreadChannels",
+  "autoPublishChannelIds": "autoPublishChannelIds",
+  "voiceRoleLinks": "voiceRoleLinks",
+  "voiceRoleAnyRoleIds": "voiceRoleAnyRoleIds",
+  "voiceRoleIgnoreAfk": "voiceRoleIgnoreAfk",
+  "bumpChannelId": "bumpChannelId",
+  "bumpRoleId": "bumpRoleId",
+  "bumpReminderMessage": "bumpReminderMessage",
+  "bumpThanks": "bumpThanks",
+  "bumpThanksMessage": "bumpThanksMessage",
+  "bumpRewardCoins": "bumpRewardCoins"
+ },
+ "jsonColumns": [
+  "automodConfig",
+  "infractionEscalation",
+  "welcomeEmbed",
+  "welcomeCardStyle",
+  "welcomeDmEmbed",
+  "goodbyeEmbed",
+  "captchaTemplate",
+  "xpBoostRoles",
+  "rankCardStyle"
+ ],
+ "notExposed": {
+  "id": "row identity",
+  "guildId": "row identity",
+  "createdAt": "row metadata",
+  "updatedAt": "row metadata",
+  "levelingEnabled": "deprecated and never read (xpEnabled is the Levels flag)",
+  "xpRate": "legacy: only the migration to xpMin/xpMax read it",
+  "captchaChannelId": "changes only together with the posted panel: /captcha setup or /captcha channel posts it",
+  "captchaMessageId": "bot-managed: the id of the posted verification panel",
+  "captchaLockdownPrior": "bot-managed: what /captcha lock off restores",
+  "captchaFallbackFormId": "an application form id, picked by name with /captcha require form (no form picker here)",
+  "modmailBlockedUserIds": "a list of members: /modmail block and unblock manage it",
+  "confessionBlockedUserIds": "secret: blocked by confession number so staff never learn who wrote it (/confession block)"
+ },
+ "constants": {
+  "MAX_SETTINGS_CHANGES": 300,
+  "DEFAULT_TEXTS": {
+   "welcomeMessage": "Hey {user}, welcome to **{server}**!",
+   "welcomeDmMessage": "Have a great time here in **{server}**!",
+   "goodbyeMessage": "**{user.idname}** just left the server",
+   "levelUpMessage": "GG {player}, you just advanced to level {level}!",
+   "birthdayMessage": "Happy birthday {user}! 🎂",
+   "birthdayMessageAge": "Happy birthday {user}! They are now {age}! 🎂",
+   "achievementMessage": "🏆 {player} unlocked **{achievement}**!",
+   "liveRoleAnnounceMessage": "🔴 {user} is now live on {platform}!\n{url}",
+   "modmailGreeting": "Thanks for your message! The staff of **{server}** will answer you here soon.",
+   "boostMessage": "💎 {user} just boosted **{server}**! Thank you! We now have {boosts} boosts.",
+   "bumpReminderMessage": "📣 The server can be bumped again! Use `/bump` to keep us near the top of Disboard.",
+   "bumpThanksMessage": "📣 Thanks for bumping, {user}! The next bump is possible {next}."
+  },
+  "DEFAULT_EMBEDS": {
+   "welcomeEmbed": {
+    "title": "👋 Welcome to {server}!",
+    "description": "You are our **{server.member_count.ordinal}** member. Enjoy your stay!",
+    "thumbnail": "{user.avatar}",
+    "color": 5763719,
+    "timestamp": true
+   },
+   "goodbyeEmbed": {
+    "description": "**{user.idname}** just left the server",
+    "thumbnail": "{user.avatar}",
+    "color": 10070709,
+    "timestamp": true
+   }
+  },
+  "DEFAULT_CAPTCHA_PANEL": {
+   "content": null,
+   "embed": {
+    "title": "🛡️ Verification required",
+    "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+    "footer": {
+     "text": "Only you can see your captcha."
+    }
+   },
+   "buttons": []
+  },
+  "DEFAULT_VERIFY_BUTTON": {
+   "label": "Verify",
+   "style": "SUCCESS"
+  },
+  "DEFAULT_RANK_CARD_STYLE": {
+   "background": "#2B2D31",
+   "backgroundUrl": null,
+   "accentColor": "#5865F2",
+   "textColor": "#FFFFFF",
+   "overlayOpacity": 0.5
+  },
+  "NUMBER_LIMITS": {
+   "xpRangeMax": 1000,
+   "economyRangeMax": 1000000,
+   "workCooldownMaxMinutes": 10080,
+   "autoroleDelayMaxSeconds": 604800,
+   "captchaTimeoutMinMinutes": 5,
+   "captchaTimeoutMaxMinutes": 10080,
+   "timeoutMaxSeconds": 2419200,
+   "timedActionMaxSeconds": 31536000
+  },
+  "AUTOMOD_RULES": {
+   "badWords": {
+    "label": "Bad Words",
+    "threshold": null,
+    "description": "Removes messages that contain a listed word, phrase or pattern."
+   },
+   "repeatedText": {
+    "label": "Repeated Text",
+    "threshold": {
+     "min": 2,
+     "max": 20,
+     "default": 3,
+     "unit": "identical messages within 30 s"
+    },
+    "description": "Catches the same message sent over and over."
+   },
+   "invites": {
+    "label": "Server Invites",
+    "threshold": null,
+    "description": "Catches invite links to other Discord servers."
+   },
+   "links": {
+    "label": "External Links",
+    "threshold": null,
+    "description": "Catches links that are blocked, or not allowed when no domain is blocked."
+   },
+   "caps": {
+    "label": "Excessive Caps",
+    "threshold": {
+     "min": 50,
+     "max": 100,
+     "default": 70,
+     "unit": "% capitals, messages with at least 10 letters"
+    },
+    "description": "Catches messages that are mostly capital letters."
+   },
+   "emojis": {
+    "label": "Excessive Emojis",
+    "threshold": {
+     "min": 1,
+     "max": 50,
+     "default": 10,
+     "unit": "emojis"
+    },
+    "description": "Catches messages with too many emojis."
+   },
+   "spoilers": {
+    "label": "Excessive Spoilers",
+    "threshold": {
+     "min": 1,
+     "max": 50,
+     "default": 5,
+     "unit": "spoilers"
+    },
+    "description": "Catches messages with too many spoiler tags or spoiler attachments."
+   },
+   "mentions": {
+    "label": "Excessive Mentions",
+    "threshold": {
+     "min": 2,
+     "max": 50,
+     "default": 5,
+     "unit": "mentions"
+    },
+    "description": "Catches messages that ping too many members or roles."
+   },
+   "zalgo": {
+    "label": "Zalgo",
+    "threshold": {
+     "min": 3,
+     "max": 20,
+     "default": 4,
+     "unit": "stacked combining marks"
+    },
+    "description": "Catches glitch text with piles of combining marks."
+   },
+   "spam": {
+    "label": "Anti-Spam",
+    "threshold": {
+     "min": 3,
+     "max": 30,
+     "default": 6,
+     "unit": "messages within 5 s"
+    },
+    "description": "Catches members who send messages too fast."
+   }
+  },
+  "AUTOMOD_ACTIONS": [
+   {
+    "value": "off",
+    "label": "Off"
+   },
+   {
+    "value": "delete",
+    "label": "Delete message"
+   },
+   {
+    "value": "warn",
+    "label": "Warn member"
+   },
+   {
+    "value": "delete_warn",
+    "label": "Delete & warn"
+   },
+   {
+    "value": "timeout",
+    "label": "Delete & timeout"
+   },
+   {
+    "value": "kick",
+    "label": "Delete & kick"
+   },
+   {
+    "value": "ban",
+    "label": "Delete & ban"
+   }
+  ],
+  "AUTOMOD_DEFAULTS": {
+   "allowedDomains": [
+    "tenor.com",
+    "giphy.com",
+    "discord.com",
+    "discordapp.com",
+    "discordapp.net"
+   ],
+   "timeoutSeconds": 600,
+   "minTimeoutSeconds": 60,
+   "maxTimeoutSeconds": 2419200
+  },
+  "AUTOMOD_HONEYPOT": {
+   "actions": [
+    {
+     "value": "softban",
+     "label": "Softban (kick and clear their messages)"
+    },
+    {
+     "value": "ban",
+     "label": "Ban and clear their messages"
+    },
+    {
+     "value": "kick",
+     "label": "Delete & kick"
+    },
+    {
+     "value": "timeout",
+     "label": "Delete & timeout"
+    }
+   ],
+   "timeoutSeconds": 86400,
+   "maxChannels": 5
+  },
+  "LOG_EVENTS": {
+   "messageDelete": "Message deleted",
+   "messageEdit": "Message edited",
+   "messageBulkDelete": "Messages bulk-deleted",
+   "invitePosted": "Invite posted",
+   "memberRoles": "Member roles changed",
+   "memberNickname": "Nickname changed",
+   "memberTimeout": "Member timed out / untimed",
+   "memberAvatar": "Server avatar changed",
+   "userUpdate": "User updated (name / avatar)",
+   "memberBan": "Member banned",
+   "memberUnban": "Member unbanned",
+   "memberJoin": "Member joined",
+   "memberLeave": "Member left",
+   "voiceJoin": "Voice channel joined",
+   "voiceLeave": "Voice channel left",
+   "voiceMove": "Voice channel switched",
+   "voiceState": "Voice mute / deafen / stream",
+   "channelCreate": "Channel created",
+   "channelUpdate": "Channel updated",
+   "channelDelete": "Channel deleted",
+   "threadCreate": "Thread created",
+   "threadUpdate": "Thread updated",
+   "threadDelete": "Thread deleted",
+   "roleCreate": "Role created",
+   "roleUpdate": "Role updated",
+   "roleDelete": "Role deleted",
+   "serverUpdate": "Server edited",
+   "emojiCreate": "Emoji created",
+   "emojiUpdate": "Emoji updated",
+   "emojiDelete": "Emoji deleted",
+   "inviteCreate": "Invite created",
+   "inviteDelete": "Invite deleted / expired"
+  },
+  "TIER_ACTIONS": [
+   {
+    "value": "TIMEOUT",
+    "label": "Timeout"
+   },
+   {
+    "value": "MUTE",
+    "label": "Mute (mute role)"
+   },
+   {
+    "value": "KICK",
+    "label": "Kick"
+   },
+   {
+    "value": "TEMPBAN",
+    "label": "Temporary ban"
+   },
+   {
+    "value": "BAN",
+    "label": "Permanent ban"
+   }
+  ]
+ }
+}

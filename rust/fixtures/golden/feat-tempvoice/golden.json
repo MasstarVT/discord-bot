@@ -1,0 +1,1425 @@
+{
+  "msg": {
+    "NOT_IN_TEMP": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Not In A Temporary Channel",
+        "description": "Join your temporary voice channel first, then run this command."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Not In A Temporary Channel",
+        "description": "Join your temporary voice channel first, then run this command."
+      }
+    },
+    "CHANNEL_GONE": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Channel Gone",
+        "description": "This temporary channel no longer exists."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Channel Gone",
+        "description": "This temporary channel no longer exists."
+      }
+    },
+    "NOT_ALLOWED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Not Your Channel",
+        "description": "Only the channel owner or a temp-voice moderator can do that."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Not Your Channel",
+        "description": "Only the channel owner or a temp-voice moderator can do that."
+      }
+    },
+    "CLEAN_NOT_ALLOWED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Insufficient Permissions",
+        "description": "Only moderators can clean up temporary channels."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Insufficient Permissions",
+        "description": "Only moderators can clean up temporary channels."
+      }
+    },
+    "TARGET_SELF": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "You can't do that to yourself."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "You can't do that to yourself."
+      }
+    },
+    "TARGET_OWNER": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "<@222> owns this channel. Transfer ownership first."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "<@undefined> owns this channel. Transfer ownership first."
+      }
+    },
+    "TARGET_PROTECTED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Protected Member",
+        "description": "<@222> is a moderator or has an ignored role, so /voice commands don't affect them."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Protected Member",
+        "description": "<@undefined> is a moderator or has an ignored role, so /voice commands don't affect them."
+      }
+    },
+    "TARGET_NOT_MEMBER": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "That user is not in this server."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "That user is not in this server."
+      }
+    },
+    "TARGET_NOT_CONNECTED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Not In Channel",
+        "description": "<@222> is not in this voice channel."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Not In Channel",
+        "description": "<@undefined> is not in this voice channel."
+      }
+    },
+    "TARGET_BOT": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "Bots can't own a channel."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Member",
+        "description": "Bots can't own a channel."
+      }
+    },
+    "TARGET_ALREADY_OWNER": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@222> already owns this channel."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@undefined> already owns this channel."
+      }
+    },
+    "ALREADY_BANNED": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@222> is already banned from this channel."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@undefined> is already banned from this channel."
+      }
+    },
+    "NOT_BANNED": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@222> is not banned from this channel."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "<@undefined> is not banned from this channel."
+      }
+    },
+    "BAN_LIMIT": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Limit Reached",
+        "description": "A channel can ban at most 50 members."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Limit Reached",
+        "description": "A channel can ban at most 50 members."
+      }
+    },
+    "NO_CHANGE_LOCK": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already locked."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already locked."
+      }
+    },
+    "NO_CHANGE_UNLOCK": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already unlocked."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already unlocked."
+      }
+    },
+    "NO_CHANGE_HIDE": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already hidden."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already hidden."
+      }
+    },
+    "NO_CHANGE_REVEAL": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already visible."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "This channel is already visible."
+      }
+    },
+    "NO_CHANGE_NAME": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "That is already the channel's name."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "That is already the channel's name."
+      }
+    },
+    "NO_CHANGE_LIMIT": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "The member limit is already 7."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "The member limit is already off."
+      },
+      "zero": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "The member limit is already off."
+      }
+    },
+    "CLAIM_ALREADY_OWNER": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "You already own this channel."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  No Change",
+        "description": "You already own this channel."
+      }
+    },
+    "CLAIM_NOT_CONNECTED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Not In Channel",
+        "description": "Join the channel first, then claim it."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Not In Channel",
+        "description": "Join the channel first, then claim it."
+      }
+    },
+    "CLAIM_OWNER_PRESENT": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Owner Still Here",
+        "description": "<@333> is still in the channel."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Owner Still Here",
+        "description": "<@undefined> is still in the channel."
+      }
+    },
+    "CLAIM_LOCKED": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Not Yet",
+        "description": "This channel can be claimed <t:1700000000:R>."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Not Yet",
+        "description": "This channel can be claimed <t:NaN:R>."
+      }
+    },
+    "RENAME_INVALID": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Name",
+        "description": "Channel names must be 1–100 characters."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Name",
+        "description": "Channel names must be 1–100 characters."
+      }
+    },
+    "RENAME_RATE": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Slow Down",
+        "description": "Discord allows only 2 renames per channel every 10 minutes. Try again <t:1700000600:R>."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Slow Down",
+        "description": "Discord allows only 2 renames per channel every 10 minutes. Try again <t:NaN:R>."
+      }
+    },
+    "RENAME_QUEUED": {
+      "params": {
+        "color": 16705372,
+        "title": "⚠️  Rename Queued",
+        "description": "Discord is rate-limiting renames of this channel. The new name will apply when the limit ends (up to 10 minutes)."
+      },
+      "none": {
+        "color": 16705372,
+        "title": "⚠️  Rename Queued",
+        "description": "Discord is rate-limiting renames of this channel. The new name will apply when the limit ends (up to 10 minutes)."
+      }
+    },
+    "LIMIT_INVALID": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Invalid Limit",
+        "description": "Enter a whole number from 0 to 99 (0 = no limit)."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Invalid Limit",
+        "description": "Enter a whole number from 0 to 99 (0 = no limit)."
+      }
+    },
+    "BOT_MISSING": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Missing Permissions",
+        "description": "I need **Manage Channels, Manage Roles** in <#444> to do that."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Missing Permissions",
+        "description": "I need **** in <#undefined> to do that."
+      }
+    },
+    "DISCORD_ERROR": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "Discord rejected that change (missing permissions). Please try again in a moment."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "Discord rejected that change (error unknown). Please try again in a moment."
+      },
+      "unknown": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "Discord rejected that change (error unknown). Please try again in a moment."
+      }
+    },
+    "DB_ERROR": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "The channel changed, but I could not save it. Please try again."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "The channel changed, but I could not save it. Please try again."
+      }
+    },
+    "HUB_GONE": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Hub Deleted",
+        "description": "The hub this channel came from was deleted, so its permissions cannot be changed safely any more. Lock, unlock, hide, reveal, ban, unban, transfer and claim are unavailable here; kick, limit and rename still work."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Hub Deleted",
+        "description": "The hub this channel came from was deleted, so its permissions cannot be changed safely any more. Lock, unlock, hide, reveal, ban, unban, transfer and claim are unavailable here; kick, limit and rename still work."
+      }
+    },
+    "INTERNAL": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "Something went wrong. Please try again in a moment."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "Something went wrong. Please try again in a moment."
+      }
+    },
+    "NOT_IN_GUILD": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Server Only",
+        "description": "This only works in a server."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Server Only",
+        "description": "This only works in a server."
+      }
+    },
+    "TRY_AGAIN": {
+      "params": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "That took too long. Please try again."
+      },
+      "none": {
+        "color": 15548997,
+        "title": "❌  Something Went Wrong",
+        "description": "That took too long. Please try again."
+      }
+    }
+  },
+  "ok": {
+    "lock": {
+      "color": 5763719,
+      "title": "✅  Channel Locked",
+      "description": "🔒 New members can no longer join **My \\*Room\\***."
+    },
+    "unlock": {
+      "color": 5763719,
+      "title": "✅  Channel Unlocked",
+      "description": "🔓 **My \\*Room\\*** is open to join again."
+    },
+    "hide": {
+      "color": 5763719,
+      "title": "✅  Channel Hidden",
+      "description": "🙈 **My \\*Room\\*** is hidden from the channel list."
+    },
+    "reveal": {
+      "color": 5763719,
+      "title": "✅  Channel Revealed",
+      "description": "👁️ **My \\*Room\\*** is visible again."
+    },
+    "limit": {
+      "color": 5763719,
+      "title": "✅  Limit Updated",
+      "description": "👥 **My \\*Room\\*** now allows **4** members."
+    },
+    "rename": {
+      "color": 5763719,
+      "title": "✅  Channel Renamed",
+      "description": "✏️ The channel is now called **New\\_name**."
+    },
+    "kick": {
+      "color": 5763719,
+      "title": "✅  Member Kicked",
+      "description": "👢 Disconnected <@222> from **My \\*Room\\***."
+    },
+    "ban": {
+      "color": 5763719,
+      "title": "✅  Member Banned",
+      "description": "🔨 <@222> can no longer join **My \\*Room\\***."
+    },
+    "unban": {
+      "color": 5763719,
+      "title": "✅  Member Unbanned",
+      "description": "✅ <@222> can join **My \\*Room\\*** again."
+    },
+    "transfer": {
+      "color": 5763719,
+      "title": "✅  Ownership Transferred",
+      "description": "👑 <@222> now owns **My \\*Room\\***."
+    },
+    "claim": {
+      "color": 5763719,
+      "title": "✅  Channel Claimed",
+      "description": "👑 You now own **My \\*Room\\***."
+    },
+    "clean": {
+      "color": 5763719,
+      "title": "✅  Channels Cleaned",
+      "description": "🧹 Deleted **4** empty temporary channel(s)."
+    },
+    "nope": {
+      "color": 15548997,
+      "title": "❌  Something Went Wrong",
+      "description": "Something went wrong. Please try again in a moment."
+    },
+    "limit0": {
+      "color": 5763719,
+      "title": "✅  Limit Updated",
+      "description": "👥 **x** has no member limit now."
+    },
+    "clean0": {
+      "color": 5793266,
+      "title": "ℹ️  Nothing To Clean",
+      "description": "There are no empty temporary channels."
+    },
+    "noname": {
+      "color": 5763719,
+      "title": "✅  Channel Locked",
+      "description": "🔒 New members can no longer join **this channel**."
+    }
+  },
+  "describe": {
+    "10003": "channel not found",
+    "12345": "error 12345",
+    "30013": "the server has 500 channels",
+    "40032": "member not connected",
+    "50001": "no access",
+    "50013": "missing permissions",
+    "50035": "invalid request (is the category full?)",
+    "null": "error unknown"
+  },
+  "panel": {
+    "embed": {
+      "color": 1193046,
+      "title": "🔊 Temporary channel",
+      "description": "**Owner:** <@111>\n\nUse the buttons below or the `/voice` commands:\n🔒 **Lock** / 🔓 **Unlock**: stop or allow new members joining\n🙈 **Hide** / 👁️ **Reveal**: hide the channel from the channel list\n👑 **Claim**: take over after the owner leaves\n👥 **Limit** · ✏️ **Rename** · 👢 **Kick** · 🔨 **Ban** · 🤝 **Transfer**",
+      "footer": {
+        "text": "Only the owner and moderators can use these controls."
+      }
+    },
+    "components": [
+      {
+        "type": 1,
+        "components": [
+          {
+            "type": 2,
+            "emoji": {
+              "name": "🔒",
+              "animated": false
+            },
+            "custom_id": "voice:lock:123456789012345678",
+            "label": "Lock",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "🔓",
+              "animated": false
+            },
+            "custom_id": "voice:unlock:123456789012345678",
+            "label": "Unlock",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "🙈",
+              "animated": false
+            },
+            "custom_id": "voice:hide:123456789012345678",
+            "label": "Hide",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "👁️",
+              "animated": false
+            },
+            "custom_id": "voice:reveal:123456789012345678",
+            "label": "Reveal",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "👑",
+              "animated": false
+            },
+            "custom_id": "voice:claim:123456789012345678",
+            "label": "Claim",
+            "style": 1
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "components": [
+          {
+            "type": 2,
+            "emoji": {
+              "name": "👥",
+              "animated": false
+            },
+            "custom_id": "voice:limit:123456789012345678",
+            "label": "Limit",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "✏️",
+              "animated": false
+            },
+            "custom_id": "voice:rename:123456789012345678",
+            "label": "Rename",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "👢",
+              "animated": false
+            },
+            "custom_id": "voice:kick:123456789012345678",
+            "label": "Kick",
+            "style": 2
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "🔨",
+              "animated": false
+            },
+            "custom_id": "voice:ban:123456789012345678",
+            "label": "Ban",
+            "style": 4
+          },
+          {
+            "type": 2,
+            "emoji": {
+              "name": "🤝",
+              "animated": false
+            },
+            "custom_id": "voice:transfer:123456789012345678",
+            "label": "Transfer",
+            "style": 2
+          }
+        ]
+      }
+    ],
+    "allowedMentions": {
+      "parse": []
+    }
+  },
+  "pickers": {
+    "kick": {
+      "content": "Choose a member to disconnect.",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:kick:123456789012345678",
+              "placeholder": "Member to disconnect",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        }
+      ],
+      "ephemeral": true,
+      "allowedMentions": {
+        "parse": []
+      }
+    },
+    "ban": {
+      "content": "Choose a member to ban, or one to unban.",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:ban:123456789012345678",
+              "placeholder": "Member to ban",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:unban:123456789012345678",
+              "placeholder": "Member to unban",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        }
+      ],
+      "ephemeral": true,
+      "allowedMentions": {
+        "parse": []
+      }
+    },
+    "ban2": {
+      "content": "Choose a member to ban, or one to unban.\nBanned: <@5>, <@6>",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:ban:123456789012345678",
+              "placeholder": "Member to ban",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:unban:123456789012345678",
+              "placeholder": "Member to unban",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        }
+      ],
+      "ephemeral": true,
+      "allowedMentions": {
+        "parse": []
+      }
+    },
+    "transfer": {
+      "content": "Choose the new owner (they must be in the channel).",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 5,
+              "custom_id": "voice-select:transfer:123456789012345678",
+              "placeholder": "New owner",
+              "min_values": 1,
+              "max_values": 1
+            }
+          ]
+        }
+      ],
+      "ephemeral": true,
+      "allowedMentions": {
+        "parse": []
+      }
+    }
+  },
+  "modals": {
+    "limit": {
+      "custom_id": "voice-modal:limit:123456789012345678",
+      "title": "Member limit",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 4,
+              "custom_id": "voice-value",
+              "style": 1,
+              "required": true,
+              "label": "Maximum members (0 = no limit)",
+              "min_length": 1,
+              "max_length": 2,
+              "value": "5"
+            }
+          ]
+        }
+      ]
+    },
+    "limitNull": {
+      "custom_id": "voice-modal:limit:123456789012345678",
+      "title": "Member limit",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 4,
+              "custom_id": "voice-value",
+              "style": 1,
+              "required": true,
+              "label": "Maximum members (0 = no limit)",
+              "min_length": 1,
+              "max_length": 2,
+              "value": "0"
+            }
+          ]
+        }
+      ]
+    },
+    "rename": {
+      "custom_id": "voice-modal:rename:123456789012345678",
+      "title": "Rename channel",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 4,
+              "custom_id": "voice-value",
+              "style": 1,
+              "required": true,
+              "label": "New name",
+              "min_length": 1,
+              "max_length": 100,
+              "value": "Old name"
+            }
+          ]
+        }
+      ]
+    },
+    "renameEmpty": {
+      "custom_id": "voice-modal:rename:123456789012345678",
+      "title": "Rename channel",
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 4,
+              "custom_id": "voice-value",
+              "style": 1,
+              "required": true,
+              "label": "New name",
+              "min_length": 1,
+              "max_length": 100
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "render": [
+    {
+      "format": "#{index} - {username}'s Channel",
+      "out": "#3 - Bob's Channel"
+    },
+    {
+      "format": "{user.name} room",
+      "out": "bob room"
+    },
+    {
+      "format": "{user}",
+      "out": "#3 - Bob's Channel"
+    },
+    {
+      "format": "",
+      "out": "#3 - Bob's Channel"
+    },
+    {
+      "format": "   ",
+      "out": "#3 - Bob's Channel"
+    },
+    {
+      "format": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "format": "{nope} x",
+      "out": "{nope} x"
+    },
+    {
+      "format": "{username} {index}",
+      "out": "Bob 3"
+    },
+    {
+      "format": "  a \t b\nc  ",
+      "out": "a b c"
+    },
+    {
+      "format": "<#123456789012345678> hi",
+      "out": "hi"
+    },
+    {
+      "format": "{server} lounge",
+      "out": "Srv lounge"
+    },
+    {
+      "format": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "format": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮",
+      "out": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮…"
+    },
+    {
+      "format": "{ nope }",
+      "out": "{ nope }"
+    },
+    {
+      "format": "{Index}!",
+      "out": "3!"
+    }
+  ],
+  "validate": [
+    {
+      "format": "#{index} - {username}'s Channel",
+      "out": {
+        "ok": true,
+        "preview": "#1 - Bob's Channel",
+        "warnings": []
+      }
+    },
+    {
+      "format": "{user.name} room",
+      "out": {
+        "ok": true,
+        "preview": "bob room",
+        "warnings": []
+      }
+    },
+    {
+      "format": "{user}",
+      "out": {
+        "ok": false,
+        "error": "Channel names can't contain mentions. Use {username} or {user.name} instead of {user}."
+      }
+    },
+    {
+      "format": "",
+      "out": {
+        "ok": false,
+        "error": "Name formats must be 1–100 characters."
+      }
+    },
+    {
+      "format": "   ",
+      "out": {
+        "ok": false,
+        "error": "Name formats must be 1–100 characters."
+      }
+    },
+    {
+      "format": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "out": {
+        "ok": false,
+        "error": "Name formats must be 1–100 characters."
+      }
+    },
+    {
+      "format": "{nope} x",
+      "out": {
+        "ok": true,
+        "preview": "{nope} x",
+        "warnings": [
+          "Unknown placeholders are kept as typed: `{nope}`"
+        ]
+      }
+    },
+    {
+      "format": "{username} {index}",
+      "out": {
+        "ok": true,
+        "preview": "Bob 1",
+        "warnings": []
+      }
+    },
+    {
+      "format": "  a \t b\nc  ",
+      "out": {
+        "ok": true,
+        "preview": "a b c",
+        "warnings": []
+      }
+    },
+    {
+      "format": "<#123456789012345678> hi",
+      "out": {
+        "ok": false,
+        "error": "Channel names can't contain mentions. Use {username} or {user.name} instead of {user}."
+      }
+    },
+    {
+      "format": "{server} lounge",
+      "out": {
+        "ok": true,
+        "preview": "Srv lounge",
+        "warnings": []
+      }
+    },
+    {
+      "format": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "out": {
+        "ok": false,
+        "error": "Name formats must be 1–100 characters."
+      }
+    },
+    {
+      "format": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮",
+      "out": {
+        "ok": false,
+        "error": "Name formats must be 1–100 characters."
+      }
+    },
+    {
+      "format": "{ nope }",
+      "out": {
+        "ok": true,
+        "preview": "{ nope }",
+        "warnings": [
+          "Unknown placeholders are kept as typed: `{ nope }`"
+        ]
+      }
+    },
+    {
+      "format": "{Index}!",
+      "out": {
+        "ok": true,
+        "preview": "1!",
+        "warnings": []
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "input": "  Hello   World  ",
+      "out": "Hello World"
+    },
+    {
+      "input": "",
+      "out": null
+    },
+    {
+      "input": "   ",
+      "out": null
+    },
+    {
+      "input": null,
+      "out": null
+    },
+    {
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "input": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮",
+      "out": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮"
+    },
+    {
+      "input": "x\r\ny\tz",
+      "out": "x y z"
+    },
+    {
+      "input": "   nbsp   ",
+      "out": "nbsp"
+    },
+    {
+      "input": "trailing trailing trailing trailing trailing trailing trailing trailing trailing trailing trailing trailing ",
+      "out": "trailing trailing trailing trailing trailing trailing trailing trailing trailing trailing trailing t"
+    }
+  ],
+  "textNames": [
+    {
+      "input": "#3 - Bob's Channel",
+      "out": "3-bobs-channel"
+    },
+    {
+      "input": "Ünïcödé ROOM",
+      "out": "ünïcödé-room"
+    },
+    {
+      "input": "---",
+      "out": "voice-7"
+    },
+    {
+      "input": "",
+      "out": "voice-7"
+    },
+    {
+      "input": "ＦＵＬＬ ｗｉｄｔｈ",
+      "out": "full-width"
+    },
+    {
+      "input": "a -- b",
+      "out": "a-b"
+    },
+    {
+      "input": "🎮 Gaming 🎮",
+      "out": "gaming"
+    },
+    {
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "input": "Straße",
+      "out": "straße"
+    },
+    {
+      "input": "日本語 チャンネル",
+      "out": "日本語-チャンネル"
+    },
+    {
+      "input": "_under_score_",
+      "out": "_under_score_"
+    }
+  ],
+  "overwrites": {
+    "voice": [
+      {
+        "id": "200",
+        "type": 1,
+        "allow": "17910800",
+        "deny": "0"
+      },
+      {
+        "id": "300",
+        "type": 1,
+        "allow": "17827088",
+        "deny": "0"
+      },
+      {
+        "id": "400",
+        "type": 0,
+        "allow": "269485056",
+        "deny": "0"
+      },
+      {
+        "id": "500",
+        "type": 1,
+        "allow": "0",
+        "deny": "1048576"
+      },
+      {
+        "id": "9",
+        "type": 0,
+        "allow": "0",
+        "deny": "3146752"
+      }
+    ],
+    "voiceMasked": [
+      {
+        "id": "200",
+        "type": 1,
+        "allow": "17826832",
+        "deny": "0"
+      },
+      {
+        "id": "300",
+        "type": 1,
+        "allow": "17826832",
+        "deny": "0"
+      },
+      {
+        "id": "400",
+        "type": 0,
+        "allow": "1049600",
+        "deny": "0"
+      },
+      {
+        "id": "9",
+        "type": 0,
+        "allow": "0",
+        "deny": "1048576"
+      }
+    ],
+    "textPrivate": [
+      {
+        "id": "200",
+        "type": 1,
+        "allow": "2251799813778448",
+        "deny": "0"
+      },
+      {
+        "id": "300",
+        "type": 1,
+        "allow": "1024",
+        "deny": "0"
+      },
+      {
+        "id": "400",
+        "type": 0,
+        "allow": "268436480",
+        "deny": "0"
+      },
+      {
+        "id": "600",
+        "type": 1,
+        "allow": "1024",
+        "deny": "0"
+      },
+      {
+        "id": "9",
+        "type": 0,
+        "allow": "0",
+        "deny": "2098176"
+      }
+    ],
+    "textPublic": [
+      {
+        "id": "200",
+        "type": 1,
+        "allow": "1024",
+        "deny": "0"
+      },
+      {
+        "id": "400",
+        "type": 0,
+        "allow": "1024",
+        "deny": "0"
+      },
+      {
+        "id": "500",
+        "type": 1,
+        "allow": "0",
+        "deny": "1024"
+      }
+    ]
+  },
+  "summaries": [
+    {
+      "hub": {
+        "id": "h1",
+        "guildId": "9",
+        "channelId": "700",
+        "categoryId": null,
+        "nameFormat": "A `b` c",
+        "userLimit": 0,
+        "bitrate": null,
+        "keepAliveMinutes": 0,
+        "ownershipLockMinutes": 0,
+        "syncPermissions": true,
+        "createTextChannel": false,
+        "textChannelMembersOnly": true,
+        "ignoredRoleIds": [],
+        "moderatorRoleIds": []
+      },
+      "top": "Hub: <#700> · New channels in: top level\nName: `A ˋbˋ c`\nLimit: none · Bitrate: default · Keep alive: delete at once\nOwnership lock: none · Permissions: copied from category\nText channel: off\nMod roles: none · Ignored roles: none",
+      "parented": "Hub: <#700> · New channels in: the hub's category\nName: `A ˋbˋ c`\nLimit: none · Bitrate: default · Keep alive: delete at once\nOwnership lock: none · Permissions: copied from category\nText channel: off\nMod roles: none · Ignored roles: none"
+    },
+    {
+      "hub": {
+        "id": "h1",
+        "guildId": "9",
+        "channelId": "700",
+        "categoryId": "800",
+        "nameFormat": "A `b` c",
+        "userLimit": 5,
+        "bitrate": 64500,
+        "keepAliveMinutes": 10,
+        "ownershipLockMinutes": 3,
+        "syncPermissions": false,
+        "createTextChannel": true,
+        "textChannelMembersOnly": false,
+        "ignoredRoleIds": [
+          "11",
+          "12"
+        ],
+        "moderatorRoleIds": [
+          "13"
+        ]
+      },
+      "top": "Hub: <#700> · New channels in: <#800>\nName: `A ˋbˋ c`\nLimit: 5 · Bitrate: 65 kbps · Keep alive: 10 min\nOwnership lock: 3 min · Permissions: copied from hub channel\nText channel: public\nMod roles: <@&13> · Ignored roles: <@&11>, <@&12>",
+      "parented": "Hub: <#700> · New channels in: <#800>\nName: `A ˋbˋ c`\nLimit: 5 · Bitrate: 65 kbps · Keep alive: 10 min\nOwnership lock: 3 min · Permissions: copied from hub channel\nText channel: public\nMod roles: <@&13> · Ignored roles: <@&11>, <@&12>"
+    },
+    {
+      "hub": {
+        "id": "h1",
+        "guildId": "9",
+        "channelId": "700",
+        "categoryId": null,
+        "nameFormat": "A `b` c",
+        "userLimit": 0,
+        "bitrate": 96000,
+        "keepAliveMinutes": 0,
+        "ownershipLockMinutes": 0,
+        "syncPermissions": true,
+        "createTextChannel": true,
+        "textChannelMembersOnly": true,
+        "ignoredRoleIds": [],
+        "moderatorRoleIds": []
+      },
+      "top": "Hub: <#700> · New channels in: top level\nName: `A ˋbˋ c`\nLimit: none · Bitrate: 96 kbps · Keep alive: delete at once\nOwnership lock: none · Permissions: copied from category\nText channel: private\nMod roles: none · Ignored roles: none",
+      "parented": "Hub: <#700> · New channels in: the hub's category\nName: `A ˋbˋ c`\nLimit: none · Bitrate: 96 kbps · Keep alive: delete at once\nOwnership lock: none · Permissions: copied from category\nText channel: private\nMod roles: none · Ignored roles: none"
+    }
+  ],
+  "botTextPerms": "2251799813778448",
+  "keys": {
+    "cleanup": "tempvoice.cleanup:123456789012345678",
+    "rename": "tempvoice:rename:123456789012345678"
+  },
+  "voiceRoles": {
+    "settings": {
+      "voiceRoleLinks": [
+        {
+          "channelId": "c1",
+          "roleId": "r1"
+        },
+        {
+          "channelId": "c1",
+          "roleId": "r1"
+        },
+        null,
+        {
+          "channelId": 5,
+          "roleId": "r2"
+        },
+        {
+          "channelId": "cat",
+          "roleId": "r2"
+        },
+        {
+          "channelId": "",
+          "roleId": "r3"
+        },
+        {
+          "channelId": "c2",
+          "roleId": "r4"
+        }
+      ],
+      "voiceRoleAnyRoleIds": [
+        "a1",
+        "a1",
+        "r1"
+      ],
+      "voiceRoleIgnoreAfk": true
+    },
+    "links": [
+      {
+        "channelId": "c1",
+        "roleId": "r1"
+      },
+      {
+        "channelId": "cat",
+        "roleId": "r2"
+      },
+      {
+        "channelId": "c2",
+        "roleId": "r4"
+      }
+    ],
+    "any": [
+      "a1",
+      "r1"
+    ],
+    "managed": [
+      "r1",
+      "r2",
+      "r4",
+      "a1"
+    ],
+    "desired": {
+      "c1": [
+        "r1",
+        "a1"
+      ],
+      "inCat": [
+        "r2",
+        "a1",
+        "r1"
+      ],
+      "none": [],
+      "afk": [],
+      "afkOff": [
+        "a1",
+        "r1"
+      ]
+    },
+    "dropChannel": {
+      "voiceRoleLinks": [
+        null,
+        {
+          "channelId": 5,
+          "roleId": "r2"
+        },
+        {
+          "channelId": "cat",
+          "roleId": "r2"
+        },
+        {
+          "channelId": "",
+          "roleId": "r3"
+        },
+        {
+          "channelId": "c2",
+          "roleId": "r4"
+        }
+      ]
+    },
+    "dropChannelNone": null,
+    "dropRole": {
+      "voiceRoleLinks": [
+        null,
+        {
+          "channelId": 5,
+          "roleId": "r2"
+        },
+        {
+          "channelId": "cat",
+          "roleId": "r2"
+        },
+        {
+          "channelId": "",
+          "roleId": "r3"
+        },
+        {
+          "channelId": "c2",
+          "roleId": "r4"
+        }
+      ],
+      "voiceRoleAnyRoleIds": [
+        "a1",
+        "a1"
+      ]
+    },
+    "dropRoleNone": null
+  },
+  "reasons": {
+    "add": "Voice Roles: joined a linked voice channel",
+    "remove": "Voice Roles: not in a linked voice channel"
+  }
+}

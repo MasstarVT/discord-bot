@@ -1,0 +1,1740 @@
+[
+  {
+    "file": "src/plugins/achievements.js",
+    "id": "achievements",
+    "module": "achievements",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "achievements",
+        "always": false,
+        "timeoutMs": 5000,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionAdd",
+        "id": "achievements",
+        "always": false,
+        "timeoutMs": 5000,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "achievements",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "levelUp",
+        "id": "achievements",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "economyPurchase",
+        "id": "achievements",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/afk.js",
+    "id": "afk",
+    "module": "afk",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "afk",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/antiraid.js",
+    "id": "antiraid",
+    "module": "antiraid",
+    "hooks": [
+      {
+        "event": "guildMemberAdd",
+        "id": "antiraid",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "antiraid",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "antiraid",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "antiraid.unlock"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/applications.js",
+    "id": "applications",
+    "module": "applications",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "applications",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "applications",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "applications",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "application"
+      },
+      {
+        "type": "modal",
+        "prefix": "application-modal"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/auto-threads.js",
+    "id": "auto-threads",
+    "module": "autothreads",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "auto-threads",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "botMessage",
+        "id": "auto-threads",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "auto-threads",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "autothread"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/automations.js",
+    "id": "automations",
+    "module": "automations",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageUpdate",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDelete",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionAdd",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "voiceStateUpdate",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "threadCreate",
+        "id": "automations",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "automation"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/automod.js",
+    "id": "automod",
+    "module": "automod",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "automod",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": true
+      },
+      {
+        "event": "messageUpdate",
+        "id": "automod",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/autotime.js",
+    "id": "autotime",
+    "module": "autotime",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "autotime",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/backups.js",
+    "id": "backups",
+    "module": "backups",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "backups",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "backup",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "backup.auto",
+      "backup.restore"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/birthdays.js",
+    "id": "birthdays",
+    "module": "birthdays",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "birthdays",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "birthday.tick"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/boosts.js",
+    "id": "boosts",
+    "module": "boosts",
+    "hooks": [
+      {
+        "event": "guildMemberUpdate",
+        "id": "boosts",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "boosts",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildReady",
+        "id": "boosts",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelDelete",
+        "id": "boosts",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "boosts",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "boosts.sweep"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/bot-joins.js",
+    "id": "bot-joins",
+    "module": null,
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "bot-joins",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/bumps.js",
+    "id": "bumps",
+    "module": "bumps",
+    "hooks": [
+      {
+        "event": "botMessage",
+        "id": "bumps",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "bumps",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "bumps",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "bump.remind"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/captcha.js",
+    "id": "captcha",
+    "module": "captcha",
+    "hooks": [
+      {
+        "event": "guildMemberAdd",
+        "id": "captcha",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "captcha",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "captcha",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "captcha"
+      },
+      {
+        "type": "modal",
+        "prefix": "captcha-modal",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "captcha.timeout"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/confessions.js",
+    "id": "confessions",
+    "module": "confessions",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "confessions",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "confessions",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "confession"
+      },
+      {
+        "type": "modal",
+        "prefix": "confession-modal"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/counting.js",
+    "id": "counting",
+    "module": "counting",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "counting",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDelete",
+        "id": "counting",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/custom-commands.js",
+    "id": "custom-commands",
+    "module": "customcommands",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "custom-commands",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": true
+      },
+      {
+        "event": "messageCreate",
+        "id": "custom-commands:triggers",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/dashboard-tasks.js",
+    "id": "dashboard-tasks",
+    "module": null,
+    "hooks": [],
+    "components": [],
+    "jobs": [
+      "dashboard.task"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/economy.js",
+    "id": "economy",
+    "module": "economy",
+    "hooks": [],
+    "components": [],
+    "jobs": [],
+    "provides": [
+      "coins"
+    ],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/embeds.js",
+    "id": "embeds",
+    "module": "embeds",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "embeds",
+        "always": true,
+        "timeoutMs": 5000,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "modal",
+        "prefix": "embed-modal"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/events.js",
+    "id": "events",
+    "module": "events",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "events",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "events",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      },
+      {
+        "event": "roleDelete",
+        "id": "events",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildScheduledEventUpdate",
+        "id": "events",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      },
+      {
+        "event": "guildScheduledEventDelete",
+        "id": "events",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      },
+      {
+        "event": "voiceStateUpdate",
+        "id": "events",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "event"
+      },
+      {
+        "type": "button",
+        "prefix": "event-edit"
+      },
+      {
+        "type": "modal",
+        "prefix": "event-modal"
+      }
+    ],
+    "jobs": [
+      "event.remind",
+      "event.end",
+      "event.voice",
+      "event.cleanup"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/feeds.js",
+    "id": "feeds",
+    "module": "feeds",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "feeds",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      },
+      {
+        "event": "channelDelete",
+        "id": "feeds",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "feed.poll"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/games-fixes.js",
+    "id": "games-fixes",
+    "module": "games",
+    "hooks": [],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "scrabble-rack"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/giveaways.js",
+    "id": "giveaways",
+    "module": "giveaways",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "giveaways",
+        "always": true,
+        "timeoutMs": 10000,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDeleteBulk",
+        "id": "giveaways",
+        "always": true,
+        "timeoutMs": 10000,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "giveaway"
+      }
+    ],
+    "jobs": [
+      "giveaway.end"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/invites.js",
+    "id": "invites",
+    "module": "invites",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "invites",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "invites",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "invites",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "inviteCreate",
+        "id": "invites",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "inviteDelete",
+        "id": "invites",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/levels.js",
+    "id": "levels",
+    "module": "leveling",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "levels",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "voiceStateUpdate",
+        "id": "levels",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "levels",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildReady",
+        "id": "levels",
+        "always": false,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "levels.voiceSweep"
+    ],
+    "provides": [
+      "xp"
+    ],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/liverole.js",
+    "id": "liverole",
+    "module": "liverole",
+    "hooks": [
+      {
+        "event": "presenceUpdate",
+        "id": "liverole",
+        "always": false,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      },
+      {
+        "event": "guildReady",
+        "id": "liverole",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "liverole",
+        "always": false,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/logging.js",
+    "id": "logging",
+    "module": "logging",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "messageDelete",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "messageDeleteBulk",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": false
+      },
+      {
+        "event": "voiceStateUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "userUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelDelete",
+        "id": "logging",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "threadCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "threadUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "threadDelete",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "roleCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "roleUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "roleDelete",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildBanAdd",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildBanRemove",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "emojiCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "emojiUpdate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "emojiDelete",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "inviteCreate",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "inviteDelete",
+        "id": "logging",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/moderation.js",
+    "id": "moderation",
+    "module": "moderation",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "moderation",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "moderation",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildBanAdd",
+        "id": "moderation",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildBanRemove",
+        "id": "moderation",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "mod.unban",
+      "mod.expire"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/modmail.js",
+    "id": "modmail",
+    "module": "modmail",
+    "hooks": [
+      {
+        "event": "directMessage",
+        "id": "modmail",
+        "module": null,
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      },
+      {
+        "event": "messageCreate",
+        "id": "modmail",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "modmail",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      },
+      {
+        "event": "threadDelete",
+        "id": "modmail",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "modmail",
+        "module": null
+      },
+      {
+        "type": "select",
+        "prefix": "modmail-select",
+        "module": null
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/polls.js",
+    "id": "polls",
+    "module": "polls",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "polls",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDeleteBulk",
+        "id": "polls",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelDelete",
+        "id": "polls",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "poll"
+      },
+      {
+        "type": "select",
+        "prefix": "poll-select"
+      },
+      {
+        "type": "modal",
+        "prefix": "poll-modal"
+      }
+    ],
+    "jobs": [
+      "poll.end"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/reaction-roles.js",
+    "id": "reaction-roles",
+    "module": "reactionroles",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "reaction-roles",
+        "always": false,
+        "timeoutMs": 60000,
+        "hasFilter": false
+      },
+      {
+        "event": "messageReactionAdd",
+        "id": "reaction-roles",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemove",
+        "id": "reaction-roles",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemoveAll",
+        "id": "reaction-roles",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemoveEmoji",
+        "id": "reaction-roles",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDelete",
+        "id": "reaction-roles",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "reaction-roles",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "rr"
+      },
+      {
+        "type": "select",
+        "prefix": "rr-select"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/reminders.js",
+    "id": "reminders",
+    "module": "reminders",
+    "hooks": [
+      {
+        "event": "channelDelete",
+        "id": "reminders",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildReady",
+        "id": "reminders",
+        "always": true,
+        "timeoutMs": 30000,
+        "hasFilter": false
+      }
+    ],
+    "components": [
+      {
+        "type": "modal",
+        "prefix": "reminder-modal",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "reminder.fire"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/role-persist.js",
+    "id": "role-persist",
+    "module": "rolepersist",
+    "hooks": [
+      {
+        "event": "guildMemberRemove",
+        "id": "role-persist",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "role-persist",
+        "always": false,
+        "timeoutMs": 20000,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "role-persist",
+        "always": false,
+        "timeoutMs": 20000,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "role-persist",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/starboard.js",
+    "id": "starboard",
+    "module": "starboard",
+    "hooks": [
+      {
+        "event": "messageReactionAdd",
+        "id": "starboard",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemove",
+        "id": "starboard",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemoveAll",
+        "id": "starboard",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageReactionRemoveEmoji",
+        "id": "starboard",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageUpdate",
+        "id": "starboard",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDelete",
+        "id": "starboard",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDeleteBulk",
+        "id": "starboard",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "starboard",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/stat-channels.js",
+    "id": "stat-channels",
+    "module": "stats",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "stat-channels",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberAdd",
+        "id": "stat-channels",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "stat-channels",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "stat-channels",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [
+      "stats.refresh"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/sticky.js",
+    "id": "sticky",
+    "module": "sticky",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "sticky",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "ownMessage",
+        "id": "sticky",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "messageDelete",
+        "id": "sticky",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "sticky",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "modal",
+        "prefix": "sticky-modal",
+        "module": null
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/suggestions.js",
+    "id": "suggestions",
+    "module": "suggestions",
+    "hooks": [
+      {
+        "event": "messageDelete",
+        "id": "suggestions",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "suggestions",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "suggestion"
+      },
+      {
+        "type": "modal",
+        "prefix": "suggestion-modal"
+      }
+    ],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/temp-voice.js",
+    "id": "temp-voice",
+    "module": "tempvoice",
+    "hooks": [
+      {
+        "event": "guildReady",
+        "id": "temp-voice",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "voiceStateUpdate",
+        "id": "temp-voice",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "channelDelete",
+        "id": "temp-voice",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "voice"
+      },
+      {
+        "type": "select",
+        "prefix": "voice-select"
+      },
+      {
+        "type": "modal",
+        "prefix": "voice-modal"
+      }
+    ],
+    "jobs": [
+      "tempvoice.cleanup"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/tickets.js",
+    "id": "tickets",
+    "module": "tickets",
+    "hooks": [
+      {
+        "event": "channelDelete",
+        "id": "tickets",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "button",
+        "prefix": "ticket"
+      },
+      {
+        "type": "select",
+        "prefix": "ticket-select"
+      },
+      {
+        "type": "modal",
+        "prefix": "ticket-modal",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "ticket.managersync"
+    ],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/translation-fixes.js",
+    "id": "translation-fixes",
+    "module": "translation",
+    "hooks": [
+      {
+        "event": "messageCreate",
+        "id": "translation-fixes",
+        "always": false,
+        "timeoutMs": 45000,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/voice-roles.js",
+    "id": "voice-roles",
+    "module": "voiceroles",
+    "hooks": [
+      {
+        "event": "voiceStateUpdate",
+        "id": "voice-roles",
+        "always": false,
+        "timeoutMs": 30000,
+        "hasFilter": true
+      },
+      {
+        "event": "guildReady",
+        "id": "voice-roles",
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": false
+      },
+      {
+        "event": "channelDelete",
+        "id": "voice-roles",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "voice-roles",
+        "always": true,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [],
+    "jobs": [],
+    "provides": [],
+    "hasInit": false
+  },
+  {
+    "file": "src/plugins/welcome.js",
+    "id": "welcome",
+    "module": "welcome",
+    "hooks": [
+      {
+        "event": "guildMemberAdd",
+        "id": "welcome",
+        "module": null,
+        "always": false,
+        "timeoutMs": 15000,
+        "hasFilter": false
+      },
+      {
+        "event": "guildMemberRemove",
+        "id": "welcome",
+        "module": null,
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "guildMemberUpdate",
+        "id": "welcome",
+        "module": null,
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      },
+      {
+        "event": "roleDelete",
+        "id": "welcome",
+        "module": null,
+        "always": false,
+        "timeoutMs": null,
+        "hasFilter": true
+      }
+    ],
+    "components": [
+      {
+        "type": "modal",
+        "prefix": "welcome-setup",
+        "module": null
+      },
+      {
+        "type": "modal",
+        "prefix": "welcome-dm-setup",
+        "module": null
+      },
+      {
+        "type": "modal",
+        "prefix": "goodbye-setup",
+        "module": null
+      }
+    ],
+    "jobs": [
+      "welcome.autorole"
+    ],
+    "provides": [],
+    "hasInit": false
+  }
+]

@@ -1,0 +1,3483 @@
+{
+ "docs": {
+  "rss": {
+   "xml": "<?xml version=\"1.0\"?>\n<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2005/Atom\"><channel>\n<title>Example &amp; Co</title><link>https://example.com/</link><atom:link href=\"https://example.com/feed.xml\" rel=\"self\"/>\n<item><title><![CDATA[Hello <b>World</b>]]></title><link>https://example.com/2</link><guid isPermaLink=\"false\">post-2</guid>\n<pubDate>Fri, 09 Oct 2026 10:00:00 GMT</pubDate><dc:creator>Ann</dc:creator><description>&lt;p&gt;Second&lt;/p&gt;</description></item>\n<item><title>First</title><link>https://example.com/1</link><pubDate>Thu, 08 Oct 2026 10:00:00 GMT</pubDate></item>\n</channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "Example & Co",
+       "link": [
+        "https://example.com/",
+        {
+         "@_href": "https://example.com/feed.xml",
+         "@_rel": "self"
+        }
+       ],
+       "item": [
+        {
+         "title": "Hello <b>World</b>",
+         "link": "https://example.com/2",
+         "guid": {
+          "#text": "post-2",
+          "@_isPermaLink": "false"
+         },
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 GMT",
+         "creator": "Ann",
+         "description": "<p>Second</p>"
+        },
+        {
+         "title": "First",
+         "link": "https://example.com/1",
+         "pubDate": "Thu, 08 Oct 2026 10:00:00 GMT"
+        }
+       ]
+      },
+      "@_version": "2.0"
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "Example & Co",
+    "link": "https://example.com/",
+    "image": null,
+    "items": [
+     {
+      "id": "post-2",
+      "title": "Hello World",
+      "url": "https://example.com/2",
+      "author": "Ann",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "Second",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://example.com/1",
+      "title": "First",
+      "url": "https://example.com/1",
+      "author": "",
+      "publishedAt": "2026-10-08T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "youtube": {
+   "xml": "<feed xmlns:yt=\"http://www.youtube.com/xml/schemas/2015\" xmlns:media=\"http://search.yahoo.com/mrss/\" xmlns=\"http://www.w3.org/2005/Atom\">\n<title>Chan</title><entry><id>yt:video:abc123</id><yt:videoId>abc123</yt:videoId><title>Vid</title>\n<link rel=\"alternate\" href=\"https://www.youtube.com/watch?v=abc123\"/><author><name>Chan</name></author>\n<published>2026-10-09T12:00:00+00:00</published><media:group><media:thumbnail url=\"https://i.ytimg.com/vi/abc123/hqdefault.jpg\" width=\"480\" height=\"360\"/></media:group></entry></feed>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "feed": {
+      "title": "Chan",
+      "entry": {
+       "id": "yt:video:abc123",
+       "videoId": "abc123",
+       "title": "Vid",
+       "link": {
+        "@_rel": "alternate",
+        "@_href": "https://www.youtube.com/watch?v=abc123"
+       },
+       "author": {
+        "name": "Chan"
+       },
+       "published": "2026-10-09T12:00:00+00:00",
+       "group": {
+        "thumbnail": {
+         "@_url": "https://i.ytimg.com/vi/abc123/hqdefault.jpg",
+         "@_width": "480",
+         "@_height": "360"
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "atom",
+    "title": "Chan",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "yt:video:abc123",
+      "title": "Vid",
+      "url": "https://www.youtube.com/watch?v=abc123",
+      "author": "Chan",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": "https://i.ytimg.com/vi/abc123/hqdefault.jpg",
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "reddit": {
+   "xml": "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:media=\"http://search.yahoo.com/mrss/\"><title>newest submissions : aww</title>\n<entry><author><name>/u/kit</name></author><content type=\"html\">&lt;p&gt;so cute&lt;/p&gt; submitted by &lt;a href=\"https://www.reddit.com/user/kit\"&gt; /u/kit &lt;/a&gt; [link] [comments]</content>\n<id>t3_xyz</id><media:thumbnail url=\"https://b.thumbs.redditmedia.com/x.jpg\"/><link href=\"https://www.reddit.com/r/aww/comments/xyz/cat/\"/>\n<published>2026-10-09T12:00:00+00:00</published><title>Cat</title></entry></feed>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "feed": {
+      "title": "newest submissions : aww",
+      "entry": {
+       "author": {
+        "name": "/u/kit"
+       },
+       "content": {
+        "#text": "<p>so cute</p> submitted by <a href=\"https://www.reddit.com/user/kit\"> /u/kit </a> [link] [comments]",
+        "@_type": "html"
+       },
+       "id": "t3_xyz",
+       "thumbnail": {
+        "@_url": "https://b.thumbs.redditmedia.com/x.jpg"
+       },
+       "link": {
+        "@_href": "https://www.reddit.com/r/aww/comments/xyz/cat/"
+       },
+       "published": "2026-10-09T12:00:00+00:00",
+       "title": "Cat"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "atom",
+    "title": "newest submissions : aww",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "t3_xyz",
+      "title": "Cat",
+      "url": "https://www.reddit.com/r/aww/comments/xyz/cat/",
+      "author": "u/kit",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": "https://b.thumbs.redditmedia.com/x.jpg",
+      "summary": "so cute",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "rdf": {
+   "xml": "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns=\"http://purl.org/rss/1.0/\">\n<channel rdf:about=\"https://r.example/\"><title>RDF Feed</title><link>https://r.example/</link></channel>\n<item rdf:about=\"https://r.example/a\"><title>A</title><link>https://r.example/a</link></item></rdf:RDF>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "RDF": {
+      "channel": {
+       "title": "RDF Feed",
+       "link": "https://r.example/",
+       "@_about": "https://r.example/"
+      },
+      "item": {
+       "title": "A",
+       "link": "https://r.example/a",
+       "@_about": "https://r.example/a"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rdf",
+    "title": "RDF Feed",
+    "link": "https://r.example/",
+    "image": null,
+    "items": [
+     {
+      "id": "https://r.example/a",
+      "title": "A",
+      "url": "https://r.example/a",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "podcast": {
+   "xml": "<rss xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\"><channel><title>Pod</title><itunes:image href=\"https://p.example/art.jpg\"/>\n<item><title>Ep 1</title><enclosure url=\"https://p.example/1.mp3\" type=\"audio/mpeg\" length=\"1\"/><guid isPermaLink=\"false\">ep-1</guid>\n<itunes:author>Host</itunes:author><pubDate>Fri, 09 Oct 2026 10:00:00 GMT</pubDate></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "Pod",
+       "image": {
+        "@_href": "https://p.example/art.jpg"
+       },
+       "item": {
+        "title": "Ep 1",
+        "enclosure": {
+         "@_url": "https://p.example/1.mp3",
+         "@_type": "audio/mpeg",
+         "@_length": "1"
+        },
+        "guid": {
+         "#text": "ep-1",
+         "@_isPermaLink": "false"
+        },
+        "author": "Host",
+        "pubDate": "Fri, 09 Oct 2026 10:00:00 GMT"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "Pod",
+    "link": null,
+    "image": "https://p.example/art.jpg",
+    "items": [
+     {
+      "id": "ep-1",
+      "title": "Ep 1",
+      "url": "https://p.example/1.mp3",
+      "author": "Host",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "lolz": {
+   "xml": "<?xml version=\"1.0\"?><!DOCTYPE lolz [<!ENTITY lol \"lol\"><!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">]><rss><channel><title>&lol2;</title></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "&lol2;"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "&lol2;",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "nasty": {
+   "xml": "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY a \"]>\"><!ENTITY b \"&a;&a;&a;&a;\"><!ENTITY c \"&b;&b;&b;&b;&b;&b;\">]><!DOCTYPE y [<!ENTITY d \"&c;&c;&c;\">]><rss><channel><title>&c;&d;</title></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "&c;&d;"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "&c;&d;",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "odd": {
+   "xml": "<rss><channel><title>t</title>\n    <item></item>\n    <item><title>Only title</title></item>\n    <item><guid>gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg</guid><title>Long</title><link>not a url</link></item>\n    <item><title>Space</title><link>https://x.test/a b</link></item>\n  </channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "t",
+       "item": [
+        "",
+        {
+         "title": "Only title"
+        },
+        {
+         "guid": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+         "title": "Long",
+         "link": "not a url"
+        },
+        {
+         "title": "Space",
+         "link": "https://x.test/a b"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "t",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "Only title|",
+      "title": "Only title",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "sha1:f33c2f078055129b47afbca86e58a820c5779ebb",
+      "title": "Long",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://x.test/a%20b",
+      "title": "Space",
+      "url": "https://x.test/a%20b",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "entityOutsideDoctype": {
+   "xml": "<rss><channel><title>t</title><!ENTITY z \"q\"></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "t",
+       "!ENTITY": {
+        "@_z": true,
+        "@_\"q\"": true
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "unterminatedDoctype": {
+   "xml": "<!DOCTYPE x [<!ENTITY a \"b\"><rss><channel><title>t</title></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {}
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "html": {
+   "xml": "<html><body>hi</body></html>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "html": {
+      "body": "hi"
+     }
+    }
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "notXml": {
+   "xml": "not xml",
+   "tree": {
+    "ok": true,
+    "tree": {}
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "selfClosingRss": {
+   "xml": "<rss/>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": ""
+    }
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "note": {
+   "xml": "<note>hi</note>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "note": "hi"
+    }
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "deep40": {
+   "xml": "<rss><channel><title>deep</title><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "deep",
+       "x": {
+        "x": {
+         "x": {
+          "x": {
+           "x": {
+            "x": {
+             "x": {
+              "x": {
+               "x": {
+                "x": {
+                 "x": {
+                  "x": {
+                   "x": {
+                    "x": {
+                     "x": {
+                      "x": {
+                       "x": {
+                        "x": {
+                         "x": {
+                          "x": {
+                           "x": {
+                            "x": {
+                             "x": {
+                              "x": {
+                               "x": {
+                                "x": {
+                                 "x": {
+                                  "x": {
+                                   "x": {
+                                    "x": {
+                                     "x": {
+                                      "x": {
+                                       "x": {
+                                        "x": {
+                                         "x": {
+                                          "x": {
+                                           "x": {
+                                            "x": ""
+                                           }
+                                          }
+                                         }
+                                        }
+                                       }
+                                      }
+                                     }
+                                    }
+                                   }
+                                  }
+                                 }
+                                }
+                               }
+                              }
+                             }
+                            }
+                           }
+                          }
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "deep",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "deep41": {
+   "xml": "<rss><channel><title>deep</title><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "deep",
+       "x": {
+        "x": {
+         "x": {
+          "x": {
+           "x": {
+            "x": {
+             "x": {
+              "x": {
+               "x": {
+                "x": {
+                 "x": {
+                  "x": {
+                   "x": {
+                    "x": {
+                     "x": {
+                      "x": {
+                       "x": {
+                        "x": {
+                         "x": {
+                          "x": {
+                           "x": {
+                            "x": {
+                             "x": {
+                              "x": {
+                               "x": {
+                                "x": {
+                                 "x": {
+                                  "x": {
+                                   "x": {
+                                    "x": {
+                                     "x": {
+                                      "x": {
+                                       "x": {
+                                        "x": {
+                                         "x": {
+                                          "x": {
+                                           "x": {
+                                            "x": {
+                                             "x": ""
+                                            }
+                                           }
+                                          }
+                                         }
+                                        }
+                                       }
+                                      }
+                                     }
+                                    }
+                                   }
+                                  }
+                                 }
+                                }
+                               }
+                              }
+                             }
+                            }
+                           }
+                          }
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "deep",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "deep45": {
+   "xml": "<rss><channel><title>deep</title><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x><x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></x></channel></rss>",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "cdataMix": {
+   "xml": "<rss><channel><title>T</title><item><title>a <![CDATA[ <b>B</b> ]]> c</title><guid>1</guid><description><![CDATA[]]></description></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "a <b>B</b> c",
+        "guid": "1",
+        "description": ""
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "1",
+      "title": "a B c",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "cdataLink": {
+   "xml": "<rss><channel><title>T</title><item><title>x</title><link><![CDATA[https://c.test/p?a=1&b=2]]></link></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "x",
+        "link": "https://c.test/p?a=1&b=2"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "https://c.test/p?a=1&b=2",
+      "title": "x",
+      "url": "https://c.test/p?a=1&b=2",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "entities": {
+   "xml": "<rss><channel><title>T</title><item><title>&nbsp;&mdash;&#x1F600;&#0;&#55296;&#1114112;&bogus;&amp;lt; R&D &#65abc; &#x0x41; &#; &#x; &euro;&yen;</title><guid>e</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": " —😀&#1114112;&bogus;&lt; R&D A A &#; &#x; €¥",
+        "guid": "e"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "e",
+      "title": "—😀&bogus;< R&D A A &#; &#x; €¥",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "xml11": {
+   "xml": "<?xml version=\"1.1\"?><rss><channel><title>T</title><item><title>a&#1;b&#2;</title><guid>v</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "a\u0001b\u0002",
+        "guid": "v"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "v",
+      "title": "a\u0001b\u0002",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "xml10ctrl": {
+   "xml": "<rss><channel><title>T</title><item><title>a&#1;b&#9;c</title><guid>v</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "ab\tc",
+        "guid": "v"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "v",
+      "title": "ab c",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "namespaces": {
+   "xml": "<rss xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" xmlns:media=\"http://search.yahoo.com/mrss/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><channel><title>NS</title><link>https://ns.test/</link>\n<image><url>https://ns.test/logo.png</url></image>\n<item><title>N1</title><guid isPermaLink=\"true\">https://ns.test/1</guid><content:encoded><![CDATA[<p>Full <i>body</i></p><script>alert(1)</script>]]></content:encoded><media:content url=\"https://ns.test/i.jpg\" medium=\"image\"/><dc:date>2026-10-09T08:00:00Z</dc:date></item>\n<item><title>N2</title><enclosure url=\"https://ns.test/pic.png\" type=\"IMAGE/PNG\"/><enclosure url=\"https://ns.test/a.mp3\" type=\"audio/mpeg\"/><updated>Fri, 09 Oct 2026 07:00:00 GMT</updated></item>\n<item><enclosure url=\"https://ns.test/only.mp3\"/></item>\n<item><guid>https://ns.test/permalink</guid></item>\n<item><guid isPermaLink=\"false\">https://ns.test/nope</guid><title>G</title></item>\n</channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "NS",
+       "link": "https://ns.test/",
+       "image": {
+        "url": "https://ns.test/logo.png"
+       },
+       "item": [
+        {
+         "title": "N1",
+         "guid": {
+          "#text": "https://ns.test/1",
+          "@_isPermaLink": "true"
+         },
+         "encoded": "<p>Full <i>body</i></p><script>alert(1)</script>",
+         "content": {
+          "@_url": "https://ns.test/i.jpg",
+          "@_medium": "image"
+         },
+         "date": "2026-10-09T08:00:00Z"
+        },
+        {
+         "title": "N2",
+         "enclosure": [
+          {
+           "@_url": "https://ns.test/pic.png",
+           "@_type": "IMAGE/PNG"
+          },
+          {
+           "@_url": "https://ns.test/a.mp3",
+           "@_type": "audio/mpeg"
+          }
+         ],
+         "updated": "Fri, 09 Oct 2026 07:00:00 GMT"
+        },
+        {
+         "enclosure": {
+          "@_url": "https://ns.test/only.mp3"
+         }
+        },
+        {
+         "guid": "https://ns.test/permalink"
+        },
+        {
+         "guid": {
+          "#text": "https://ns.test/nope",
+          "@_isPermaLink": "false"
+         },
+         "title": "G"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "NS",
+    "link": "https://ns.test/",
+    "image": "https://ns.test/logo.png",
+    "items": [
+     {
+      "id": "https://ns.test/1",
+      "title": "N1",
+      "url": "https://ns.test/1",
+      "author": "",
+      "publishedAt": "2026-10-09T08:00:00.000Z",
+      "image": "https://ns.test/i.jpg",
+      "summary": "Full body",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://ns.test/pic.png",
+      "title": "N2",
+      "url": "https://ns.test/pic.png",
+      "author": "",
+      "publishedAt": "2026-10-09T07:00:00.000Z",
+      "image": "https://ns.test/pic.png",
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://ns.test/only.mp3",
+      "title": "(untitled)",
+      "url": "https://ns.test/only.mp3",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://ns.test/permalink",
+      "title": "(untitled)",
+      "url": "https://ns.test/permalink",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://ns.test/nope",
+      "title": "G",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "atomLinks": {
+   "xml": "<feed><title type=\"html\">&lt;b&gt;Atom&lt;/b&gt;</title><link rel=\"self\" href=\"https://a.test/self\"/><link href=\"https://a.test/\"/><logo>https://a.test/logo.png</logo>\n<entry><title>E1</title><link rel=\"enclosure\" href=\"https://a.test/e.mp3\"/><link rel=\"alternate\" type=\"text/html\" href=\"https://a.test/e1\"/><id>urn:e1</id><updated>2026-10-09T12:00:00Z</updated><summary>Sum &amp; mary</summary><author><name>Writer</name></author></entry>\n<entry><title>E2</title><link rel=\"related\" href=\"https://a.test/rel\"/><id>urn:e2</id><content type=\"xhtml\"><div>XHTML <b>content</b></div></content><author>Bare</author></entry>\n<entry><title>E3</title><link>https://a.test/textlink</link><link href=\"https://a.test/href\"/></entry>\n</feed>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "feed": {
+      "title": {
+       "#text": "<b>Atom</b>",
+       "@_type": "html"
+      },
+      "link": [
+       {
+        "@_rel": "self",
+        "@_href": "https://a.test/self"
+       },
+       {
+        "@_href": "https://a.test/"
+       }
+      ],
+      "logo": "https://a.test/logo.png",
+      "entry": [
+       {
+        "title": "E1",
+        "link": [
+         {
+          "@_rel": "enclosure",
+          "@_href": "https://a.test/e.mp3"
+         },
+         {
+          "@_rel": "alternate",
+          "@_type": "text/html",
+          "@_href": "https://a.test/e1"
+         }
+        ],
+        "id": "urn:e1",
+        "updated": "2026-10-09T12:00:00Z",
+        "summary": "Sum & mary",
+        "author": {
+         "name": "Writer"
+        }
+       },
+       {
+        "title": "E2",
+        "link": {
+         "@_rel": "related",
+         "@_href": "https://a.test/rel"
+        },
+        "id": "urn:e2",
+        "content": {
+         "div": {
+          "b": "content",
+          "#text": "XHTML"
+         },
+         "@_type": "xhtml"
+        },
+        "author": "Bare"
+       },
+       {
+        "title": "E3",
+        "link": [
+         "https://a.test/textlink",
+         {
+          "@_href": "https://a.test/href"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "atom",
+    "title": "Atom",
+    "link": "https://a.test/",
+    "image": "https://a.test/logo.png",
+    "items": [
+     {
+      "id": "urn:e1",
+      "title": "E1",
+      "url": "https://a.test/e1",
+      "author": "Writer",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "Sum & mary",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "urn:e2",
+      "title": "E2",
+      "url": "https://a.test/rel",
+      "author": "Bare",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://a.test/textlink",
+      "title": "E3",
+      "url": "https://a.test/textlink",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "missing": {
+   "xml": "<rss><channel><item><title>no channel title</title><guid>m</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "item": {
+        "title": "no channel title",
+        "guid": "m"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": null,
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "m",
+      "title": "no channel title",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "dates": {
+   "xml": "<rss><channel><title>D</title><item><guid>d0</guid><pubDate>Fri, 09 Oct 2026 10:00:00 GMT</pubDate></item><item><guid>d1</guid><pubDate>Fri, 09 Oct 2026 10:00:00 +0000</pubDate></item><item><guid>d2</guid><pubDate>Fri, 09 Oct 2026 10:00:00 +0200</pubDate></item><item><guid>d3</guid><pubDate>Fri, 9 Oct 2026 10:00:00 -0730</pubDate></item><item><guid>d4</guid><pubDate>Fri, 09 Oct 2026 10:00:00 EST</pubDate></item><item><guid>d5</guid><pubDate>Fri, 09 Oct 2026 10:00:00 PDT</pubDate></item><item><guid>d6</guid><pubDate>Fri, 09 Oct 2026 10:00:00 UT</pubDate></item><item><guid>d7</guid><pubDate>Fri, 09 Oct 2026 10:00:00 Z</pubDate></item><item><guid>d8</guid><pubDate>Fri, 09 Oct 2026 10:00 GMT</pubDate></item><item><guid>d9</guid><pubDate>09 Oct 26 10:00:00 GMT</pubDate></item><item><guid>d10</guid><pubDate>9 Oct 2026</pubDate></item><item><guid>d11</guid><pubDate>Oct 9, 2026</pubDate></item><item><guid>d12</guid><pubDate>October 9, 2026 10:00 PM</pubDate></item><item><guid>d13</guid><pubDate>Friday, October 9, 2026 10:00 pm</pubDate></item><item><guid>d14</guid><pubDate>2026-10-09</pubDate></item><item><guid>d15</guid><pubDate>2026-10-09T12:00:00Z</pubDate></item><item><guid>d16</guid><pubDate>2026-10-09T12:00:00+00:00</pubDate></item><item><guid>d17</guid><pubDate>2026-10-09T12:00:00.123456Z</pubDate></item><item><guid>d18</guid><pubDate>2026-10-09T12:00:00.1Z</pubDate></item><item><guid>d19</guid><pubDate>2026-10-09T12:00Z</pubDate></item><item><guid>d20</guid><pubDate>2026-10-09T24:00:00Z</pubDate></item><item><guid>d21</guid><pubDate>2026-10-09T24:00:01Z</pubDate></item><item><guid>d22</guid><pubDate>2026-10-09T12:00:00</pubDate></item><item><guid>d23</guid><pubDate>2026-10-09 12:00</pubDate></item><item><guid>d24</guid><pubDate>2026-10-09 12:00:00 +0100</pubDate></item><item><guid>d25</guid><pubDate>2026/10/09 12:00:00</pubDate></item><item><guid>d26</guid><pubDate>10/09/2026</pubDate></item><item><guid>d27</guid><pubDate>10/9</pubDate></item><item><guid>d28</guid><pubDate>Oct 9</pubDate></item><item><guid>d29</guid><pubDate>2026-10-09T12:00:00 +0000</pubDate></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "D",
+       "item": [
+        {
+         "guid": "d0",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 GMT"
+        },
+        {
+         "guid": "d1",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 +0000"
+        },
+        {
+         "guid": "d2",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 +0200"
+        },
+        {
+         "guid": "d3",
+         "pubDate": "Fri, 9 Oct 2026 10:00:00 -0730"
+        },
+        {
+         "guid": "d4",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 EST"
+        },
+        {
+         "guid": "d5",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 PDT"
+        },
+        {
+         "guid": "d6",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 UT"
+        },
+        {
+         "guid": "d7",
+         "pubDate": "Fri, 09 Oct 2026 10:00:00 Z"
+        },
+        {
+         "guid": "d8",
+         "pubDate": "Fri, 09 Oct 2026 10:00 GMT"
+        },
+        {
+         "guid": "d9",
+         "pubDate": "09 Oct 26 10:00:00 GMT"
+        },
+        {
+         "guid": "d10",
+         "pubDate": "9 Oct 2026"
+        },
+        {
+         "guid": "d11",
+         "pubDate": "Oct 9, 2026"
+        },
+        {
+         "guid": "d12",
+         "pubDate": "October 9, 2026 10:00 PM"
+        },
+        {
+         "guid": "d13",
+         "pubDate": "Friday, October 9, 2026 10:00 pm"
+        },
+        {
+         "guid": "d14",
+         "pubDate": "2026-10-09"
+        },
+        {
+         "guid": "d15",
+         "pubDate": "2026-10-09T12:00:00Z"
+        },
+        {
+         "guid": "d16",
+         "pubDate": "2026-10-09T12:00:00+00:00"
+        },
+        {
+         "guid": "d17",
+         "pubDate": "2026-10-09T12:00:00.123456Z"
+        },
+        {
+         "guid": "d18",
+         "pubDate": "2026-10-09T12:00:00.1Z"
+        },
+        {
+         "guid": "d19",
+         "pubDate": "2026-10-09T12:00Z"
+        },
+        {
+         "guid": "d20",
+         "pubDate": "2026-10-09T24:00:00Z"
+        },
+        {
+         "guid": "d21",
+         "pubDate": "2026-10-09T24:00:01Z"
+        },
+        {
+         "guid": "d22",
+         "pubDate": "2026-10-09T12:00:00"
+        },
+        {
+         "guid": "d23",
+         "pubDate": "2026-10-09 12:00"
+        },
+        {
+         "guid": "d24",
+         "pubDate": "2026-10-09 12:00:00 +0100"
+        },
+        {
+         "guid": "d25",
+         "pubDate": "2026/10/09 12:00:00"
+        },
+        {
+         "guid": "d26",
+         "pubDate": "10/09/2026"
+        },
+        {
+         "guid": "d27",
+         "pubDate": "10/9"
+        },
+        {
+         "guid": "d28",
+         "pubDate": "Oct 9"
+        },
+        {
+         "guid": "d29",
+         "pubDate": "2026-10-09T12:00:00 +0000"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "D",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "d0",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d1",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d2",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T08:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d3",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T17:30:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d4",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T15:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d5",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T17:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d6",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d7",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d8",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d9",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T10:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d10",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d11",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d12",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T22:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d13",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T22:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d14",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d15",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d16",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d17",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.123Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d18",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.100Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d19",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d20",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-10T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d21",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d22",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d23",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d24",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T11:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d25",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T12:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d26",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d27",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2001-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d28",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": "2001-10-09T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "d29",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "unclosed": {
+   "xml": "<rss><channel><title>Open<item><title>i1</title><guid>1</guid>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": {
+        "item": {
+         "title": "i1",
+         "guid": "1"
+        },
+        "#text": "Open"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "Open",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "strayClose": {
+   "xml": "</x><rss><channel></y><title>S</title></channel></rss></z>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": "",
+      "title": "S"
+     }
+    }
+   },
+   "feed": {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  },
+  "comments": {
+   "xml": "<rss><channel><title>T</title><item><title>a<!-- c -->b <!-- d --> c</title><guid>c</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "ab  c",
+        "guid": "c"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "c",
+      "title": "ab c",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "piInBody": {
+   "xml": "<rss><channel><title>T</title><item><?pi stuff?><title>p</title><guid>p</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "p",
+        "guid": "p"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "p",
+      "title": "p",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "attrs": {
+   "xml": "<rss><channel><title>A</title><item><guid\tisPermaLink\t=\t'false'\t>t1</guid><link href='https://q.test/1' href=\"https://q.test/2\"/><enclosure url = \" https://q.test/e.mp3 \" type=\"audio/mpeg\" bare/></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "A",
+       "item": {
+        "guid": {
+         "#text": "t1",
+         "@_isPermaLink": "false"
+        },
+        "link": {
+         "@_href": "https://q.test/2"
+        },
+        "enclosure": {
+         "@_url": "https://q.test/e.mp3",
+         "@_type": "audio/mpeg",
+         "@_bare": true
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "A",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "t1",
+      "title": "(untitled)",
+      "url": "https://q.test/2",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "bangElement": {
+   "xml": "<rss><channel><title>T</title><item><!foo>x</!foo><title>b</title><guid>b</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "!foo": "x",
+        "title": "b",
+        "guid": "b"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "b",
+      "title": "b",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "dangerous": {
+   "xml": "<rss><channel><title>T</title><item><toString>ts</toString><title>d</title><guid>d</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "__toString": {
+         "#text": "ts",
+         "@_toString": true
+        },
+        "title": "d",
+        "guid": "d"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "d",
+      "title": "d",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "constructorTag": {
+   "xml": "<rss><channel><title>T</title><item><constructor>c</constructor><guid>c</guid></item></channel></rss>",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "textTag": {
+   "xml": "<rss><channel><title>T</title><item><#text/><title>t</title><guid>t</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "t",
+        "guid": "t",
+        "#text": []
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "t",
+      "title": "t",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "multipleRoots": {
+   "xml": "<feed><title>one</title></feed><feed><title>two</title></feed>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "feed": [
+      {
+       "title": "one"
+      },
+      {
+       "title": "two"
+      }
+     ]
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "atom",
+    "title": null,
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "rdfItems": {
+   "xml": "<rdf:RDF xmlns:rdf=\"r\"><channel><title>R</title></channel><item rdf:about=\"https://r.test/1\"><title>1</title><dc:date>2026-10-01T00:00:00Z</dc:date></item><item rdf:about=\"https://r.test/2\"/></rdf:RDF>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "RDF": {
+      "channel": {
+       "title": "R"
+      },
+      "item": [
+       {
+        "title": "1",
+        "date": "2026-10-01T00:00:00Z",
+        "@_about": "https://r.test/1"
+       },
+       {
+        "@_about": "https://r.test/2"
+       }
+      ]
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rdf",
+    "title": "R",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "https://r.test/1",
+      "title": "1",
+      "url": null,
+      "author": "",
+      "publishedAt": "2026-10-01T00:00:00.000Z",
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     },
+     {
+      "id": "https://r.test/2",
+      "title": "(untitled)",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "crlf": {
+   "xml": "<rss>\r\n<channel>\r<title>Line\r\nBreaks</title>\r\n<item><title>a\rb</title><guid>x</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "Line\nBreaks",
+       "item": {
+        "title": "a\nb",
+        "guid": "x"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "Line\nBreaks",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "x",
+      "title": "a\nb",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "fiveDoctypes": {
+   "xml": "<!DOCTYPE a><!DOCTYPE a><!DOCTYPE a><!DOCTYPE a><!DOCTYPE a><rss><channel><title>five</title></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "five"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "five",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "lowercaseDoctype": {
+   "xml": "<!doctype rss><rss><channel><title>lc</title></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "lc"
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "lc",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "tagNoClose": {
+   "xml": "<rss><channel><title>t</title><item",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "closeNoGt": {
+   "xml": "<rss><channel><title>t</title></channel",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "cdataUnclosed": {
+   "xml": "<rss><channel><title><![CDATA[x</title></channel></rss>",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "commentUnclosed": {
+   "xml": "<rss><channel><title>t</title><!-- x </channel></rss>",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "piUnclosed": {
+   "xml": "<?xml version=\"1.0\"<rss/>",
+   "tree": {
+    "ok": false
+   },
+   "feed": {
+    "ok": false,
+    "code": "INVALID_XML"
+   }
+  },
+  "emptyItems": {
+   "xml": "<rss><channel><title>E</title><item/><item>just text</item><item><title></title></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "E",
+       "item": [
+        "",
+        "just text",
+        {
+         "title": ""
+        }
+       ]
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "E",
+    "link": null,
+    "image": null,
+    "items": []
+   }
+  },
+  "htmlTitle": {
+   "xml": "<rss><channel><title>T</title><item><title>&lt;script&gt;bad()&lt;/script&gt;Clean &lt;br/&gt;text&lt;/p&gt;more</title><guid>h</guid><author>/u/someone</author></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "<script>bad()</script>Clean <br/>text</p>more",
+        "guid": "h",
+        "author": "/u/someone"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "h",
+      "title": "Clean\ntext\nmore",
+      "url": null,
+      "author": "u/someone",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "longSummary": {
+   "xml": "<rss><channel><title>T</title><item><title>L</title><guid>l</guid><description>word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word  submitted by /u/x [link]</description></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "L",
+        "guid": "l",
+        "description": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word  submitted by /u/x [link]"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "l",
+      "title": "L",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word…",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "imageCandidates": {
+   "xml": "<rss><channel><title>T</title><item><title>I</title><guid>i</guid><media:thumbnail url=\"ftp://bad\"/><media:group><media:thumbnail url=\"https://img.test/g.jpg\"/></media:group></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "I",
+        "guid": "i",
+        "thumbnail": {
+         "@_url": "ftp://bad"
+        },
+        "group": {
+         "thumbnail": {
+          "@_url": "https://img.test/g.jpg"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "i",
+      "title": "I",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": "https://img.test/g.jpg",
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "itunesImage": {
+   "xml": "<rss><channel><title>T</title><item><title>I</title><guid>i2</guid><itunes:image href=\"https://img.test/it.jpg\"/></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "I",
+        "guid": "i2",
+        "image": {
+         "@_href": "https://img.test/it.jpg"
+        }
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "i2",
+      "title": "I",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": "https://img.test/it.jpg",
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "nestedTextAndChildren": {
+   "xml": "<rss><channel><title>T</title><item><title>before<b>bold</b>after</title><guid>n</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": {
+         "b": "bold",
+         "#text": "beforeafter"
+        },
+        "guid": "n"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "n",
+      "title": "beforeafter",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "numericTitle": {
+   "xml": "<rss><channel><title>T</title><item><title>2024</title><guid>2025</guid></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "2024",
+        "guid": "2025"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "2025",
+      "title": "2024",
+      "url": null,
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  },
+  "unicode": {
+   "xml": "<rss><channel><title>T</title><item><title>Café ☕ 𝓤𝓷𝓲𝓬𝓸𝓭𝓮</title><guid>u</guid><link>https://ünïcode.test/päth?q=ü</link></item></channel></rss>",
+   "tree": {
+    "ok": true,
+    "tree": {
+     "rss": {
+      "channel": {
+       "title": "T",
+       "item": {
+        "title": "Café ☕ 𝓤𝓷𝓲𝓬𝓸𝓭𝓮",
+        "guid": "u",
+        "link": "https://ünïcode.test/päth?q=ü"
+       }
+      }
+     }
+    }
+   },
+   "feed": {
+    "ok": true,
+    "kind": "rss",
+    "title": "T",
+    "link": null,
+    "image": null,
+    "items": [
+     {
+      "id": "u",
+      "title": "Café ☕ 𝓤𝓷𝓲𝓬𝓸𝓭𝓮",
+      "url": "https://xn--ncode-cta3g.test/p%C3%A4th?q=%C3%BC",
+      "author": "",
+      "publishedAt": null,
+      "image": null,
+      "summary": "",
+      "isRepost": false,
+      "actorName": "",
+      "actorHandle": ""
+     }
+    ]
+   }
+  }
+ },
+ "dates": {
+  "2026": 1767225600000,
+  "Fri, 09 Oct 2026 10:00:00 GMT": 1791540000000,
+  "Fri, 09 Oct 2026 10:00:00 +0000": 1791540000000,
+  "Fri, 09 Oct 2026 10:00:00 +0200": 1791532800000,
+  "Fri, 9 Oct 2026 10:00:00 -0730": 1791567000000,
+  "Fri, 09 Oct 2026 10:00:00 EST": 1791558000000,
+  "Fri, 09 Oct 2026 10:00:00 PDT": 1791565200000,
+  "Fri, 09 Oct 2026 10:00:00 UT": 1791540000000,
+  "Fri, 09 Oct 2026 10:00:00 Z": 1791540000000,
+  "Fri, 09 Oct 2026 10:00 GMT": 1791540000000,
+  "09 Oct 26 10:00:00 GMT": 1791540000000,
+  "9 Oct 2026": 1791504000000,
+  "Oct 9, 2026": 1791504000000,
+  "October 9, 2026 10:00 PM": 1791583200000,
+  "Friday, October 9, 2026 10:00 pm": 1791583200000,
+  "2026-10-09": 1791504000000,
+  "2026-10-09T12:00:00Z": 1791547200000,
+  "2026-10-09T12:00:00+00:00": 1791547200000,
+  "2026-10-09T12:00:00.123456Z": 1791547200123,
+  "2026-10-09T12:00:00.1Z": 1791547200100,
+  "2026-10-09T12:00Z": 1791547200000,
+  "2026-10-09T24:00:00Z": 1791590400000,
+  "2026-10-09T24:00:01Z": null,
+  "2026-10-09T12:00:00": 1791547200000,
+  "2026-10-09 12:00": 1791547200000,
+  "2026-10-09 12:00:00 +0100": 1791543600000,
+  "2026/10/09 12:00:00": 1791547200000,
+  "10/09/2026": 1791504000000,
+  "10/9": 1002585600000,
+  "Oct 9": 1002585600000,
+  "2026-10-09T12:00:00 +0000": null,
+  "+002026-10-09T00:00:00Z": 1791504000000,
+  "-000000-01-01T00:00:00Z": null,
+  "2026-13-45": null,
+  "2026-02-30": 1772409600000,
+  "Fri, 32 Oct 2026": null,
+  "Fri Oct 09 2026 10:00:00 GMT+0200 (Central European Summer Time)": 1791532800000,
+  "Thu, 01 Jan 1970 00:00:00 GMT": 0,
+  "Sat, 31 Dec 1949 00:00:00 GMT": -631238400000,
+  "12:00": null,
+  "garbage": null,
+  "": null,
+  "  ": null,
+  "1700000000000": null,
+  "2026-10": 1790812800000,
+  "Fri, 09 Oct 2026 10:00:00 GMT+2": 1791532800000,
+  "Fri, 09 Oct 2026 10:00:00 GMT-08:00": 1791568800000,
+  "2026-10-09T12:00:00-0130": 1791552600000,
+  "Fri, 09 Oct 2026 10:00:00.5 GMT": 1791540000500,
+  "9 October 2026 10:00:00.250": 1791540000250,
+  "2026-10-09T12:00:00+25:00": null,
+  "Oct 2026 9": 1791504000000,
+  "Mon, 1 Jan 2001 25:00:00 GMT": null,
+  "Mon, 1 Jan 2001 12:00 AM": 978307200000,
+  "Mon, 1 Jan 2001 12:00 PM": 978350400000,
+  "Mon, 1 Jan 2001 13:00 PM": null,
+  "1 Jan 99": 915148800000,
+  "1 Jan 49": 2493072000000,
+  "Fri, 09 Oct 2026 10:00:00 (comment) GMT": 1791540000000,
+  "T12": null,
+  "Fri,09-Oct-2026 10:00:00 GMT": 1791540000000,
+  "2026-10-09T12:00:00.Z": null,
+  "May 5": 989020800000,
+  "Sept 5, 2026": 1788566400000
+ },
+ "misc": {
+  "bluesky": {
+   "ok": true,
+   "kind": "bluesky",
+   "title": null,
+   "link": null,
+   "image": null,
+   "items": [
+    {
+     "id": "at://did:plc:abc/app.bsky.feed.post/3k2",
+     "title": "Hello world",
+     "url": "https://bsky.app/profile/alice.bsky.social/post/3k2",
+     "author": "Alice",
+     "publishedAt": "2026-10-09T12:00:01.000Z",
+     "image": "https://cdn.bsky.app/f.jpg",
+     "summary": "Hello world\nsecond line",
+     "isRepost": false,
+     "actorName": "Alice",
+     "actorHandle": "alice.bsky.social"
+    },
+    {
+     "id": "repost:at://did:plc:zzz/app.bsky.feed.post/9x:2026-10-09T13:00:00Z",
+     "title": "Bob post",
+     "url": "https://bsky.app/profile/bob.bsky.social/post/9x",
+     "author": "Bob",
+     "publishedAt": "2026-10-09T13:00:00.000Z",
+     "image": null,
+     "summary": "Bob post",
+     "isRepost": true,
+     "actorName": "Alice",
+     "actorHandle": "alice.bsky.social"
+    },
+    {
+     "id": "at://did:plc:q/app.bsky.feed.post/r1",
+     "title": "(post)",
+     "url": "https://bsky.app/profile/did:plc:q/post/r1",
+     "author": "",
+     "publishedAt": "2026-10-09T00:00:00.000Z",
+     "image": null,
+     "summary": "",
+     "isRepost": false,
+     "actorName": "",
+     "actorHandle": "did:plc:q"
+    },
+    {
+     "id": "at://x/y/ext",
+     "title": "(image)",
+     "url": null,
+     "author": "",
+     "publishedAt": null,
+     "image": "https://e.test/t.png",
+     "summary": "\n  \n",
+     "isRepost": false,
+     "actorName": "",
+     "actorHandle": ""
+    },
+    {
+     "id": "at://x/y/rwm",
+     "title": "media",
+     "url": null,
+     "author": "7",
+     "publishedAt": "2026-10-09T10:00:00.000Z",
+     "image": "https://m.test/t.jpg",
+     "summary": "media",
+     "isRepost": false,
+     "actorName": "7",
+     "actorHandle": ""
+    },
+    {
+     "id": "repost:at://x/y/vid:12345",
+     "title": "video",
+     "url": "https://bsky.app/profile/v.test/post/vid",
+     "author": "@v.test",
+     "publishedAt": "+012345-01-01T00:00:00.000Z",
+     "image": "https://v.test/t.jpg",
+     "summary": "video",
+     "isRepost": true,
+     "actorName": "",
+     "actorHandle": ""
+    }
+   ]
+  },
+  "blueskyInput": {
+   "feed": [
+    {
+     "post": {
+      "uri": "at://did:plc:abc/app.bsky.feed.post/3k2",
+      "author": {
+       "did": "did:plc:abc",
+       "handle": "alice.bsky.social",
+       "displayName": "Alice"
+      },
+      "record": {
+       "text": "Hello world\nsecond line",
+       "createdAt": "2026-10-09T12:00:00Z"
+      },
+      "indexedAt": "2026-10-09T12:00:01Z",
+      "embed": {
+       "$type": "app.bsky.embed.images#view",
+       "images": [
+        {
+         "thumb": "https://cdn.bsky.app/t.jpg",
+         "fullsize": "https://cdn.bsky.app/f.jpg"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "post": {
+      "uri": "at://did:plc:zzz/app.bsky.feed.post/9x",
+      "author": {
+       "did": "did:plc:zzz",
+       "handle": "bob.bsky.social",
+       "displayName": "Bob"
+      },
+      "record": {
+       "text": "Bob post"
+      },
+      "indexedAt": "2026-10-08T00:00:00Z"
+     },
+     "reason": {
+      "$type": "app.bsky.feed.defs#reasonRepost",
+      "by": {
+       "did": "did:plc:abc",
+       "handle": "alice.bsky.social",
+       "displayName": "Alice"
+      },
+      "indexedAt": "2026-10-09T13:00:00Z"
+     }
+    },
+    {
+     "post": {
+      "uri": "at://did:plc:q/app.bsky.feed.post/r1",
+      "author": {
+       "did": "did:plc:q",
+       "handle": "handle.invalid"
+      },
+      "record": {},
+      "indexedAt": "2026-10-09T00:00:00Z"
+     }
+    },
+    {
+     "post": {
+      "uri": "at://did:plc:p/app.bsky.feed.post/pin"
+     },
+     "reason": {
+      "$type": "app.bsky.feed.defs#reasonPin"
+     }
+    },
+    {
+     "post": {
+      "uri": "at://x/y/ext",
+      "author": [],
+      "record": {
+       "text": "\n  \n"
+      },
+      "embed": {
+       "$type": "app.bsky.embed.external#view",
+       "external": {
+        "thumb": "https://e.test/t.png"
+       }
+      },
+      "indexedAt": "bad"
+     }
+    },
+    {
+     "post": {
+      "uri": "at://x/y/rwm",
+      "author": {
+       "did": "",
+       "displayName": 7
+      },
+      "record": {
+       "text": "media",
+       "createdAt": "Fri, 09 Oct 2026 10:00:00 GMT"
+      },
+      "embed": {
+       "$type": "app.bsky.embed.recordWithMedia#view",
+       "media": {
+        "images": [
+         {
+          "thumb": "https://m.test/t.jpg"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "post": {
+      "uri": "at://x/y/vid",
+      "author": {
+       "handle": "v.test"
+      },
+      "record": {
+       "text": "video"
+      },
+      "embed": {
+       "$type": "app.bsky.embed.video#view",
+       "thumbnail": "https://v.test/t.jpg"
+      }
+     },
+     "reason": {
+      "$type": "app.bsky.feed.defs#reasonRepost",
+      "by": [],
+      "indexedAt": 12345
+     }
+    },
+    {
+     "post": {
+      "uri": 5
+     }
+    },
+    null,
+    "str"
+   ]
+  },
+  "blueskyBad": [
+   {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   },
+   {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   },
+   {
+    "ok": false,
+    "code": "NOT_A_FEED"
+   }
+  ],
+  "itunesInput": {
+   "results": [
+    {
+     "collectionName": "A",
+     "feedUrl": "ftp://x"
+    },
+    {
+     "collectionName": "B",
+     "artistName": "Z",
+     "feedUrl": "https://b.test/rss",
+     "artworkUrl100": "https://a.test/i.jpg"
+    },
+    {
+     "trackName": "T",
+     "feedUrl": "HTTP://t.test/f",
+     "artworkUrl600": "nope",
+     "collectionViewUrl": "https://apple.test/c"
+    },
+    {
+     "collectionName": null,
+     "trackName": 5,
+     "artistName": null,
+     "feedUrl": "https://n.test/"
+    },
+    "x",
+    null
+   ]
+  },
+  "itunes": [
+   {
+    "name": "B",
+    "artist": "Z",
+    "feedUrl": "https://b.test/rss",
+    "artwork": "https://a.test/i.jpg",
+    "url": null
+   },
+   {
+    "name": "T",
+    "artist": "",
+    "feedUrl": "HTTP://t.test/f",
+    "artwork": null,
+    "url": "https://apple.test/c"
+   },
+   {
+    "name": "5",
+    "artist": "",
+    "feedUrl": "https://n.test/",
+    "artwork": null,
+    "url": null
+   }
+  ],
+  "stripHtml": [
+   [
+    "<p>A&amp;B</p><script>x</script>&#233;&#x41;",
+    "A&B\néA"
+   ],
+   [
+    "&amp;#65; &#0; &#xD800; &#1114112; &nbsp;x",
+    "&#65; x"
+   ],
+   [
+    "a<br/>b<br>c</div>d<style>p{}</style>e",
+    "a\nb\nc\nde"
+   ],
+   [
+    "<SCRIPT type=\"x\">bad</SCRIPT >ok<script>never closed",
+    "ok"
+   ],
+   [
+    "<scripty>kept</scripty>",
+    "kept"
+   ],
+   [
+    " lots   of\t\tspace \n\n\n\n lines ",
+    "lots of space\n\nlines"
+   ],
+   [
+    "<<<>>> < b >",
+    "<<<>>>"
+   ],
+   [
+    "&quot;&apos;&lt;&gt;&#x1f600;",
+    "\"'<>😀"
+   ],
+   [
+    "<li>one</li><li>two</li>",
+    "one\ntwo"
+   ],
+   [
+    "x<br  />y<BR/>z",
+    "x\ny\nz"
+   ]
+  ],
+  "oneLine": [
+   [
+    "a\nb",
+    "a b"
+   ],
+   [
+    " x\t\u0000yz w ",
+    "x y z w"
+   ],
+   [
+    "café\r\n bar",
+    "café bar"
+   ]
+  ],
+  "looksLikeHtml": [
+   [
+    "<!DOCTYPE html><html>",
+    "",
+    true
+   ],
+   [
+    "x",
+    "text/html; charset=utf-8",
+    true
+   ],
+   [
+    "<?xml version=\"1.0\"?>\n<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2005/Atom\"><channel>\n<title>Example &amp; Co</title><link>https://example.com/</link><atom:link href=\"https://example.com/feed.xml\" rel=\"self\"/>\n<item><title><![CDATA[Hello <b>World</b>]]></title><link>https://example.com/2</link><guid isPermaLink=\"false\">post-2</guid>\n<pubDate>Fri, 09 Oct 2026 10:00:00 GMT</pubDate><dc:creator>Ann</dc:creator><description>&lt;p&gt;Second&lt;/p&gt;</description></item>\n<item><title>First</title><link>https://example.com/1</link><pubDate>Thu, 08 Oct 2026 10:00:00 GMT</pubDate></item>\n</channel></rss>",
+    "application/rss+xml",
+    false
+   ],
+   [
+    "<?xml version=\"1.0\"?>\n<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2005/Atom\"><channel>\n<title>Example &amp; Co</title><link>https://example.com/</link><atom:link href=\"https://example.com/feed.xml\" rel=\"self\"/>\n<item><title><![CDATA[Hello <b>World</b>]]></title><link>https://example.com/2</link><guid isPermaLink=\"false\">post-2</guid>\n<pubDate>Fri, 09 Oct 2026 10:00:00 GMT</pubDate><dc:creator>Ann</dc:creator><description>&lt;p&gt;Second&lt;/p&gt;</description></item>\n<item><title>First</title><link>https://example.com/1</link><pubDate>Thu, 08 Oct 2026 10:00:00 GMT</pubDate></item>\n</channel></rss>",
+    "text/html",
+    false
+   ],
+   [
+    "<?xml version=\"1.0\"?><html xmlns=\"http://www.w3.org/1999/xhtml\">",
+    "text/html",
+    true
+   ],
+   [
+    "<!-- c --> <!-- d --><html>",
+    "",
+    true
+   ],
+   [
+    "<!-- c --><rss>",
+    "text/html",
+    false
+   ],
+   [
+    "<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->x",
+    "text/html",
+    true
+   ],
+   [
+    "<feed xmlns=\"a\">",
+    "application/xhtml+xml",
+    false
+   ],
+   [
+    "  <HTML lang=\"en\">",
+    "",
+    true
+   ]
+  ],
+  "discover": [
+   [
+    "<head><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/feed.xml\"><link rel=\"alternate\" type=\"application/feed+json\" href=\"/f.json\"></head>",
+    "https://site.test/blog/",
+    [
+     "https://site.test/feed.xml"
+    ]
+   ],
+   [
+    "<link href='a.xml?x=1&amp;y=2' type=\"APPLICATION/ATOM+XML\" rel=\"Alternate nofollow\"><link rel=\"stylesheet\" href=\"s.css\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"javascript:alert(1)\">",
+    "https://site.test/blog/",
+    [
+     "https://site.test/blog/a.xml?x=1&y=2"
+    ]
+   ],
+   [
+    "<link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f0.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f1.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f2.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f3.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f4.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f5.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f6.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f7.xml\"><link rel=\"alternate\" type=\"application/rss+xml\" href=\"/f8.xml\">",
+    "https://s.test/",
+    [
+     "https://s.test/f0.xml",
+     "https://s.test/f1.xml",
+     "https://s.test/f2.xml",
+     "https://s.test/f3.xml",
+     "https://s.test/f4.xml"
+    ]
+   ],
+   [
+    "<link rel=alternate type=application/rss+xml href=//cdn.test/x.rss><link rel=\"alternate\" type=\"application/rss+xml\" href=\"//cdn.test/x.rss\">",
+    "https://s.test/",
+    [
+     "https://cdn.test/x.rss"
+    ]
+   ],
+   [
+    "<link rel=\"alternate\" type=\"application/rss+xml\" href=\"/x\">",
+    "not a base",
+    []
+   ]
+  ],
+  "stripDoctype": [
+   [
+    "<!DOCTYPE a [ <!ENTITY x \"]>\"> ]><r/>",
+    "<r/>"
+   ],
+   [
+    "<!doctype html><p>",
+    "<p>"
+   ],
+   [
+    "a<!DOCTYPE b \"x>y\">c",
+    "ay\">c"
+   ],
+   [
+    "<!DOCTYPE unterminated [ <r/>",
+    ""
+   ]
+  ],
+  "decode": [
+   [
+    "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iSVNPLTg4NTktMSI/Pjxyc3M+PGNoYW5uZWw+PHRpdGxlPkNhZuk8L3RpdGxlPjwvY2hhbm5lbD48L3Jzcz4=",
+    "application/xml",
+    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><rss><channel><title>Café</title></channel></rss>"
+   ],
+   [
+    "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iSVNPLTg4NTktMSI/Pjxyc3M+PGNoYW5uZWw+PHRpdGxlPkNhZuk8L3RpdGxlPjwvY2hhbm5lbD48L3Jzcz4=",
+    "application/xml; charset=iso-8859-1",
+    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><rss><channel><title>Café</title></channel></rss>"
+   ],
+   [
+    "77u/PHJzcy8+",
+    "",
+    "<rss/>"
+   ],
+   [
+    "PHJzcy8+",
+    "text/xml; charset=nonsense-9",
+    "<rss/>"
+   ],
+   [
+    "//48AGEA",
+    "text/xml; charset=utf-16le",
+    "<a"
+   ],
+   [
+    "77u/77u/eA==",
+    "text/xml",
+    "x"
+   ],
+   [
+    "Y2Fmw6k=",
+    "text/xml; charset=\"windows-1252\"",
+    "cafÃ©"
+   ],
+   [
+    "PD94bWwgZW5jb2Rpbmc9J3NoaWZ0X2ppcyc/Pg==",
+    "",
+    "<?xml encoding='shift_jis'?>"
+   ],
+   [
+    "eA==",
+    "text/xml; charset=replacement",
+    "x"
+   ]
+  ],
+  "itemKey": [
+   [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sha1:0b6def5d5b9d8901d6c613f18ab90181bc7f1467"
+   ],
+   [
+    "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+    "sha1:4f48239981a608174d9fc58e8e13717af1db1611"
+   ]
+  ],
+  "normalizeFeedUrl": [
+   [
+    "example.com/feed",
+    {
+     "ok": true,
+     "url": "https://example.com/feed"
+    }
+   ],
+   [
+    "feed://example.com/rss",
+    {
+     "ok": true,
+     "url": "https://example.com/rss"
+    }
+   ],
+   [
+    "feed:https://example.com/rss",
+    {
+     "ok": true,
+     "url": "https://example.com/rss"
+    }
+   ],
+   [
+    "<https://x.test/a#frag>",
+    {
+     "ok": true,
+     "url": "https://x.test/a"
+    }
+   ],
+   [
+    "ftp://x",
+    {
+     "ok": false,
+     "reason": "Only http and https feed URLs work."
+    }
+   ],
+   [
+    "https://u:p@x.test/",
+    {
+     "ok": false,
+     "reason": "URLs with a username or password are not allowed."
+    }
+   ],
+   [
+    "   ",
+    {
+     "ok": false,
+     "reason": "Give a feed URL."
+    }
+   ],
+   [
+    "https://x.test/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    {
+     "ok": false,
+     "reason": "That URL is too long (max 500 characters)."
+    }
+   ],
+   [
+    "javascript:alert(1)",
+    {
+     "ok": false,
+     "reason": "That doesn't look like a URL."
+    }
+   ],
+   [
+    "HTTPS://Example.COM:443/A b",
+    {
+     "ok": true,
+     "url": "https://example.com/A%20b"
+    }
+   ],
+   [
+    "http://[::1]:8080/x",
+    {
+     "ok": true,
+     "url": "http://[::1]:8080/x"
+    }
+   ],
+   [
+    "https://ex ample.com",
+    {
+     "ok": false,
+     "reason": "That doesn't look like a URL."
+    }
+   ],
+   [
+    "mailto:x@y.z",
+    {
+     "ok": false,
+     "reason": "URLs with a username or password are not allowed."
+    }
+   ],
+   [
+    "https://x.test/?q=1#",
+    {
+     "ok": true,
+     "url": "https://x.test/?q=1"
+    }
+   ]
+  ],
+  "youtube": [
+   [
+    "UCaaaaaaaaaaaaaaaaaaaaaa",
+    {
+     "ok": true,
+     "channelId": "UCaaaaaaaaaaaaaaaaaaaaaa"
+    }
+   ],
+   [
+    "https://www.youtube.com/channel/UCbbbbbbbbbbbbbbbbbbbbbb/videos",
+    {
+     "ok": true,
+     "channelId": "UCbbbbbbbbbbbbbbbbbbbbbb"
+    }
+   ],
+   [
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UCcccccccccccccccccccccc",
+    {
+     "ok": true,
+     "channelId": "UCcccccccccccccccccccccc"
+    }
+   ],
+   [
+    "@mkbhd",
+    {
+     "ok": false,
+     "handle": true,
+     "reason": "YouTube @handles and /c/ or /user/ links can't be looked up without a YouTube API key, which this bot doesn't use. Use the channel ID instead: it starts with **UC** and is 24 characters long (on YouTube: the channel → About → Share → **Copy channel ID**)."
+    }
+   ],
+   [
+    "youtube.com/@mkbhd",
+    {
+     "ok": false,
+     "handle": true,
+     "reason": "YouTube @handles and /c/ or /user/ links can't be looked up without a YouTube API key, which this bot doesn't use. Use the channel ID instead: it starts with **UC** and is 24 characters long (on YouTube: the channel → About → Share → **Copy channel ID**)."
+    }
+   ],
+   [
+    "https://www.youtube.com/c/foo",
+    {
+     "ok": false,
+     "handle": true,
+     "reason": "YouTube @handles and /c/ or /user/ links can't be looked up without a YouTube API key, which this bot doesn't use. Use the channel ID instead: it starts with **UC** and is 24 characters long (on YouTube: the channel → About → Share → **Copy channel ID**)."
+    }
+   ],
+   [
+    "https://youtube.com/user/foo",
+    {
+     "ok": false,
+     "handle": true,
+     "reason": "YouTube @handles and /c/ or /user/ links can't be looked up without a YouTube API key, which this bot doesn't use. Use the channel ID instead: it starts with **UC** and is 24 characters long (on YouTube: the channel → About → Share → **Copy channel ID**)."
+    }
+   ],
+   [
+    "https://www.youtube.com/watch?v=abc",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ],
+   [
+    "UCshort",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ],
+   [
+    "https://evil.test/youtube.com/channel/UCdddddddddddddddddddddd",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ],
+   [
+    "https://youtu.be/abc",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ],
+   [
+    "",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ],
+   [
+    "<UCeeeeeeeeeeeeeeeeeeeeee>",
+    {
+     "ok": true,
+     "channelId": "UCeeeeeeeeeeeeeeeeeeeeee"
+    }
+   ],
+   [
+    "m.youtube.com/channel/UCffffffffffffffffffffff",
+    {
+     "ok": true,
+     "channelId": "UCffffffffffffffffffffff"
+    }
+   ],
+   [
+    "https://notyoutube.com/channel/x",
+    {
+     "ok": false,
+     "handle": false,
+     "reason": "That isn't a YouTube channel ID. Use the 24-character ID starting with **UC**, or a youtube.com/channel/UC… link."
+    }
+   ]
+  ],
+  "subreddit": [
+   [
+    "r/aww",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "/r/aww/",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "aww",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "https://www.reddit.com/r/aww/new/",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "r/aww/top",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "old.reddit.com/r/aww",
+    {
+     "ok": true,
+     "name": "aww"
+    }
+   ],
+   [
+    "r/AskReddit",
+    {
+     "ok": true,
+     "name": "AskReddit"
+    }
+   ],
+   [
+    "u/spez",
+    {
+     "ok": false,
+     "reason": "Only subreddits are supported, not user profiles."
+    }
+   ],
+   [
+    "/user/spez",
+    {
+     "ok": false,
+     "reason": "Only subreddits are supported, not user profiles."
+    }
+   ],
+   [
+    "https://reddit.com/user/spez",
+    {
+     "ok": false,
+     "reason": "Only subreddits are supported, not user profiles."
+    }
+   ],
+   [
+    "a",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ],
+   [
+    "bad-name",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ],
+   [
+    "https://evil.test/r/aww",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ],
+   [
+    "https://www.reddit.com/",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ],
+   [
+    "",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ],
+   [
+    "R/Pics",
+    {
+     "ok": true,
+     "name": "Pics"
+    }
+   ],
+   [
+    "https://www.reddit.com/R/foo_bar",
+    {
+     "ok": true,
+     "name": "foo_bar"
+    }
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxx",
+    {
+     "ok": false,
+     "reason": "That isn't a valid subreddit name (2–21 letters, digits or underscores)."
+    }
+   ]
+  ],
+  "bluesky_actor": [
+   [
+    "@Alice.bsky.social",
+    {
+     "ok": true,
+     "actor": "alice.bsky.social"
+    }
+   ],
+   [
+    "alice",
+    {
+     "ok": true,
+     "actor": "alice.bsky.social"
+    }
+   ],
+   [
+    "https://bsky.app/profile/bob.example.com/post/1",
+    {
+     "ok": true,
+     "actor": "bob.example.com"
+    }
+   ],
+   [
+    "https://bsky.app/profile/did:plc:abc123?x=1",
+    {
+     "ok": true,
+     "actor": "did:plc:abc123"
+    }
+   ],
+   [
+    "did:plc:abc123",
+    {
+     "ok": true,
+     "actor": "did:plc:abc123"
+    }
+   ],
+   [
+    "not a handle!",
+    {
+     "ok": false,
+     "reason": "That isn't a Bluesky handle. Use something like **alice.bsky.social**, a bsky.app profile link, or a did:plc: ID."
+    }
+   ],
+   [
+    "",
+    {
+     "ok": false,
+     "reason": "That isn't a Bluesky handle. Use something like **alice.bsky.social**, a bsky.app profile link, or a did:plc: ID."
+    }
+   ],
+   [
+    "did:web:example.com",
+    {
+     "ok": true,
+     "actor": "did:web:example.com"
+    }
+   ],
+   [
+    "a.b",
+    {
+     "ok": true,
+     "actor": "a.b"
+    }
+   ],
+   [
+    "-bad.bsky.social",
+    {
+     "ok": false,
+     "reason": "That isn't a Bluesky handle. Use something like **alice.bsky.social**, a bsky.app profile link, or a did:plc: ID."
+    }
+   ],
+   [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bsky.social",
+    {
+     "ok": false,
+     "reason": "That isn't a Bluesky handle. Use something like **alice.bsky.social**, a bsky.app profile link, or a did:plc: ID."
+    }
+   ],
+   [
+    "ALICE.BSKY.SOCIAL",
+    {
+     "ok": true,
+     "actor": "alice.bsky.social"
+    }
+   ],
+   [
+    "x.123",
+    {
+     "ok": false,
+     "reason": "That isn't a Bluesky handle. Use something like **alice.bsky.social**, a bsky.app profile link, or a did:plc: ID."
+    }
+   ]
+  ]
+ }
+}

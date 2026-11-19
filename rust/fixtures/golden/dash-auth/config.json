@@ -1,0 +1,2829 @@
+{
+  "cases": [
+    {
+      "env": {},
+      "result": {
+        "ok": false,
+        "missing": [
+          "CLIENT_ID",
+          "DISCORD_TOKEN",
+          "DISCORD_CLIENT_SECRET",
+          "DASHBOARD_SESSION_SECRET",
+          "DATABASE_URL",
+          "REDIS_URL"
+        ],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "",
+          "botToken": "",
+          "clientSecret": "",
+          "sessionSecret": "",
+          "databaseUrl": "",
+          "redisUrl": "",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "   "
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "http://localhost:8080"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com/",
+        "DASHBOARD_PORT": "9000",
+        "BOT_OWNER_ID": "999999999999999999"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": "999999999999999999",
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 9000,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com///"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "HTTPS://Dash.Example.COM:443"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "http://dash.example.com:8443"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://dash.example.com:8443",
+          "origin": "http://dash.example.com:8443",
+          "urlIsDefault": false,
+          "redirectUri": "http://dash.example.com:8443/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com/?"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com/#"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://dash.example.com",
+          "origin": "https://dash.example.com",
+          "urlIsDefault": false,
+          "redirectUri": "https://dash.example.com/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com/?a=1"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must be the bare origin (no path, query or fragment), e.g. https://dash.example.com"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://dash.example.com/#x"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must be the bare origin (no path, query or fragment), e.g. https://dash.example.com"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://bücher.example"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://xn--bcher-kva.example",
+          "origin": "https://xn--bcher-kva.example",
+          "urlIsDefault": false,
+          "redirectUri": "https://xn--bcher-kva.example/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "http://192.168.1.5:8080"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://192.168.1.5:8080",
+          "origin": "http://192.168.1.5:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://192.168.1.5:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "http://[::1]:8080"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://[::1]:8080",
+          "origin": "http://[::1]:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://[::1]:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "short",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_SESSION_SECRET",
+            "reason": "must be at least 32 characters"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "short",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "ééééééééééééééééééééééééééééééé",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_SESSION_SECRET",
+            "reason": "must be at least 32 characters"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "ééééééééééééééééééééééééééééééé",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "ftp://example.com"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must use http or https"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "not a url"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must be an absolute http(s) URL such as https://dash.example.com"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://example.com/dashboard"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must be the bare origin (no path, query or fragment), e.g. https://dash.example.com"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://user:pw@example.com"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must not contain credentials"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://user@example.com"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must not contain credentials"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_URL",
+            "reason": "must be an absolute http(s) URL such as https://dash.example.com"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": false,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "70000"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "abc"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "0"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "00080"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 80,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "65535"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 65535,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "65536"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "123456"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": " 81 "
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 81,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "8e3"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_PORT": "٣"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "my-app",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "CLIENT_ID",
+            "reason": "must be the application id (17-20 digits)"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "my-app",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "1234567890123456",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "CLIENT_ID",
+            "reason": "must be the application id (17-20 digits)"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "1234567890123456",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "١٢٣٤٥٦٧٨٩٠١٢٣٤٥٦٧٨",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "CLIENT_ID",
+            "reason": "must be the application id (17-20 digits)"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "١٢٣٤٥٦٧٨٩٠١٢٣٤٥٦٧٨",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_HOST": "127.0.0.1"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "127.0.0.1",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_HOST": "  "
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "BOT_OWNER_ID": "me"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "BOT_OWNER_ID is not a Discord user id (17-20 digits); it is ignored by the dashboard."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "BOT_OWNER_ID": " 999999999999999999 "
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": "999999999999999999",
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_TRUSTED_PROXIES": "10.0.1.30, cloudflared"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_TRUSTED_PROXIES",
+            "reason": "must be a comma-separated list of IP addresses"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_TRUSTED_PROXIES": "10.0.1.0/24"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "DASHBOARD_TRUSTED_PROXIES",
+            "reason": "must be a comma-separated list of IP addresses"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_TRUSTED_PROXIES": " 10.0.1.30,10.0.1.31 , ::FFFF:10.0.1.30,,fd7a::1 "
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [
+            "10.0.1.30",
+            "10.0.1.31",
+            "fd7a::1"
+          ],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_TRUSTED_PROXIES": "fe80::1%eth0,FE80::1%ETH0, ::ffff:7f00:1"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [
+            "fe80::1%eth0",
+            "::ffff:7f00:1"
+          ],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_TRUSTED_PROXIES": ",,"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "owner@example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": {
+            "kind": "email",
+            "value": "owner@example.com"
+          },
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "https://example.com/contact"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": {
+            "kind": "url",
+            "value": "https://example.com/contact"
+          },
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "https://Example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": {
+            "kind": "url",
+            "value": "https://example.com/"
+          },
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "https://example.com/a b?q=ü#f"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": {
+            "kind": "url",
+            "value": "https://example.com/a%20b?q=%C3%BC#f"
+          },
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "http://example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "javascript:alert(1)"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "owner at example"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "<b>@x.y"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "https://u:p@example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@x.co"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_CONTACT": "a@b"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_CONTACT is not an email address or an https URL; the privacy and terms pages show no contact."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "https://discord.gg/abc123"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": "https://discord.gg/abc123"
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "http://discord.gg/abc123"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_SUPPORT_URL is not an https URL; the public pages show no support server link."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "owner@example.com"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_SUPPORT_URL is not an https URL; the public pages show no support server link."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "javascript:alert(1)"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_SUPPORT_URL is not an https URL; the public pages show no support server link."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "https://u:p@discord.gg/x"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [
+          "DASHBOARD_SUPPORT_URL is not an https URL; the public pages show no support server link."
+        ],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_SUPPORT_URL": "https://discord.gg"
+      },
+      "result": {
+        "ok": true,
+        "missing": [],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": "https://discord.gg/"
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "y",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "z",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "redis://localhost:6379",
+        "DASHBOARD_URL": "https://a.example",
+        "DASHBOARD_PORT": "x",
+        "DASHBOARD_TRUSTED_PROXIES": "q"
+      },
+      "result": {
+        "ok": false,
+        "missing": [],
+        "invalid": [
+          {
+            "key": "CLIENT_ID",
+            "reason": "must be the application id (17-20 digits)"
+          },
+          {
+            "key": "DASHBOARD_SESSION_SECRET",
+            "reason": "must be at least 32 characters"
+          },
+          {
+            "key": "DASHBOARD_PORT",
+            "reason": "must be a port number from 1 to 65535"
+          },
+          {
+            "key": "DASHBOARD_TRUSTED_PROXIES",
+            "reason": "must be a comma-separated list of IP addresses"
+          }
+        ],
+        "warnings": [],
+        "config": {
+          "clientId": "y",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "z",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "https://a.example",
+          "origin": "https://a.example",
+          "urlIsDefault": false,
+          "redirectUri": "https://a.example/auth/callback",
+          "secureCookies": true,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "",
+        "REDIS_URL": "redis://localhost:6379"
+      },
+      "result": {
+        "ok": false,
+        "missing": [
+          "DATABASE_URL"
+        ],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "",
+          "redisUrl": "redis://localhost:6379",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    },
+    {
+      "env": {
+        "CLIENT_ID": "123456789012345678",
+        "DISCORD_TOKEN": "bot-token",
+        "DISCORD_CLIENT_SECRET": "client-secret",
+        "DASHBOARD_SESSION_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "DATABASE_URL": "postgresql://localhost/db",
+        "REDIS_URL": "   "
+      },
+      "result": {
+        "ok": false,
+        "missing": [
+          "REDIS_URL"
+        ],
+        "invalid": [],
+        "warnings": [],
+        "config": {
+          "clientId": "123456789012345678",
+          "botToken": "bot-token",
+          "clientSecret": "client-secret",
+          "sessionSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "databaseUrl": "postgresql://localhost/db",
+          "redisUrl": "",
+          "botOwnerId": null,
+          "url": "http://localhost:8080",
+          "origin": "http://localhost:8080",
+          "urlIsDefault": true,
+          "redirectUri": "http://localhost:8080/auth/callback",
+          "secureCookies": false,
+          "port": 8080,
+          "host": "0.0.0.0",
+          "trustedProxies": [],
+          "contact": null,
+          "supportUrl": null
+        }
+      }
+    }
+  ],
+  "required": [
+    "CLIENT_ID",
+    "DISCORD_TOKEN",
+    "DISCORD_CLIENT_SECRET",
+    "DASHBOARD_SESSION_SECRET",
+    "DATABASE_URL",
+    "REDIS_URL"
+  ],
+  "parseDashboardUrl": [
+    {
+      "input": "https://dash.example.com",
+      "output": {
+        "ok": true,
+        "url": "https://dash.example.com"
+      }
+    },
+    {
+      "input": "https://dash.example.com/",
+      "output": {
+        "ok": true,
+        "url": "https://dash.example.com"
+      }
+    },
+    {
+      "input": "http://x:80",
+      "output": {
+        "ok": true,
+        "url": "http://x"
+      }
+    },
+    {
+      "input": "https://x:443/",
+      "output": {
+        "ok": true,
+        "url": "https://x"
+      }
+    },
+    {
+      "input": "https://x:444",
+      "output": {
+        "ok": true,
+        "url": "https://x:444"
+      }
+    },
+    {
+      "input": "https://x/?",
+      "output": {
+        "ok": true,
+        "url": "https://x"
+      }
+    },
+    {
+      "input": "https://x/#",
+      "output": {
+        "ok": true,
+        "url": "https://x"
+      }
+    },
+    {
+      "input": "https://x/p",
+      "output": {
+        "ok": false,
+        "reason": "must be the bare origin (no path, query or fragment), e.g. https://dash.example.com"
+      }
+    },
+    {
+      "input": "mailto:a@b",
+      "output": {
+        "ok": false,
+        "reason": "must use http or https"
+      }
+    },
+    {
+      "input": "file:///c:/x",
+      "output": {
+        "ok": false,
+        "reason": "must use http or https"
+      }
+    },
+    {
+      "input": "https://u@x",
+      "output": {
+        "ok": false,
+        "reason": "must not contain credentials"
+      }
+    },
+    {
+      "input": "https://:p@x",
+      "output": {
+        "ok": false,
+        "reason": "must not contain credentials"
+      }
+    },
+    {
+      "input": "http://[::ffff:1.2.3.4]",
+      "output": {
+        "ok": true,
+        "url": "http://[::ffff:102:304]"
+      }
+    },
+    {
+      "input": "https://xn--bcher-kva.example",
+      "output": {
+        "ok": true,
+        "url": "https://xn--bcher-kva.example"
+      }
+    },
+    {
+      "input": "https://BÜCHER.example",
+      "output": {
+        "ok": true,
+        "url": "https://xn--bcher-kva.example"
+      }
+    },
+    {
+      "input": "http://0x7f.1",
+      "output": {
+        "ok": true,
+        "url": "http://127.0.0.1"
+      }
+    },
+    {
+      "input": "http://127.1",
+      "output": {
+        "ok": true,
+        "url": "http://127.0.0.1"
+      }
+    },
+    {
+      "input": " https://x",
+      "output": {
+        "ok": true,
+        "url": "https://x"
+      }
+    },
+    {
+      "input": "https://x\t",
+      "output": {
+        "ok": true,
+        "url": "https://x"
+      }
+    }
+  ],
+  "parseContact": [
+    {
+      "input": "owner@example.com",
+      "output": {
+        "kind": "email",
+        "value": "owner@example.com"
+      }
+    },
+    {
+      "input": "https://example.com/contact",
+      "output": {
+        "kind": "url",
+        "value": "https://example.com/contact"
+      }
+    },
+    {
+      "input": "https://example.com",
+      "output": {
+        "kind": "url",
+        "value": "https://example.com/"
+      }
+    },
+    {
+      "input": "https://EXAMPLE.com/A",
+      "output": {
+        "kind": "url",
+        "value": "https://example.com/A"
+      }
+    },
+    {
+      "input": "https://example.com/a b",
+      "output": {
+        "kind": "url",
+        "value": "https://example.com/a%20b"
+      }
+    },
+    {
+      "input": "https://ü.example/ü",
+      "output": {
+        "kind": "url",
+        "value": "https://xn--tda.example/%C3%BC"
+      }
+    },
+    {
+      "input": "http://example.com",
+      "output": null
+    },
+    {
+      "input": "a.b-c+d%e@x-y.z",
+      "output": {
+        "kind": "email",
+        "value": "a.b-c+d%e@x-y.z"
+      }
+    },
+    {
+      "input": "a@b",
+      "output": null
+    },
+    {
+      "input": "a@b.c.",
+      "output": null
+    },
+    {
+      "input": "https://x/?#",
+      "output": {
+        "kind": "url",
+        "value": "https://x/?#"
+      }
+    },
+    {
+      "input": "https://x/..",
+      "output": {
+        "kind": "url",
+        "value": "https://x/"
+      }
+    },
+    {
+      "input": "https://x/./a/../b",
+      "output": {
+        "kind": "url",
+        "value": "https://x/b"
+      }
+    },
+    {
+      "input": "HTTPS://X",
+      "output": {
+        "kind": "url",
+        "value": "https://x/"
+      }
+    },
+    {
+      "input": "https://u:@x",
+      "output": null
+    },
+    {
+      "input": "https://:@x",
+      "output": {
+        "kind": "url",
+        "value": "https://x/"
+      }
+    }
+  ]
+}

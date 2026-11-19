@@ -1,0 +1,7139 @@
+{
+ "snapshot": {
+  "version": 1,
+  "takenAt": "2026-10-21T10:00:00.000Z",
+  "guild": {
+   "id": "900",
+   "name": "Test Server"
+  },
+  "everyone": {
+   "permissions": "68608"
+  },
+  "roles": [
+   {
+    "id": "104",
+    "name": "SomeBot",
+    "color": 0,
+    "hoist": false,
+    "mentionable": false,
+    "permissions": "1024",
+    "position": 2,
+    "unicodeEmoji": null,
+    "managed": true
+   },
+   {
+    "id": "103",
+    "name": "Member",
+    "color": 0,
+    "hoist": false,
+    "mentionable": false,
+    "permissions": "3072",
+    "position": 3,
+    "unicodeEmoji": null,
+    "managed": false
+   },
+   {
+    "id": "102",
+    "name": "Mod",
+    "color": 0,
+    "hoist": false,
+    "mentionable": true,
+    "permissions": "6",
+    "position": 6,
+    "unicodeEmoji": null,
+    "managed": false
+   },
+   {
+    "id": "101",
+    "name": "Admin",
+    "color": 16711680,
+    "hoist": true,
+    "mentionable": false,
+    "permissions": "268435464",
+    "position": 8,
+    "unicodeEmoji": null,
+    "managed": false
+   }
+  ],
+  "categories": [
+   {
+    "id": "201",
+    "type": 4,
+    "name": "Info",
+    "parentId": null,
+    "position": 0,
+    "overwrites": [
+     {
+      "id": "900",
+      "type": "role",
+      "allow": "0",
+      "deny": "2048"
+     }
+    ]
+   }
+  ],
+  "channels": [
+   {
+    "id": "202",
+    "type": 0,
+    "name": "general",
+    "parentId": "201",
+    "position": 0,
+    "overwrites": [
+     {
+      "id": "102",
+      "type": "role",
+      "allow": "9216",
+      "deny": "0"
+     },
+     {
+      "id": "104",
+      "type": "role",
+      "allow": "1024",
+      "deny": "0"
+     },
+     {
+      "id": "777",
+      "type": "member",
+      "allow": "0",
+      "deny": "2048"
+     },
+     {
+      "id": "778",
+      "type": "member",
+      "allow": "1024",
+      "deny": "0"
+     }
+    ],
+    "topic": "Say hi",
+    "nsfw": false,
+    "rateLimitPerUser": 5,
+    "defaultAutoArchiveDuration": 1440
+   },
+   {
+    "id": "203",
+    "type": 2,
+    "name": "Lounge",
+    "parentId": "201",
+    "position": 1,
+    "overwrites": [],
+    "bitrate": 64000,
+    "userLimit": 5,
+    "rateLimitPerUser": 0
+   },
+   {
+    "id": "206",
+    "type": 15,
+    "name": "help",
+    "parentId": null,
+    "position": 2,
+    "overwrites": [],
+    "topic": null,
+    "nsfw": false,
+    "rateLimitPerUser": 0,
+    "defaultAutoArchiveDuration": null,
+    "tags": [
+     {
+      "name": "Solved",
+      "moderated": true,
+      "emojiName": "✅"
+     },
+     {
+      "name": "Custom",
+      "moderated": false,
+      "emojiName": null
+     }
+    ]
+   }
+  ],
+  "skipped": {
+   "channels": 1
+  }
+ },
+ "snapshotBytes": 1696,
+ "snapshotBytesTricky": {
+  "data": {
+   "version": 1,
+   "takenAt": "2026-10-21T10:00:00.000Z",
+   "guild": {
+    "id": "900",
+    "name": "é\u0001\"\\\n😀 "
+   },
+   "everyone": {
+    "permissions": "68608"
+   },
+   "roles": [
+    {
+     "id": "104",
+     "name": "SomeBot",
+     "color": 0,
+     "hoist": false,
+     "mentionable": false,
+     "permissions": "1024",
+     "position": 2,
+     "unicodeEmoji": null,
+     "managed": true
+    },
+    {
+     "id": "103",
+     "name": "Member",
+     "color": 0,
+     "hoist": false,
+     "mentionable": false,
+     "permissions": "3072",
+     "position": 3,
+     "unicodeEmoji": null,
+     "managed": false
+    },
+    {
+     "id": "102",
+     "name": "Mod",
+     "color": 0,
+     "hoist": false,
+     "mentionable": true,
+     "permissions": "6",
+     "position": 6,
+     "unicodeEmoji": null,
+     "managed": false
+    },
+    {
+     "id": "101",
+     "name": "Admin",
+     "color": 16711680,
+     "hoist": true,
+     "mentionable": false,
+     "permissions": "268435464",
+     "position": 8,
+     "unicodeEmoji": null,
+     "managed": false
+    }
+   ],
+   "categories": [
+    {
+     "id": "201",
+     "type": 4,
+     "name": "Info",
+     "parentId": null,
+     "position": 0,
+     "overwrites": [
+      {
+       "id": "900",
+       "type": "role",
+       "allow": "0",
+       "deny": "2048"
+      }
+     ]
+    }
+   ],
+   "channels": [
+    {
+     "id": "202",
+     "type": 0,
+     "name": "general",
+     "parentId": "201",
+     "position": 0,
+     "overwrites": [
+      {
+       "id": "102",
+       "type": "role",
+       "allow": "9216",
+       "deny": "0"
+      },
+      {
+       "id": "104",
+       "type": "role",
+       "allow": "1024",
+       "deny": "0"
+      },
+      {
+       "id": "777",
+       "type": "member",
+       "allow": "0",
+       "deny": "2048"
+      },
+      {
+       "id": "778",
+       "type": "member",
+       "allow": "1024",
+       "deny": "0"
+      }
+     ],
+     "topic": "Say hi",
+     "nsfw": false,
+     "rateLimitPerUser": 5,
+     "defaultAutoArchiveDuration": 1440
+    },
+    {
+     "id": "203",
+     "type": 2,
+     "name": "Lounge",
+     "parentId": "201",
+     "position": 1,
+     "overwrites": [],
+     "bitrate": 64000,
+     "userLimit": 5,
+     "rateLimitPerUser": 0
+    },
+    {
+     "id": "206",
+     "type": 15,
+     "name": "help",
+     "parentId": null,
+     "position": 2,
+     "overwrites": [],
+     "topic": null,
+     "nsfw": false,
+     "rateLimitPerUser": 0,
+     "defaultAutoArchiveDuration": null,
+     "tags": [
+      {
+       "name": "Solved",
+       "moderated": true,
+       "emojiName": "✅"
+      },
+      {
+       "name": "Custom",
+       "moderated": false,
+       "emojiName": null
+      }
+     ]
+    }
+   ],
+   "skipped": {
+    "channels": 1
+   }
+  },
+  "bytes": 1706
+ },
+ "original": {
+  "botPerms": "268528662",
+  "roles": [
+   {
+    "id": "101",
+    "name": "Admin",
+    "color": 16711680,
+    "hoist": true,
+    "perms": "268435464",
+    "pos": 8
+   },
+   {
+    "id": "102",
+    "name": "Mod",
+    "mentionable": true,
+    "perms": "6",
+    "pos": 6
+   },
+   {
+    "id": "103",
+    "name": "Member",
+    "perms": "3072",
+    "pos": 3
+   },
+   {
+    "id": "104",
+    "name": "SomeBot",
+    "managed": true,
+    "perms": "1024",
+    "pos": 2
+   }
+  ],
+  "channels": [
+   {
+    "id": "201",
+    "type": 4,
+    "name": "Info",
+    "pos": 0,
+    "overwrites": [
+     {
+      "id": "900",
+      "deny": "2048"
+     }
+    ]
+   },
+   {
+    "id": "202",
+    "name": "general",
+    "parent": "201",
+    "pos": 0,
+    "topic": "Say hi",
+    "slow": 5,
+    "archive": 1440,
+    "overwrites": [
+     {
+      "id": "102",
+      "allow": "9216"
+     },
+     {
+      "id": "104",
+      "allow": "1024"
+     },
+     {
+      "id": "777",
+      "type": 1,
+      "deny": "2048"
+     },
+     {
+      "id": "778",
+      "type": 1,
+      "allow": "1024"
+     }
+    ]
+   },
+   {
+    "id": "203",
+    "type": 2,
+    "name": "Lounge",
+    "parent": "201",
+    "pos": 1,
+    "bitrate": 64000,
+    "limit": 5
+   },
+   {
+    "id": "204",
+    "type": 11,
+    "name": "a thread",
+    "parent": "202",
+    "thread": true
+   },
+   {
+    "id": "205",
+    "type": 14,
+    "name": "directory"
+   },
+   {
+    "id": "206",
+    "type": 15,
+    "name": "help",
+    "pos": 2,
+    "tags": [
+     {
+      "name": "Solved",
+      "moderated": true,
+      "emoji": {
+       "id": null,
+       "name": "✅"
+      }
+     },
+     {
+      "name": "Custom",
+      "moderated": false,
+      "emoji": {
+       "id": "55",
+       "name": "x"
+      }
+     }
+    ]
+   }
+  ],
+  "everyonePerms": "68608"
+ },
+ "stats": {
+  "roles": 4,
+  "categories": 1,
+  "channels": 3,
+  "overwrites": 5
+ },
+ "restores": {
+  "missing": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin (renamed)",
+      "perms": "1024",
+      "pos": 8
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "managed": true,
+      "pos": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "channels": [
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help (renamed)",
+      "pos": 2
+     }
+    ],
+    "members": [
+     "777"
+    ],
+    "everyonePerms": "1024"
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 2,
+      "update": 0,
+      "keep": 2,
+      "skip": 0
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 2,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "overwrites": 5,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 4,
+     "calls": 11
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 2,
+      "update": 2,
+      "keep": 1,
+      "skip": 0
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 2,
+      "update": 1,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 5,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 4,
+     "calls": 15
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {
+     "102": "5001",
+     "103": "5000",
+     "201": "5002",
+     "202": "5003",
+     "203": "5004"
+    },
+    "made": [
+     "5000",
+     "5001",
+     "5002",
+     "5003",
+     "5004"
+    ],
+    "counts": {
+     "rolesCreated": 2,
+     "rolesUpdated": 0,
+     "rolesKept": 2,
+     "rolesSkipped": 0,
+     "categoriesCreated": 1,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 2,
+     "channelsUpdated": 0,
+     "channelsKept": 1,
+     "channelsSkipped": 0,
+     "overwritesSet": 1,
+     "overwritesKept": 3,
+     "overwritesSkipped": 1,
+     "positionsSet": 2,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [
+     [
+      "role",
+      {
+       "name": "Member",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": false,
+       "permissions": "3072",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Mod",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": true,
+       "permissions": "6",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Info",
+       "type": 4,
+       "reason": "test",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "900",
+         "type": 0,
+         "allow": "0",
+         "deny": "2048"
+        }
+       ]
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "general",
+       "type": 0,
+       "reason": "test",
+       "parent": "5002",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "5001",
+         "type": 0,
+         "allow": "9216",
+         "deny": "0"
+        },
+        {
+         "id": "104",
+         "type": 0,
+         "allow": "1024",
+         "deny": "0"
+        }
+       ],
+       "topic": "Say hi",
+       "rateLimitPerUser": 5,
+       "defaultAutoArchiveDuration": 1440
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Lounge",
+       "type": 2,
+       "reason": "test",
+       "parent": "5002",
+       "position": 1,
+       "bitrate": 64000,
+       "userLimit": 5
+      }
+     ]
+    ],
+    "edit": [],
+    "put": [
+     {
+      "route": "/channels/5003/permissions/777",
+      "body": {
+       "type": 1,
+       "allow": "0",
+       "deny": "2048"
+      },
+      "reason": "test"
+     }
+    ],
+    "rolePositions": [
+     [
+      {
+       "role": "5000",
+       "position": 3
+      },
+      {
+       "role": "5001",
+       "position": 6
+      }
+     ]
+    ],
+    "channelPositions": [],
+    "fetches": [
+     "777",
+     "778"
+    ]
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin (renamed)",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "1024",
+      "rawPosition": 8
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "1024",
+      "rawPosition": 0
+     },
+     {
+      "id": "5000",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "5001",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 6
+     }
+    ],
+    "channels": [
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help (renamed)",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     },
+     {
+      "id": "5002",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "type": 0,
+        "allow": "0",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "5003",
+      "type": 0,
+      "name": "general",
+      "parentId": "5002",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "5001",
+        "type": 0,
+        "allow": "9216",
+        "deny": "0"
+       },
+       {
+        "id": "104",
+        "type": 0,
+        "allow": "1024",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "5004",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "5002",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.576Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 2 · already there 2"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 2 · already there 1",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · already right 3 · skipped 1 · positions set 2"
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.603Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 2 · already there 2"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 2 · already there 1",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · already right 3 · skipped 1 · positions set 2"
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.606Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 2 · leave 2"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 2 · leave 1",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "5 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "full": {
+   "mode": "full",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admins",
+      "color": 0,
+      "perms": "1024",
+      "pos": 4
+     },
+     {
+      "id": "102",
+      "name": "Mod",
+      "mentionable": true,
+      "perms": "6",
+      "pos": 5
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "perms": "3072",
+      "pos": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "managed": true,
+      "pos": 7
+     },
+     {
+      "id": "150",
+      "name": "Newcomer",
+      "pos": 6
+     },
+     {
+      "id": "160",
+      "name": "Boss",
+      "pos": 12
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Information",
+      "pos": 3
+     },
+     {
+      "id": "202",
+      "name": "chat",
+      "parent": null,
+      "pos": 5,
+      "topic": "old",
+      "slow": 0,
+      "overwrites": [
+       {
+        "id": "102",
+        "allow": "0",
+        "deny": "0"
+       },
+       {
+        "id": "888",
+        "type": 1,
+        "deny": "1024"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parent": "201",
+      "pos": 1,
+      "bitrate": 64000,
+      "limit": 5
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "pos": 9
+     }
+    ],
+    "members": [
+     "777",
+     "778"
+    ],
+    "everyonePerms": "3072"
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 0,
+      "update": 0,
+      "keep": 4,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 0,
+      "keep": 3,
+      "skip": 0
+     },
+     "overwrites": 0,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 8,
+     "channelTotalAfter": 4,
+     "calls": 0
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 0,
+      "update": 2,
+      "keep": 3,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 1,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 1,
+      "keep": 2,
+      "skip": 0
+     },
+     "overwrites": 5,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 8,
+     "channelTotalAfter": 4,
+     "calls": 11
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "full",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {},
+    "made": [],
+    "counts": {
+     "rolesCreated": 0,
+     "rolesUpdated": 2,
+     "rolesKept": 3,
+     "rolesSkipped": 0,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 1,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 0,
+     "channelsUpdated": 1,
+     "channelsKept": 2,
+     "channelsSkipped": 0,
+     "overwritesSet": 5,
+     "overwritesKept": 0,
+     "overwritesSkipped": 0,
+     "positionsSet": 6,
+     "positionsLimited": 0,
+     "masked": 1,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "8",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 2,
+   "log": {
+    "create": [],
+    "edit": [
+     [
+      "role",
+      "900",
+      {
+       "permissions": "68608",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      "101",
+      {
+       "name": "Admin",
+       "colors": {
+        "primaryColor": 16711680
+       },
+       "hoist": true,
+       "permissions": "268435456",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      "201",
+      {
+       "name": "Info",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      "202",
+      {
+       "name": "general",
+       "topic": "Say hi",
+       "rateLimitPerUser": 5,
+       "defaultAutoArchiveDuration": 1440,
+       "parent": "201",
+       "reason": "test"
+      }
+     ]
+    ],
+    "put": [
+     {
+      "route": "/channels/201/permissions/900",
+      "body": {
+       "type": 0,
+       "allow": "0",
+       "deny": "2048"
+      },
+      "reason": "test"
+     },
+     {
+      "route": "/channels/202/permissions/102",
+      "body": {
+       "type": 0,
+       "allow": "9216",
+       "deny": "0"
+      },
+      "reason": "test"
+     },
+     {
+      "route": "/channels/202/permissions/104",
+      "body": {
+       "type": 0,
+       "allow": "1024",
+       "deny": "0"
+      },
+      "reason": "test"
+     },
+     {
+      "route": "/channels/202/permissions/777",
+      "body": {
+       "type": 1,
+       "allow": "0",
+       "deny": "2048"
+      },
+      "reason": "test"
+     },
+     {
+      "route": "/channels/202/permissions/778",
+      "body": {
+       "type": 1,
+       "allow": "1024",
+       "deny": "0"
+      },
+      "reason": "test"
+     }
+    ],
+    "rolePositions": [
+     [
+      {
+       "role": "102",
+       "position": 4
+      },
+      {
+       "role": "101",
+       "position": 5
+      }
+     ]
+    ],
+    "channelPositions": [
+     [
+      {
+       "channel": "201",
+       "position": 0
+      },
+      {
+       "channel": "202",
+       "position": 0
+      },
+      {
+       "channel": "203",
+       "position": 1
+      },
+      {
+       "channel": "206",
+       "position": 2
+      }
+     ]
+    ],
+    "fetches": [
+     "777",
+     "778"
+    ]
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435456",
+      "rawPosition": 5
+     },
+     {
+      "id": "102",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 4
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 7
+     },
+     {
+      "id": "150",
+      "name": "Newcomer",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 6
+     },
+     {
+      "id": "160",
+      "name": "Boss",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 12
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "68608",
+      "rawPosition": 0
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     },
+     {
+      "id": "202",
+      "type": 0,
+      "name": "general",
+      "parentId": "201",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "102",
+        "type": 0,
+        "allow": "0",
+        "deny": "0"
+       },
+       {
+        "id": "888",
+        "type": 1,
+        "allow": "0",
+        "deny": "1024"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "201",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.610Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **full**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "updated 2 · already there 3"
+     },
+     {
+      "name": "Categories",
+      "value": "updated 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "updated 1 · already there 2",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 5 · positions set 6"
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.611Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **full**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "updated 2 · already there 3"
+     },
+     {
+      "name": "Categories",
+      "value": "updated 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "updated 1 · already there 2",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 5 · positions set 6"
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.613Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Full:** recreates what is missing, and also sets the names, permissions, order and channel permissions of roles and channels that still exist back to the backup.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "update 2 · leave 3"
+     },
+     {
+      "name": "Categories",
+      "value": "update 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "update 1 · leave 2",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "5 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I lack Administrator, so 1 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "empty": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "members": [
+     "777",
+     "778"
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 14
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {
+     "101": "5002",
+     "102": "5001",
+     "103": "5000",
+     "201": "5003",
+     "202": "5004",
+     "203": "5005",
+     "206": "5006"
+    },
+    "made": [
+     "5000",
+     "5001",
+     "5002",
+     "5003",
+     "5004",
+     "5005",
+     "5006"
+    ],
+    "counts": {
+     "rolesCreated": 3,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 1,
+     "categoriesCreated": 1,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 3,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 0,
+     "overwritesSet": 2,
+     "overwritesKept": 2,
+     "overwritesSkipped": 1,
+     "positionsSet": 3,
+     "positionsLimited": 0,
+     "masked": 1,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "8",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 2,
+   "log": {
+    "create": [
+     [
+      "role",
+      {
+       "name": "Member",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": false,
+       "permissions": "3072",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Mod",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": true,
+       "permissions": "6",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Admin",
+       "colors": {
+        "primaryColor": 16711680
+       },
+       "hoist": true,
+       "mentionable": false,
+       "permissions": "268435456",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Info",
+       "type": 4,
+       "reason": "test",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "900",
+         "type": 0,
+         "allow": "0",
+         "deny": "2048"
+        }
+       ]
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "general",
+       "type": 0,
+       "reason": "test",
+       "parent": "5003",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "5001",
+         "type": 0,
+         "allow": "9216",
+         "deny": "0"
+        }
+       ],
+       "topic": "Say hi",
+       "rateLimitPerUser": 5,
+       "defaultAutoArchiveDuration": 1440
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Lounge",
+       "type": 2,
+       "reason": "test",
+       "parent": "5003",
+       "position": 1,
+       "bitrate": 64000,
+       "userLimit": 5
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "help",
+       "type": 15,
+       "reason": "test",
+       "position": 2,
+       "availableTags": [
+        {
+         "name": "Solved",
+         "moderated": true,
+         "emoji": {
+          "id": null,
+          "name": "✅"
+         }
+        },
+        {
+         "name": "Custom",
+         "moderated": false,
+         "emoji": null
+        }
+       ]
+      }
+     ]
+    ],
+    "edit": [],
+    "put": [
+     {
+      "route": "/channels/5004/permissions/777",
+      "body": {
+       "type": 1,
+       "allow": "0",
+       "deny": "2048"
+      },
+      "reason": "test"
+     },
+     {
+      "route": "/channels/5004/permissions/778",
+      "body": {
+       "type": 1,
+       "allow": "1024",
+       "deny": "0"
+      },
+      "reason": "test"
+     }
+    ],
+    "rolePositions": [
+     [
+      {
+       "role": "5000",
+       "position": 3
+      },
+      {
+       "role": "5001",
+       "position": 6
+      },
+      {
+       "role": "5002",
+       "position": 8
+      }
+     ]
+    ],
+    "channelPositions": [],
+    "fetches": [
+     "777",
+     "778"
+    ]
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     },
+     {
+      "id": "5000",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "5001",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 6
+     },
+     {
+      "id": "5002",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435456",
+      "rawPosition": 8
+     }
+    ],
+    "channels": [
+     {
+      "id": "5003",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "type": 0,
+        "allow": "0",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "5004",
+      "type": 0,
+      "name": "general",
+      "parentId": "5003",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "5001",
+        "type": 0,
+        "allow": "9216",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "5005",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "5003",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     },
+     {
+      "id": "5006",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.616Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 2 · already right 2 · skipped 1 · positions set 3"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.617Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 2 · already right 2 · skipped 1 · positions set 3"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.618Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "4 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I lack Administrator, so 1 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "limited": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 5
+     }
+    ],
+    "botTop": 5
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 14
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {
+     "101": "5002",
+     "102": "5001",
+     "103": "5000",
+     "201": "5003",
+     "202": "5004",
+     "203": "5005",
+     "206": "5006"
+    },
+    "made": [
+     "5000",
+     "5001",
+     "5002",
+     "5003",
+     "5004",
+     "5005",
+     "5006"
+    ],
+    "counts": {
+     "rolesCreated": 3,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 1,
+     "categoriesCreated": 1,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 3,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 0,
+     "overwritesSet": 0,
+     "overwritesKept": 2,
+     "overwritesSkipped": 3,
+     "positionsSet": 3,
+     "positionsLimited": 2,
+     "masked": 1,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "8",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [
+     [
+      "role",
+      {
+       "name": "Member",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": false,
+       "permissions": "3072",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Mod",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": true,
+       "permissions": "6",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Admin",
+       "colors": {
+        "primaryColor": 16711680
+       },
+       "hoist": true,
+       "mentionable": false,
+       "permissions": "268435456",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Info",
+       "type": 4,
+       "reason": "test",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "900",
+         "type": 0,
+         "allow": "0",
+         "deny": "2048"
+        }
+       ]
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "general",
+       "type": 0,
+       "reason": "test",
+       "parent": "5003",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "5001",
+         "type": 0,
+         "allow": "9216",
+         "deny": "0"
+        }
+       ],
+       "topic": "Say hi",
+       "rateLimitPerUser": 5,
+       "defaultAutoArchiveDuration": 1440
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Lounge",
+       "type": 2,
+       "reason": "test",
+       "parent": "5003",
+       "position": 1,
+       "bitrate": 64000,
+       "userLimit": 5
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "help",
+       "type": 15,
+       "reason": "test",
+       "position": 2,
+       "availableTags": [
+        {
+         "name": "Solved",
+         "moderated": true,
+         "emoji": {
+          "id": null,
+          "name": "✅"
+         }
+        },
+        {
+         "name": "Custom",
+         "moderated": false,
+         "emoji": null
+        }
+       ]
+      }
+     ]
+    ],
+    "edit": [],
+    "put": [],
+    "rolePositions": [
+     [
+      {
+       "role": "5000",
+       "position": 3
+      },
+      {
+       "role": "5001",
+       "position": 4
+      },
+      {
+       "role": "5002",
+       "position": 4
+      }
+     ]
+    ],
+    "channelPositions": [],
+    "fetches": [
+     "777",
+     "778"
+    ]
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 5
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     },
+     {
+      "id": "5000",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "5001",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 4
+     },
+     {
+      "id": "5002",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435456",
+      "rawPosition": 4
+     }
+    ],
+    "channels": [
+     {
+      "id": "5003",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "type": 0,
+        "allow": "0",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "5004",
+      "type": 0,
+      "name": "general",
+      "parentId": "5003",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "5001",
+        "type": 0,
+        "allow": "9216",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "5005",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "5003",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     },
+     {
+      "id": "5006",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.619Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "already right 2 · skipped 3 · positions set 3 · placed lower than before 2"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role.\n• A role cannot be placed above my own highest role, so some were placed lower than before. Move my role up, then run the restore again."
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.621Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "already right 2 · skipped 3 · positions set 3 · placed lower than before 2"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role.\n• A role cannot be placed above my own highest role, so some were placed lower than before. Move my role up, then run the restore again."
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.621Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "4 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I lack Administrator, so 1 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "admin": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "8",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "members": [
+     "777"
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 14
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {
+     "101": "5002",
+     "102": "5001",
+     "103": "5000",
+     "201": "5003",
+     "202": "5004",
+     "203": "5005",
+     "206": "5006"
+    },
+    "made": [
+     "5000",
+     "5001",
+     "5002",
+     "5003",
+     "5004",
+     "5005",
+     "5006"
+    ],
+    "counts": {
+     "rolesCreated": 3,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 1,
+     "categoriesCreated": 1,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 3,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 0,
+     "overwritesSet": 1,
+     "overwritesKept": 2,
+     "overwritesSkipped": 2,
+     "positionsSet": 3,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 2,
+   "log": {
+    "create": [
+     [
+      "role",
+      {
+       "name": "Member",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": false,
+       "permissions": "3072",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Mod",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": true,
+       "permissions": "6",
+       "reason": "test"
+      }
+     ],
+     [
+      "role",
+      {
+       "name": "Admin",
+       "colors": {
+        "primaryColor": 16711680
+       },
+       "hoist": true,
+       "mentionable": false,
+       "permissions": "268435464",
+       "reason": "test"
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Info",
+       "type": 4,
+       "reason": "test",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "900",
+         "type": 0,
+         "allow": "0",
+         "deny": "2048"
+        }
+       ]
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "general",
+       "type": 0,
+       "reason": "test",
+       "parent": "5003",
+       "position": 0,
+       "permissionOverwrites": [
+        {
+         "id": "5001",
+         "type": 0,
+         "allow": "9216",
+         "deny": "0"
+        }
+       ],
+       "topic": "Say hi",
+       "rateLimitPerUser": 5,
+       "defaultAutoArchiveDuration": 1440
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "Lounge",
+       "type": 2,
+       "reason": "test",
+       "parent": "5003",
+       "position": 1,
+       "bitrate": 64000,
+       "userLimit": 5
+      }
+     ],
+     [
+      "channel",
+      {
+       "name": "help",
+       "type": 15,
+       "reason": "test",
+       "position": 2,
+       "availableTags": [
+        {
+         "name": "Solved",
+         "moderated": true,
+         "emoji": {
+          "id": null,
+          "name": "✅"
+         }
+        },
+        {
+         "name": "Custom",
+         "moderated": false,
+         "emoji": null
+        }
+       ]
+      }
+     ]
+    ],
+    "edit": [],
+    "put": [
+     {
+      "route": "/channels/5004/permissions/777",
+      "body": {
+       "type": 1,
+       "allow": "0",
+       "deny": "2048"
+      },
+      "reason": "test"
+     }
+    ],
+    "rolePositions": [
+     [
+      {
+       "role": "5000",
+       "position": 3
+      },
+      {
+       "role": "5001",
+       "position": 6
+      },
+      {
+       "role": "5002",
+       "position": 8
+      }
+     ]
+    ],
+    "channelPositions": [],
+    "fetches": [
+     "777",
+     "778"
+    ]
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     },
+     {
+      "id": "5000",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "5001",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 6
+     },
+     {
+      "id": "5002",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435464",
+      "rawPosition": 8
+     }
+    ],
+    "channels": [
+     {
+      "id": "5003",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "type": 0,
+        "allow": "0",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "5004",
+      "type": 0,
+      "name": "general",
+      "parentId": "5003",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "5001",
+        "type": 0,
+        "allow": "9216",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "5005",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "5003",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     },
+     {
+      "id": "5006",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.623Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · already right 2 · skipped 2 · positions set 3"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.623Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 3 · skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "created 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "created 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · already right 2 · skipped 2 · positions set 3"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.624Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "4 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "noperms": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "3072",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 3,
+     "dropped": "268443662",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": false,
+     "canManageChannels": false,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 4,
+     "dropped": "268509198",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": false,
+     "canManageChannels": false,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 14
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {},
+    "made": [],
+    "counts": {
+     "rolesCreated": 0,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 4,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 1,
+     "channelsCreated": 0,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 3,
+     "overwritesSet": 0,
+     "overwritesKept": 0,
+     "overwritesSkipped": 5,
+     "positionsSet": 0,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 4
+    },
+    "errors": [
+     "I need the Manage Roles permission, so no roles were restored.",
+     "I need the Manage Channels permission, so no categories were restored.",
+     "I need the Manage Channels permission, so no channels were restored.",
+     "I need the Manage Roles permission, so no channel permissions were restored."
+    ],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [],
+    "edit": [],
+    "put": [],
+    "rolePositions": [],
+    "channelPositions": [],
+    "fetches": []
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     }
+    ],
+    "channels": []
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.625Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 4"
+     },
+     {
+      "name": "Categories",
+      "value": "skipped 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "skipped 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (4)",
+      "value": "• I need the Manage Roles permission, so no roles were restored.\n• I need the Manage Channels permission, so no categories were restored.\n• I need the Manage Channels permission, so no channels were restored.\n• I need the Manage Roles permission, so no channel permissions were restored."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.626Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 4"
+     },
+     {
+      "name": "Categories",
+      "value": "skipped 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "skipped 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (4)",
+      "value": "• I need the Manage Roles permission, so no roles were restored.\n• I need the Manage Channels permission, so no categories were restored.\n• I need the Manage Channels permission, so no channels were restored.\n• I need the Manage Roles permission, so no channel permissions were restored."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.627Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "4 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I do not have **Manage Roles**: roles and channel permissions will be skipped.\n• I do not have **Manage Channels**: categories and channels will be skipped.\n• I lack Kick Members, Ban Members, Administrator, Manage Messages, Manage Roles, so 3 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "norolesperm": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "1040",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 2,
+     "masked": 6,
+     "dropped": "268445710",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": false,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 10
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 2,
+     "masked": 7,
+     "dropped": "268511246",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": false,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {},
+    "made": [],
+    "counts": {
+     "rolesCreated": 0,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 4,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 1,
+     "channelsCreated": 0,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 3,
+     "overwritesSet": 0,
+     "overwritesKept": 0,
+     "overwritesSkipped": 5,
+     "positionsSet": 0,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 4
+    },
+    "errors": [
+     "I need the Manage Roles permission, so no roles were restored.",
+     "I need the Manage Roles permission to give categories their permissions, so no categories were restored.",
+     "I need the Manage Roles permission to give channels their permissions, so no channels were restored.",
+     "I need the Manage Roles permission, so no channel permissions were restored."
+    ],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [],
+    "edit": [],
+    "put": [],
+    "rolePositions": [],
+    "channelPositions": [],
+    "fetches": []
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     }
+    ],
+    "channels": []
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.627Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 4"
+     },
+     {
+      "name": "Categories",
+      "value": "skipped 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "skipped 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (4)",
+      "value": "• I need the Manage Roles permission, so no roles were restored.\n• I need the Manage Roles permission to give categories their permissions, so no categories were restored.\n• I need the Manage Roles permission to give channels their permissions, so no channels were restored.\n• I need the Manage Roles permission, so no channel permissions were restored."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.628Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 4"
+     },
+     {
+      "name": "Categories",
+      "value": "skipped 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "skipped 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (4)",
+      "value": "• I need the Manage Roles permission, so no roles were restored.\n• I need the Manage Roles permission to give categories their permissions, so no categories were restored.\n• I need the Manage Roles permission to give channels their permissions, so no channels were restored.\n• I need the Manage Roles permission, so no channel permissions were restored."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.631Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "2 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I do not have **Manage Roles**: roles and channel permissions will be skipped.\n• I lack Kick Members, Ban Members, Administrator, Send Messages, Manage Messages, Manage Roles, so 6 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "errors": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "fail": {
+     "roleCreate": true,
+     "channelCreate": true
+    }
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 12
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 3,
+      "update": 1,
+      "keep": 0,
+      "skip": 1
+     },
+     "categories": {
+      "create": 1,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "channels": {
+      "create": 3,
+      "update": 0,
+      "keep": 0,
+      "skip": 0
+     },
+     "overwrites": 4,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 1,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 5,
+     "channelTotalAfter": 4,
+     "calls": 14
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {},
+    "made": [],
+    "counts": {
+     "rolesCreated": 0,
+     "rolesUpdated": 0,
+     "rolesKept": 0,
+     "rolesSkipped": 1,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 0,
+     "categoriesKept": 0,
+     "categoriesSkipped": 0,
+     "channelsCreated": 0,
+     "channelsUpdated": 0,
+     "channelsKept": 0,
+     "channelsSkipped": 0,
+     "overwritesSet": 0,
+     "overwritesKept": 0,
+     "overwritesSkipped": 5,
+     "positionsSet": 0,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 7
+    },
+    "errors": [
+     "Role \"Member\": Maximum number of server roles reached (30005)",
+     "Role \"Mod\": Maximum number of server roles reached (30005)",
+     "Role \"Admin\": Maximum number of server roles reached (30005)",
+     "#Info: Missing Permissions (50013)",
+     "#general: Missing Permissions (50013)",
+     "#Lounge: Missing Permissions (50013)",
+     "#help: Missing Permissions (50013)"
+    ],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [],
+    "edit": [],
+    "put": [],
+    "rolePositions": [],
+    "channelPositions": [],
+    "fetches": []
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     }
+    ],
+    "channels": []
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.633Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "nothing to do",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "nothing to do",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (7)",
+      "value": "• Role \"Member\": Maximum number of server roles reached (30005)\n• Role \"Mod\": Maximum number of server roles reached (30005)\n• Role \"Admin\": Maximum number of server roles reached (30005)\n• #Info: Missing Permissions (50013)\n• #general: Missing Permissions (50013)\n• #Lounge: Missing Permissions (50013)\n• #help: Missing Permissions (50013)"
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.634Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "skipped 1"
+     },
+     {
+      "name": "Categories",
+      "value": "nothing to do",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "nothing to do",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "skipped 5"
+     },
+     {
+      "name": "Good to know",
+      "value": "• Roles are skipped when they belong to an integration, or (full mode) sit above my highest role."
+     },
+     {
+      "name": "Problems (7)",
+      "value": "• Role \"Member\": Maximum number of server roles reached (30005)\n• Role \"Mod\": Maximum number of server roles reached (30005)\n• Role \"Admin\": Maximum number of server roles reached (30005)\n• #Info: Missing Permissions (50013)\n• #general: Missing Permissions (50013)\n• #Lounge: Missing Permissions (50013)\n• #help: Missing Permissions (50013)"
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.635Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 3 · skip 1"
+     },
+     {
+      "name": "Categories",
+      "value": "create 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "create 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "4 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• I lack Administrator, so 1 role(s) or channel permission(s) will be restored without them. Give my role those permissions first for a complete restore.\n• 1 role(s) belong to integrations or bots and cannot be recreated.\n• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "recreated": {
+   "mode": "missing",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin",
+      "pos": 8
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "pos": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "managed": true,
+      "pos": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Info",
+      "pos": 0
+     },
+     {
+      "id": "202",
+      "name": "general",
+      "parent": "201",
+      "pos": 0,
+      "overwrites": [
+       {
+        "id": "104",
+        "allow": "2048"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parent": "201",
+      "pos": 1
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "pos": 2
+     }
+    ],
+    "members": [
+     "777",
+     "778"
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 1,
+      "update": 0,
+      "keep": 3,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 0,
+      "keep": 3,
+      "skip": 0
+     },
+     "overwrites": 1,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 4,
+     "calls": 3
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 1,
+      "update": 3,
+      "keep": 1,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 2,
+      "keep": 1,
+      "skip": 0
+     },
+     "overwrites": 5,
+     "masked": 1,
+     "dropped": "8",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 4,
+     "calls": 13
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "missing",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {
+     "102": "5000"
+    },
+    "made": [
+     "5000"
+    ],
+    "counts": {
+     "rolesCreated": 1,
+     "rolesUpdated": 0,
+     "rolesKept": 3,
+     "rolesSkipped": 0,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 0,
+     "categoriesKept": 1,
+     "categoriesSkipped": 0,
+     "channelsCreated": 0,
+     "channelsUpdated": 0,
+     "channelsKept": 3,
+     "channelsSkipped": 0,
+     "overwritesSet": 1,
+     "overwritesKept": 0,
+     "overwritesSkipped": 0,
+     "positionsSet": 1,
+     "positionsLimited": 0,
+     "masked": 0,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "0",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [
+     [
+      "role",
+      {
+       "name": "Mod",
+       "colors": {
+        "primaryColor": 0
+       },
+       "hoist": false,
+       "mentionable": true,
+       "permissions": "6",
+       "reason": "test"
+      }
+     ]
+    ],
+    "edit": [],
+    "put": [
+     {
+      "route": "/channels/202/permissions/5000",
+      "body": {
+       "type": 0,
+       "allow": "9216",
+       "deny": "0"
+      },
+      "reason": "test"
+     }
+    ],
+    "rolePositions": [
+     [
+      {
+       "role": "5000",
+       "position": 6
+      }
+     ]
+    ],
+    "channelPositions": [],
+    "fetches": []
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 8
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 0
+     },
+     {
+      "id": "5000",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 6
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     },
+     {
+      "id": "202",
+      "type": 0,
+      "name": "general",
+      "parentId": "201",
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "104",
+        "type": 0,
+        "allow": "2048",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "201",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.640Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 1 · already there 3"
+     },
+     {
+      "name": "Categories",
+      "value": "already there 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "already there 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · positions set 1"
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.641Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **missing only**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "created 1 · already there 3"
+     },
+     {
+      "name": "Categories",
+      "value": "already there 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "already there 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "channel permissions set 1 · positions set 1"
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.642Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Missing only:** recreates roles and channels that no longer exist, with their channel permissions. Channels that still exist only get the permissions of recreated roles added where they have none; nothing that exists is changed.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "create 1 · leave 3"
+     },
+     {
+      "name": "Categories",
+      "value": "leave 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "leave 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "1 to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  },
+  "fullAgain": {
+   "mode": "full",
+   "spec": {
+    "botPerms": "268528662",
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "perms": "268435456",
+      "pos": 8
+     },
+     {
+      "id": "102",
+      "name": "Mod",
+      "mentionable": true,
+      "perms": "6",
+      "pos": 6
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "perms": "3072",
+      "pos": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "managed": true,
+      "pos": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "pos": 10
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Info",
+      "pos": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "202",
+      "name": "general",
+      "parent": "201",
+      "pos": 0,
+      "topic": "Say hi",
+      "slow": 5,
+      "archive": 1440,
+      "overwrites": [
+       {
+        "id": "102",
+        "allow": "9216"
+       },
+       {
+        "id": "104",
+        "allow": "1024"
+       },
+       {
+        "id": "777",
+        "type": 1,
+        "deny": "2048"
+       },
+       {
+        "id": "778",
+        "type": 1,
+        "allow": "1024"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parent": "201",
+      "pos": 1,
+      "bitrate": 64000,
+      "limit": 5
+     },
+     {
+      "id": "205",
+      "type": 14,
+      "name": "directory"
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "pos": 2,
+      "tags": [
+       {
+        "name": "Solved",
+        "moderated": true,
+        "emoji": {
+         "id": null,
+         "name": "✅"
+        }
+       },
+       {
+        "name": "Custom",
+        "moderated": false,
+        "emoji": {
+         "id": "55",
+         "name": "x"
+        }
+       }
+      ]
+     }
+    ],
+    "everyonePerms": "68608",
+    "members": [
+     "777",
+     "778"
+    ]
+   },
+   "previews": {
+    "missing": {
+     "mode": "missing",
+     "roles": {
+      "create": 0,
+      "update": 0,
+      "keep": 4,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 0,
+      "keep": 3,
+      "skip": 0
+     },
+     "overwrites": 0,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 5,
+     "calls": 0
+    },
+    "full": {
+     "mode": "full",
+     "roles": {
+      "create": 0,
+      "update": 0,
+      "keep": 4,
+      "skip": 0
+     },
+     "categories": {
+      "create": 0,
+      "update": 0,
+      "keep": 1,
+      "skip": 0
+     },
+     "channels": {
+      "create": 0,
+      "update": 0,
+      "keep": 3,
+      "skip": 0
+     },
+     "overwrites": 0,
+     "masked": 0,
+     "dropped": "0",
+     "unsupported": 1,
+     "managedMissing": 0,
+     "canManageRoles": true,
+     "canManageChannels": true,
+     "roleTotalAfter": 6,
+     "channelTotalAfter": 5,
+     "calls": 1
+    }
+   },
+   "state": {
+    "backupId": "bk000001",
+    "mode": "full",
+    "phase": "finish",
+    "cursor": 0,
+    "stalls": 0,
+    "retry": false,
+    "idMap": {},
+    "made": [],
+    "counts": {
+     "rolesCreated": 0,
+     "rolesUpdated": 0,
+     "rolesKept": 4,
+     "rolesSkipped": 0,
+     "categoriesCreated": 0,
+     "categoriesUpdated": 0,
+     "categoriesKept": 1,
+     "categoriesSkipped": 0,
+     "channelsCreated": 0,
+     "channelsUpdated": 0,
+     "channelsKept": 3,
+     "channelsSkipped": 0,
+     "overwritesSet": 0,
+     "overwritesKept": 5,
+     "overwritesSkipped": 0,
+     "positionsSet": 0,
+     "positionsLimited": 0,
+     "masked": 1,
+     "errors": 0
+    },
+    "errors": [],
+    "dropped": "8",
+    "startedById": "OWNER",
+    "channelId": "CH",
+    "startedAt": 0
+   },
+   "batches": 1,
+   "log": {
+    "create": [],
+    "edit": [],
+    "put": [],
+    "rolePositions": [],
+    "channelPositions": [],
+    "fetches": []
+   },
+   "after": {
+    "roles": [
+     {
+      "id": "101",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435456",
+      "rawPosition": 8
+     },
+     {
+      "id": "102",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "rawPosition": 6
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "rawPosition": 3
+     },
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 2
+     },
+     {
+      "id": "999",
+      "name": "Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "rawPosition": 10
+     },
+     {
+      "id": "900",
+      "name": "@everyone",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "68608",
+      "rawPosition": 0
+     }
+    ],
+    "channels": [
+     {
+      "id": "201",
+      "type": 4,
+      "name": "Info",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "900",
+        "type": 0,
+        "allow": "0",
+        "deny": "2048"
+       }
+      ]
+     },
+     {
+      "id": "202",
+      "type": 0,
+      "name": "general",
+      "parentId": "201",
+      "rawPosition": 0,
+      "topic": "Say hi",
+      "nsfw": false,
+      "rateLimitPerUser": 5,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": [
+       {
+        "id": "102",
+        "type": 0,
+        "allow": "9216",
+        "deny": "0"
+       },
+       {
+        "id": "104",
+        "type": 0,
+        "allow": "1024",
+        "deny": "0"
+       },
+       {
+        "id": "777",
+        "type": 1,
+        "allow": "0",
+        "deny": "2048"
+       },
+       {
+        "id": "778",
+        "type": 1,
+        "allow": "1024",
+        "deny": "0"
+       }
+      ]
+     },
+     {
+      "id": "203",
+      "type": 2,
+      "name": "Lounge",
+      "parentId": "201",
+      "rawPosition": 1,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": 64000,
+      "userLimit": 5,
+      "overwrites": []
+     },
+     {
+      "id": "205",
+      "type": 14,
+      "name": "directory",
+      "parentId": null,
+      "rawPosition": 0,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     },
+     {
+      "id": "206",
+      "type": 15,
+      "name": "help",
+      "parentId": null,
+      "rawPosition": 2,
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "bitrate": null,
+      "userLimit": 0,
+      "overwrites": []
+     }
+    ]
+   },
+   "summary": {
+    "color": 5763719,
+    "timestamp": "2026-11-19T01:55:32.645Z",
+    "title": "✅  Restore Finished",
+    "description": "Mode **full**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "already there 4"
+     },
+     {
+      "name": "Categories",
+      "value": "already there 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "already there 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "already right 5"
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "summaryStopped": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.646Z",
+    "title": "⚠️  Restore Stopped",
+    "description": "The backup was deleted, so the restore stopped.\n\nMode **full**. **Nothing was deleted.**",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "already there 4"
+     },
+     {
+      "name": "Categories",
+      "value": "already there 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "already there 3",
+      "inline": true
+     },
+     {
+      "name": "Permissions and order",
+      "value": "already right 5"
+     },
+     {
+      "name": "Permissions I could not give",
+      "value": "1 role(s) or channel permission(s) were restored without: Administrator. I can only give permissions I have myself. Give my role those permissions, then run the restore again."
+     }
+    ]
+   },
+   "previewEmbed": {
+    "color": 16705372,
+    "timestamp": "2026-11-19T01:55:32.647Z",
+    "title": "⚠️  Restore This Backup?",
+    "description": "Backup **Nightly** from <t:1792576800:f>.\n\n**Full:** recreates what is missing, and also sets the names, permissions, order and channel permissions of roles and channels that still exist back to the backup.\n**Nothing is ever deleted:** roles and channels that are not in the backup stay.",
+    "fields": [
+     {
+      "name": "Roles",
+      "value": "leave 4"
+     },
+     {
+      "name": "Categories",
+      "value": "leave 1",
+      "inline": true
+     },
+     {
+      "name": "Channels",
+      "value": "leave 3",
+      "inline": true
+     },
+     {
+      "name": "Channel permissions",
+      "value": "none to set",
+      "inline": true
+     },
+     {
+      "name": "Time",
+      "value": "under a minute; I post the result here when it is done.",
+      "inline": true
+     },
+     {
+      "name": "Heads up",
+      "value": "• 1 channel(s) of a type a backup cannot hold were not saved."
+     }
+    ],
+    "footer": {
+     "text": "Confirm within 5 minutes. Only the server owner can confirm."
+    }
+   }
+  }
+ },
+ "parse": [
+  {
+   "error": "The backup data cannot be read."
+  },
+  {
+   "error": "The backup data cannot be read."
+  },
+  {
+   "error": "The backup data cannot be read."
+  },
+  {
+   "error": "This backup uses format version 2, which this bot cannot read."
+  },
+  {
+   "error": "This backup uses format version 1, which this bot cannot read."
+  },
+  {
+   "ok": {
+    "version": 1,
+    "takenAt": "",
+    "guild": {
+     "id": "",
+     "name": ""
+    },
+    "everyone": {
+     "permissions": "0"
+    },
+    "roles": [],
+    "categories": [],
+    "channels": [],
+    "skipped": {
+     "channels": 0
+    },
+    "idMap": {}
+   }
+  },
+  {
+   "error": "This backup uses format version undefined, which this bot cannot read."
+  },
+  {
+   "ok": {
+    "version": 1,
+    "takenAt": "2026-10-21T10:00:00.000Z",
+    "guild": {
+     "id": "900",
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+    },
+    "everyone": {
+     "permissions": "5"
+    },
+    "roles": [
+     {
+      "id": "104",
+      "name": "SomeBot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "1024",
+      "position": 2,
+      "unicodeEmoji": null,
+      "managed": true
+     },
+     {
+      "id": "103",
+      "name": "Member",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "3072",
+      "position": 3,
+      "unicodeEmoji": null,
+      "managed": false
+     },
+     {
+      "id": "5",
+      "name": "role",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "99",
+      "position": 3,
+      "unicodeEmoji": null,
+      "managed": false
+     },
+     {
+      "id": "102",
+      "name": "Mod",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "6",
+      "position": 6,
+      "unicodeEmoji": null,
+      "managed": false
+     },
+     {
+      "id": "101",
+      "name": "Admin",
+      "color": 16711680,
+      "hoist": true,
+      "mentionable": false,
+      "permissions": "268435464",
+      "position": 8,
+      "unicodeEmoji": null,
+      "managed": false
+     }
+    ],
+    "categories": [
+     {
+      "id": "401",
+      "type": 4,
+      "name": "cat",
+      "parentId": null,
+      "position": 2,
+      "overwrites": []
+     }
+    ],
+    "channels": [
+     {
+      "id": "300",
+      "type": 0,
+      "name": "x",
+      "parentId": null,
+      "position": 0,
+      "overwrites": [
+       {
+        "id": "5",
+        "type": "role",
+        "allow": "3",
+        "deny": "4"
+       },
+       {
+        "id": "6",
+        "type": "member",
+        "allow": "8",
+        "deny": "0"
+       }
+      ],
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "defaultAutoArchiveDuration": null
+     },
+     {
+      "id": "302",
+      "type": 2,
+      "name": "v",
+      "parentId": null,
+      "position": 0,
+      "overwrites": [],
+      "bitrate": null,
+      "userLimit": 0,
+      "rateLimitPerUser": 5
+     },
+     {
+      "id": "303",
+      "type": 15,
+      "name": "channel",
+      "parentId": null,
+      "position": 0,
+      "overwrites": [],
+      "topic": null,
+      "nsfw": false,
+      "rateLimitPerUser": 0,
+      "defaultAutoArchiveDuration": null,
+      "tags": [
+       {
+        "name": "aaaaaaaaaaaaaaaaaaaa",
+        "moderated": false,
+        "emojiName": null
+       },
+       {
+        "name": "t",
+        "moderated": true,
+        "emojiName": "🔥"
+       }
+      ]
+     }
+    ],
+    "skipped": {
+     "channels": 0
+    },
+    "idMap": {
+     "9": "8",
+     "101": "999"
+    }
+   }
+  },
+  {
+   "ok": {
+    "version": 1,
+    "takenAt": "",
+    "guild": {
+     "id": "",
+     "name": ""
+    },
+    "everyone": {
+     "permissions": "0"
+    },
+    "roles": [],
+    "categories": [],
+    "channels": [],
+    "skipped": {
+     "channels": 0
+    },
+    "idMap": {}
+   }
+  }
+ ],
+ "messy": [
+  null,
+  [],
+  "x",
+  {
+   "version": 2
+  },
+  {
+   "version": "1"
+  },
+  {
+   "version": 1
+  },
+  {},
+  {
+   "version": 1,
+   "takenAt": "2026-10-21T10:00:00.000Z",
+   "guild": {
+    "id": 900,
+    "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+   },
+   "everyone": {
+    "permissions": [
+     5
+    ]
+   },
+   "roles": [
+    {
+     "id": "104",
+     "name": "SomeBot",
+     "color": 0,
+     "hoist": false,
+     "mentionable": false,
+     "permissions": "1024",
+     "position": 2,
+     "unicodeEmoji": null,
+     "managed": true
+    },
+    {
+     "id": "103",
+     "name": "Member",
+     "color": 0,
+     "hoist": false,
+     "mentionable": false,
+     "permissions": "3072",
+     "position": 3,
+     "unicodeEmoji": null,
+     "managed": false
+    },
+    {
+     "id": "102",
+     "name": "Mod",
+     "color": 0,
+     "hoist": false,
+     "mentionable": true,
+     "permissions": "6",
+     "position": 6,
+     "unicodeEmoji": null,
+     "managed": false
+    },
+    {
+     "id": "101",
+     "name": "Admin",
+     "color": 16711680,
+     "hoist": true,
+     "mentionable": false,
+     "permissions": "268435464",
+     "position": 8,
+     "unicodeEmoji": null,
+     "managed": false
+    },
+    {
+     "id": "nope",
+     "name": "bad"
+    },
+    null,
+    {
+     "id": "5",
+     "name": "",
+     "color": 1.5,
+     "permissions": 99,
+     "position": 3,
+     "unicodeEmoji": ""
+    }
+   ],
+   "categories": [
+    {
+     "id": "400",
+     "type": 0,
+     "name": "notcat"
+    },
+    {
+     "id": "401",
+     "type": 4,
+     "name": "cat",
+     "position": 2
+    }
+   ],
+   "channels": [
+    {
+     "id": "300",
+     "type": 0,
+     "name": "x",
+     "overwrites": [
+      {
+       "id": "5",
+       "type": "role",
+       "allow": "3",
+       "deny": "7"
+      },
+      {
+       "id": "zz"
+      },
+      {
+       "id": "6",
+       "type": "member",
+       "allow": 8,
+       "deny": "123456789012345678901"
+      }
+     ]
+    },
+    {
+     "id": "301",
+     "type": 11,
+     "name": "thread"
+    },
+    {
+     "id": "302",
+     "type": 2,
+     "name": "v",
+     "bitrate": 7999,
+     "userLimit": 100,
+     "rateLimitPerUser": 5
+    },
+    {
+     "id": "303",
+     "type": 15,
+     "name": "",
+     "topic": "",
+     "tags": [
+      {
+       "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+       "emojiName": ""
+      },
+      {
+       "name": ""
+      },
+      null,
+      {
+       "name": "t",
+       "moderated": true,
+       "emojiName": "🔥"
+      }
+     ],
+     "defaultAutoArchiveDuration": 61
+    }
+   ],
+   "skipped": {
+    "channels": -1
+   },
+   "idMap": {
+    "9": "8",
+    "101": "999",
+    "102": "x",
+    "abc": "1"
+   }
+  },
+  {
+   "version": 1,
+   "guild": null,
+   "everyone": null,
+   "takenAt": 5
+  }
+ ],
+ "payloads": [
+  null,
+  "x",
+  {},
+  {
+   "backupId": "",
+   "mode": "missing",
+   "phase": "roles"
+  },
+  {
+   "backupId": "b",
+   "mode": "bad",
+   "phase": "roles"
+  },
+  {
+   "backupId": "b",
+   "mode": "full",
+   "phase": "nope"
+  },
+  {
+   "backupId": "b",
+   "mode": "full",
+   "phase": "channels",
+   "cursor": 3,
+   "stalls": -1,
+   "retry": "yes",
+   "idMap": {
+    "1": "2",
+    "x": "3"
+   },
+   "made": [
+    "1",
+    2,
+    "a",
+    "33"
+   ],
+   "counts": {
+    "rolesCreated": 2,
+    "bogus": 3,
+    "errors": 1.5
+   },
+   "errors": [
+    "e",
+    3,
+    "f"
+   ],
+   "dropped": "x",
+   "startedById": 5,
+   "channelId": "C",
+   "startedAt": 1234
+  },
+  {
+   "backupId": "b",
+   "mode": "missing",
+   "phase": "finish",
+   "retry": true,
+   "startedAt": -5,
+   "dropped": "8"
+  }
+ ],
+ "normalise": [
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  {
+   "backupId": "b",
+   "mode": "full",
+   "phase": "channels",
+   "cursor": 3,
+   "stalls": 0,
+   "retry": false,
+   "idMap": {
+    "1": "2"
+   },
+   "made": [
+    "1",
+    "33"
+   ],
+   "counts": {
+    "rolesCreated": 2,
+    "rolesUpdated": 0,
+    "rolesKept": 0,
+    "rolesSkipped": 0,
+    "categoriesCreated": 0,
+    "categoriesUpdated": 0,
+    "categoriesKept": 0,
+    "categoriesSkipped": 0,
+    "channelsCreated": 0,
+    "channelsUpdated": 0,
+    "channelsKept": 0,
+    "channelsSkipped": 0,
+    "overwritesSet": 0,
+    "overwritesKept": 0,
+    "overwritesSkipped": 0,
+    "positionsSet": 0,
+    "positionsLimited": 0,
+    "masked": 0,
+    "errors": 0
+   },
+   "errors": [
+    "e",
+    "f"
+   ],
+   "dropped": "0",
+   "startedById": null,
+   "channelId": "C",
+   "startedAt": 1234
+  },
+  {
+   "backupId": "b",
+   "mode": "missing",
+   "phase": "finish",
+   "cursor": 0,
+   "stalls": 0,
+   "retry": true,
+   "idMap": {},
+   "made": [],
+   "counts": {
+    "rolesCreated": 0,
+    "rolesUpdated": 0,
+    "rolesKept": 0,
+    "rolesSkipped": 0,
+    "categoriesCreated": 0,
+    "categoriesUpdated": 0,
+    "categoriesKept": 0,
+    "categoriesSkipped": 0,
+    "channelsCreated": 0,
+    "channelsUpdated": 0,
+    "channelsKept": 0,
+    "channelsSkipped": 0,
+    "overwritesSet": 0,
+    "overwritesKept": 0,
+    "overwritesSkipped": 0,
+    "positionsSet": 0,
+    "positionsLimited": 0,
+    "masked": 0,
+    "errors": 0
+   },
+   "errors": [],
+   "dropped": "8",
+   "startedById": null,
+   "channelId": null,
+   "startedAt": "now"
+  }
+ ],
+ "newState": {
+  "backupId": "bk1",
+  "mode": "missing",
+  "phase": "roles",
+  "cursor": 0,
+  "stalls": 0,
+  "retry": false,
+  "idMap": {
+   "1": "2"
+  },
+  "made": [],
+  "counts": {},
+  "errors": [],
+  "dropped": "0",
+  "startedById": null,
+  "channelId": "C",
+  "startedAt": 5
+ },
+ "mask": [
+  {
+   "in": [
+    "8",
+    "3",
+    "0"
+   ],
+   "out": {
+    "value": "0",
+    "dropped": "8"
+   }
+  },
+  {
+   "in": [
+    "8",
+    "3",
+    "8"
+   ],
+   "out": {
+    "value": "8",
+    "dropped": "0"
+   }
+  },
+  {
+   "in": [
+    "0",
+    "3",
+    "12"
+   ],
+   "out": {
+    "value": "12",
+    "dropped": "0"
+   }
+  },
+  {
+   "in": [
+    "6",
+    "2",
+    "1"
+   ],
+   "out": {
+    "value": "3",
+    "dropped": "4"
+   }
+  },
+  {
+   "in": [
+    "123456789",
+    "987654321",
+    "55555"
+   ],
+   "out": {
+    "value": "39508243",
+    "dropped": "83952644"
+   }
+  }
+ ],
+ "bits": [
+  {
+   "in": "12",
+   "out": "12"
+  },
+  {
+   "in": "x",
+   "out": "0"
+  },
+  {
+   "in": "",
+   "out": "0"
+  },
+  {
+   "in": "00012",
+   "out": "12"
+  },
+  {
+   "in": "123456789012345678901",
+   "out": "0"
+  },
+  {
+   "in": "18446744073709551616",
+   "out": "18446744073709551616"
+  },
+  {
+   "in": 12,
+   "out": "12"
+  },
+  {
+   "in": -1,
+   "out": "0"
+  },
+  {
+   "in": 1.5,
+   "out": "0"
+  },
+  {
+   "in": 9007199254740992,
+   "out": "0"
+  },
+  {
+   "in": null,
+   "out": "0"
+  },
+  {
+   "in": true,
+   "out": "0"
+  },
+  {
+   "in": [
+    5
+   ],
+   "out": "5"
+  },
+  {
+   "in": [
+    "7"
+   ],
+   "out": "7"
+  },
+  {
+   "in": {},
+   "out": "0"
+  }
+ ],
+ "allBits": "8866461766385663",
+ "bitNames": [
+  {
+   "in": "8",
+   "out": [
+    "Administrator"
+   ]
+  },
+  {
+   "in": "1099511627775",
+   "out": [
+    "Create Invite",
+    "Kick Members",
+    "Ban Members",
+    "Administrator",
+    "Manage Channels",
+    "Manage Server",
+    "Add Reactions",
+    "View Audit Log",
+    "Priority Speaker",
+    "Stream",
+    "View Channel",
+    "Send Messages",
+    "Send TTS Messages",
+    "Manage Messages",
+    "Embed Links",
+    "Attach Files",
+    "Read Message History",
+    "Mention @everyone",
+    "Use External Emojis",
+    "View Guild Insights",
+    "Connect",
+    "Speak",
+    "Mute Members",
+    "Deafen Members",
+    "Move Members",
+    "Use Voice Activity",
+    "Change Nickname",
+    "Manage Nicknames",
+    "Manage Roles",
+    "Manage Webhooks",
+    "Manage Emojis and Stickers",
+    "Manage Expressions",
+    "Use Application Commands",
+    "Request To Speak",
+    "Manage Events",
+    "Manage Threads",
+    "Create Public Threads",
+    "Create Private Threads",
+    "Use External Stickers",
+    "Send Messages in Threads",
+    "Use Embedded Activities"
+   ]
+  },
+  {
+   "in": "0",
+   "out": []
+  },
+  {
+   "in": "268435456",
+   "out": [
+    "Manage Roles"
+   ]
+  }
+ ],
+ "cleanName": [
+  {
+   "in": "  manual\n0 ",
+   "out": "manual 0"
+  },
+  {
+   "in": "a\u0000\u0001b",
+   "out": "a b"
+  },
+  {
+   "in": "\t\t",
+   "out": null
+  },
+  {
+   "in": "",
+   "out": null
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "in": "é  ü z",
+   "out": "é ü z"
+  },
+  {
+   "in": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+   "out": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+  },
+  {
+   "in": "line1\r\nline2",
+   "out": "line1 line2"
+  },
+  {
+   "in": "del",
+   "out": "del"
+  }
+ ],
+ "stamps": [
+  {
+   "in": "2026-10-21T14:05:33.123Z",
+   "out": "2026-10-21 14:05 UTC"
+  },
+  {
+   "in": "2026-01-02T03:04:05Z",
+   "out": "2026-01-02 03:04 UTC"
+  }
+ ],
+ "rows": [
+  {
+   "id": "cm1abc",
+   "name": "Nightly",
+   "automatic": false,
+   "createdAt": "2026-10-21T14:05:33.000Z",
+   "roleCount": 3,
+   "channelCount": 1234
+  },
+  {
+   "id": "cm2abc",
+   "name": null,
+   "automatic": true,
+   "createdAt": "2026-01-02T03:04:05.000Z",
+   "roleCount": 0,
+   "channelCount": 0
+  },
+  {
+   "id": "cm3abc",
+   "name": "Named auto",
+   "automatic": true,
+   "createdAt": "2026-01-02T03:04:05.000Z",
+   "roleCount": 1,
+   "channelCount": 2
+  },
+  {
+   "id": "cm4abc",
+   "name": "",
+   "automatic": false,
+   "createdAt": "2026-01-02T03:04:05.000Z",
+   "roleCount": 1,
+   "channelCount": 2
+  }
+ ],
+ "labels": [
+  "Nightly · 2026-10-21 14:05 UTC",
+  "Automatic backup · 2026-01-02 03:04 UTC",
+  "Named auto · 2026-01-02 03:04 UTC · auto",
+  "Manual backup · 2026-01-02 03:04 UTC"
+ ],
+ "listEmbed": {
+  "color": 5793266,
+  "timestamp": "2026-11-19T01:55:32.654Z",
+  "title": "💾 Backups (4)",
+  "description": "👤 **Nightly** · <t:1792591533:R> · 3 roles, 1,234 channels\n🤖 **Automatic backup** · <t:1767323045:R> · 0 roles, 0 channels\n🤖 **Named auto** · <t:1767323045:R> · 1 roles, 2 channels\n👤 **Manual backup** · <t:1767323045:R> · 1 roles, 2 channels",
+  "footer": {
+   "text": "Pick one by name with /backup info, export, restore or delete."
+  }
+ },
+ "listEmpty": {
+  "color": 5793266,
+  "timestamp": "2026-11-19T01:55:32.654Z",
+  "title": "💾 Backups (0)",
+  "description": "No backups yet. Make one with `/backup create`.",
+  "footer": {
+   "text": "Pick one by name with /backup info, export, restore or delete."
+  }
+ },
+ "infoEmbed": {
+  "color": 5793266,
+  "timestamp": "2026-11-19T01:55:32.654Z",
+  "title": "💾 Nightly",
+  "description": "Made by <@U1> <t:1792591533:R>.",
+  "fields": [
+   {
+    "name": "Contains",
+    "value": "4 roles · 1 categories · 3 channels · 5 channel permissions",
+    "inline": false
+   },
+   {
+    "name": "Size",
+    "value": "12,345 bytes",
+    "inline": true
+   },
+   {
+    "name": "Server then",
+    "value": "Test Server",
+    "inline": true
+   },
+   {
+    "name": "Not included",
+    "value": "A backup holds roles, categories, channels and their permission overwrites. Threads, messages, members and their roles, emojis, stickers, webhooks and bot settings are not included."
+   }
+  ],
+  "footer": {
+   "text": "ID cm1abc"
+  }
+ },
+ "status": {
+  "none": "No restore is running.",
+  "live": "🔄 Restoring (full), now on **channel order**. Made so far: 1,234 roles, 3 channels. Started <t:1700000000:R> by <@OWNER>.",
+  "liveMissing": "🔄 Restoring (missing only), now on **finishing**. Made so far: 1,234 roles, 3 channels. Started <t:1700000000:R>.",
+  "failed": "⚠️ The last restore stopped with an error: boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom boom… Start it again with `/backup restore`; what was restored is not made twice.",
+  "failedNull": "⚠️ The last restore stopped with an error: unknown Start it again with `/backup restore`; what was restored is not made twice.",
+  "done": "No restore is running."
+ },
+ "statusEmbeds": [
+  {
+   "input": {
+    "settings": {
+     "backupsEnabled": true,
+     "backupIntervalHours": 0,
+     "backupKeep": 7
+    },
+    "counts": {
+     "manual": 1,
+     "automatic": 2
+    },
+    "newest": null,
+    "restoreJob": null,
+    "problems": []
+   },
+   "embed": {
+    "color": 5793266,
+    "timestamp": "2026-11-19T01:55:32.660Z",
+    "title": "💾 Server Backups",
+    "fields": [
+     {
+      "name": "Automatic backups",
+      "value": "Off. Set the interval on the dashboard (Server Backups)."
+     },
+     {
+      "name": "Stored",
+      "value": "1 / 10 manual · 2 automatic",
+      "inline": true
+     },
+     {
+      "name": "Restore",
+      "value": "No restore is running."
+     }
+    ]
+   }
+  },
+  {
+   "input": {
+    "settings": {
+     "backupsEnabled": false,
+     "backupIntervalHours": 1,
+     "backupKeep": 99
+    },
+    "counts": {
+     "manual": 10,
+     "automatic": 0
+    },
+    "newest": null,
+    "restoreJob": null,
+    "problems": [
+     "a",
+     "b"
+    ]
+   },
+   "embed": {
+    "color": 5793266,
+    "timestamp": "2026-11-19T01:55:32.660Z",
+    "title": "💾 Server Backups",
+    "fields": [
+     {
+      "name": "Automatic backups",
+      "value": "Every **1** hour, keeping the newest **25**. None made yet. **Paused: the module is off** (`/module enable backups`)."
+     },
+     {
+      "name": "Stored",
+      "value": "10 / 10 manual · 0 automatic",
+      "inline": true
+     },
+     {
+      "name": "Restore",
+      "value": "No restore is running."
+     },
+     {
+      "name": "Needs attention",
+      "value": "• a\n• b"
+     }
+    ]
+   }
+  },
+  {
+   "input": {
+    "settings": {
+     "backupsEnabled": true,
+     "backupIntervalHours": 12,
+     "backupKeep": 3
+    },
+    "counts": {
+     "manual": 0,
+     "automatic": 1234
+    },
+    "newest": {
+     "createdAt": "2020-01-01T00:00:00.000Z"
+    },
+    "restoreJob": null,
+    "problems": []
+   },
+   "embed": {
+    "color": 5793266,
+    "timestamp": "2026-11-19T01:55:32.661Z",
+    "title": "💾 Server Backups",
+    "fields": [
+     {
+      "name": "Automatic backups",
+      "value": "Every **12** hours, keeping the newest **3**. Last: <t:1577836800:R>."
+     },
+     {
+      "name": "Stored",
+      "value": "0 / 10 manual · 1,234 automatic",
+      "inline": true
+     },
+     {
+      "name": "Restore",
+      "value": "No restore is running."
+     }
+    ]
+   }
+  }
+ ],
+ "missingPerms": [
+  {
+   "in": [
+    "Manage Roles"
+   ],
+   "out": {
+    "color": 15548997,
+    "timestamp": "2026-11-19T01:55:32.673Z",
+    "title": "❌  Missing Permissions",
+    "description": "I need **Manage Roles** to restore a backup: a channel I could not give its permissions would be open to everyone. Give my role that permission, then run `/backup restore` again."
+   }
+  },
+  {
+   "in": [
+    "Manage Channels"
+   ],
+   "out": {
+    "color": 15548997,
+    "timestamp": "2026-11-19T01:55:32.673Z",
+    "title": "❌  Missing Permissions",
+    "description": "I need **Manage Channels** to restore a backup: a channel I could not give its permissions would be open to everyone. Give my role that permission, then run `/backup restore` again."
+   }
+  },
+  {
+   "in": [
+    "Manage Roles",
+    "Manage Channels"
+   ],
+   "out": {
+    "color": 15548997,
+    "timestamp": "2026-11-19T01:55:32.673Z",
+    "title": "❌  Missing Permissions",
+    "description": "I need **Manage Roles** and **Manage Channels** to restore a backup: a channel I could not give its permissions would be open to everyone. Give my role those permissions, then run `/backup restore` again."
+   }
+  }
+ ],
+ "ownerOnly": {
+  "color": 15548997,
+  "timestamp": "2026-11-19T01:55:32.673Z",
+  "title": "❌  Server Owner Only",
+  "description": "Only the owner of this server can restore or delete backups. A restore rebuilds roles and permissions, so it is kept away from every other account, administrators included."
+ },
+ "customIds": {
+  "restore": "backup:restore:cm0abcdefghijkl:full",
+  "cancel": "backup:cancel"
+ },
+ "keys": {
+  "auto": "backup.auto:123",
+  "restore": "backup.restore:123"
+ },
+ "buttons": {
+  "type": 1,
+  "components": [
+   {
+    "type": 2,
+    "custom_id": "backup:restore:cmabc:missing",
+    "label": "Restore",
+    "style": 4
+   },
+   {
+    "type": 2,
+    "custom_id": "backup:cancel",
+    "label": "Cancel",
+    "style": 2
+   }
+  ]
+ },
+ "emoji": {
+  "parsed": [
+   {
+    "in": "",
+    "out": {
+     "kind": "empty"
+    }
+   },
+   {
+    "in": "   ",
+    "out": {
+     "kind": "empty"
+    }
+   },
+   {
+    "in": "<:blob:123456789012345678>",
+    "out": {
+     "kind": "custom",
+     "id": "123456789012345678",
+     "name": "blob",
+     "animated": false
+    }
+   },
+   {
+    "in": "<a:dance_2:123456789012345678>",
+    "out": {
+     "kind": "custom",
+     "id": "123456789012345678",
+     "name": "dance_2",
+     "animated": true
+    }
+   },
+   {
+    "in": "<:x:12345>",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "<https://example.com/a.png>",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/a.png",
+     "nameHint": null
+    }
+   },
+   {
+    "in": "https://cdn.discordapp.com/emojis/123456789012345678.gif",
+    "out": {
+     "kind": "custom",
+     "id": "123456789012345678",
+     "name": null,
+     "animated": true
+    }
+   },
+   {
+    "in": "https://cdn.discordapp.com/emojis/123456789012345678.png?name=hello%20world&animated=true",
+    "out": {
+     "kind": "custom",
+     "id": "123456789012345678",
+     "name": "hello_world",
+     "animated": true
+    }
+   },
+   {
+    "in": "https://media.discordapp.net/emojis/123456789012345678",
+    "out": {
+     "kind": "custom",
+     "id": "123456789012345678",
+     "name": null,
+     "animated": false
+    }
+   },
+   {
+    "in": "https://cdn.discordapp.com/emojis/123456789012345678.svg",
+    "out": {
+     "kind": "url",
+     "url": "https://cdn.discordapp.com/emojis/123456789012345678.svg",
+     "nameHint": null
+    }
+   },
+   {
+    "in": "HTTPS://Example.com/Path/My%20Cool-Pic.PNG?x=1",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/Path/My%20Cool-Pic.PNG?x=1",
+     "nameHint": "My_Cool_Pic"
+    }
+   },
+   {
+    "in": "https://example.com/12345.png",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/12345.png",
+     "nameHint": null
+    }
+   },
+   {
+    "in": "https://example.com/",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/",
+     "nameHint": null
+    }
+   },
+   {
+    "in": "https://exa mple.com/x.png",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "http://[::1]/x.png",
+    "out": {
+     "kind": "url",
+     "url": "http://[::1]/x.png",
+     "nameHint": null
+    }
+   },
+   {
+    "in": "https://example.com/%E0%A4%A.png",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/%E0%A4%A.png",
+     "nameHint": "E0A4A"
+    }
+   },
+   {
+    "in": "https://example.com/a.png?name=good_name",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/a.png?name=good_name",
+     "nameHint": "good_name"
+    }
+   },
+   {
+    "in": "https://example.com/caf%C3%A9.gif",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/caf%C3%A9.gif",
+     "nameHint": "cafe"
+    }
+   },
+   {
+    "in": "123456789012345678",
+    "out": {
+     "kind": "id",
+     "id": "123456789012345678"
+    }
+   },
+   {
+    "in": ":blob:",
+    "out": {
+     "kind": "shortcode",
+     "name": "blob"
+    }
+   },
+   {
+    "in": ":blob~2:",
+    "out": {
+     "kind": "shortcode",
+     "name": "blob"
+    }
+   },
+   {
+    "in": "blob",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "😀",
+    "out": {
+     "kind": "unicode"
+    }
+   },
+   {
+    "in": "🇫🇷",
+    "out": {
+     "kind": "unicode"
+    }
+   },
+   {
+    "in": "©",
+    "out": {
+     "kind": "unicode"
+    }
+   },
+   {
+    "in": "#",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "hello 😀",
+    "out": {
+     "kind": "unicode"
+    }
+   },
+   {
+    "in": ":a:",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "<:blob:123456789012345678> extra",
+    "out": {
+     "kind": "invalid"
+    }
+   },
+   {
+    "in": "https://example.com/a+b.png?name=a+b",
+    "out": {
+     "kind": "url",
+     "url": "https://example.com/a+b.png?name=a+b",
+     "nameHint": "a_b"
+    }
+   }
+  ],
+  "sanitize": [
+   {
+    "in": "café",
+    "out": "cafe"
+   },
+   {
+    "in": "  hi there ",
+    "out": "hi_there"
+   },
+   {
+    "in": "a.b-c d",
+    "out": "a_b_c_d"
+   },
+   {
+    "in": "ÅngströmÆ",
+    "out": "Angstrom"
+   },
+   {
+    "in": "😀x",
+    "out": "x"
+   },
+   {
+    "in": "ﬁ",
+    "out": "fi"
+   },
+   {
+    "in": "①②",
+    "out": "12"
+   },
+   {
+    "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   {
+    "in": "a__b",
+    "out": "a__b"
+   },
+   {
+    "in": "",
+    "out": ""
+   },
+   {
+    "in": "Ⅻ",
+    "out": "XII"
+   },
+   {
+    "in": "ß",
+    "out": ""
+   },
+   {
+    "in": "İ",
+    "out": "I"
+   }
+  ],
+  "nameUrls": [
+   {
+    "in": "https://e.com/a/b/cool_pic.png",
+    "out": "cool_pic"
+   },
+   {
+    "in": "https://e.com/123.png",
+    "out": null
+   },
+   {
+    "in": "https://e.com/",
+    "out": null
+   },
+   {
+    "in": "https://e.com/x.png?name=ok_name",
+    "out": "ok_name"
+   },
+   {
+    "in": "https://e.com/%ZZ.png",
+    "out": "ZZ"
+   },
+   {
+    "in": "https://e.com/a.toolongext",
+    "out": "a_toolongext"
+   },
+   {
+    "in": "https://e.com/a",
+    "out": null
+   },
+   {
+    "in": "notaurl",
+    "out": null
+   },
+   {
+    "in": "https://e.com/caf%C3%A9-%F0%9F%98%80.png",
+    "out": "cafe_"
+   },
+   {
+    "in": "https://e.com/a.b.c.png",
+    "out": "a_b_c"
+   }
+  ],
+  "resolveNames": [
+   {
+    "in": {
+     "given": "my emoji",
+     "source": {
+      "kind": "url",
+      "nameHint": null
+     }
+    },
+    "out": {
+     "ok": true,
+     "name": "my_emoji",
+     "adjusted": true,
+     "derived": false
+    }
+   },
+   {
+    "in": {
+     "given": "ok_name",
+     "source": null
+    },
+    "out": {
+     "ok": true,
+     "name": "ok_name",
+     "adjusted": false,
+     "derived": false
+    }
+   },
+   {
+    "in": {
+     "given": "x",
+     "source": null
+    },
+    "out": {
+     "ok": false,
+     "reason": "Emoji names need 2–32 characters: letters, numbers or underscores."
+    }
+   },
+   {
+    "in": {
+     "given": "  spaced  ",
+     "source": null
+    },
+    "out": {
+     "ok": true,
+     "name": "spaced",
+     "adjusted": false,
+     "derived": false
+    }
+   },
+   {
+    "in": {
+     "given": null,
+     "source": {
+      "kind": "custom",
+      "name": "blob"
+     }
+    },
+    "out": {
+     "ok": true,
+     "name": "blob",
+     "adjusted": false,
+     "derived": true
+    }
+   },
+   {
+    "in": {
+     "given": null,
+     "source": {
+      "kind": "custom",
+      "name": null
+     }
+    },
+    "out": {
+     "ok": true,
+     "name": "emoji",
+     "adjusted": false,
+     "derived": true
+    }
+   },
+   {
+    "in": {
+     "given": null,
+     "source": {
+      "kind": "url",
+      "nameHint": "12345"
+     }
+    },
+    "out": {
+     "ok": true,
+     "name": "emoji",
+     "adjusted": false,
+     "derived": true
+    }
+   },
+   {
+    "in": {
+     "given": null,
+     "source": {
+      "kind": "url",
+      "nameHint": "pic"
+     }
+    },
+    "out": {
+     "ok": true,
+     "name": "pic",
+     "adjusted": false,
+     "derived": true
+    }
+   },
+   {
+    "in": {
+     "given": "é",
+     "source": null
+    },
+    "out": {
+     "ok": false,
+     "reason": "Emoji names need 2–32 characters: letters, numbers or underscores."
+    }
+   }
+  ],
+  "freeNames": [
+   {
+    "in": "blob",
+    "out": "blob_3"
+   },
+   {
+    "in": "new",
+    "out": "new"
+   },
+   {
+    "in": "full",
+    "out": null
+   },
+   {
+    "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2"
+   },
+   {
+    "in": "BLOB",
+    "out": "BLOB_3"
+   }
+  ],
+  "emojis": [
+   {
+    "id": "111111111111111111",
+    "name": "blob",
+    "animated": false,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 0
+     }
+    }
+   },
+   {
+    "id": "222222222222222222",
+    "name": "Blob",
+    "animated": true,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 2
+     }
+    }
+   },
+   {
+    "id": "333333333333333333",
+    "name": "party_blob",
+    "animated": false,
+    "managed": true,
+    "available": false,
+    "roles": {
+     "cache": {
+      "size": 1
+     }
+    }
+   },
+   {
+    "id": "444444444444444444",
+    "name": "zeta",
+    "animated": false,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 0
+     }
+    }
+   },
+   {
+    "id": "555555555555555555",
+    "name": "alpha_blob",
+    "animated": true,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 0
+     }
+    }
+   },
+   {
+    "id": "666666666666666666",
+    "name": "dup",
+    "animated": false,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 0
+     }
+    }
+   },
+   {
+    "id": "777777777777777777",
+    "name": "dup",
+    "animated": false,
+    "managed": false,
+    "available": true,
+    "roles": {
+     "cache": {
+      "size": 0
+     }
+    }
+   }
+  ],
+  "resolved": [
+   {
+    "in": "",
+    "out": {
+     "ok": false,
+     "reason": "Pick an emoji from the list, or paste it or its ID."
+    }
+   },
+   {
+    "in": "blob",
+    "out": {
+     "ok": true,
+     "id": "111111111111111111"
+    }
+   },
+   {
+    "in": "BLOB",
+    "out": {
+     "ok": false,
+     "reason": "Several emojis are named `:BLOB:`. Pick one from the list or use its ID."
+    }
+   },
+   {
+    "in": ":blob:",
+    "out": {
+     "ok": true,
+     "id": "111111111111111111"
+    }
+   },
+   {
+    "in": "Blob",
+    "out": {
+     "ok": true,
+     "id": "222222222222222222"
+    }
+   },
+   {
+    "in": "<:x:222222222222222222>",
+    "out": {
+     "ok": true,
+     "id": "222222222222222222"
+    }
+   },
+   {
+    "in": "<:x:999999999999999999>",
+    "out": {
+     "ok": false,
+     "reason": "That emoji isn't from this server."
+    }
+   },
+   {
+    "in": "111111111111111111",
+    "out": {
+     "ok": true,
+     "id": "111111111111111111"
+    }
+   },
+   {
+    "in": "999999999999999999",
+    "out": {
+     "ok": false,
+     "reason": "No emoji with that ID exists in this server."
+    }
+   },
+   {
+    "in": "dup",
+    "out": {
+     "ok": false,
+     "reason": "Several emojis are named `:dup:`. Pick one from the list or use its ID."
+    }
+   },
+   {
+    "in": "nothing",
+    "out": {
+     "ok": false,
+     "reason": "No emoji named `:nothing:` in this server."
+    }
+   },
+   {
+    "in": "DUP",
+    "out": {
+     "ok": false,
+     "reason": "Several emojis are named `:DUP:`. Pick one from the list or use its ID."
+    }
+   },
+   {
+    "in": ":zeta",
+    "out": {
+     "ok": true,
+     "id": "444444444444444444"
+    }
+   }
+  ],
+  "choices": [
+   {
+    "in": "",
+    "out": [
+     {
+      "name": ":alpha_blob: (animated)",
+      "value": "555555555555555555"
+     },
+     {
+      "name": ":blob:",
+      "value": "111111111111111111"
+     },
+     {
+      "name": ":Blob: (animated)",
+      "value": "222222222222222222"
+     },
+     {
+      "name": ":dup:",
+      "value": "666666666666666666"
+     },
+     {
+      "name": ":dup:",
+      "value": "777777777777777777"
+     },
+     {
+      "name": ":zeta:",
+      "value": "444444444444444444"
+     }
+    ]
+   },
+   {
+    "in": "blob",
+    "out": [
+     {
+      "name": ":blob:",
+      "value": "111111111111111111"
+     },
+     {
+      "name": ":Blob: (animated)",
+      "value": "222222222222222222"
+     },
+     {
+      "name": ":alpha_blob: (animated)",
+      "value": "555555555555555555"
+     }
+    ]
+   },
+   {
+    "in": "b-l",
+    "out": [
+     {
+      "name": ":blob:",
+      "value": "111111111111111111"
+     },
+     {
+      "name": ":Blob: (animated)",
+      "value": "222222222222222222"
+     },
+     {
+      "name": ":alpha_blob: (animated)",
+      "value": "555555555555555555"
+     }
+    ]
+   },
+   {
+    "in": "2222222222222222222",
+    "out": []
+   },
+   {
+    "in": "id 333333333333333333",
+    "out": []
+   },
+   {
+    "in": "ZE",
+    "out": [
+     {
+      "name": ":zeta:",
+      "value": "444444444444444444"
+     }
+    ]
+   },
+   {
+    "in": "a",
+    "out": [
+     {
+      "name": ":alpha_blob: (animated)",
+      "value": "555555555555555555"
+     },
+     {
+      "name": ":zeta:",
+      "value": "444444444444444444"
+     }
+    ]
+   }
+  ],
+  "slots": [
+   {
+    "in": [
+     0,
+     []
+    ],
+    "limit": 50,
+    "slots": {
+     "tier": 0,
+     "static": {
+      "used": 4,
+      "max": 50,
+      "free": 46
+     },
+     "animated": {
+      "used": 2,
+      "max": 50,
+      "free": 48
+     }
+    }
+   },
+   {
+    "in": [
+     1,
+     []
+    ],
+    "limit": 100,
+    "slots": {
+     "tier": 1,
+     "static": {
+      "used": 4,
+      "max": 100,
+      "free": 96
+     },
+     "animated": {
+      "used": 2,
+      "max": 100,
+      "free": 98
+     }
+    }
+   },
+   {
+    "in": [
+     2,
+     [
+      "MORE_EMOJI"
+     ]
+    ],
+    "limit": 200,
+    "slots": {
+     "tier": 2,
+     "static": {
+      "used": 4,
+      "max": 200,
+      "free": 196
+     },
+     "animated": {
+      "used": 2,
+      "max": 200,
+      "free": 198
+     }
+    }
+   },
+   {
+    "in": [
+     3,
+     [
+      "MORE_EMOJI"
+     ]
+    ],
+    "limit": 250,
+    "slots": {
+     "tier": 3,
+     "static": {
+      "used": 4,
+      "max": 250,
+      "free": 246
+     },
+     "animated": {
+      "used": 2,
+      "max": 250,
+      "free": 248
+     }
+    }
+   },
+   {
+    "in": [
+     7,
+     []
+    ],
+    "limit": 50,
+    "slots": {
+     "tier": 7,
+     "static": {
+      "used": 4,
+      "max": 50,
+      "free": 46
+     },
+     "animated": {
+      "used": 2,
+      "max": 50,
+      "free": 48
+     }
+    }
+   },
+   {
+    "in": [
+     0,
+     [
+      "MORE_EMOJI"
+     ]
+    ],
+    "limit": 200,
+    "slots": {
+     "tier": 0,
+     "static": {
+      "used": 4,
+      "max": 200,
+      "free": 196
+     },
+     "animated": {
+      "used": 2,
+      "max": 200,
+      "free": 198
+     }
+    }
+   }
+  ],
+  "pages": [
+   {
+    "description": "Static 4/100 · Animated 2/100 · Boost level 1\n\n<:blob:111111111111111111> `:blob:` · `111111111111111111`\n<:dup:666666666666666666> `:dup:` · `666666666666666666`\n<:dup:777777777777777777> `:dup:` · `777777777777777777`",
+    "footer": "7 custom emojis"
+   },
+   {
+    "description": "Static 4/100 · Animated 2/100 · Boost level 1\n\n<:party_blob:333333333333333333> `:party_blob:` · `333333333333333333` · 🔒 1 role · managed · ⚠️ unavailable\n<:zeta:444444444444444444> `:zeta:` · `444444444444444444`\n<a:alpha_blob:555555555555555555> `:alpha_blob:` · `555555555555555555` · animated",
+    "footer": "7 custom emojis"
+   },
+   {
+    "description": "Static 4/100 · Animated 2/100 · Boost level 1\n\n<a:Blob:222222222222222222> `:Blob:` · `222222222222222222` · animated · 🔒 2 roles",
+    "footer": "7 custom emojis"
+   }
+  ],
+  "lines": [
+   "<:blob:111111111111111111> `:blob:` · `111111111111111111`",
+   "<a:Blob:222222222222222222> `:Blob:` · `222222222222222222` · animated · 🔒 2 roles",
+   "<:party_blob:333333333333333333> `:party_blob:` · `333333333333333333` · 🔒 1 role · managed · ⚠️ unavailable",
+   "<:zeta:444444444444444444> `:zeta:` · `444444444444444444`",
+   "<a:alpha_blob:555555555555555555> `:alpha_blob:` · `555555555555555555` · animated",
+   "<:dup:666666666666666666> `:dup:` · `666666666666666666`",
+   "<:dup:777777777777777777> `:dup:` · `777777777777777777`"
+  ],
+  "sniff": [
+   {
+    "in": [
+     137,
+     80,
+     78,
+     71,
+     13,
+     10,
+     26,
+     10,
+     0,
+     0,
+     0,
+     0
+    ],
+    "out": {
+     "mime": "image/png",
+     "ext": "png",
+     "animated": false
+    }
+   },
+   {
+    "in": [
+     255,
+     216,
+     255,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "out": {
+     "mime": "image/jpeg",
+     "ext": "jpg",
+     "animated": false
+    }
+   },
+   {
+    "in": [
+     71,
+     73,
+     70,
+     56,
+     57,
+     97,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "out": {
+     "mime": "image/gif",
+     "ext": "gif",
+     "animated": true
+    }
+   },
+   {
+    "in": [
+     82,
+     73,
+     70,
+     70,
+     0,
+     0,
+     0,
+     0,
+     87,
+     69,
+     66,
+     80,
+     86,
+     80,
+     56,
+     88,
+     0,
+     0,
+     0,
+     0,
+     2
+    ],
+    "out": {
+     "mime": "image/webp",
+     "ext": "webp",
+     "animated": true
+    }
+   },
+   {
+    "in": [
+     82,
+     73,
+     70,
+     70,
+     0,
+     0,
+     0,
+     0,
+     87,
+     69,
+     66,
+     80,
+     86,
+     80,
+     56,
+     88,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "out": {
+     "mime": "image/webp",
+     "ext": "webp",
+     "animated": false
+    }
+   },
+   {
+    "in": [
+     82,
+     73,
+     70,
+     70,
+     0,
+     0,
+     0,
+     0,
+     87,
+     69,
+     66,
+     80,
+     86,
+     80,
+     56,
+     76,
+     0,
+     0,
+     0,
+     0,
+     2
+    ],
+    "out": {
+     "mime": "image/webp",
+     "ext": "webp",
+     "animated": false
+    }
+   },
+   {
+    "in": [
+     60,
+     115,
+     118,
+     103,
+     32,
+     120,
+     109,
+     108,
+     110,
+     115,
+     61
+    ],
+    "out": null
+   },
+   {
+    "in": [
+     1,
+     2,
+     3
+    ],
+    "out": null
+   }
+  ],
+  "fetchErrs": [
+   {
+    "code": "INVALID_URL",
+    "message": "Only http and https links are allowed.",
+    "status": null,
+    "fromCdn": false,
+    "out": "Only http and https links are allowed."
+   },
+   {
+    "code": "INVALID_URL",
+    "message": "Only http and https links are allowed.",
+    "status": null,
+    "fromCdn": true,
+    "out": "Only http and https links are allowed."
+   },
+   {
+    "code": "BLOCKED_ADDRESS",
+    "message": "BLOCKED_ADDRESS",
+    "status": null,
+    "fromCdn": false,
+    "out": "That link points to a private or reserved network address."
+   },
+   {
+    "code": "BLOCKED_ADDRESS",
+    "message": "BLOCKED_ADDRESS",
+    "status": null,
+    "fromCdn": true,
+    "out": "That link points to a private or reserved network address."
+   },
+   {
+    "code": "DNS_FAILED",
+    "message": "DNS_FAILED",
+    "status": null,
+    "fromCdn": false,
+    "out": "I couldn't resolve that link's host name."
+   },
+   {
+    "code": "DNS_FAILED",
+    "message": "DNS_FAILED",
+    "status": null,
+    "fromCdn": true,
+    "out": "I couldn't resolve that link's host name."
+   },
+   {
+    "code": "TIMEOUT",
+    "message": "TIMEOUT",
+    "status": null,
+    "fromCdn": false,
+    "out": "The image took too long to download (8 s limit)."
+   },
+   {
+    "code": "TIMEOUT",
+    "message": "TIMEOUT",
+    "status": null,
+    "fromCdn": true,
+    "out": "The image took too long to download (8 s limit)."
+   },
+   {
+    "code": "TOO_LARGE",
+    "message": "TOO_LARGE",
+    "status": null,
+    "fromCdn": false,
+    "out": "That image is larger than 256 KB, Discord's limit for emojis. Use a smaller image."
+   },
+   {
+    "code": "TOO_LARGE",
+    "message": "TOO_LARGE",
+    "status": null,
+    "fromCdn": true,
+    "out": "That image is larger than 256 KB, Discord's limit for emojis. Use a smaller image."
+   },
+   {
+    "code": "TOO_MANY_REDIRECTS",
+    "message": "TOO_MANY_REDIRECTS",
+    "status": null,
+    "fromCdn": false,
+    "out": "That link redirects too many times."
+   },
+   {
+    "code": "TOO_MANY_REDIRECTS",
+    "message": "TOO_MANY_REDIRECTS",
+    "status": null,
+    "fromCdn": true,
+    "out": "That link redirects too many times."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP 404",
+    "status": 404,
+    "fromCdn": false,
+    "out": "The link returned HTTP 404."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP 404",
+    "status": 404,
+    "fromCdn": true,
+    "out": "Discord's CDN doesn't have that emoji (it may have been deleted)."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP 500",
+    "status": 500,
+    "fromCdn": false,
+    "out": "The link returned HTTP 500."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP 500",
+    "status": 500,
+    "fromCdn": true,
+    "out": "The link returned HTTP 500."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP_ERROR",
+    "status": null,
+    "fromCdn": false,
+    "out": "The link returned HTTP ?."
+   },
+   {
+    "code": "HTTP_ERROR",
+    "message": "HTTP_ERROR",
+    "status": null,
+    "fromCdn": true,
+    "out": "The link returned HTTP ?."
+   },
+   {
+    "code": "BAD_CONTENT_TYPE",
+    "message": "BAD_CONTENT_TYPE",
+    "status": null,
+    "fromCdn": false,
+    "out": "That link is not a PNG, JPG, GIF or WebP image."
+   },
+   {
+    "code": "BAD_CONTENT_TYPE",
+    "message": "BAD_CONTENT_TYPE",
+    "status": null,
+    "fromCdn": true,
+    "out": "That link is not a PNG, JPG, GIF or WebP image."
+   },
+   {
+    "code": "BAD_IMAGE",
+    "message": "BAD_IMAGE",
+    "status": null,
+    "fromCdn": false,
+    "out": "That file is not a valid image (it may be corrupt or have too large dimensions)."
+   },
+   {
+    "code": "BAD_IMAGE",
+    "message": "BAD_IMAGE",
+    "status": null,
+    "fromCdn": true,
+    "out": "That file is not a valid image (it may be corrupt or have too large dimensions)."
+   },
+   {
+    "code": "NETWORK",
+    "message": "NETWORK",
+    "status": null,
+    "fromCdn": false,
+    "out": "A network error stopped the download. Try again in a moment."
+   },
+   {
+    "code": "NETWORK",
+    "message": "NETWORK",
+    "status": null,
+    "fromCdn": true,
+    "out": "A network error stopped the download. Try again in a moment."
+   }
+  ],
+  "emojiErrs": [
+   {
+    "code": 30008,
+    "action": "add",
+    "message": "Some error",
+    "out": "This server has no free static emoji slots."
+   },
+   {
+    "code": 30008,
+    "action": "delete",
+    "message": "Some error",
+    "out": "This server has no free static emoji slots."
+   },
+   {
+    "code": 30018,
+    "action": "add",
+    "message": "Some error",
+    "out": "This server has no free animated emoji slots."
+   },
+   {
+    "code": 30018,
+    "action": "delete",
+    "message": "Some error",
+    "out": "This server has no free animated emoji slots."
+   },
+   {
+    "code": 50013,
+    "action": "add",
+    "message": "Some error",
+    "out": "I need the **Manage Expressions** (or **Create Expressions**) permission to upload emojis."
+   },
+   {
+    "code": 50013,
+    "action": "delete",
+    "message": "Some error",
+    "out": "I need the **Manage Expressions** permission to delete that emoji (with only Create Expressions I can delete just the emojis I uploaded)."
+   },
+   {
+    "code": 50001,
+    "action": "add",
+    "message": "Some error",
+    "out": "I can't access this server's emojis."
+   },
+   {
+    "code": 50001,
+    "action": "delete",
+    "message": "Some error",
+    "out": "I can't access this server's emojis."
+   },
+   {
+    "code": 50045,
+    "action": "add",
+    "message": "Some error",
+    "out": "That image is larger than 256 KB."
+   },
+   {
+    "code": 50045,
+    "action": "delete",
+    "message": "Some error",
+    "out": "That image is larger than 256 KB."
+   },
+   {
+    "code": 50046,
+    "action": "add",
+    "message": "Some error",
+    "out": "Discord couldn't read that image file."
+   },
+   {
+    "code": 50046,
+    "action": "delete",
+    "message": "Some error",
+    "out": "Discord couldn't read that image file."
+   },
+   {
+    "code": 50138,
+    "action": "add",
+    "message": "Some error",
+    "out": "Discord couldn't resize that image to fit its emoji limits. Try a smaller or simpler image."
+   },
+   {
+    "code": 50138,
+    "action": "delete",
+    "message": "Some error",
+    "out": "Discord couldn't resize that image to fit its emoji limits. Try a smaller or simpler image."
+   },
+   {
+    "code": 50035,
+    "action": "add",
+    "message": "Invalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body x",
+    "out": "Discord rejected the emoji: Invalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form B…"
+   },
+   {
+    "code": 50035,
+    "action": "delete",
+    "message": "Invalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body x",
+    "out": "Discord rejected the emoji: Invalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form Body xInvalid Form B…"
+   },
+   {
+    "code": 10014,
+    "action": "add",
+    "message": "Some error",
+    "out": "That emoji no longer exists."
+   },
+   {
+    "code": 10014,
+    "action": "delete",
+    "message": "Some error",
+    "out": "That emoji no longer exists."
+   },
+   {
+    "code": 99999,
+    "action": "add",
+    "message": "Some error",
+    "out": "Discord returned an error: Some error"
+   },
+   {
+    "code": 99999,
+    "action": "delete",
+    "message": "Some error",
+    "out": "Discord returned an error: Some error"
+   },
+   {
+    "code": null,
+    "action": "add",
+    "message": "",
+    "out": "Discord returned an error: "
+   },
+   {
+    "code": null,
+    "action": "delete",
+    "message": "",
+    "out": "Discord returned an error: "
+   }
+  ],
+  "timeouts": [
+   "Discord is rate-limiting emoji uploads for this server. Your upload is queued and will finish on its own when Discord allows it (this can take a while). Check `/emoji list` later before trying again.",
+   "Discord is rate-limiting emoji changes right now. The deletion is queued and will finish on its own; check `/emoji list` later."
+  ],
+  "cdn": [
+   "https://cdn.discordapp.com/emojis/1.png",
+   "https://cdn.discordapp.com/emojis/1.gif?size=96"
+  ]
+ }
+}
