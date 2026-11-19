@@ -277,7 +277,9 @@ jobs:
         run: |
           docker run --rm --entrypoint sh discord-bot:ci -c 'command -v bot dashboard curl'
           # No dashboard settings are passed: it parks, answering 200 on /healthz and 503 everywhere else.
-          docker run -d --name dash --network host discord-bot:ci dashboard
+          if docker run --rm discord-bot:ci node -e 1; then echo 'the node stand-in accepted an unknown command'; exit 1; fi
+          # Started the way Compose files written for the Node image do it, so the `node` stand-in is tested too.
+          docker run -d --name dash --network host discord-bot:ci node dashboard.js
           ok=
           for _ in $(seq 1 15); do
             if curl -fsS --max-time 4 -o /dev/null http://127.0.0.1:8080/healthz; then ok=1; break; fi

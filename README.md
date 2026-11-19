@@ -201,7 +201,7 @@ volumes:
 ```
 
 - **Env file:** set only the keys you need. Don't copy empty keys or `NODE_ENV=development` from `.env.example`: Compose passes empty values through, and they override what the image sets (`NODE_ENV=production`, `HEALTH_PORT`, `STATE_DIR`, `DEPLOY_HASH_FILE`).
-- **Migrations:** the container runs `prisma migrate deploy` before it starts the bot (PostgreSQL 12 or newer). Every schema change needs an additive migration (`npm run db:migrate`), and CI fails when `schema.prisma` and `prisma/migrations/` disagree. Rolling back the image does not roll back the database.
+- **Migrations:** the bot applies the pending migrations itself before it connects to Discord (PostgreSQL 12 or newer). Every schema change needs an additive migration (`npm run db:migrate`), and CI fails when `schema.prisma` and `prisma/migrations/` disagree. Rolling back the image does not roll back the database.
 - **Privileged intents:** enable Server Members, Presence and Message Content under Bot → Privileged Gateway Intents in the Developer Portal. Without them Discord closes the connection with code 4014. The Presence intent is used by the statistics counters (online and peak) and the Live Role.
 - **Health endpoints** on `HEALTH_PORT` (default 8081):
   - `GET /healthz` returns 200 while the process runs. The image's `HEALTHCHECK` uses it.
@@ -228,12 +228,12 @@ Server admins can log in with Discord and change the settings of every server th
 3. Start it:
    - **npm:** `npm run dashboard`, or `npm run dashboard:dev` to restart on file changes.
    - **PM2:** `npm run pm2:dashboard` starts the `discord-bot-dashboard` app; `npm run pm2:start` still starts only the bot. Logs go to `./logs/pm2-dashboard-out.log` and `./logs/pm2-dashboard-error.log`. Reload with `pm2 reload discord-bot-dashboard`.
-   - **Docker:** the same image runs the dashboard with `node dashboard.js`. Add this service under `services:`, next to `discord-bot`, and point it at the same env file as the bot (with the dashboard keys added to it):
+   - **Docker:** the same image runs the dashboard with the `dashboard` command (a Compose file that still says `node dashboard.js` keeps working). Add this service under `services:`, next to `discord-bot`, and point it at the same env file as the bot (with the dashboard keys added to it):
 
      ```yaml
        dashboard:
          image: ghcr.io/masstarvt/discord-bot:latest
-         command: ["node", "dashboard.js"]
+         command: ["dashboard"]
          env_file: discord-bot.env
          environment:
            HEALTH_PORT: "8080"
