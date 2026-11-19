@@ -47,6 +47,19 @@ ENV NODE_ENV=production \
 
 COPY --from=build /out/bot /out/dashboard /usr/local/bin/
 
+# Compose files written for the Node image start the dashboard with
+# `node dashboard.js` (and the bot with `node index.js`). This stand-in keeps
+# them working: it starts the matching Rust binary. There is no Node here.
+COPY --chmod=755 <<'EOF' /usr/local/bin/node
+#!/bin/sh
+case "${1:-}" in
+  dashboard.js|./dashboard.js) shift; exec dashboard "$@" ;;
+  index.js|./index.js) shift; exec bot "$@" ;;
+esac
+echo "This image no longer contains Node.js. Use the command 'bot' or 'dashboard'." >&2
+exit 64
+EOF
+
 # Optional runtime files, read relative to /app: the Scrabble word list
 # (assets/dictionaries/words.txt). Fonts, migrations and the dashboard front end
 # are compiled into the binaries.
