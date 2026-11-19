@@ -1,0 +1,33 @@
+[feat-general] bot_core::discord: add a public raw REST GET helper, e.g. `rest_get_json(http: &Http, route: Route<'_>, params: Option<Vec<(&'static str, String)>>) -> Result<serde_json::Value>`, that goes through serenity's rate limiter and returns the JSON discord.js reads. feat-general has a local copy, `bot_join_service::rest_get_json`, used for the audit log, the integrations, `GET /guilds/{g}?with_counts=true` and role member counts.
+
+[feat-general] bot_core::testing::FakeInteraction: a ROLE option is only put in data.resolved when `.resolve_from(guild)` is given, but Discord always sends the resolved role. It would help if ROLE options got a default resolved role, the way USER options do. feat-general works around this in production too: `info::option_role` falls back to the cached role.
+
+[feat-dashboard-tasks] bot_core::testing::fake_rest default_answer / echo_message: when it echoes a POST /channels/{c}/messages, it copies the body's partial message_reference (no channel_id), and serenity cannot deserialize that. Any reply post (giveaway announcements, poll results) therefore fails in tests. Please drop message_reference from the echo, or complete it with channel_id. tests/db.rs works around this with its own POST /channels/*/messages script.
+
+[feat-automod] bot-core discord: a helper that writes a REST-returned IncidentsData into the cached guild, like cache_created_role (for example discord::cache_guild_incidents(app, guild_id, &IncidentsData)). anti_raid_service.rs would then not need its 60 s override of guild.incidentsData.
+
+[feat-automod] bot-core (or feat-logging): a sanctioned, synchronous view of a guild's own invite codes, equivalent to discord.js guild.invites.cache. Please also confirm whether feat_logging::invite_tracker::current_snapshot is the intended source; automod uses it now.
+
+[feat-automod] feat-moderation moderation_service::is_immune_member: when the guild is not cached it returns false. A variant that still checks the owner id and immuneRoleIds from the member and settings would keep automod's staff bypass intact in that case.
+
+[feat-captcha] bot_core::interaction_helpers::Payload::to_edit cannot express the JS `attachments: []` on editReply, which removes the stale captcha image. Please add a flag, e.g. Payload::clear_attachments(), that calls EditInteractionResponse::clear_attachments() when no new files are given. feat-captcha uses its own captcha_service::Reply builder for this.
+
+[feat-captcha] bot_core::custom_embed::Rendered has no Default or empty constructor. buildPanelPayload needs a fallback value, so feat-captcha builds one field by field.
+
+[feat-captcha] bot_core::testing::FakeRest default_answer: PATCH /guilds/*/roles/* (and POST /guilds/*/roles) answers 204 with no body, but serenity's edit_role and create_role expect a Role, including `colors`. Please answer with a Role echo, as message creates do. Tests have to script it now.
+
+[feat-captcha] bot_core::testing::message_json is private. Please make it pub, so modal tests can attach a source message (`isFromMessage`) without building one from fake_message.
+
+[feat-captcha] bot_util::logger::capture uses a task-local, so lines logged from tasks spawned inside the captured future (scheduler timers, with_timeout) are not captured. A capture mode that follows spawned tasks would let crates assert those log lines.
+
+[feat-games] bot_core::collectors::CollectorHub: add a message collector (for example `collect_messages(filter: channel + author + predicate)` with the same stop-on-drop semantics), fed from MESSAGE_CREATE in bot_core::gateway::process before the hooks run. Then games.js numguess no longer needs the boot-registered `games-fixes:numguess` hook. Until then, bot_config HOOK_ORDER should list `games-fixes:numguess` under messageCreate.
+
+[feat-games] bot_core::collectors::Collector: discord.js collector options and events, namely `idle` and `time` timers, `stop(reason)` with an end reason, an end callback, and the end reasons messageDelete, channelDelete, threadDelete and guildDelete fed from the gateway. feat-games ships its own src/collector_driver.rs for the first four; the delete reasons need gateway support.
+
+[feat-games] bot_core::interaction::RecordingBackend: optionally record the interaction id with each RecordedCall, so tests can assert one click's calls (the JS tests' `verbs(click)`) instead of the shared call list.
+
+[feat-events] bot-core testing::FakeRest default_answer: unscripted DELETE /channels/{id}, POST and PATCH /guilds/{g}/scheduled-events[/{id}], POST /guilds/{g}/channels and POST /guilds/{g}/roles answer 204, which serenity cannot parse into Channel / ScheduledEvent / GuildChannel / Role. Please echo a minimal valid object for each, as message creates already do. feat-events scripts them in its tests. Also, a script for POST /guilds/*/roles must include `colors`, or serenity rejects the Role.
+
+[feat-events] bot-core interaction::RecordedCall: file attachments of interaction replies are visible only through the body's `attachments` [{id, filename}]. A `files()` accessor with names and bytes would let router tests assert the .ics content, not just its name.
+
+[feat-automations] bot-core permissions (bot_core::interaction_helpers::bot_permissions / missing_bot_permissions, bot_core::permissions::member_permissions_in, check_channel_usable_for): serenity's Permissions::deserialize uses from_bits_truncate, so bit 51 (PinMessages) is dropped from every cached role and overwrite. These functions can never report PinMessages unless the member is an Administrator. Request: keep the raw permission bits, for example by re-reading the roles' `permissions` and the overwrites' `allow` / `deny` from the gateway JSON with from_bits_retain, so PIN actions can be pre-checked as the JS does.

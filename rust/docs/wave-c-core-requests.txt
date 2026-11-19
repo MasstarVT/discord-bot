@@ -1,0 +1,33 @@
+[bot] bot-core client::Bot: `wait(self)` consumes the Bot, so `shutdown(&self)` and `all_shards_ready(&self)` cannot be called while the client task is awaited. bins/bot keeps a BotHandle (app, shard_manager, gateway, shards) and re-implements both from public parts. Please add `Bot::wait(&self)` or a `split()` that returns a handle plus the join future.
+
+[bot] bot-core registry::Registry: there is no way to take the plugins or commands by value (the test rebuilds each Plugin from its public fields to call collect_plugins) and no way to reorder commands. Please add `Registry::into_parts()` and a `sort_commands_by(..)`, so the binary can load commands in the JS walkDir order.
+
+[bot] feat-levels xp_service: it keeps its own ready time (`set_ready_at` / `ready_at`) instead of reading `App::ready_at_ms()`. bins/bot copies the value over once the first shard is ready (`bot::bot::sync_levels_ready_at`). feat-levels should read `app.ready_at_ms()` directly.
+
+[bot] bot-db migrate::plan: an applied migration whose checksum no longer matches stops the run with an error, where `prisma migrate deploy` only warns. Since the binary migrates on every start, that mismatch makes it exit 1 on every start. Please make it a warning, or give the bot a non-fatal mode.
+
+[bot] bot-config HOOK_ORDER: list `games-fixes:numguess` under messageCreate, or add the message collector feat-games asked for in wave-b-core-requests.txt. The binary's test allows it as the only boot-registered hook outside HOOK_ORDER.
+
+[bot] bot-core command::DeployConfig::from_env: the default hash file is './.deploy-hash' relative to the working directory, not the repository root as in the JS. bins/bot builds its own DeployConfig from its root path.
+
+[bot] bot-core cache::RedisBackend::is_ready is private; a public `is_ready()` would let the start-up test assert that Redis closed at shutdown.
+
+[dash-records-b] feat-starboard-stats: create_board / BoardPatch should accept ignoredChannelIds on create, as the JS createBoard does. Then dash-records-b can drop its replica of createBoard.
+
+[dash-records-b] feat-feeds: a build_send_payload variant that takes a bot_util RenderContext (or plain guild/channel placeholder data) instead of serenity Guild/GuildChannel. The dashboard's reminder test post could then call the service directly.
+
+[dash-records-b] feat-tags: write_trigger should tell 'row deleted' (JS returns null) apart from CONFLICT.
+
+[dash-records-b] dash-collections: StoreCtx has no logger (ctx.logger), so stores log through bot_util's logger.
+
+[dash-server] dash-auth auth.rs OAuthClient::with_endpoints: its reqwest client sets no User-Agent, while the JS token and revoke calls (fetch) send 'User-Agent: node'. Add .user_agent("node") for wire parity.
+
+[dash-server] dash-collections: a public DiscordApiError::with_retry_after(secs) builder would help; callers set the public field by hand today.
+
+[dash-records-a] dash-collections StoreCtx/ReadCtx: they carry no App, pool, cache, settings or scheduler, so each store is built with an App (store_for / register_stores take &App). bins/dashboard must build an App with Postgres, Redis, settings and the scheduler; no gateway is needed. Adding an App handle to the contexts would remove this coupling.
+
+[dash-records-a] dash-collections DashboardDiscord: there is no way to say 'this client lacks method X', which the JS stores test with typeof ctx.discord.x === 'function'. Either an Option per capability or a capability query would let the stores answer exactly as the JS does.
+
+[dash-records-a] bot-core Scheduler::cancel_jobs: it never fails. A fallible variant (like try_get_job) would let the feeds store fail as the JS does when the database is down.
+
+[dash-records-a] bot-db ADVISORY_XACT_LOCK_SQL is `SELECT 1 AS ok FROM pg_advisory_xact_lock(hashtext($1))`, while the JS dashboard stores use `SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext($1))) AS l`. This crate keeps its own statement-for-statement copy (common::ADVISORY_LOCK_SQL). No change is needed; noted only for consistency.

@@ -14,3 +14,10 @@ graphify-out
 .audit-checkpoint
 claude-code-hooks
 claude-token-saver
+# Rust build output and the local mock database (tens of GB): never part of the context.
+rust/target
+rust/target-seed
+rust/target-agents
+rust/mockdb
+rust/fixtures
+rust/docs

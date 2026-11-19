@@ -1,0 +1,656 @@
+{
+ "words": [
+  {
+   "input": "  Hello  World ",
+   "out": "hello world"
+  },
+  {
+   "input": "ｆｕｌｌ",
+   "out": "full"
+  },
+  {
+   "input": "a",
+   "out": null
+  },
+  {
+   "input": "!!",
+   "out": null
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "out": null
+  },
+  {
+   "input": "zero​width",
+   "out": "zerowidth"
+  },
+  {
+   "input": "ok",
+   "out": "ok"
+  },
+  {
+   "input": 42,
+   "out": "42"
+  },
+  {
+   "input": null,
+   "out": null
+  },
+  {
+   "input": "Ünïcödé",
+   "out": "ünïcödé"
+  },
+  {
+   "input": "١٢",
+   "out": "١٢"
+  },
+  {
+   "input": "a\tb\nc",
+   "out": "a b c"
+  },
+  {
+   "input": "ﬁne",
+   "out": "fine"
+  }
+ ],
+ "domains": [
+  {
+   "input": "Example.COM",
+   "out": "example.com"
+  },
+  {
+   "input": "https://www.example.com/path",
+   "out": "example.com"
+  },
+  {
+   "input": "*.example.com",
+   "out": "example.com"
+  },
+  {
+   "input": "bücher.de",
+   "out": "xn--bcher-kva.de"
+  },
+  {
+   "input": "nope",
+   "out": null
+  },
+  {
+   "input": "",
+   "out": null
+  },
+  {
+   "input": "a..b",
+   "out": null
+  },
+  {
+   "input": "example.com:8080",
+   "out": "example.com"
+  },
+  {
+   "input": "xn--bcher-kva.de",
+   "out": "xn--bcher-kva.de"
+  },
+  {
+   "input": "http://user@evil.com",
+   "out": "evil.com"
+  },
+  {
+   "input": "example.com.",
+   "out": "example.com"
+  },
+  {
+   "input": "www.",
+   "out": null
+  },
+  {
+   "input": "sub.domain.co.uk/x?y#z",
+   "out": "sub.domain.co.uk"
+  },
+  {
+   "input": "ex_ample.com",
+   "out": null
+  },
+  {
+   "input": "-bad.com",
+   "out": null
+  },
+  {
+   "input": "a.b",
+   "out": null
+  },
+  {
+   "input": "ftp://files.example.org",
+   "out": "files.example.org"
+  },
+  {
+   "input": "https://",
+   "out": null
+  },
+  {
+   "input": "日本.jp",
+   "out": "xn--wgv71a.jp"
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+   "out": null
+  },
+  {
+   "input": null,
+   "out": null
+  },
+  {
+   "input": "HTTPS://WWW.Ex.org:443/a",
+   "out": "ex.org"
+  }
+ ],
+ "escalation": [
+  {
+   "input": null,
+   "out": []
+  },
+  {
+   "input": "x",
+   "out": []
+  },
+  {
+   "input": [],
+   "out": []
+  },
+  {
+   "input": [
+    {
+     "warnCount": 3,
+     "action": "BAN",
+     "duration": 600
+    },
+    {
+     "warnCount": 5,
+     "action": "kick"
+    },
+    {
+     "warnCount": 0,
+     "action": "BAN"
+    }
+   ],
+   "out": [
+    {
+     "id": 1,
+     "warnCount": 3,
+     "withinSeconds": null,
+     "action": "TEMPBAN",
+     "durationSeconds": 600,
+     "countFrom": "2026-10-10T12:00:00.000Z"
+    },
+    {
+     "id": 2,
+     "warnCount": 5,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": "2026-10-10T12:00:00.000Z"
+    }
+   ]
+  },
+  {
+   "input": [
+    {
+     "id": 2,
+     "warnCount": 3,
+     "withinSeconds": 600,
+     "action": "TIMEOUT",
+     "durationSeconds": 10,
+     "countFrom": null
+    },
+    {
+     "id": 2,
+     "warnCount": 4,
+     "withinSeconds": null,
+     "action": "MUTE",
+     "durationSeconds": null,
+     "countFrom": "2026-02-01T00:00:00.000Z"
+    },
+    {
+     "warnCount": 3,
+     "withinSeconds": 600,
+     "action": "TEMPBAN",
+     "durationSeconds": 99999999
+    },
+    {
+     "warnCount": 6,
+     "withinSeconds": 30,
+     "action": "TIMEOUT",
+     "durationSeconds": null
+    }
+   ],
+   "out": [
+    {
+     "id": 4,
+     "warnCount": 3,
+     "withinSeconds": 600,
+     "action": "TEMPBAN",
+     "durationSeconds": 31536000,
+     "countFrom": null
+    },
+    {
+     "id": 3,
+     "warnCount": 4,
+     "withinSeconds": null,
+     "action": "MUTE",
+     "durationSeconds": null,
+     "countFrom": "2026-02-01T00:00:00.000Z"
+    }
+   ]
+  },
+  {
+   "input": [
+    {
+     "id": 1,
+     "warnCount": 1,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 2,
+     "warnCount": 2,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 3,
+     "warnCount": 3,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 4,
+     "warnCount": 4,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 5,
+     "warnCount": 5,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 6,
+     "warnCount": 6,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 7,
+     "warnCount": 7,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 8,
+     "warnCount": 8,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 9,
+     "warnCount": 9,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 10,
+     "warnCount": 10,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 11,
+     "warnCount": 11,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    },
+    {
+     "id": 12,
+     "warnCount": 12,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": 5
+    }
+   ],
+   "out": [
+    {
+     "id": 1,
+     "warnCount": 1,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 2,
+     "warnCount": 2,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 3,
+     "warnCount": 3,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 4,
+     "warnCount": 4,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 5,
+     "warnCount": 5,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 6,
+     "warnCount": 6,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 7,
+     "warnCount": 7,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 8,
+     "warnCount": 8,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 9,
+     "warnCount": 9,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    },
+    {
+     "id": 10,
+     "warnCount": 10,
+     "withinSeconds": null,
+     "action": "KICK",
+     "durationSeconds": null,
+     "countFrom": null
+    }
+   ]
+  },
+  {
+   "input": [
+    {
+     "warnCount": 2,
+     "action": "MUTE",
+     "durationSeconds": 30,
+     "withinSeconds": "600",
+     "countFrom": "not a date"
+    },
+    "junk",
+    null,
+    {
+     "warnCount": 2,
+     "action": "mute",
+     "durationSeconds": 5000000000,
+     "withinSeconds": 600,
+     "id": 0
+    },
+    {
+     "warnCount": 2.5,
+     "action": "KICK"
+    },
+    {
+     "warnCount": 7,
+     "action": "TIMEOUT",
+     "duration": 99,
+     "countFrom": "2026-03-01"
+    }
+   ],
+   "out": [
+    {
+     "id": 2,
+     "warnCount": 2,
+     "withinSeconds": 600,
+     "action": "MUTE",
+     "durationSeconds": 31536000,
+     "countFrom": null
+    },
+    {
+     "id": 3,
+     "warnCount": 7,
+     "withinSeconds": null,
+     "action": "TIMEOUT",
+     "durationSeconds": 99,
+     "countFrom": "2026-03-01"
+    }
+   ]
+  }
+ ],
+ "embedHasContent": [
+  {
+   "input": null,
+   "out": false
+  },
+  {
+   "input": {},
+   "out": false
+  },
+  {
+   "input": {
+    "title": " "
+   },
+   "out": false
+  },
+  {
+   "input": {
+    "title": "x"
+   },
+   "out": true
+  },
+  {
+   "input": {
+    "footer": {
+     "text": "f"
+    }
+   },
+   "out": false
+  },
+  {
+   "input": {
+    "image": "https://a.example/x.png"
+   },
+   "out": true
+  },
+  {
+   "input": {
+    "fields": [
+     {
+      "name": "a",
+      "value": "b"
+     }
+    ]
+   },
+   "out": true
+  },
+  {
+   "input": {
+    "author": {
+     "name": "me"
+    }
+   },
+   "out": true
+  },
+  {
+   "input": {
+    "thumbnail": "https://a.example/x.png"
+   },
+   "out": false
+  },
+  {
+   "input": {
+    "fields": []
+   },
+   "out": false
+  },
+  {
+   "input": {
+    "description": 7
+   },
+   "out": false
+  },
+  {
+   "input": {
+    "author": {
+     "name": "  "
+    }
+   },
+   "out": false
+  },
+  {
+   "input": "title",
+   "out": false
+  },
+  {
+   "input": [],
+   "out": false
+  }
+ ],
+ "channelKind": [
+  {
+   "input": 0,
+   "out": "text"
+  },
+  {
+   "input": 2,
+   "out": "voice"
+  },
+  {
+   "input": 4,
+   "out": "category"
+  },
+  {
+   "input": 5,
+   "out": "announcement"
+  },
+  {
+   "input": 13,
+   "out": "stage"
+  },
+  {
+   "input": 15,
+   "out": "forum"
+  },
+  {
+   "input": 16,
+   "out": "media"
+  },
+  {
+   "input": 11,
+   "out": "other"
+  },
+  {
+   "input": 1,
+   "out": "other"
+  },
+  {
+   "input": -1,
+   "out": "other"
+  },
+  {
+   "input": null,
+   "out": "other"
+  }
+ ],
+ "refKey": [
+  {
+   "path": "tiers.2.roleAdd",
+   "id": "1",
+   "out": "tiers.roleAdd|1"
+  },
+  {
+   "path": "tiers.0.roleAdd",
+   "id": "1",
+   "out": "tiers.roleAdd|1"
+  },
+  {
+   "path": "a",
+   "id": "2",
+   "out": "a|2"
+  },
+  {
+   "path": "0.1",
+   "id": "3",
+   "out": "|3"
+  },
+  {
+   "path": "x.10y.3",
+   "id": "4",
+   "out": "x.10y|4"
+  },
+  {
+   "path": "",
+   "id": "5",
+   "out": "|5"
+  }
+ ],
+ "isSnowflake": [
+  {
+   "input": "12345678901234567",
+   "out": true
+  },
+  {
+   "input": "123456789012345678901",
+   "out": false
+  },
+  {
+   "input": "1234567890123456",
+   "out": false
+  },
+  {
+   "input": "١٢٣٤٥٦٧٨٩٠١٢٣٤٥٦٧٨",
+   "out": false
+  },
+  {
+   "input": 12345678901234568,
+   "out": false
+  },
+  {
+   "input": " 12345678901234567",
+   "out": false
+  }
+ ]
+}

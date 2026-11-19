@@ -1,0 +1,1219 @@
+{
+  "ipCases": [
+    {
+      "input": "1.2.3.4",
+      "isIP": 4,
+      "normalizeIp": "1.2.3.4"
+    },
+    {
+      "input": "01.2.3.4",
+      "isIP": 0,
+      "normalizeIp": "01.2.3.4"
+    },
+    {
+      "input": "255.255.255.255",
+      "isIP": 4,
+      "normalizeIp": "255.255.255.255"
+    },
+    {
+      "input": "256.1.1.1",
+      "isIP": 0,
+      "normalizeIp": "256.1.1.1"
+    },
+    {
+      "input": "1.2.3",
+      "isIP": 0,
+      "normalizeIp": "1.2.3"
+    },
+    {
+      "input": "1.2.3.4.5",
+      "isIP": 0,
+      "normalizeIp": "1.2.3.4.5"
+    },
+    {
+      "input": "::",
+      "isIP": 6,
+      "normalizeIp": "::"
+    },
+    {
+      "input": "::1",
+      "isIP": 6,
+      "normalizeIp": "::1"
+    },
+    {
+      "input": "1::",
+      "isIP": 6,
+      "normalizeIp": "1::"
+    },
+    {
+      "input": "fe80::1%eth0",
+      "isIP": 6,
+      "normalizeIp": "fe80::1%eth0"
+    },
+    {
+      "input": "fe80::1%",
+      "isIP": 0,
+      "normalizeIp": "fe80::1%"
+    },
+    {
+      "input": "fe80::1%e.t-h:0",
+      "isIP": 6,
+      "normalizeIp": "fe80::1%e.t-h:0"
+    },
+    {
+      "input": "FE80::1",
+      "isIP": 6,
+      "normalizeIp": "fe80::1"
+    },
+    {
+      "input": "::ffff:1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "1.2.3.4"
+    },
+    {
+      "input": "::FFFF:1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "1.2.3.4"
+    },
+    {
+      "input": "::ffff:01.2.3.4",
+      "isIP": 0,
+      "normalizeIp": "::ffff:01.2.3.4"
+    },
+    {
+      "input": "1:2:3:4:5:6:7:8",
+      "isIP": 6,
+      "normalizeIp": "1:2:3:4:5:6:7:8"
+    },
+    {
+      "input": "1:2:3:4:5:6:7::",
+      "isIP": 6,
+      "normalizeIp": "1:2:3:4:5:6:7::"
+    },
+    {
+      "input": "::2:3:4:5:6:7:8",
+      "isIP": 6,
+      "normalizeIp": "::2:3:4:5:6:7:8"
+    },
+    {
+      "input": "1:2:3:4:5:6:7:8:9",
+      "isIP": 0,
+      "normalizeIp": "1:2:3:4:5:6:7:8:9"
+    },
+    {
+      "input": "1::2::3",
+      "isIP": 0,
+      "normalizeIp": "1::2::3"
+    },
+    {
+      "input": "12345::",
+      "isIP": 0,
+      "normalizeIp": "12345::"
+    },
+    {
+      "input": "g::1",
+      "isIP": 0,
+      "normalizeIp": "g::1"
+    },
+    {
+      "input": "1:2:3:4:5:6:1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "1:2:3:4:5:6:1.2.3.4"
+    },
+    {
+      "input": "::1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "::1.2.3.4"
+    },
+    {
+      "input": "1::1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "1::1.2.3.4"
+    },
+    {
+      "input": "2001:db8::",
+      "isIP": 6,
+      "normalizeIp": "2001:db8::"
+    },
+    {
+      "input": " 1.2.3.4",
+      "isIP": 0,
+      "normalizeIp": "1.2.3.4"
+    },
+    {
+      "input": "1.2.3.4 ",
+      "isIP": 0,
+      "normalizeIp": "1.2.3.4"
+    },
+    {
+      "input": "",
+      "isIP": 0,
+      "normalizeIp": ""
+    },
+    {
+      "input": "localhost",
+      "isIP": 0,
+      "normalizeIp": "localhost"
+    },
+    {
+      "input": "::ffff:127.0.0.1",
+      "isIP": 6,
+      "normalizeIp": "127.0.0.1"
+    },
+    {
+      "input": "0.0.0.0",
+      "isIP": 4,
+      "normalizeIp": "0.0.0.0"
+    },
+    {
+      "input": "1:2:3:4:5::1.2.3.4",
+      "isIP": 6,
+      "normalizeIp": "1:2:3:4:5::1.2.3.4"
+    },
+    {
+      "input": "1:2:3:4:5:6::1.2.3.4",
+      "isIP": 0,
+      "normalizeIp": "1:2:3:4:5:6::1.2.3.4"
+    },
+    {
+      "input": "[::1]",
+      "isIP": 0,
+      "normalizeIp": "[::1]"
+    },
+    {
+      "input": "::%eth0",
+      "isIP": 6,
+      "normalizeIp": "::%eth0"
+    },
+    {
+      "input": "fe80::1%eth0%x",
+      "isIP": 0,
+      "normalizeIp": "fe80::1%eth0%x"
+    },
+    {
+      "input": "1.2.3.4%x",
+      "isIP": 0,
+      "normalizeIp": "1.2.3.4%x"
+    }
+  ],
+  "loginSourceKey": [
+    {
+      "input": "198.51.100.7:51234",
+      "output": "198.51.100.7"
+    },
+    {
+      "input": "[2001:db8:1:2::a]:443",
+      "output": "2001:0db8:0001:0002::/64"
+    },
+    {
+      "input": "2001:db8:1:2::b",
+      "output": "2001:0db8:0001:0002::/64"
+    },
+    {
+      "input": "[2001:db8:1:2::a]",
+      "output": "2001:0db8:0001:0002::/64"
+    },
+    {
+      "input": "[fe80::1%eth0]:80",
+      "output": "fe80:0000:0000:0000::/64"
+    },
+    {
+      "input": "fe80::9",
+      "output": "fe80:0000:0000:0000::/64"
+    },
+    {
+      "input": "[::ffff:203.0.113.9]:5000",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "::ffff:203.0.113.9",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "::FFFF:203.0.113.9%eth0",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "2001:DB8:1:2:0:0:0:f",
+      "output": "2001:0db8:0001:0002::/64"
+    },
+    {
+      "input": "2001:db8:1:2:ffff:ffff:ffff:ffff",
+      "output": "2001:0db8:0001:0002::/64"
+    },
+    {
+      "input": "2001:db8:1:3::a",
+      "output": "2001:0db8:0001:0003::/64"
+    },
+    {
+      "input": "::1",
+      "output": "0000:0000:0000:0000::/64"
+    },
+    {
+      "input": "fe80::1%eth0",
+      "output": "fe80:0000:0000:0000::/64"
+    },
+    {
+      "input": "::ffff:cb00:7109",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "203.0.113.9",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "unknown",
+      "output": "unknown"
+    },
+    {
+      "input": "not an ip",
+      "output": "not an ip"
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": " 203.0.113.9 ",
+      "output": "203.0.113.9"
+    },
+    {
+      "input": "1:2:3:4:5:6:7::",
+      "output": "0001:0002:0003:0004::/64"
+    },
+    {
+      "input": "::2:3:4:5:6:7:8",
+      "output": "0000:0002:0003:0004::/64"
+    },
+    {
+      "input": "1:2:3:4:5:6:1.2.3.4",
+      "output": "0001:0002:0003:0004::/64"
+    },
+    {
+      "input": "::1.2.3.4",
+      "output": "0000:0000:0000:0000::/64"
+    },
+    {
+      "input": "[1.2.3.4]:80",
+      "output": "1.2.3.4"
+    },
+    {
+      "input": "1.2.3.4:99999",
+      "output": "1.2.3.4"
+    },
+    {
+      "input": "01.2.3.4:80",
+      "output": "01.2.3.4"
+    },
+    {
+      "input": "::ffff:0:1.2.3.4",
+      "output": "0000:0000:0000:0000::/64"
+    },
+    {
+      "input": "::ffff:1.2.3.4:80",
+      "output": "::ffff:1.2.3.4:80"
+    },
+    {
+      "input": "64:ff9b::1.2.3.4",
+      "output": "0064:ff9b:0000:0000::/64"
+    },
+    {
+      "input": "0:0:0:0:0:ffff:1.2.3.4",
+      "output": "1.2.3.4"
+    }
+  ],
+  "clientAddress": {
+    "trusted": [
+      "10.0.1.30",
+      "fd7a::1"
+    ],
+    "cases": [
+      {
+        "peer": "203.0.113.9",
+        "forwarded": null,
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": null,
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "203.0.113.9",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "203.0.113.9"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": null,
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": null,
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "10.0.0.5",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "10.0.0.5"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": null,
+        "trusted": false,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": null,
+        "trusted": true,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "127.0.0.1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "127.0.0.1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": null,
+        "trusted": false,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": null,
+        "trusted": true,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "::1"
+      },
+      {
+        "peer": "::1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "::1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": null,
+        "trusted": false,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": null,
+        "trusted": true,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "::ffff:127.0.0.1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "::ffff:127.0.0.1"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": null,
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": null,
+        "trusted": true,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "10.0.1.30",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": null,
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": null,
+        "trusted": true,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "::ffff:10.0.1.30",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "::ffff:10.0.1.30"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": null,
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": null,
+        "trusted": true,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "198.51.100.1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "198.51.100.2"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": "FD7A::1",
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "FD7A::1"
+      },
+      {
+        "peer": null,
+        "forwarded": null,
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": null,
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "198.51.100.1",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "198.51.100.1",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "spoofed, 198.51.100.2",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": " , ",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": " , ",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "1.1.1.1,",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "1.1.1.1,",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trusted": true,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": false,
+        "output": "unknown"
+      },
+      {
+        "peer": null,
+        "forwarded": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "trusted": true,
+        "output": "unknown"
+      }
+    ]
+  },
+  "limits": {
+    "WRITE_RATE_LIMIT": {
+      "max": 20,
+      "windowMs": 10000
+    },
+    "SEARCH_RATE_LIMIT": {
+      "max": 30,
+      "windowMs": 10000
+    },
+    "LOGIN_RATE_LIMIT": {
+      "max": 10,
+      "windowMs": 60000
+    },
+    "LOGIN_GLOBAL_RATE_LIMIT": {
+      "max": 60,
+      "windowMs": 60000
+    },
+    "LOGIN_FIRST_ATTEMPT_RATE_LIMIT": {
+      "max": 600,
+      "windowMs": 60000
+    }
+  }
+}

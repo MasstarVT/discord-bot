@@ -1,0 +1,1097 @@
+[
+ {
+  "text": "plain text",
+  "options": {},
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {},
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {},
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {},
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {},
+  "out": "\\`\\`\\`js\nconst a = 1 \\* 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {},
+  "out": "text \\`inline \\*star\\*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {},
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {},
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {},
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {},
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {},
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {},
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {},
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {},
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {},
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 * 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "text \\`inline \\*star\\*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "codeBlockContent": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 \\* 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "text \\`inline *star*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "inlineCodeContent": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 * 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "text \\`inline *star*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "codeBlockContent": false,
+   "inlineCodeContent": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 \\* 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "text \\`inline \\*star\\*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\# Heading\n\\## Sub\n  \\### three\n\\- bullet\n\\* star bullet\n  \\- nested\n1\\. one\n 22\\. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "heading": true,
+   "bulletedList": true,
+   "numberedList": true,
+   "maskedLink": true
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "*italic* and **bold** and ***both***"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "_under_ \\_\\_underline\\_\\_ _\\_\\_both\\_\\__"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 * 2;\n\\`\\`\\`\nafter *star*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "text \\`inline *star*\\` more _x_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "snake_case_word and \\_\\_init\\_\\_ and a_b_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "**unclosed bold and *unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": "mixed ***_ \\_\\_ ** _ * _\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "escape": false,
+   "italic": false,
+   "bold": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "\\_under\\_ __underline__ \\___both__\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "`code` and ``double`` and ```block```"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "```js\nconst a = 1 \\* 2;\n```\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "text `inline \\*star\\*` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "~~strike~~ ||spoiler|| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "snake\\_case\\_word and __init__ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": "mixed \\*\\*\\*\\_ __ \\*\\* \\_ \\* \\___ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "underline": false,
+   "strikethrough": false,
+   "spoiler": false,
+   "inlineCode": false,
+   "codeBlock": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "\\`code\\` and \\`\\`double\\`\\` and ```block```"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "```js\nconst a = 1 * 2;\n```\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "text \\`inline \\*star\\*\\` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "codeBlock": false,
+   "codeBlockContent": false
+  },
+  "out": ""
+ },
+ {
+  "text": "plain text",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "plain text"
+ },
+ {
+  "text": "*italic* and **bold** and ***both***",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\*italic\\* and \\*\\*bold\\*\\* and \\*\\*\\*both\\*\\*\\*"
+ },
+ {
+  "text": "_under_ __underline__ ___both___",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\_under\\_ \\_\\_underline\\_\\_ \\_\\_\\_both\\_\\_\\_"
+ },
+ {
+  "text": "`code` and ``double`` and ```block```",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "`code` and \\`\\`double\\`\\` and \\`\\`\\`block\\`\\`\\`"
+ },
+ {
+  "text": "```js\nconst a = 1 * 2;\n```\nafter *star*",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\`\\`\\`js\nconst a = 1 \\* 2;\n\\`\\`\\`\nafter \\*star\\*"
+ },
+ {
+  "text": "text `inline *star*` more _x_",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "text `inline *star*` more \\_x\\_"
+ },
+ {
+  "text": "~~strike~~ ||spoiler|| back\\slash",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\~\\~strike\\~\\~ \\|\\|spoiler\\|\\| back\\\\slash"
+ },
+ {
+  "text": "# Heading\n## Sub\n  ### three\n- bullet\n* star bullet\n  - nested\n1. one\n 22. two",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "# Heading\n## Sub\n  ### three\n- bullet\n\\* star bullet\n  - nested\n1. one\n 22. two"
+ },
+ {
+  "text": "[label](https://example.com) and [a](b)",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "[label](https://example.com) and [a](b)"
+ },
+ {
+  "text": "https://example.com/some_path_with*stars*_ and <https://x.y/a_b>",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "https://example.com/some_path_with*stars*_ and <https://x.y/a\\_b>"
+ },
+ {
+  "text": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "<:name_with_underscore:123456789012345678> and <a:anim_x:123456789012345678>"
+ },
+ {
+  "text": "snake_case_word and __init__ and a_b_c",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "snake\\_case\\_word and \\_\\_init\\_\\_ and a\\_b\\_c"
+ },
+ {
+  "text": "**unclosed bold and *unclosed italic",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "\\*\\*unclosed bold and \\*unclosed italic"
+ },
+ {
+  "text": "mixed ***_ __ ** _ * ___ markers",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": "mixed \\*\\*\\*\\_ \\_\\_ \\*\\* \\_ \\* \\_\\_\\_ markers"
+ },
+ {
+  "text": "",
+  "options": {
+   "inlineCode": false,
+   "inlineCodeContent": false
+  },
+  "out": ""
+ }
+]

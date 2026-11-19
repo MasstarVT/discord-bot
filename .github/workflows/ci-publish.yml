@@ -2,7 +2,7 @@ name: CI and publish
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev] # dev runs the tests only; the publish job is limited to main
   pull_request:
   workflow_dispatch:
 
@@ -115,9 +115,68 @@ jobs:
   # major updates still wait for a person. Only Dependabot's own PRs from this
   # repo qualify: a fork PR never matches (and gets a read-only token anyway),
   # and a commit pushed by anyone else on a Dependabot branch changes the actor.
+  rust-test:
+    name: Test the Rust bot
+    runs-on: ubuntu-latest
+    timeout-minutes: 90 # a cold debug build of the whole workspace takes most of this; the cache makes later runs short
+    env:
+      # Smaller and faster test builds, so the build output fits the runner's disk and the Actions cache.
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # The Rust tests run the JS bot's own code (Prisma, the services) to prove both read each other's data.
+      - name: Install the JavaScript dependencies
+        run: |
+          npm ci
+          npx prisma generate
+          npm ci --prefix rust/mockdb
+
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: rust-test-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            rust-test-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}-
+            rust-test-${{ runner.os }}-
+
+      # Not a service container: the tests open many connections at once, and a service cannot take server flags.
+      - name: Start PostgreSQL 17
+        run: >-
+          docker run -d --name rust-test-db -p 127.0.0.1:5434:5432 -e POSTGRES_PASSWORD=ci postgres:17
+          -c max_connections=400 -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c timezone=UTC
+
+      # One crate at a time, each against a fresh copy of a database the JS toolchain migrated and seeded, plus the
+      # Redis-protocol mock (rust/mockdb). A skipped database test would hide a failure, so both servers must be up.
+      - name: Run every crate's tests against PostgreSQL and the Redis mock
+        env:
+          MOCKDB_PG_URL: postgresql://postgres:ci@127.0.0.1:5434
+          CARGO_BUILD_JOBS: 4
+        run: bash rust/run-all-tests.sh
+
+      - name: Show the database log on failure
+        if: failure()
+        run: docker logs --tail 100 rust-test-db
+
   dependabot-merge:
     name: Merge a Dependabot patch or minor update
-    needs: test
+    needs: [test, rust-test]
     if: >-
       github.event_name == 'pull_request' &&
       github.repository == 'MasstarVT/discord-bot' &&
@@ -150,10 +209,10 @@ jobs:
 
   publish:
     name: Build, smoke-test and push image
-    needs: test
+    needs: [test, rust-test]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60 # a cold release build of the Rust workspace takes most of this
     permissions:
       contents: read
       packages: write
@@ -212,34 +271,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: 'Smoke test: migrations, canvas and Prisma inside the image'
+      - name: 'Smoke test: both binaries are in the image and the dashboard parks without configuration'
         run: |
-          docker run --rm --network host -e DATABASE_URL discord-bot:ci \
-            node_modules/.bin/prisma migrate deploy
-          docker run --rm -i --network host -e DATABASE_URL discord-bot:ci \
-            node --input-type=commonjs - <<'EOF'
-          const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
-          if (!GlobalFonts.registerFromPath('assets/fonts/Nunito-Bold.ttf', 'Nunito')) {
-            throw new Error('assets/fonts/Nunito-Bold.ttf is missing from the image');
-          }
-          createCanvas(64, 32).getContext('2d').fillText('ok', 0, 16);
-          const { PrismaClient } = require('@prisma/client');
-          const prisma = new PrismaClient();
-          prisma.$connect()
-            .then(() => prisma.$queryRaw`SELECT count(*)::int AS applied FROM "_prisma_migrations"`)
-            .then((rows) => { console.log('smoke ok:', JSON.stringify(rows)); return prisma.$disconnect(); })
-            .catch((err) => { console.error(err); process.exit(1); });
-          EOF
+          docker run --rm --entrypoint sh discord-bot:ci -c 'command -v bot dashboard curl'
+          # No dashboard settings are passed: it parks, answering 200 on /healthz and 503 everywhere else.
+          docker run -d --name dash --network host discord-bot:ci dashboard
+          ok=
+          for _ in $(seq 1 15); do
+            if curl -fsS --max-time 4 -o /dev/null http://127.0.0.1:8080/healthz; then ok=1; break; fi
+            sleep 2
+          done
+          [ "$(curl -sS --max-time 4 -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ || true)" = 503 ] || ok=
+          docker logs dash
+          docker rm -f dash >/dev/null
+          test -n "$ok"
 
-      - name: 'Smoke test: the bot boots, serves /healthz and parks without a token'
+      - name: 'Smoke test: the bot applies the migrations, serves /healthz and parks without a token'
         run: |
           docker run -d --name smoke --network host -e DATABASE_URL -e HEALTH_PORT=18081 discord-bot:ci
           ok=
           for _ in $(seq 1 30); do
-            if docker exec smoke node -e "fetch('http://127.0.0.1:18081/healthz').then(r=>process.exit(r.status===200?0:1),()=>process.exit(1))"; then ok=1; break; fi
+            if curl -fsS --max-time 4 -o /dev/null http://127.0.0.1:18081/healthz; then ok=1; break; fi
             sleep 2
           done
-          docker exec smoke node -e "fetch('http://127.0.0.1:18081/readyz').then(async r=>{const b=await r.json();console.log(r.status,b);process.exit(r.status===503&&b.reason==='parked:missing-env'?0:1)},()=>process.exit(1))" || ok=
+          # Parked for the missing token: /readyz answers 503 with the reason.
+          code=$(curl -sS --max-time 4 -o readyz.json -w '%{http_code}' http://127.0.0.1:18081/readyz || true)
+          echo "$code $(cat readyz.json 2>/dev/null)"
+          [ "$code" = 503 ] || ok=
+          [ "$(jq -r .reason readyz.json 2>/dev/null)" = parked:missing-env ] || ok=
+          # The bot ran the migrations compiled into it before parking: every one in the repo is applied.
+          want=$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d | wc -l)
+          got=$(docker exec "${{ job.services.db.id }}" psql -U postgres -tAc 'SELECT count(*) FROM "_prisma_migrations" WHERE finished_at IS NOT NULL')
+          echo "migrations applied: $got of $want"
+          [ "$got" = "$want" ] || ok=
           docker logs smoke
           docker rm -f smoke >/dev/null
           test -n "$ok"

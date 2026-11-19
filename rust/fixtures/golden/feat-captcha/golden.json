@@ -1,0 +1,2348 @@
+{
+ "normalize": [
+  [
+   " 7kx-4pm ",
+   "7KX4PM"
+  ],
+  [
+   "7KX4PM",
+   "7KX4PM"
+  ],
+  [
+   "7kx_4p.m",
+   "7KX4PM"
+  ],
+  [
+   "abc",
+   "ABC"
+  ],
+  [
+   "",
+   ""
+  ],
+  [
+   null,
+   ""
+  ],
+  [
+   "ÿx",
+   "ŸX"
+  ],
+  [
+   "ß7KX4P",
+   "SS7KX4P"
+  ],
+  [
+   " 7KX4PM ",
+   "7KX4PM"
+  ],
+  [
+   "7KX\t4PM\n",
+   "7KX4PM"
+  ],
+  [
+   "ﬀ",
+   "FF"
+  ]
+ ],
+ "hash": [
+  [
+   "G",
+   "U",
+   "7KX4PM",
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff"
+  ],
+  [
+   "900000000000000001",
+   "600000000000000001",
+   "acefhj",
+   "9a2bc41c2866b7739a691ffbb6ca00d6f60033ba446ad122be8d93d594d3f5f7"
+  ],
+  [
+   "G",
+   "V",
+   " 7kx-4pm ",
+   "24fb5cda70bcd832974709a5ee2e35354e1d66fe11ca6d37c3216dd3f1e392d1"
+  ]
+ ],
+ "matches": [
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   " 7kx-4pm ",
+   true
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "7KX4PM",
+   true
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "7kx_4p.m",
+   true
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "abc",
+   false
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "",
+   false
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   null,
+   false
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "ÿx",
+   false
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   " 7KX4PM ",
+   true
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "7KX\t4PM\n",
+   true
+  ],
+  [
+   "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+   "ﬀ",
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   " 7kx-4pm ",
+   true
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "7KX4PM",
+   true
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "7kx_4p.m",
+   true
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "abc",
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "",
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   null,
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "ÿx",
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   " 7KX4PM ",
+   true
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "7KX\t4PM\n",
+   true
+  ],
+  [
+   "3DE895837F31D1BAE35CC6B9E072F41E4F80C337B573D3A2E1B1E58AE505E6FF",
+   "ﬀ",
+   false
+  ],
+  [
+   null,
+   " 7kx-4pm ",
+   false
+  ],
+  [
+   null,
+   "7KX4PM",
+   false
+  ],
+  [
+   null,
+   "7kx_4p.m",
+   false
+  ],
+  [
+   null,
+   "abc",
+   false
+  ],
+  [
+   null,
+   "",
+   false
+  ],
+  [
+   null,
+   null,
+   false
+  ],
+  [
+   null,
+   "ÿx",
+   false
+  ],
+  [
+   null,
+   "ß7KX4P",
+   false
+  ],
+  [
+   null,
+   " 7KX4PM ",
+   false
+  ],
+  [
+   null,
+   "7KX\t4PM\n",
+   false
+  ],
+  [
+   null,
+   "ﬀ",
+   false
+  ],
+  [
+   "",
+   " 7kx-4pm ",
+   false
+  ],
+  [
+   "",
+   "7KX4PM",
+   false
+  ],
+  [
+   "",
+   "7kx_4p.m",
+   false
+  ],
+  [
+   "",
+   "abc",
+   false
+  ],
+  [
+   "",
+   "",
+   false
+  ],
+  [
+   "",
+   null,
+   false
+  ],
+  [
+   "",
+   "ÿx",
+   false
+  ],
+  [
+   "",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "",
+   " 7KX4PM ",
+   false
+  ],
+  [
+   "",
+   "7KX\t4PM\n",
+   false
+  ],
+  [
+   "",
+   "ﬀ",
+   false
+  ],
+  [
+   "abc",
+   " 7kx-4pm ",
+   false
+  ],
+  [
+   "abc",
+   "7KX4PM",
+   false
+  ],
+  [
+   "abc",
+   "7kx_4p.m",
+   false
+  ],
+  [
+   "abc",
+   "abc",
+   false
+  ],
+  [
+   "abc",
+   "",
+   false
+  ],
+  [
+   "abc",
+   null,
+   false
+  ],
+  [
+   "abc",
+   "ÿx",
+   false
+  ],
+  [
+   "abc",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "abc",
+   " 7KX4PM ",
+   false
+  ],
+  [
+   "abc",
+   "7KX\t4PM\n",
+   false
+  ],
+  [
+   "abc",
+   "ﬀ",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   " 7kx-4pm ",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "7KX4PM",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "7kx_4p.m",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "abc",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   null,
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "ÿx",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   " 7KX4PM ",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "7KX\t4PM\n",
+   false
+  ],
+  [
+   "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "ﬀ",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   " 7kx-4pm ",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "7KX4PM",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "7kx_4p.m",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "abc",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   null,
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "ÿx",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "ß7KX4P",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   " 7KX4PM ",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "7KX\t4PM\n",
+   false
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "ﬀ",
+   false
+  ]
+ ],
+ "evaluate": [
+  [
+   null,
+   "7KX4PM",
+   {
+    "result": "none"
+   }
+  ],
+  [
+   {
+    "answerHash": null,
+    "attempts": 0,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "7KX4PM",
+   {
+    "result": "none"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 0,
+    "expiresAt": "1970-01-01T00:16:39.999Z"
+   },
+   "7KX4PM",
+   {
+    "result": "expired"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 0,
+    "expiresAt": "1970-01-01T00:16:40.000Z"
+   },
+   "7KX4PM",
+   {
+    "result": "expired"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 0,
+    "expiresAt": null
+   },
+   "7KX4PM",
+   {
+    "result": "expired"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 3,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "7KX4PM",
+   {
+    "result": "exhausted",
+    "attemptsLeft": 0
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 0,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "7KX4PM",
+   {
+    "result": "ok"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 2,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "7kx 4pm",
+   {
+    "result": "ok"
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 0,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "AAAAAA",
+   {
+    "result": "wrong",
+    "attemptsLeft": 2
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 1,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "AAAAAA",
+   {
+    "result": "wrong",
+    "attemptsLeft": 1
+   }
+  ],
+  [
+   {
+    "answerHash": "3de895837f31d1bae35cc6b9e072f41e4f80c337b573d3a2e1b1e58ae505e6ff",
+    "attempts": 2,
+    "expiresAt": "1970-01-01T00:17:40.000Z"
+   },
+   "AAAAAA",
+   {
+    "result": "exhausted",
+    "attemptsLeft": 0
+   }
+  ]
+ ],
+ "timeout": [
+  [
+   0,
+   {
+    "minutes": 0
+   }
+  ],
+  [
+   4,
+   {
+    "error": "Use 0 (never) or between 5 and 10080 minutes (7 days)."
+   }
+  ],
+  [
+   5,
+   {
+    "minutes": 5
+   }
+  ],
+  [
+   60,
+   {
+    "minutes": 60
+   }
+  ],
+  [
+   10080,
+   {
+    "minutes": 10080
+   }
+  ],
+  [
+   10081,
+   {
+    "error": "Use 0 (never) or between 5 and 10080 minutes (7 days)."
+   }
+  ],
+  [
+   -5,
+   {
+    "error": "Use 0 (never) or between 5 and 10080 minutes (7 days)."
+   }
+  ],
+  [
+   2.5,
+   {
+    "error": "Use a whole number of minutes."
+   }
+  ],
+  [
+   "5",
+   {
+    "error": "Use a whole number of minutes."
+   }
+  ],
+  [
+   null,
+   {
+    "error": "Use a whole number of minutes."
+   }
+  ]
+ ],
+ "runAt": [
+  [
+   4999999000,
+   10,
+   5000599000
+  ],
+  [
+   4996400000,
+   10,
+   5000060000
+  ],
+  [
+   null,
+   10,
+   5000600000
+  ],
+  [
+   5000000000,
+   5,
+   5000300000
+  ]
+ ],
+ "verifyButton": [
+  [
+   null,
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   null,
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   {
+    "label": "  Go ",
+    "style": "DANGER"
+   },
+   {
+    "label": "Go",
+    "style": "DANGER"
+   }
+  ],
+  [
+   {
+    "style": "LINK"
+   },
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   {
+    "style": "toString"
+   },
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   {
+    "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   {
+    "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   {
+    "label": "   "
+   },
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ],
+  [
+   {
+    "label": 5,
+    "style": "PRIMARY"
+   },
+   {
+    "label": "Verify",
+    "style": "PRIMARY"
+   }
+  ],
+  [
+   "nope",
+   {
+    "label": "Verify",
+    "style": "SUCCESS"
+   }
+  ]
+ ],
+ "panelTemplate": [
+  [
+   null,
+   {
+    "content": null,
+    "embed": {
+     "title": "🛡️ Verification required",
+     "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+     "footer": {
+      "text": "Only you can see your captcha.",
+      "iconUrl": null
+     }
+    },
+    "buttons": []
+   }
+  ],
+  [
+   {
+    "embed": {
+     "title": "X"
+    },
+    "verifyButton": {
+     "label": "Go",
+     "style": "DANGER"
+    }
+   },
+   {
+    "content": null,
+    "embed": {
+     "title": "X"
+    },
+    "buttons": []
+   }
+  ],
+  [
+   {
+    "embed": 5
+   },
+   {
+    "content": null,
+    "embed": {
+     "title": "🛡️ Verification required",
+     "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+     "footer": {
+      "text": "Only you can see your captcha.",
+      "iconUrl": null
+     }
+    },
+    "buttons": []
+   }
+  ],
+  [
+   "nope",
+   {
+    "content": null,
+    "embed": {
+     "title": "🛡️ Verification required",
+     "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+     "footer": {
+      "text": "Only you can see your captcha.",
+      "iconUrl": null
+     }
+    },
+    "buttons": []
+   }
+  ],
+  [
+   {
+    "content": "Hi {server}"
+   },
+   {
+    "content": "Hi {server}",
+    "embed": null,
+    "buttons": []
+   }
+  ],
+  [
+   {
+    "content": ""
+   },
+   {
+    "content": null,
+    "embed": {
+     "title": "🛡️ Verification required",
+     "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+     "footer": {
+      "text": "Only you can see your captcha.",
+      "iconUrl": null
+     }
+    },
+    "buttons": []
+   }
+  ],
+  [
+   {
+    "embed": {
+     "color": 16711680
+    }
+   },
+   {
+    "content": null,
+    "embed": {
+     "color": 16711680
+    },
+    "buttons": []
+   }
+  ]
+ ],
+ "defaultPanel": {
+  "content": null,
+  "embed": {
+   "title": "🛡️ Verification required",
+   "description": "Welcome to **{server}**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+   "footer": {
+    "text": "Only you can see your captcha."
+   }
+  },
+  "buttons": []
+ },
+ "panel": [
+  [
+   {
+    "embedColor": 1193046,
+    "captchaTemplate": null
+   },
+   {
+    "embeds": [
+     {
+      "title": "🛡️ Verification required",
+      "description": "Welcome to **Test**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+      "footer": {
+       "text": "Only you can see your captcha."
+      },
+      "color": 1193046
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "✅",
+         "animated": false
+        },
+        "custom_id": "captcha:start",
+        "label": "Verify",
+        "style": 3
+       }
+      ]
+     }
+    ],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   {
+    "embedColor": null,
+    "captchaTemplate": {
+     "embed": {
+      "title": "Hi {server} in {channel}"
+     },
+     "verifyButton": {
+      "style": "PRIMARY",
+      "label": "Go"
+     }
+    }
+   },
+   {
+    "embeds": [
+     {
+      "title": "Hi Test in <#800000000000000001>",
+      "color": 5793266
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "✅",
+         "animated": false
+        },
+        "custom_id": "captcha:start",
+        "label": "Go",
+        "style": 1
+       }
+      ]
+     }
+    ],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   {
+    "captchaTemplate": {
+     "embed": {
+      "color": 16711680
+     }
+    }
+   },
+   {
+    "embeds": [
+     {
+      "title": "🛡️ Verification required",
+      "description": "Welcome to **Test**!\n\nTo make sure you are human, press **Verify** below. Once you pass, you get access to the rest of the server.",
+      "footer": {
+       "text": "Only you can see your captcha."
+      },
+      "color": 5793266
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "✅",
+         "animated": false
+        },
+        "custom_id": "captcha:start",
+        "label": "Verify",
+        "style": 3
+       }
+      ]
+     }
+    ],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   {
+    "captchaTemplate": {
+     "content": "Press it, {user}",
+     "embed": null,
+     "buttons": [
+      {
+       "label": "Rules",
+       "url": "https://example.com"
+      }
+     ],
+     "verifyButton": {
+      "label": "Let me in",
+      "style": "DANGER"
+     }
+    }
+   },
+   {
+    "content": "Press it, {user}",
+    "embeds": [],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "style": 5,
+        "label": "Rules",
+        "url": "https://example.com"
+       }
+      ]
+     },
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "✅",
+         "animated": false
+        },
+        "custom_id": "captcha:start",
+        "label": "Let me in",
+        "style": 4
+       }
+      ]
+     }
+    ],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ]
+ ],
+ "challenge": {
+  "content": "prefix",
+  "embeds": [
+   {
+    "color": 65280,
+    "title": "ℹ️  🔐 Verification",
+    "description": "Type the **6 characters** from the image, then press **Enter code**.\nCapital letters and numbers only; case does not matter. You have **3 tries**. This code expires <t:1800000000:R>.",
+    "image": {
+     "url": "attachment://captcha.png"
+    }
+   }
+  ],
+  "components": [
+   {
+    "type": 1,
+    "components": [
+     {
+      "type": 2,
+      "emoji": {
+       "name": "⌨️",
+       "animated": false
+      },
+      "custom_id": "captcha:answer",
+      "label": "Enter code",
+      "style": 1
+     },
+     {
+      "type": 2,
+      "emoji": {
+       "name": "🔄",
+       "animated": false
+      },
+      "custom_id": "captcha:start",
+      "label": "New image",
+      "style": 2
+     }
+    ]
+   }
+  ],
+  "attachments": [],
+  "files": [
+   {
+    "name": "captcha.png",
+    "description": null
+   }
+  ]
+ },
+ "msg": {
+  "MODULE_OFF": "The **Verification** module is turned off on this server.",
+  "FONT_MISSING": "The captcha font (assets/fonts/Nunito-Bold.ttf) is missing and no system font is available, so the one-click button is used instead.",
+  "TEMP_UNAVAILABLE": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 15548997,
+     "title": "❌  Temporarily Unavailable",
+     "description": "Server settings could not be loaded. Please try again in a moment."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "NOT_SET_UP": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 15548997,
+     "title": "❌  Verification Unavailable",
+     "description": "Verification isn't set up correctly on this server. Please tell a server admin."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "ALREADY": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 5763719,
+     "title": "✅  Already Verified",
+     "description": "You're already verified."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "SCREENING_FIRST": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 16705372,
+     "title": "⚠️  Rules Screening First",
+     "description": "Please complete this server's rules screening first (the prompt at the bottom of the channel list), then press **Verify** again."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "RATE_USER": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 16705372,
+     "title": "⚠️  Slow Down",
+     "description": "You've asked for a lot of codes. Please try again in a few minutes."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "RATE_GUILD": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 16705372,
+     "title": "⚠️  Busy",
+     "description": "Lots of people are verifying right now. Please try again in a minute."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "IMAGE_FAILED": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 15548997,
+     "title": "❌  Try Again",
+     "description": "I couldn't draw a captcha just now. Press **Verify** again in a moment."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "ROLE_FAILED": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 15548997,
+     "title": "❌  Verification Failed",
+     "description": "I couldn't give you the verified role because I'm missing permissions. Please tell a server admin."
+    }
+   ],
+   "components": [],
+   "attachments": []
+  },
+  "VERIFIED": {
+   "content": "",
+   "embeds": [
+    {
+     "color": 5763719,
+     "title": "✅  Verified",
+     "description": "You now have access to **Cool **Server****. Welcome!"
+    }
+   ],
+   "components": [],
+   "attachments": []
+  }
+ },
+ "needsRole": [
+  [
+   [
+    "R1"
+   ],
+   [],
+   false,
+   {
+    "content": "",
+    "embeds": [
+     {
+      "color": 16705372,
+      "title": "⚠️  Role Required",
+      "description": "To verify here you need one of these roles: <@&R1>.\n\nIf you think you should have one, please ask a server admin."
+     }
+    ],
+    "components": [],
+    "attachments": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   [
+    "R1",
+    "R2"
+   ],
+   [
+    "R2"
+   ],
+   false,
+   {
+    "content": "",
+    "embeds": [
+     {
+      "color": 16705372,
+      "title": "⚠️  Role Required",
+      "description": "To verify here you need one of these roles: <@&R1>, <@&R2>.\n\n**<@&R2>** is a Linked Role: connect the account it asks for in **User Settings → Connections**, then click the server name → **Linked Roles** and claim it. Then press **Verify** again."
+     }
+    ],
+    "components": [],
+    "attachments": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   [
+    "R1"
+   ],
+   [],
+   true,
+   {
+    "content": "",
+    "embeds": [
+     {
+      "color": 16705372,
+      "title": "⚠️  Role Required",
+      "description": "To verify here you need one of these roles: <@&R1>.\n\nDon't have one? Press **Fill out the form** below; staff will review it."
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "📝",
+         "animated": false
+        },
+        "custom_id": "application:apply:FORM1",
+        "label": "Fill out the form",
+        "style": 1
+       }
+      ]
+     }
+    ],
+    "attachments": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   [
+    "R1",
+    "R2"
+   ],
+   [
+    "R1"
+   ],
+   true,
+   {
+    "content": "",
+    "embeds": [
+     {
+      "color": 16705372,
+      "title": "⚠️  Role Required",
+      "description": "To verify here you need one of these roles: <@&R1>, <@&R2>.\n\n**<@&R1>** is a Linked Role: connect the account it asks for in **User Settings → Connections**, then click the server name → **Linked Roles** and claim it. Then press **Verify** again.\n\nNo linked account? Press **Fill out the form** below; staff will review it."
+     }
+    ],
+    "components": [
+     {
+      "type": 1,
+      "components": [
+       {
+        "type": 2,
+        "emoji": {
+         "name": "📝",
+         "animated": false
+        },
+        "custom_id": "application:apply:FORM1",
+        "label": "Fill out the form",
+        "style": 1
+       }
+      ]
+     }
+    ],
+    "attachments": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ]
+ ],
+ "missingRequirement": [
+  [
+   null,
+   [
+    "A"
+   ],
+   [
+    "A"
+   ],
+   null,
+   null
+  ],
+  [
+   [
+    "R1"
+   ],
+   [],
+   [
+    "A"
+   ],
+   null,
+   null
+  ],
+  [
+   [
+    "R1",
+    "R2"
+   ],
+   [
+    "R2"
+   ],
+   [
+    "R1",
+    "R2"
+   ],
+   null,
+   null
+  ],
+  [
+   [
+    "R1",
+    "R2"
+   ],
+   [
+    "X"
+   ],
+   [
+    "R1",
+    "R2"
+   ],
+   null,
+   [
+    "R1",
+    "R2"
+   ]
+  ],
+  [
+   [
+    "R1",
+    "R1",
+    "V"
+   ],
+   [],
+   [
+    "R1",
+    "V"
+   ],
+   "V",
+   [
+    "R1"
+   ]
+  ],
+  [
+   [
+    "V"
+   ],
+   [],
+   [
+    "V"
+   ],
+   "V",
+   null
+  ],
+  [
+   [
+    "R1",
+    "GONE"
+   ],
+   [],
+   [
+    "R1"
+   ],
+   null,
+   [
+    "R1"
+   ]
+  ]
+ ],
+ "checkRequired": [
+  [
+   {
+    "id": "G"
+   },
+   "G",
+   null,
+   {
+    "ok": false,
+    "reason": "@everyone is not a useful requirement: everybody has it."
+   }
+  ],
+  [
+   {
+    "id": "V"
+   },
+   "G",
+   "V",
+   {
+    "ok": false,
+    "reason": "That's the verified role: nobody has it before they verify, so nobody could."
+   }
+  ],
+  [
+   {
+    "id": "B",
+    "managed": true
+   },
+   "G",
+   null,
+   {
+    "ok": false,
+    "reason": "That's a bot or integration role, which members don't earn. Pick a normal role or a Linked Role."
+   }
+  ],
+  [
+   {
+    "id": "L",
+    "managed": true,
+    "tags": {
+     "guildConnections": true
+    }
+   },
+   "G",
+   null,
+   {
+    "ok": true
+   }
+  ],
+  [
+   {
+    "id": "P"
+   },
+   "G",
+   "V",
+   {
+    "ok": true
+   }
+  ]
+ ],
+ "planRequired": [
+  [
+   {
+    "current": [],
+    "guildRoleIds": [
+     "A"
+    ],
+    "addId": "A"
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A"
+    ],
+    "outcome": "added",
+    "changed": true,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "A"
+    ],
+    "guildRoleIds": [
+     "A"
+    ],
+    "addId": "A"
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A"
+    ],
+    "outcome": "already",
+    "changed": false,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "R0",
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8",
+     "R9"
+    ],
+    "guildRoleIds": [
+     "R0",
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8",
+     "R9",
+     "X"
+    ],
+    "addId": "X"
+   },
+   {
+    "ok": false,
+    "reason": "At most 10 roles can be required. Remove one first."
+   }
+  ],
+  [
+   {
+    "current": [
+     "A",
+     "B"
+    ],
+    "guildRoleIds": [
+     "A",
+     "B"
+    ],
+    "removeId": "A"
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "B"
+    ],
+    "outcome": "removed",
+    "changed": true,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "A"
+    ],
+    "guildRoleIds": [
+     "A"
+    ],
+    "removeId": "Z"
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A"
+    ],
+    "outcome": "absent",
+    "changed": false,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "A",
+     "B"
+    ],
+    "guildRoleIds": [
+     "A"
+    ],
+    "clear": true
+   },
+   {
+    "ok": true,
+    "roleIds": [],
+    "outcome": "cleared",
+    "changed": true,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "A",
+     "GONE"
+    ],
+    "guildRoleIds": [
+     "A",
+     "B"
+    ],
+    "addId": "B"
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A",
+     "B"
+    ],
+    "outcome": "added",
+    "changed": true,
+    "dropped": 1
+   }
+  ],
+  [
+   {
+    "current": [
+     "A",
+     "A"
+    ],
+    "guildRoleIds": [
+     "A"
+    ]
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A"
+    ],
+    "outcome": "unchanged",
+    "changed": false,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": null,
+    "guildRoleIds": []
+   },
+   {
+    "ok": true,
+    "roleIds": [],
+    "outcome": "unchanged",
+    "changed": false,
+    "dropped": 0
+   }
+  ],
+  [
+   {
+    "current": [
+     "A",
+     "GONE"
+    ],
+    "guildRoleIds": [
+     "A"
+    ]
+   },
+   {
+    "ok": true,
+    "roleIds": [
+     "A"
+    ],
+    "outcome": "unchanged",
+    "changed": true,
+    "dropped": 1
+   }
+  ]
+ ],
+ "fallbackProblem": [
+  [
+   null,
+   false,
+   null,
+   [],
+   "The Applications module is off (`/module enable applications`)."
+  ],
+  [
+   null,
+   true,
+   null,
+   [],
+   "The form no longer exists (`/captcha require form:none` clears it)."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": "C",
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [],
+   null
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": false,
+    "reviewChannelId": "C",
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [],
+   "The form is closed (disabled)."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": null,
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [],
+   "The form has no review channel."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": "C",
+    "questions": [],
+    "requiredRoleIds": [],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [],
+   "The form has no questions."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": "C",
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [],
+    "cooldownHours": 0
+   },
+   true,
+   "I need **Send Messages** in <#C>.",
+   [],
+   "I need **Send Messages** in <#C>."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": "C",
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [
+     "X"
+    ],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [],
+   "The form has required roles of its own, so members without them cannot use it."
+  ],
+  [
+   {
+    "id": "F",
+    "name": "Apply",
+    "enabled": true,
+    "reviewChannelId": "C",
+    "questions": [
+     {
+      "label": "Why?"
+     }
+    ],
+    "requiredRoleIds": [
+     "X"
+    ],
+    "cooldownHours": 0
+   },
+   true,
+   null,
+   [
+    "X"
+   ],
+   null
+  ]
+ ],
+ "progress": [
+  [
+   {
+    "done": 1000,
+    "total": 2000,
+    "ok": 900,
+    "failed": 5,
+    "left": 3
+   },
+   "**1,000/2,000** processed · ✅ 900 given · ⚠️ 5 failed · 🚪 3 left"
+  ],
+  [
+   {
+    "done": 0,
+    "total": 0,
+    "ok": 0,
+    "failed": 0,
+    "left": 0
+   },
+   "**0/0** processed · ✅ 0 given · ⚠️ 0 failed · 🚪 0 left"
+  ]
+ ],
+ "discordError": [
+  [
+   50013,
+   "I am missing a permission for that."
+  ],
+  [
+   50001,
+   "I can't access that channel."
+  ],
+  [
+   10003,
+   "The channel no longer exists."
+  ],
+  [
+   10011,
+   "The role no longer exists."
+  ],
+  [
+   10008,
+   "The message no longer exists."
+  ],
+  [
+   30013,
+   "This server has reached the maximum number of channels or roles."
+  ],
+  [
+   99999,
+   "boom"
+  ],
+  [
+   null,
+   "Unknown error"
+  ]
+ ],
+ "describe": [
+  [
+   {
+    "captchaRequiredRoleIds": [],
+    "captchaRoleId": "V"
+   },
+   {
+    "formId": null,
+    "form": null,
+    "problem": null
+   },
+   {
+    "roles": "None",
+    "form": "None"
+   }
+  ],
+  [
+   {
+    "captchaRequiredRoleIds": [
+     "R1",
+     "GONE",
+     "V"
+    ],
+    "captchaRoleId": "V"
+   },
+   {
+    "formId": "F",
+    "form": {
+     "name": "Apply **now**"
+    },
+    "problem": null
+   },
+   {
+    "roles": "<@&R1>, ⚠️ deleted (`GONE`), <@&V> (⚠️ verified role: ignored)",
+    "form": "**Apply **now****"
+   }
+  ],
+  [
+   {
+    "captchaRequiredRoleIds": [
+     "R1"
+    ],
+    "captchaRoleId": null
+   },
+   {
+    "formId": "F",
+    "form": null,
+    "problem": "The form could not be checked right now."
+   },
+   {
+    "roles": "<@&R1>",
+    "form": "`F` · ⚠️ The form could not be checked right now."
+   }
+  ]
+ ],
+ "keys": {
+  "timeoutJob": "captcha.timeout:900000000000000001:600000000000000001",
+  "customIds": {
+   "start": "captcha:start",
+   "answer": "captcha:answer",
+   "modalAnswer": "captcha-modal:answer",
+   "modalPanel": "captcha-modal:panel",
+   "answerField": "captcha-answer"
+  }
+ },
+ "answerModal": {
+  "custom_id": "captcha-modal:answer",
+  "title": "Enter the code",
+  "components": [
+   {
+    "type": 1,
+    "components": [
+     {
+      "type": 4,
+      "custom_id": "captcha-answer",
+      "label": "Code from the image",
+      "style": 1,
+      "min_length": 1,
+      "max_length": 16,
+      "required": true,
+      "placeholder": "Type the 6 characters"
+     }
+    ]
+   }
+  ]
+ },
+ "embedPart": [
+  [
+   {
+    "content": "Hi",
+    "embed": {
+     "title": "T",
+     "description": "D"
+    },
+    "buttons": [
+     {
+      "label": "Go",
+      "url": "https://example.com"
+     }
+    ]
+   },
+   {
+    "embed": {
+     "title": "T",
+     "description": "D"
+    },
+    "buttons": [
+     {
+      "label": "Go",
+      "url": "https://example.com",
+      "emoji": null
+     }
+    ]
+   }
+  ],
+  [
+   {
+    "content": "Only text"
+   },
+   null
+  ],
+  [
+   {
+    "embed": null,
+    "buttons": [
+     {
+      "label": "L",
+      "url": "https://example.com"
+     }
+    ]
+   },
+   {
+    "embed": null,
+    "buttons": [
+     {
+      "label": "L",
+      "url": "https://example.com",
+      "emoji": null
+     }
+    ]
+   }
+  ],
+  [
+   null,
+   null
+  ],
+  [
+   {
+    "embed": {
+     "color": 5
+    }
+   },
+   {
+    "embed": {
+     "color": 5
+    },
+    "buttons": []
+   }
+  ]
+ ],
+ "renderSticky": [
+  [
+   {
+    "content": "Welcome to {server} in {channel}, {user} @everyone",
+    "embed": null
+   },
+   {
+    "embedColor": 1122867
+   },
+   {
+    "content": "Welcome to Sticky **Guild** in <#800000000000000002>, {user} @everyone",
+    "embeds": [],
+    "components": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   {
+    "content": null,
+    "embed": {
+     "embed": {
+      "title": "{server}",
+      "description": "x"
+     },
+     "buttons": [
+      {
+       "label": "Docs",
+       "url": "https://example.com/{server}"
+      }
+     ]
+    }
+   },
+   null,
+   {
+    "embeds": [
+     {
+      "title": "Sticky **Guild**",
+      "description": "x",
+      "color": 5793266
+     }
+    ],
+    "components": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ],
+  [
+   {
+    "content": "   ",
+    "embed": null
+   },
+   null,
+   null
+  ],
+  [
+   {
+    "content": "a",
+    "embed": {
+     "embed": {
+      "color": 3
+     },
+     "buttons": []
+    }
+   },
+   {
+    "embedColor": -1
+   },
+   {
+    "content": "a",
+    "embeds": [],
+    "components": [],
+    "allowedMentions": {
+     "parse": []
+    }
+   }
+  ]
+ ],
+ "stickyNeeds": [
+  [
+   "ViewChannel",
+   "SendMessages",
+   "EmbedLinks"
+  ],
+  [
+   "ViewChannel",
+   "SendMessages"
+  ]
+ ],
+ "setResult": [
+  [
+   {
+    "created": true,
+    "hasEmbed": false,
+    "status": "sent"
+   },
+   "",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Set",
+    "description": "The sticky message in <#800000000000000002> is set.\nIt is posted now and moves back down once chat has been quiet for a few seconds."
+   }
+  ],
+  [
+   {
+    "created": false,
+    "hasEmbed": true,
+    "status": "current"
+   },
+   "\nnote",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Updated",
+    "description": "The sticky message in <#800000000000000002> is updated (with an embed).\nIt is already the last message there.\nnote"
+   }
+  ],
+  [
+   {
+    "created": true,
+    "hasEmbed": false,
+    "status": "off"
+   },
+   "",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Set",
+    "description": "The sticky message in <#800000000000000002> is set.\n⚠️ The **Sticky Messages** module is off, so nothing is posted yet. Turn it on with `/module enable sticky`."
+   }
+  ],
+  [
+   {
+    "created": true,
+    "hasEmbed": false,
+    "status": "perms"
+   },
+   "",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Set",
+    "description": "The sticky message in <#800000000000000002> is set.\n⚠️ I can't post there right now. Check my permissions in the channel."
+   }
+  ],
+  [
+   {
+    "created": true,
+    "hasEmbed": false,
+    "status": "failed"
+   },
+   "",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Set",
+    "description": "The sticky message in <#800000000000000002> is set.\nIt is saved but could not be posted just now; it is tried again after the next message."
+   }
+  ],
+  [
+   {
+    "created": true,
+    "hasEmbed": false,
+    "status": "gone"
+   },
+   "",
+   {
+    "color": 5763719,
+    "title": "✅  Sticky Message Set",
+    "description": "The sticky message in <#800000000000000002> is set.\nIt is saved but could not be posted just now; it is tried again after the next message."
+   }
+  ]
+ ],
+ "variableNotes": [
+  [
+   {
+    "content": "Hi {server}"
+   },
+   ""
+  ],
+  [
+   {
+    "content": "Hi {user}"
+   },
+   "\n⚠️ A sticky message has no member, so user variables like `{user}` are posted as written. Server and channel variables work."
+  ],
+  [
+   {
+    "content": "Hi {user.name} {nope}"
+   },
+   "\n⚠️ Unknown variables are shown as typed: `{nope}`\n⚠️ A sticky message has no member, so user variables like `{user}` are posted as written. Server and channel variables work."
+  ],
+  [
+   {
+    "content": "Hi {USER.Mention}"
+   },
+   "\n⚠️ A sticky message has no member, so user variables like `{user}` are posted as written. Server and channel variables work."
+  ],
+  [
+   {
+    "content": "{user.}"
+   },
+   "\n⚠️ Unknown variables are shown as typed: `{user.}`"
+  ],
+  [
+   {
+    "content": null,
+    "embed": {
+     "embed": {
+      "title": "{user}"
+     },
+     "buttons": []
+    }
+   },
+   "\n⚠️ A sticky message has no member, so user variables like `{user}` are posted as written. Server and channel variables work."
+  ],
+  [
+   {
+    "content": "{unknown_thing} {channel}"
+   },
+   "\n⚠️ Unknown variables are shown as typed: `{unknown_thing}`"
+  ],
+  [
+   {},
+   ""
+  ]
+ ],
+ "stickyModal": [
+  {
+   "custom_id": "sticky-modal:800000000000000002",
+   "title": "Sticky message",
+   "components": [
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 4,
+       "custom_id": "sticky-content",
+       "label": "Sticky message text",
+       "style": 2,
+       "max_length": 2000,
+       "required": false,
+       "placeholder": "Rules, links, a reminder … {server} and {channel} work.",
+       "value": "Current text"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "custom_id": "sticky-modal:800000000000000003",
+   "title": "Sticky message",
+   "components": [
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 4,
+       "custom_id": "sticky-content",
+       "label": "Sticky message text",
+       "style": 2,
+       "max_length": 2000,
+       "required": false,
+       "placeholder": "Rules, links, a reminder … {server} and {channel} work."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "custom_id": "sticky-modal:800000000000000004",
+   "title": "Sticky message",
+   "components": [
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 4,
+       "custom_id": "sticky-content",
+       "label": "Sticky message text",
+       "style": 2,
+       "max_length": 2000,
+       "required": false,
+       "placeholder": "Rules, links, a reminder … {server} and {channel} work.",
+       "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

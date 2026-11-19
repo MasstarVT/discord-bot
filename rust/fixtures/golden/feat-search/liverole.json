@@ -1,0 +1,734 @@
+{
+ "streamLabel": [
+  [
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   "Twitch"
+  ],
+  [
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   "Streaming"
+  ],
+  [
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "**Big**_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   "\\*\\*Big\\*\\*\\_xxxxxxxxxxxxxxxxxx…"
+  ],
+  [
+   {
+    "activities": [
+     {
+      "type": 0,
+      "name": "Game"
+     }
+    ]
+   },
+   null
+  ],
+  [
+   null,
+   null
+  ]
+ ],
+ "safeStreamUrl": [
+  [
+   "https://www.twitch.tv/x",
+   "https://www.twitch.tv/x"
+  ],
+  [
+   "http://twitch.tv/x",
+   "http://twitch.tv/x"
+  ],
+  [
+   "https://youtu.be/abc",
+   "https://youtu.be/abc"
+  ],
+  [
+   "https://m.youtube.com/watch?v=1",
+   "https://m.youtube.com/watch?v=1"
+  ],
+  [
+   "https://evil.example/twitch.tv",
+   null
+  ],
+  [
+   "https://twitch.tv.evil.example/",
+   null
+  ],
+  [
+   "javascript:alert(1)",
+   null
+  ],
+  [
+   "https://user:pw@twitch.tv/x",
+   null
+  ],
+  [
+   "https://twitch.tv/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   null
+  ],
+  [
+   "not a url",
+   null
+  ],
+  [
+   "HTTPS://TWITCH.TV/Path",
+   "https://twitch.tv/Path"
+  ],
+  [
+   "https://twitch.tv",
+   "https://twitch.tv/"
+  ],
+  [
+   "https://www.youtube.com/watch?v=a b",
+   "https://www.youtube.com/watch?v=a%20b"
+  ]
+ ],
+ "streamVars": [
+  [
+   {
+    "type": 1,
+    "name": "Twitch",
+    "url": "https://www.twitch.tv/someone",
+    "details": "Ranked",
+    "state": "Valorant"
+   },
+   {
+    "url": "https://www.twitch.tv/someone",
+    "platform": "Twitch",
+    "title": "Ranked",
+    "game": "Valorant"
+   }
+  ],
+  [
+   {
+    "type": 1,
+    "name": "Twitch",
+    "url": "https://evil.example/x",
+    "details": "  **Bold** title  ",
+    "state": ""
+   },
+   {
+    "url": "",
+    "platform": "Twitch",
+    "title": "\\*\\*Bold\\*\\* title",
+    "game": ""
+   }
+  ],
+  [
+   {
+    "type": 1,
+    "name": "",
+    "url": "https://www.twitch.tv/someone",
+    "details": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "state": "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
+   },
+   {
+    "url": "https://www.twitch.tv/someone",
+    "platform": "Streaming",
+    "title": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd…",
+    "game": "sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss…"
+   }
+  ],
+  [
+   {
+    "type": 1,
+    "name": "Twitch",
+    "url": null,
+    "details": null,
+    "state": null
+   },
+   {
+    "url": "",
+    "platform": "Twitch",
+    "title": "",
+    "game": ""
+   }
+  ]
+ ],
+ "planMember": [
+  [
+   "sync",
+   true,
+   true,
+   true,
+   null
+  ],
+  [
+   "sync",
+   true,
+   true,
+   false,
+   "add"
+  ],
+  [
+   "sync",
+   true,
+   false,
+   true,
+   "remove"
+  ],
+  [
+   "sync",
+   true,
+   false,
+   false,
+   null
+  ],
+  [
+   "sync",
+   false,
+   true,
+   true,
+   "remove"
+  ],
+  [
+   "sync",
+   false,
+   true,
+   false,
+   null
+  ],
+  [
+   "sync",
+   false,
+   false,
+   true,
+   "remove"
+  ],
+  [
+   "sync",
+   false,
+   false,
+   false,
+   null
+  ],
+  [
+   "clear",
+   true,
+   true,
+   true,
+   "remove"
+  ],
+  [
+   "clear",
+   true,
+   true,
+   false,
+   null
+  ],
+  [
+   "clear",
+   true,
+   false,
+   true,
+   "remove"
+  ],
+  [
+   "clear",
+   true,
+   false,
+   false,
+   null
+  ],
+  [
+   "clear",
+   false,
+   true,
+   true,
+   "remove"
+  ],
+  [
+   "clear",
+   false,
+   true,
+   false,
+   null
+  ],
+  [
+   "clear",
+   false,
+   false,
+   true,
+   "remove"
+  ],
+  [
+   "clear",
+   false,
+   false,
+   false,
+   null
+  ]
+ ],
+ "planSync": [
+  [
+   "sync",
+   [
+    "1",
+    "2",
+    "3"
+   ],
+   [
+    "2",
+    "4",
+    "4",
+    "5"
+   ],
+   [
+    "6",
+    "1",
+    "7"
+   ],
+   [
+    "4",
+    "2"
+   ],
+   {
+    "add": [
+     "4"
+    ],
+    "remove": [
+     "1",
+     "3"
+    ],
+    "check": [
+     "6",
+     "7"
+    ]
+   }
+  ],
+  [
+   "clear",
+   [
+    "1",
+    "1",
+    "2"
+   ],
+   [
+    "3"
+   ],
+   [
+    "4"
+   ],
+   [],
+   {
+    "add": [],
+    "remove": [
+     "1",
+     "2"
+    ],
+    "check": []
+   }
+  ],
+  [
+   "sync",
+   [],
+   [],
+   [],
+   [],
+   {
+    "add": [],
+    "remove": [],
+    "check": []
+   }
+  ]
+ ],
+ "meets": [
+  [
+   null,
+   true,
+   [
+    "1"
+   ],
+   "G",
+   true
+  ],
+  [
+   "G",
+   true,
+   [],
+   "G",
+   true
+  ],
+  [
+   "R",
+   false,
+   [
+    "R"
+   ],
+   "G",
+   false
+  ],
+  [
+   "R",
+   true,
+   [
+    "R"
+   ],
+   "G",
+   true
+  ],
+  [
+   "R",
+   true,
+   [
+    "X"
+   ],
+   "G",
+   false
+  ]
+ ],
+ "classify": [
+  [
+   10007,
+   "gone"
+  ],
+  [
+   10011,
+   "role-missing"
+  ],
+  [
+   50013,
+   "perms"
+  ],
+  [
+   50001,
+   "perms"
+  ],
+  [
+   500,
+   "error"
+  ],
+  [
+   null,
+   "error"
+  ]
+ ],
+ "formatSyncResult": [
+  [
+   null,
+   "⏳ Still syncing in the background. Check `/liverole status` in a minute."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "settings"
+   },
+   "⚠️ Could not sync right now (settings unavailable). It runs again on the next restart."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "off"
+   },
+   "ℹ️ Not synced: the live role is off."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "no-role"
+   },
+   "ℹ️ Not synced: no live role is set."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "role-missing"
+   },
+   "⚠️ Not synced: the live role was deleted."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "cannot-manage",
+    "reason": "That role is above my highest role."
+   },
+   "⚠️ Not synced: That role is above my highest role."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "presence-unavailable"
+   },
+   "⚠️ Not synced: this bot runs without presence data (`DISABLE_PRESENCES=1`)."
+  ],
+  [
+   {
+    "ok": false,
+    "code": "error"
+   },
+   "⚠️ Sync failed. Check the bot logs."
+  ],
+  [
+   {
+    "ok": true,
+    "mode": "sync",
+    "added": 0,
+    "removed": 0,
+    "failed": 0,
+    "deferred": 0,
+    "addsBlocked": null,
+    "complete": true
+   },
+   "Everyone is already in sync."
+  ],
+  [
+   {
+    "ok": true,
+    "mode": "sync",
+    "added": 1234,
+    "removed": 2,
+    "failed": 3,
+    "deferred": 4,
+    "addsBlocked": "That role has dangerous permissions: Administrator.",
+    "complete": false
+   },
+   "Synced: gave it to **1,234**, removed it from **2**.\n⚠️ **3** change(s) failed. Check that my role is above the live role and that I have **Manage Roles**.\nℹ️ **4** more change(s) were left for later (at most 50 per sync). Run `/liverole enable` again to continue.\n⚠️ Not giving the role to anyone: That role has dangerous permissions: Administrator.\nℹ️ Only cached members were checked. Members who are offline may keep the role until they next stream."
+  ],
+  [
+   {
+    "ok": true,
+    "mode": "clear",
+    "added": 0,
+    "removed": 0,
+    "failed": 0,
+    "deferred": 0,
+    "addsBlocked": null,
+    "complete": true
+   },
+   "Nobody had the live role."
+  ],
+  [
+   {
+    "ok": true,
+    "mode": "clear",
+    "added": 0,
+    "removed": 5,
+    "failed": 0,
+    "deferred": 9,
+    "addsBlocked": null,
+    "complete": true
+   },
+   "Removed the live role from **5** member(s).\nℹ️ **9** more change(s) were left for later (at most 50 per sync). Run `/liverole disable` again to continue."
+  ]
+ ],
+ "problems": [
+  [
+   {
+    "enabled": true,
+    "liveRoleId": null,
+    "roleExists": false,
+    "manage": null,
+    "dangerousNames": [],
+    "requiredRoleId": null,
+    "requiredRoleExists": true,
+    "holderCount": 0
+   },
+   [
+    "⚠️ The module is on but no live role is set. Use `/liverole set`."
+   ]
+  ],
+  [
+   {
+    "enabled": false,
+    "liveRoleId": "R",
+    "roleExists": false,
+    "manage": null,
+    "dangerousNames": [],
+    "requiredRoleId": "Q",
+    "requiredRoleExists": false,
+    "holderCount": 3
+   },
+   [
+    "⚠️ The live role was deleted. Pick a new one with `/liverole set`.",
+    "⚠️ The required role was deleted, so nobody qualifies. Change it with `/liverole require`.",
+    "ℹ️ **3** member(s) still have the live role. `/liverole disable` removes it from them."
+   ]
+  ],
+  [
+   {
+    "enabled": true,
+    "liveRoleId": "R",
+    "roleExists": true,
+    "manage": {
+     "ok": false,
+     "reason": "That role is above my highest role."
+    },
+    "dangerousNames": [
+     "Administrator",
+     "Manage Roles"
+    ],
+    "requiredRoleId": null,
+    "requiredRoleExists": true,
+    "holderCount": 1500
+   },
+   [
+    "⚠️ That role is above my highest role. I can't give or remove the live role until this is fixed.",
+    "⚠️ The live role has dangerous permissions (Administrator, Manage Roles). I won't give it to anyone until they are removed."
+   ]
+  ],
+  [
+   {
+    "enabled": false,
+    "liveRoleId": "R",
+    "roleExists": true,
+    "manage": {
+     "ok": true
+    },
+    "dangerousNames": [],
+    "requiredRoleId": null,
+    "requiredRoleExists": true,
+    "holderCount": 0
+   },
+   []
+  ]
+ ],
+ "shouldHandle": [
+  [
+   null,
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   null,
+   true
+  ],
+  [
+   null,
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   {
+    "liveRoleEnabled": false,
+    "liveRoleId": "R"
+   },
+   false
+  ],
+  [
+   null,
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   {
+    "liveRoleEnabled": true,
+    "liveRoleId": null
+   },
+   false
+  ],
+  [
+   null,
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   {
+    "liveRoleEnabled": true,
+    "liveRoleId": "R"
+   },
+   true
+  ],
+  [
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   null,
+   false
+  ],
+  [
+   {
+    "activities": [
+     {
+      "type": 1,
+      "name": "Twitch",
+      "url": "https://www.twitch.tv/someone",
+      "details": "Ranked",
+      "state": "Valorant"
+     }
+    ]
+   },
+   {
+    "activities": []
+   },
+   null,
+   true
+  ]
+ ],
+ "DEFAULT_LIVE_ANNOUNCE_MESSAGE": "🔴 {user} is now live on {platform}!\n{url}"
+}

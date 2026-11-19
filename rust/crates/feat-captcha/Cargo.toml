@@ -1,0 +1,32 @@
+[package]
+name = "feat-captcha"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+bot-config.workspace = true
+bot-db.workspace = true
+bot-util.workspace = true
+bot-core.workspace = true
+bot-cards.workspace = true
+feat-welcome.workspace = true
+feat-moderation.workspace = true
+feat-embeds.workspace = true
+serenity.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+sha2.workspace = true
+hex.workspace = true
+rand.workspace = true
+# The captcha image is drawn like bot-cards draws its cards (same version, so its paths and pixmaps are shared).
+tiny-skia = { version = "0.11.4", default-features = false, features = ["std", "simd", "png-format"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+sqlx.workspace = true

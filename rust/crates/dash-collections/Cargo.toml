@@ -1,0 +1,39 @@
+[package]
+name = "dash-collections"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+bot-config.workspace = true
+bot-db.workspace = true
+bot-util.workspace = true
+bot-core.workspace = true
+dash-schema.workspace = true
+feat-feeds.workspace = true
+serenity.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+async-trait.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+unicode-normalization.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+sqlx.workspace = true
+feat-economy.workspace = true
+feat-starboard-stats.workspace = true
+feat-tempvoice.workspace = true
+feat-tickets.workspace = true
+feat-reactionroles.workspace = true
+feat-achievements.workspace = true
+feat-giveaways-polls.workspace = true
+feat-moderation.workspace = true
+feat-translation.workspace = true
+feat-automations.workspace = true

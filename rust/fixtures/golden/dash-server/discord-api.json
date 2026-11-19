@@ -1,0 +1,4312 @@
+{
+ "routes": [
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001?with_counts=true",
+   "status": 200,
+   "body": {
+    "id": "200000000000000001",
+    "name": "Zeta",
+    "icon": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "owner_id": "555555555555555555",
+    "approximate_member_count": 42,
+    "premium_tier": 2,
+    "roles": [
+     {
+      "id": "200000000000000001",
+      "name": "@everyone",
+      "position": 0,
+      "color": 0,
+      "managed": false,
+      "permissions": "1024"
+     },
+     {
+      "id": "410000000000000001",
+      "name": "Bot",
+      "position": 5,
+      "color": 0,
+      "managed": true,
+      "permissions": "268435456"
+     },
+     {
+      "id": "410000000000000002",
+      "name": "Mods",
+      "position": 4,
+      "color": 16711680,
+      "managed": false,
+      "permissions": "2"
+     },
+     {
+      "id": "410000000000000005",
+      "name": "Tie",
+      "position": 2,
+      "color": 0,
+      "managed": false,
+      "permissions": "0"
+     },
+     {
+      "id": "410000000000000003",
+      "name": "Fans",
+      "position": 2,
+      "color": 65280,
+      "managed": false,
+      "mentionable": true,
+      "permissions": "0"
+     },
+     {
+      "id": "410000000000000004",
+      "name": "Owner",
+      "position": 9,
+      "color": 0,
+      "managed": false,
+      "permissions": "8"
+     },
+     {
+      "id": "410000000000000010",
+      "name": "Hex",
+      "position": 1,
+      "permissions": "0x8"
+     },
+     {
+      "id": "410000000000000011",
+      "name": "Spaces",
+      "position": 1.5,
+      "permissions": " 4 "
+     },
+     {
+      "id": "410000000000000012",
+      "name": "Float",
+      "position": 1,
+      "permissions": 1.5,
+      "color": 16777216
+     },
+     {
+      "id": "410000000000000013",
+      "name": "Empty",
+      "permissions": "",
+      "color": 255
+     },
+     {
+      "id": "410000000000000014",
+      "name": "Junk",
+      "position": -1,
+      "permissions": "abc",
+      "mentionable": "yes"
+     },
+     {
+      "id": "410000000000000015",
+      "name": 7,
+      "position": 3,
+      "permissions": 8192
+     },
+     {
+      "id": "bad",
+      "name": "bad"
+     }
+    ],
+    "emojis": [
+     {
+      "id": "610000000000000002",
+      "name": "zebra"
+     },
+     {
+      "id": "610000000000000001",
+      "name": "apple",
+      "animated": true
+     },
+     {
+      "id": null,
+      "name": "✨"
+     },
+     {
+      "id": "610000000000000003",
+      "name": "Apple"
+     },
+     {
+      "id": "610000000000000004",
+      "name": "item10"
+     },
+     {
+      "id": "610000000000000005",
+      "name": "item9"
+     },
+     {
+      "id": "610000000000000006",
+      "name": "éclair"
+     },
+     {
+      "id": "610000000000000007",
+      "name": "_under"
+     },
+     {
+      "id": "610000000000000008",
+      "name": 3
+     }
+    ]
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/channels",
+   "status": 200,
+   "body": [
+    {
+     "id": "310000000000000001",
+     "type": 2,
+     "name": "voice-top",
+     "position": 0
+    },
+    {
+     "id": "310000000000000002",
+     "type": 0,
+     "name": "text-top",
+     "position": 5
+    },
+    {
+     "id": "310000000000000003",
+     "type": 4,
+     "name": "CAT B",
+     "position": 2
+    },
+    {
+     "id": "310000000000000004",
+     "type": 4,
+     "name": "CAT A",
+     "position": 1
+    },
+    {
+     "id": "310000000000000005",
+     "type": 0,
+     "name": "b-text",
+     "parent_id": "310000000000000003",
+     "position": 1
+    },
+    {
+     "id": "310000000000000006",
+     "type": 2,
+     "name": "b-voice",
+     "parent_id": "310000000000000003",
+     "position": 0
+    },
+    {
+     "id": "310000000000000007",
+     "type": 5,
+     "name": "a-news",
+     "parent_id": "310000000000000004",
+     "position": 3,
+     "nsfw": true
+    },
+    {
+     "id": "310000000000000008",
+     "type": 15,
+     "name": "a-forum",
+     "parent_id": "310000000000000004",
+     "position": 1
+    },
+    {
+     "id": "310000000000000009",
+     "type": 0,
+     "name": "orphan",
+     "parent_id": "399999999999999999",
+     "position": 9
+    },
+    {
+     "id": "310000000000000010",
+     "type": 13,
+     "name": "stage",
+     "position": 5
+    },
+    {
+     "id": "310000000000000011",
+     "type": 99,
+     "position": "x"
+    },
+    {
+     "id": "310000000000000012",
+     "type": 1.5,
+     "name": "float-type"
+    },
+    {
+     "id": "bad",
+     "type": 0
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/123456789012345678",
+   "status": 200,
+   "body": {
+    "roles": [
+     "410000000000000001",
+     "x",
+     "410000000000000099"
+    ]
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000003?with_counts=true",
+   "status": 200,
+   "body": {
+    "id": "200000000000000003",
+    "name": "Zeta",
+    "icon": "zz",
+    "owner_id": "555555555555555555",
+    "premium_tier": 2,
+    "member_count": 7,
+    "verification_level": 2,
+    "premium_subscription_count": 3.5
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000003/channels",
+   "status": 200,
+   "body": [],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000003/members/123456789012345678",
+   "status": 200,
+   "body": {
+    "roles": [
+     "410000000000000004"
+    ]
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000003/roles",
+   "status": 200,
+   "body": [
+    {
+     "id": "200000000000000003",
+     "name": "@everyone",
+     "position": 0,
+     "permissions": "1"
+    },
+    {
+     "id": "410000000000000004",
+     "position": 3,
+     "permissions": "268435456"
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000003/emojis",
+   "status": 200,
+   "body": [
+    {
+     "id": "610000000000000009",
+     "name": "z"
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000004?with_counts=true",
+   "status": 200,
+   "body": {},
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000004/channels",
+   "status": 403,
+   "body": {
+    "message": "Missing Access",
+    "code": 50001
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000004/members/123456789012345678",
+   "status": 200,
+   "body": {},
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/111111111111111111",
+   "status": 200,
+   "body": {
+    "roles": [
+     "400000000000000001",
+     "x",
+     5
+    ],
+    "user": {
+     "id": "111111111111111111",
+     "username": "alice"
+    }
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/999999999999999999",
+   "status": 404,
+   "body": {
+    "code": 10007
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/search?query=al+ice&limit=25",
+   "status": 200,
+   "body": [
+    {
+     "user": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "global_name": "Alice",
+      "avatar": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bot": false
+     },
+     "nick": "Al"
+    },
+    {
+     "user": {
+      "id": "x"
+     }
+    },
+    {
+     "nick": "no user"
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/search?query=%26%3D%C3%A9&limit=25",
+   "status": 200,
+   "body": [],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000001/members/search?query=bob&limit=1",
+   "status": 200,
+   "body": [
+    {
+     "user": {
+      "id": "999999999999999999",
+      "username": 7,
+      "bot": true
+     }
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/111111111111111111",
+   "status": 200,
+   "body": {
+    "id": "111111111111111111",
+    "username": "alice",
+    "global_name": null,
+    "avatar": "a_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/999999999999999999",
+   "status": 404,
+   "body": {
+    "code": 10013
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/555555555555555555",
+   "status": 200,
+   "body": {
+    "id": "555555555555555555"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/@me",
+   "status": 200,
+   "body": {
+    "id": "111111111111111111",
+    "username": "alice",
+    "global_name": "Alice",
+    "avatar": null
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/@me/guilds?limit=200",
+   "status": 200,
+   "body": [
+    {
+     "id": "200000000000000001",
+     "name": "Z",
+     "icon": null,
+     "owner": false,
+     "permissions": "32"
+    },
+    {
+     "id": "bad"
+    },
+    {
+     "id": "200000000000000002",
+     "owner": "yes",
+     "permissions": 8
+    },
+    null
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/@me/guilds?limit=200&after=0",
+   "status": 200,
+   "body": [
+    {
+     "id": "300000000000000000",
+     "name": ""
+    },
+    {
+     "id": "300000000000000001",
+     "name": "g1"
+    },
+    {
+     "id": "300000000000000002",
+     "name": ""
+    },
+    {
+     "id": "300000000000000003",
+     "name": "g3"
+    },
+    {
+     "id": "300000000000000004",
+     "name": ""
+    },
+    {
+     "id": "300000000000000005",
+     "name": "g5"
+    },
+    {
+     "id": "300000000000000006",
+     "name": ""
+    },
+    {
+     "id": "300000000000000007",
+     "name": "g7"
+    },
+    {
+     "id": "300000000000000008",
+     "name": ""
+    },
+    {
+     "id": "300000000000000009",
+     "name": "g9"
+    },
+    {
+     "id": "300000000000000010",
+     "name": ""
+    },
+    {
+     "id": "300000000000000011",
+     "name": "g11"
+    },
+    {
+     "id": "300000000000000012",
+     "name": ""
+    },
+    {
+     "id": "300000000000000013",
+     "name": "g13"
+    },
+    {
+     "id": "300000000000000014",
+     "name": ""
+    },
+    {
+     "id": "300000000000000015",
+     "name": "g15"
+    },
+    {
+     "id": "300000000000000016",
+     "name": ""
+    },
+    {
+     "id": "300000000000000017",
+     "name": "g17"
+    },
+    {
+     "id": "300000000000000018",
+     "name": ""
+    },
+    {
+     "id": "300000000000000019",
+     "name": "g19"
+    },
+    {
+     "id": "300000000000000020",
+     "name": ""
+    },
+    {
+     "id": "300000000000000021",
+     "name": "g21"
+    },
+    {
+     "id": "300000000000000022",
+     "name": ""
+    },
+    {
+     "id": "300000000000000023",
+     "name": "g23"
+    },
+    {
+     "id": "300000000000000024",
+     "name": ""
+    },
+    {
+     "id": "300000000000000025",
+     "name": "g25"
+    },
+    {
+     "id": "300000000000000026",
+     "name": ""
+    },
+    {
+     "id": "300000000000000027",
+     "name": "g27"
+    },
+    {
+     "id": "300000000000000028",
+     "name": ""
+    },
+    {
+     "id": "300000000000000029",
+     "name": "g29"
+    },
+    {
+     "id": "300000000000000030",
+     "name": ""
+    },
+    {
+     "id": "300000000000000031",
+     "name": "g31"
+    },
+    {
+     "id": "300000000000000032",
+     "name": ""
+    },
+    {
+     "id": "300000000000000033",
+     "name": "g33"
+    },
+    {
+     "id": "300000000000000034",
+     "name": ""
+    },
+    {
+     "id": "300000000000000035",
+     "name": "g35"
+    },
+    {
+     "id": "300000000000000036",
+     "name": ""
+    },
+    {
+     "id": "300000000000000037",
+     "name": "g37"
+    },
+    {
+     "id": "300000000000000038",
+     "name": ""
+    },
+    {
+     "id": "300000000000000039",
+     "name": "g39"
+    },
+    {
+     "id": "300000000000000040",
+     "name": ""
+    },
+    {
+     "id": "300000000000000041",
+     "name": "g41"
+    },
+    {
+     "id": "300000000000000042",
+     "name": ""
+    },
+    {
+     "id": "300000000000000043",
+     "name": "g43"
+    },
+    {
+     "id": "300000000000000044",
+     "name": ""
+    },
+    {
+     "id": "300000000000000045",
+     "name": "g45"
+    },
+    {
+     "id": "300000000000000046",
+     "name": ""
+    },
+    {
+     "id": "300000000000000047",
+     "name": "g47"
+    },
+    {
+     "id": "300000000000000048",
+     "name": ""
+    },
+    {
+     "id": "300000000000000049",
+     "name": "g49"
+    },
+    {
+     "id": "300000000000000050",
+     "name": ""
+    },
+    {
+     "id": "300000000000000051",
+     "name": "g51"
+    },
+    {
+     "id": "300000000000000052",
+     "name": ""
+    },
+    {
+     "id": "300000000000000053",
+     "name": "g53"
+    },
+    {
+     "id": "300000000000000054",
+     "name": ""
+    },
+    {
+     "id": "300000000000000055",
+     "name": "g55"
+    },
+    {
+     "id": "300000000000000056",
+     "name": ""
+    },
+    {
+     "id": "300000000000000057",
+     "name": "g57"
+    },
+    {
+     "id": "300000000000000058",
+     "name": ""
+    },
+    {
+     "id": "300000000000000059",
+     "name": "g59"
+    },
+    {
+     "id": "300000000000000060",
+     "name": ""
+    },
+    {
+     "id": "300000000000000061",
+     "name": "g61"
+    },
+    {
+     "id": "300000000000000062",
+     "name": ""
+    },
+    {
+     "id": "300000000000000063",
+     "name": "g63"
+    },
+    {
+     "id": "300000000000000064",
+     "name": ""
+    },
+    {
+     "id": "300000000000000065",
+     "name": "g65"
+    },
+    {
+     "id": "300000000000000066",
+     "name": ""
+    },
+    {
+     "id": "300000000000000067",
+     "name": "g67"
+    },
+    {
+     "id": "300000000000000068",
+     "name": ""
+    },
+    {
+     "id": "300000000000000069",
+     "name": "g69"
+    },
+    {
+     "id": "300000000000000070",
+     "name": ""
+    },
+    {
+     "id": "300000000000000071",
+     "name": "g71"
+    },
+    {
+     "id": "300000000000000072",
+     "name": ""
+    },
+    {
+     "id": "300000000000000073",
+     "name": "g73"
+    },
+    {
+     "id": "300000000000000074",
+     "name": ""
+    },
+    {
+     "id": "300000000000000075",
+     "name": "g75"
+    },
+    {
+     "id": "300000000000000076",
+     "name": ""
+    },
+    {
+     "id": "300000000000000077",
+     "name": "g77"
+    },
+    {
+     "id": "300000000000000078",
+     "name": ""
+    },
+    {
+     "id": "300000000000000079",
+     "name": "g79"
+    },
+    {
+     "id": "300000000000000080",
+     "name": ""
+    },
+    {
+     "id": "300000000000000081",
+     "name": "g81"
+    },
+    {
+     "id": "300000000000000082",
+     "name": ""
+    },
+    {
+     "id": "300000000000000083",
+     "name": "g83"
+    },
+    {
+     "id": "300000000000000084",
+     "name": ""
+    },
+    {
+     "id": "300000000000000085",
+     "name": "g85"
+    },
+    {
+     "id": "300000000000000086",
+     "name": ""
+    },
+    {
+     "id": "300000000000000087",
+     "name": "g87"
+    },
+    {
+     "id": "300000000000000088",
+     "name": ""
+    },
+    {
+     "id": "300000000000000089",
+     "name": "g89"
+    },
+    {
+     "id": "300000000000000090",
+     "name": ""
+    },
+    {
+     "id": "300000000000000091",
+     "name": "g91"
+    },
+    {
+     "id": "300000000000000092",
+     "name": ""
+    },
+    {
+     "id": "300000000000000093",
+     "name": "g93"
+    },
+    {
+     "id": "300000000000000094",
+     "name": ""
+    },
+    {
+     "id": "300000000000000095",
+     "name": "g95"
+    },
+    {
+     "id": "300000000000000096",
+     "name": ""
+    },
+    {
+     "id": "300000000000000097",
+     "name": "g97"
+    },
+    {
+     "id": "300000000000000098",
+     "name": ""
+    },
+    {
+     "id": "300000000000000099",
+     "name": "g99"
+    },
+    {
+     "id": "300000000000000100",
+     "name": ""
+    },
+    {
+     "id": "300000000000000101",
+     "name": "g101"
+    },
+    {
+     "id": "300000000000000102",
+     "name": ""
+    },
+    {
+     "id": "300000000000000103",
+     "name": "g103"
+    },
+    {
+     "id": "300000000000000104",
+     "name": ""
+    },
+    {
+     "id": "300000000000000105",
+     "name": "g105"
+    },
+    {
+     "id": "300000000000000106",
+     "name": ""
+    },
+    {
+     "id": "300000000000000107",
+     "name": "g107"
+    },
+    {
+     "id": "300000000000000108",
+     "name": ""
+    },
+    {
+     "id": "300000000000000109",
+     "name": "g109"
+    },
+    {
+     "id": "300000000000000110",
+     "name": ""
+    },
+    {
+     "id": "300000000000000111",
+     "name": "g111"
+    },
+    {
+     "id": "300000000000000112",
+     "name": ""
+    },
+    {
+     "id": "300000000000000113",
+     "name": "g113"
+    },
+    {
+     "id": "300000000000000114",
+     "name": ""
+    },
+    {
+     "id": "300000000000000115",
+     "name": "g115"
+    },
+    {
+     "id": "300000000000000116",
+     "name": ""
+    },
+    {
+     "id": "300000000000000117",
+     "name": "g117"
+    },
+    {
+     "id": "300000000000000118",
+     "name": ""
+    },
+    {
+     "id": "300000000000000119",
+     "name": "g119"
+    },
+    {
+     "id": "300000000000000120",
+     "name": ""
+    },
+    {
+     "id": "300000000000000121",
+     "name": "g121"
+    },
+    {
+     "id": "300000000000000122",
+     "name": ""
+    },
+    {
+     "id": "300000000000000123",
+     "name": "g123"
+    },
+    {
+     "id": "300000000000000124",
+     "name": ""
+    },
+    {
+     "id": "300000000000000125",
+     "name": "g125"
+    },
+    {
+     "id": "300000000000000126",
+     "name": ""
+    },
+    {
+     "id": "300000000000000127",
+     "name": "g127"
+    },
+    {
+     "id": "300000000000000128",
+     "name": ""
+    },
+    {
+     "id": "300000000000000129",
+     "name": "g129"
+    },
+    {
+     "id": "300000000000000130",
+     "name": ""
+    },
+    {
+     "id": "300000000000000131",
+     "name": "g131"
+    },
+    {
+     "id": "300000000000000132",
+     "name": ""
+    },
+    {
+     "id": "300000000000000133",
+     "name": "g133"
+    },
+    {
+     "id": "300000000000000134",
+     "name": ""
+    },
+    {
+     "id": "300000000000000135",
+     "name": "g135"
+    },
+    {
+     "id": "300000000000000136",
+     "name": ""
+    },
+    {
+     "id": "300000000000000137",
+     "name": "g137"
+    },
+    {
+     "id": "300000000000000138",
+     "name": ""
+    },
+    {
+     "id": "300000000000000139",
+     "name": "g139"
+    },
+    {
+     "id": "300000000000000140",
+     "name": ""
+    },
+    {
+     "id": "300000000000000141",
+     "name": "g141"
+    },
+    {
+     "id": "300000000000000142",
+     "name": ""
+    },
+    {
+     "id": "300000000000000143",
+     "name": "g143"
+    },
+    {
+     "id": "300000000000000144",
+     "name": ""
+    },
+    {
+     "id": "300000000000000145",
+     "name": "g145"
+    },
+    {
+     "id": "300000000000000146",
+     "name": ""
+    },
+    {
+     "id": "300000000000000147",
+     "name": "g147"
+    },
+    {
+     "id": "300000000000000148",
+     "name": ""
+    },
+    {
+     "id": "300000000000000149",
+     "name": "g149"
+    },
+    {
+     "id": "300000000000000150",
+     "name": ""
+    },
+    {
+     "id": "300000000000000151",
+     "name": "g151"
+    },
+    {
+     "id": "300000000000000152",
+     "name": ""
+    },
+    {
+     "id": "300000000000000153",
+     "name": "g153"
+    },
+    {
+     "id": "300000000000000154",
+     "name": ""
+    },
+    {
+     "id": "300000000000000155",
+     "name": "g155"
+    },
+    {
+     "id": "300000000000000156",
+     "name": ""
+    },
+    {
+     "id": "300000000000000157",
+     "name": "g157"
+    },
+    {
+     "id": "300000000000000158",
+     "name": ""
+    },
+    {
+     "id": "300000000000000159",
+     "name": "g159"
+    },
+    {
+     "id": "300000000000000160",
+     "name": ""
+    },
+    {
+     "id": "300000000000000161",
+     "name": "g161"
+    },
+    {
+     "id": "300000000000000162",
+     "name": ""
+    },
+    {
+     "id": "300000000000000163",
+     "name": "g163"
+    },
+    {
+     "id": "300000000000000164",
+     "name": ""
+    },
+    {
+     "id": "300000000000000165",
+     "name": "g165"
+    },
+    {
+     "id": "300000000000000166",
+     "name": ""
+    },
+    {
+     "id": "300000000000000167",
+     "name": "g167"
+    },
+    {
+     "id": "300000000000000168",
+     "name": ""
+    },
+    {
+     "id": "300000000000000169",
+     "name": "g169"
+    },
+    {
+     "id": "300000000000000170",
+     "name": ""
+    },
+    {
+     "id": "300000000000000171",
+     "name": "g171"
+    },
+    {
+     "id": "300000000000000172",
+     "name": ""
+    },
+    {
+     "id": "300000000000000173",
+     "name": "g173"
+    },
+    {
+     "id": "300000000000000174",
+     "name": ""
+    },
+    {
+     "id": "300000000000000175",
+     "name": "g175"
+    },
+    {
+     "id": "300000000000000176",
+     "name": ""
+    },
+    {
+     "id": "300000000000000177",
+     "name": "g177"
+    },
+    {
+     "id": "300000000000000178",
+     "name": ""
+    },
+    {
+     "id": "300000000000000179",
+     "name": "g179"
+    },
+    {
+     "id": "300000000000000180",
+     "name": ""
+    },
+    {
+     "id": "300000000000000181",
+     "name": "g181"
+    },
+    {
+     "id": "300000000000000182",
+     "name": ""
+    },
+    {
+     "id": "300000000000000183",
+     "name": "g183"
+    },
+    {
+     "id": "300000000000000184",
+     "name": ""
+    },
+    {
+     "id": "300000000000000185",
+     "name": "g185"
+    },
+    {
+     "id": "300000000000000186",
+     "name": ""
+    },
+    {
+     "id": "300000000000000187",
+     "name": "g187"
+    },
+    {
+     "id": "300000000000000188",
+     "name": ""
+    },
+    {
+     "id": "300000000000000189",
+     "name": "g189"
+    },
+    {
+     "id": "300000000000000190",
+     "name": ""
+    },
+    {
+     "id": "300000000000000191",
+     "name": "g191"
+    },
+    {
+     "id": "300000000000000192",
+     "name": ""
+    },
+    {
+     "id": "300000000000000193",
+     "name": "g193"
+    },
+    {
+     "id": "300000000000000194",
+     "name": ""
+    },
+    {
+     "id": "300000000000000195",
+     "name": "g195"
+    },
+    {
+     "id": "300000000000000196",
+     "name": ""
+    },
+    {
+     "id": "300000000000000197",
+     "name": "g197"
+    },
+    {
+     "id": "300000000000000198",
+     "name": ""
+    },
+    {
+     "id": "300000000000000199",
+     "name": "g199"
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/users/@me/guilds?limit=200&after=300000000000000199",
+   "status": 200,
+   "body": [
+    {
+     "id": "200000000000000001",
+     "name": "zeta",
+     "icon": "cccccccccccccccccccccccccccccccc"
+    },
+    {
+     "id": "200000000000000001",
+     "name": "again"
+    },
+    {
+     "id": "200000000000000003"
+    }
+   ],
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000002",
+   "status": 403,
+   "body": {
+    "code": 50001
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000005",
+   "status": 200,
+   "body": {
+    "id": "200000000000000005"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "GET",
+   "path": "/guilds/200000000000000099",
+   "status": 404,
+   "body": {
+    "code": 10004
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000002/messages",
+   "status": 200,
+   "body": {
+    "id": "310000000000000050",
+    "channel_id": "310000000000000002"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "PATCH",
+   "path": "/channels/310000000000000002/messages/310000000000000050",
+   "status": 200,
+   "body": {
+    "id": "310000000000000050"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "DELETE",
+   "path": "/channels/310000000000000002/messages/310000000000000050",
+   "status": 204,
+   "body": null,
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "DELETE",
+   "path": "/channels/310000000000000002/messages/310000000000000051",
+   "status": 404,
+   "body": {
+    "message": "Unknown Message",
+    "code": 10008
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000003/messages",
+   "status": 403,
+   "body": {
+    "message": "Missing Permissions",
+    "code": 50013
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000004/messages",
+   "status": 429,
+   "body": {
+    "retry_after": 1.2
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000005/messages",
+   "status": 429,
+   "body": {},
+   "raw": false,
+   "headers": {
+    "retry-after": "7"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000006/messages",
+   "status": 429,
+   "body": "not json",
+   "raw": true,
+   "headers": {
+    "retry-after": "soon"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000007/messages",
+   "status": 200,
+   "body": "not json",
+   "raw": true,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000008/messages",
+   "status": 200,
+   "body": {
+    "id": "nope"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000009/messages",
+   "status": 500,
+   "body": {
+    "code": 1.5
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/310000000000000010/messages",
+   "status": 429,
+   "body": {
+    "retry_after": 99999
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/300000000000000001/invites",
+   "status": 200,
+   "body": {
+    "code": "aB-9",
+    "expires_at": "2026-10-13T12:30:00.000Z"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/300000000000000002/invites",
+   "status": 200,
+   "body": {
+    "code": "<bad>"
+   },
+   "raw": false,
+   "headers": {}
+  },
+  {
+   "method": "POST",
+   "path": "/channels/300000000000000004/invites",
+   "status": 200,
+   "body": {
+    "code": "abc",
+    "expires_at": 5
+   },
+   "raw": false,
+   "headers": {}
+  }
+ ],
+ "results": [
+  {
+   "op": "getGuildResources",
+   "args": [
+    "200000000000000001"
+   ],
+   "result": {
+    "value": {
+     "guild": {
+      "id": "200000000000000001",
+      "name": "Zeta",
+      "icon": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "memberCount": 42,
+      "ownerId": "555555555555555555",
+      "premiumTier": 2,
+      "premiumSubscriptionCount": 0,
+      "verificationLevel": 0
+     },
+     "channels": [
+      {
+       "id": "310000000000000011",
+       "name": "unknown",
+       "type": 99,
+       "kind": "other",
+       "parentId": null,
+       "position": 0,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000002",
+       "name": "text-top",
+       "type": 0,
+       "kind": "text",
+       "parentId": null,
+       "position": 5,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000009",
+       "name": "orphan",
+       "type": 0,
+       "kind": "text",
+       "parentId": "399999999999999999",
+       "position": 9,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000001",
+       "name": "voice-top",
+       "type": 2,
+       "kind": "voice",
+       "parentId": null,
+       "position": 0,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000010",
+       "name": "stage",
+       "type": 13,
+       "kind": "stage",
+       "parentId": null,
+       "position": 5,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000004",
+       "name": "CAT A",
+       "type": 4,
+       "kind": "category",
+       "parentId": null,
+       "position": 1,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000008",
+       "name": "a-forum",
+       "type": 15,
+       "kind": "forum",
+       "parentId": "310000000000000004",
+       "position": 1,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000007",
+       "name": "a-news",
+       "type": 5,
+       "kind": "announcement",
+       "parentId": "310000000000000004",
+       "position": 3,
+       "nsfw": true
+      },
+      {
+       "id": "310000000000000003",
+       "name": "CAT B",
+       "type": 4,
+       "kind": "category",
+       "parentId": null,
+       "position": 2,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000005",
+       "name": "b-text",
+       "type": 0,
+       "kind": "text",
+       "parentId": "310000000000000003",
+       "position": 1,
+       "nsfw": false
+      },
+      {
+       "id": "310000000000000006",
+       "name": "b-voice",
+       "type": 2,
+       "kind": "voice",
+       "parentId": "310000000000000003",
+       "position": 0,
+       "nsfw": false
+      }
+     ],
+     "roles": [
+      {
+       "id": "410000000000000004",
+       "name": "Owner",
+       "color": null,
+       "position": 9,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": false,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000001",
+       "name": "Bot",
+       "color": null,
+       "position": 5,
+       "managed": true,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": false,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000002",
+       "name": "Mods",
+       "color": "#FF0000",
+       "position": 4,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000015",
+       "name": "unknown role",
+       "color": null,
+       "position": 3,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000003",
+       "name": "Fans",
+       "color": "#00FF00",
+       "position": 2,
+       "managed": false,
+       "everyone": false,
+       "mentionable": true,
+       "assignable": true,
+       "dangerous": false
+      },
+      {
+       "id": "410000000000000005",
+       "name": "Tie",
+       "color": null,
+       "position": 2,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": false
+      },
+      {
+       "id": "410000000000000010",
+       "name": "Hex",
+       "color": null,
+       "position": 1,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000012",
+       "name": "Float",
+       "color": null,
+       "position": 1,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": false
+      },
+      {
+       "id": "200000000000000001",
+       "name": "@everyone",
+       "color": null,
+       "position": 0,
+       "managed": false,
+       "everyone": true,
+       "mentionable": false,
+       "assignable": false,
+       "dangerous": false
+      },
+      {
+       "id": "410000000000000011",
+       "name": "Spaces",
+       "color": null,
+       "position": 0,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": true
+      },
+      {
+       "id": "410000000000000013",
+       "name": "Empty",
+       "color": "#0000FF",
+       "position": 0,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": false
+      },
+      {
+       "id": "410000000000000014",
+       "name": "Junk",
+       "color": null,
+       "position": -1,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": true,
+       "dangerous": false
+      }
+     ],
+     "emojis": [
+      {
+       "id": "610000000000000007",
+       "name": "_under",
+       "animated": false
+      },
+      {
+       "id": "610000000000000001",
+       "name": "apple",
+       "animated": true
+      },
+      {
+       "id": "610000000000000003",
+       "name": "Apple",
+       "animated": false
+      },
+      {
+       "id": "610000000000000006",
+       "name": "éclair",
+       "animated": false
+      },
+      {
+       "id": "610000000000000005",
+       "name": "item9",
+       "animated": false
+      },
+      {
+       "id": "610000000000000004",
+       "name": "item10",
+       "animated": false
+      },
+      {
+       "id": "610000000000000002",
+       "name": "zebra",
+       "animated": false
+      }
+     ],
+     "bot": {
+      "userId": "123456789012345678",
+      "topRolePosition": 5,
+      "manageRoles": true,
+      "createInvite": false
+     }
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001?with_counts=true",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/channels",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/123456789012345678",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getGuildResources",
+   "args": [
+    "200000000000000003"
+   ],
+   "result": {
+    "value": {
+     "guild": {
+      "id": "200000000000000003",
+      "name": "Zeta",
+      "icon": null,
+      "memberCount": 7,
+      "ownerId": "555555555555555555",
+      "premiumTier": 2,
+      "premiumSubscriptionCount": 0,
+      "verificationLevel": 2
+     },
+     "channels": [],
+     "roles": [
+      {
+       "id": "410000000000000004",
+       "name": "unknown role",
+       "color": null,
+       "position": 3,
+       "managed": false,
+       "everyone": false,
+       "mentionable": false,
+       "assignable": false,
+       "dangerous": true
+      },
+      {
+       "id": "200000000000000003",
+       "name": "@everyone",
+       "color": null,
+       "position": 0,
+       "managed": false,
+       "everyone": true,
+       "mentionable": false,
+       "assignable": false,
+       "dangerous": false
+      }
+     ],
+     "emojis": [
+      {
+       "id": "610000000000000009",
+       "name": "z",
+       "animated": false
+      }
+     ],
+     "bot": {
+      "userId": "123456789012345678",
+      "topRolePosition": 3,
+      "manageRoles": true,
+      "createInvite": true
+     }
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000003?with_counts=true",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000003/channels",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000003/members/123456789012345678",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000003/roles",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000003/emojis",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getGuildResources",
+   "args": [
+    "200000000000000004"
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 403 for GET /guilds/200000000000000004/channels",
+     "status": 403,
+     "code": "forbidden",
+     "retryAfter": null,
+     "discordCode": 50001
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000004?with_counts=true",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000004/channels",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000004/members/123456789012345678",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getGuildResources",
+   "args": [
+    "nope"
+   ],
+   "result": {
+    "error": {
+     "message": "Invalid server id",
+     "status": 0,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": []
+  },
+  {
+   "op": "getMember",
+   "args": [
+    "200000000000000001",
+    "111111111111111111"
+   ],
+   "result": {
+    "value": {
+     "roles": [
+      "400000000000000001"
+     ]
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/111111111111111111",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getMember",
+   "args": [
+    "200000000000000001",
+    "999999999999999999"
+   ],
+   "result": {
+    "value": null
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/999999999999999999",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getMember",
+   "args": [
+    "x",
+    "111111111111111111"
+   ],
+   "result": {
+    "error": {
+     "message": "Invalid server id",
+     "status": 0,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": []
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    " al ice "
+   ],
+   "result": {
+    "value": [
+     {
+      "id": "111111111111111111",
+      "username": "alice",
+      "globalName": "Alice",
+      "nick": "Al",
+      "avatarUrl": "https://cdn.discordapp.com/avatars/111111111111111111/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp?size=128",
+      "bot": false
+     }
+    ]
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/search?query=al+ice&limit=25",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    "&=é"
+   ],
+   "result": {
+    "value": []
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/search?query=%26%3D%C3%A9&limit=25",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    "   "
+   ],
+   "result": {
+    "value": []
+   },
+   "calls": []
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    "111111111111111111"
+   ],
+   "result": {
+    "value": [
+     {
+      "id": "111111111111111111",
+      "username": "alice",
+      "globalName": null,
+      "nick": null,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "bot": false
+     }
+    ]
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/111111111111111111",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    "999999999999999999"
+   ],
+   "result": {
+    "value": []
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/999999999999999999",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "200000000000000001",
+    "bob",
+    0
+   ],
+   "result": {
+    "value": [
+     {
+      "id": "999999999999999999",
+      "username": "unknown",
+      "globalName": null,
+      "nick": null,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "bot": true
+     }
+    ]
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000001/members/search?query=bob&limit=1",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "searchMembers",
+   "args": [
+    "x",
+    "bob"
+   ],
+   "result": {
+    "error": {
+     "message": "Invalid server id",
+     "status": 0,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": []
+  },
+  {
+   "op": "getUsers",
+   "args": [
+    [
+     "111111111111111111",
+     "999999999999999999",
+     "555555555555555555",
+     "111111111111111111",
+     "x"
+    ]
+   ],
+   "result": {
+    "value": {
+     "111111111111111111": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "globalName": null,
+      "nick": null,
+      "avatarUrl": "https://cdn.discordapp.com/avatars/111111111111111111/a_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.webp?size=128",
+      "bot": false
+     },
+     "555555555555555555": {
+      "id": "555555555555555555",
+      "username": "unknown",
+      "globalName": null,
+      "nick": null,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "bot": false
+     },
+     "999999999999999999": null
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/users/111111111111111111",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/users/999999999999999999",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/users/555555555555555555",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getCurrentUser",
+   "args": [
+    "user-access-token-abc123"
+   ],
+   "result": {
+    "value": {
+     "id": "111111111111111111",
+     "username": "alice",
+     "globalName": "Alice",
+     "avatar": null
+    }
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/users/@me",
+     "auth": "Bearer user-access-token-abc123",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getUserGuilds",
+   "args": [
+    "111111111111111111",
+    "user-access-token-abc123"
+   ],
+   "result": {
+    "value": [
+     {
+      "id": "200000000000000001",
+      "name": "Z",
+      "icon": null,
+      "owner": false,
+      "permissions": "32"
+     },
+     {
+      "id": "200000000000000002",
+      "name": "Unknown server",
+      "icon": null,
+      "owner": false,
+      "permissions": "0"
+     }
+    ]
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/users/@me/guilds?limit=200",
+     "auth": "Bearer user-access-token-abc123",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "getBotGuilds",
+   "args": [],
+   "result": {
+    "value": [
+     {
+      "id": "300000000000000000",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000001",
+      "name": "g1",
+      "icon": null
+     },
+     {
+      "id": "300000000000000002",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000003",
+      "name": "g3",
+      "icon": null
+     },
+     {
+      "id": "300000000000000004",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000005",
+      "name": "g5",
+      "icon": null
+     },
+     {
+      "id": "300000000000000006",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000007",
+      "name": "g7",
+      "icon": null
+     },
+     {
+      "id": "300000000000000008",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000009",
+      "name": "g9",
+      "icon": null
+     },
+     {
+      "id": "300000000000000010",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000011",
+      "name": "g11",
+      "icon": null
+     },
+     {
+      "id": "300000000000000012",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000013",
+      "name": "g13",
+      "icon": null
+     },
+     {
+      "id": "300000000000000014",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000015",
+      "name": "g15",
+      "icon": null
+     },
+     {
+      "id": "300000000000000016",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000017",
+      "name": "g17",
+      "icon": null
+     },
+     {
+      "id": "300000000000000018",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000019",
+      "name": "g19",
+      "icon": null
+     },
+     {
+      "id": "300000000000000020",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000021",
+      "name": "g21",
+      "icon": null
+     },
+     {
+      "id": "300000000000000022",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000023",
+      "name": "g23",
+      "icon": null
+     },
+     {
+      "id": "300000000000000024",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000025",
+      "name": "g25",
+      "icon": null
+     },
+     {
+      "id": "300000000000000026",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000027",
+      "name": "g27",
+      "icon": null
+     },
+     {
+      "id": "300000000000000028",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000029",
+      "name": "g29",
+      "icon": null
+     },
+     {
+      "id": "300000000000000030",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000031",
+      "name": "g31",
+      "icon": null
+     },
+     {
+      "id": "300000000000000032",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000033",
+      "name": "g33",
+      "icon": null
+     },
+     {
+      "id": "300000000000000034",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000035",
+      "name": "g35",
+      "icon": null
+     },
+     {
+      "id": "300000000000000036",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000037",
+      "name": "g37",
+      "icon": null
+     },
+     {
+      "id": "300000000000000038",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000039",
+      "name": "g39",
+      "icon": null
+     },
+     {
+      "id": "300000000000000040",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000041",
+      "name": "g41",
+      "icon": null
+     },
+     {
+      "id": "300000000000000042",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000043",
+      "name": "g43",
+      "icon": null
+     },
+     {
+      "id": "300000000000000044",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000045",
+      "name": "g45",
+      "icon": null
+     },
+     {
+      "id": "300000000000000046",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000047",
+      "name": "g47",
+      "icon": null
+     },
+     {
+      "id": "300000000000000048",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000049",
+      "name": "g49",
+      "icon": null
+     },
+     {
+      "id": "300000000000000050",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000051",
+      "name": "g51",
+      "icon": null
+     },
+     {
+      "id": "300000000000000052",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000053",
+      "name": "g53",
+      "icon": null
+     },
+     {
+      "id": "300000000000000054",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000055",
+      "name": "g55",
+      "icon": null
+     },
+     {
+      "id": "300000000000000056",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000057",
+      "name": "g57",
+      "icon": null
+     },
+     {
+      "id": "300000000000000058",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000059",
+      "name": "g59",
+      "icon": null
+     },
+     {
+      "id": "300000000000000060",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000061",
+      "name": "g61",
+      "icon": null
+     },
+     {
+      "id": "300000000000000062",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000063",
+      "name": "g63",
+      "icon": null
+     },
+     {
+      "id": "300000000000000064",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000065",
+      "name": "g65",
+      "icon": null
+     },
+     {
+      "id": "300000000000000066",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000067",
+      "name": "g67",
+      "icon": null
+     },
+     {
+      "id": "300000000000000068",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000069",
+      "name": "g69",
+      "icon": null
+     },
+     {
+      "id": "300000000000000070",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000071",
+      "name": "g71",
+      "icon": null
+     },
+     {
+      "id": "300000000000000072",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000073",
+      "name": "g73",
+      "icon": null
+     },
+     {
+      "id": "300000000000000074",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000075",
+      "name": "g75",
+      "icon": null
+     },
+     {
+      "id": "300000000000000076",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000077",
+      "name": "g77",
+      "icon": null
+     },
+     {
+      "id": "300000000000000078",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000079",
+      "name": "g79",
+      "icon": null
+     },
+     {
+      "id": "300000000000000080",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000081",
+      "name": "g81",
+      "icon": null
+     },
+     {
+      "id": "300000000000000082",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000083",
+      "name": "g83",
+      "icon": null
+     },
+     {
+      "id": "300000000000000084",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000085",
+      "name": "g85",
+      "icon": null
+     },
+     {
+      "id": "300000000000000086",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000087",
+      "name": "g87",
+      "icon": null
+     },
+     {
+      "id": "300000000000000088",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000089",
+      "name": "g89",
+      "icon": null
+     },
+     {
+      "id": "300000000000000090",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000091",
+      "name": "g91",
+      "icon": null
+     },
+     {
+      "id": "300000000000000092",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000093",
+      "name": "g93",
+      "icon": null
+     },
+     {
+      "id": "300000000000000094",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000095",
+      "name": "g95",
+      "icon": null
+     },
+     {
+      "id": "300000000000000096",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000097",
+      "name": "g97",
+      "icon": null
+     },
+     {
+      "id": "300000000000000098",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000099",
+      "name": "g99",
+      "icon": null
+     },
+     {
+      "id": "300000000000000100",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000101",
+      "name": "g101",
+      "icon": null
+     },
+     {
+      "id": "300000000000000102",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000103",
+      "name": "g103",
+      "icon": null
+     },
+     {
+      "id": "300000000000000104",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000105",
+      "name": "g105",
+      "icon": null
+     },
+     {
+      "id": "300000000000000106",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000107",
+      "name": "g107",
+      "icon": null
+     },
+     {
+      "id": "300000000000000108",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000109",
+      "name": "g109",
+      "icon": null
+     },
+     {
+      "id": "300000000000000110",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000111",
+      "name": "g111",
+      "icon": null
+     },
+     {
+      "id": "300000000000000112",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000113",
+      "name": "g113",
+      "icon": null
+     },
+     {
+      "id": "300000000000000114",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000115",
+      "name": "g115",
+      "icon": null
+     },
+     {
+      "id": "300000000000000116",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000117",
+      "name": "g117",
+      "icon": null
+     },
+     {
+      "id": "300000000000000118",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000119",
+      "name": "g119",
+      "icon": null
+     },
+     {
+      "id": "300000000000000120",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000121",
+      "name": "g121",
+      "icon": null
+     },
+     {
+      "id": "300000000000000122",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000123",
+      "name": "g123",
+      "icon": null
+     },
+     {
+      "id": "300000000000000124",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000125",
+      "name": "g125",
+      "icon": null
+     },
+     {
+      "id": "300000000000000126",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000127",
+      "name": "g127",
+      "icon": null
+     },
+     {
+      "id": "300000000000000128",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000129",
+      "name": "g129",
+      "icon": null
+     },
+     {
+      "id": "300000000000000130",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000131",
+      "name": "g131",
+      "icon": null
+     },
+     {
+      "id": "300000000000000132",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000133",
+      "name": "g133",
+      "icon": null
+     },
+     {
+      "id": "300000000000000134",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000135",
+      "name": "g135",
+      "icon": null
+     },
+     {
+      "id": "300000000000000136",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000137",
+      "name": "g137",
+      "icon": null
+     },
+     {
+      "id": "300000000000000138",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000139",
+      "name": "g139",
+      "icon": null
+     },
+     {
+      "id": "300000000000000140",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000141",
+      "name": "g141",
+      "icon": null
+     },
+     {
+      "id": "300000000000000142",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000143",
+      "name": "g143",
+      "icon": null
+     },
+     {
+      "id": "300000000000000144",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000145",
+      "name": "g145",
+      "icon": null
+     },
+     {
+      "id": "300000000000000146",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000147",
+      "name": "g147",
+      "icon": null
+     },
+     {
+      "id": "300000000000000148",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000149",
+      "name": "g149",
+      "icon": null
+     },
+     {
+      "id": "300000000000000150",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000151",
+      "name": "g151",
+      "icon": null
+     },
+     {
+      "id": "300000000000000152",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000153",
+      "name": "g153",
+      "icon": null
+     },
+     {
+      "id": "300000000000000154",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000155",
+      "name": "g155",
+      "icon": null
+     },
+     {
+      "id": "300000000000000156",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000157",
+      "name": "g157",
+      "icon": null
+     },
+     {
+      "id": "300000000000000158",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000159",
+      "name": "g159",
+      "icon": null
+     },
+     {
+      "id": "300000000000000160",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000161",
+      "name": "g161",
+      "icon": null
+     },
+     {
+      "id": "300000000000000162",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000163",
+      "name": "g163",
+      "icon": null
+     },
+     {
+      "id": "300000000000000164",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000165",
+      "name": "g165",
+      "icon": null
+     },
+     {
+      "id": "300000000000000166",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000167",
+      "name": "g167",
+      "icon": null
+     },
+     {
+      "id": "300000000000000168",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000169",
+      "name": "g169",
+      "icon": null
+     },
+     {
+      "id": "300000000000000170",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000171",
+      "name": "g171",
+      "icon": null
+     },
+     {
+      "id": "300000000000000172",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000173",
+      "name": "g173",
+      "icon": null
+     },
+     {
+      "id": "300000000000000174",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000175",
+      "name": "g175",
+      "icon": null
+     },
+     {
+      "id": "300000000000000176",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000177",
+      "name": "g177",
+      "icon": null
+     },
+     {
+      "id": "300000000000000178",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000179",
+      "name": "g179",
+      "icon": null
+     },
+     {
+      "id": "300000000000000180",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000181",
+      "name": "g181",
+      "icon": null
+     },
+     {
+      "id": "300000000000000182",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000183",
+      "name": "g183",
+      "icon": null
+     },
+     {
+      "id": "300000000000000184",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000185",
+      "name": "g185",
+      "icon": null
+     },
+     {
+      "id": "300000000000000186",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000187",
+      "name": "g187",
+      "icon": null
+     },
+     {
+      "id": "300000000000000188",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000189",
+      "name": "g189",
+      "icon": null
+     },
+     {
+      "id": "300000000000000190",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000191",
+      "name": "g191",
+      "icon": null
+     },
+     {
+      "id": "300000000000000192",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000193",
+      "name": "g193",
+      "icon": null
+     },
+     {
+      "id": "300000000000000194",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000195",
+      "name": "g195",
+      "icon": null
+     },
+     {
+      "id": "300000000000000196",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000197",
+      "name": "g197",
+      "icon": null
+     },
+     {
+      "id": "300000000000000198",
+      "name": "Unknown server",
+      "icon": null
+     },
+     {
+      "id": "300000000000000199",
+      "name": "g199",
+      "icon": null
+     },
+     {
+      "id": "200000000000000001",
+      "name": "zeta",
+      "icon": "cccccccccccccccccccccccccccccccc"
+     },
+     {
+      "id": "200000000000000003",
+      "name": "Unknown server",
+      "icon": null
+     }
+    ]
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/users/@me/guilds?limit=200&after=0",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    },
+    {
+     "method": "GET",
+     "path": "/users/@me/guilds?limit=200&after=300000000000000199",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000001",
+    true
+   ],
+   "result": {
+    "value": true
+   },
+   "calls": []
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000002",
+    false
+   ],
+   "result": {
+    "value": false
+   },
+   "calls": []
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000002",
+    true
+   ],
+   "result": {
+    "value": false
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000002",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000005",
+    true
+   ],
+   "result": {
+    "value": true
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000005",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000005",
+    false
+   ],
+   "result": {
+    "value": true
+   },
+   "calls": []
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "200000000000000099",
+    true
+   ],
+   "result": {
+    "value": false
+   },
+   "calls": [
+    {
+     "method": "GET",
+     "path": "/guilds/200000000000000099",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "isBotInGuild",
+   "args": [
+    "nope",
+    true
+   ],
+   "result": {
+    "value": false
+   },
+   "calls": []
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000002",
+    {
+     "content": "hi @everyone",
+     "allowed_mentions": {
+      "parse": [
+       "everyone",
+       "users",
+       "roles"
+      ]
+     }
+    }
+   ],
+   "result": {
+    "value": {
+     "id": "310000000000000050",
+     "channelId": "310000000000000002"
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000002/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "hi @everyone",
+      "allowed_mentions": {
+       "parse": [
+        "users",
+        "roles"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000002",
+    {
+     "embeds": [
+      {
+       "title": "x"
+      }
+     ]
+    }
+   ],
+   "result": {
+    "value": {
+     "id": "310000000000000050",
+     "channelId": "310000000000000002"
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000002/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "embeds": [
+       {
+        "title": "x"
+       }
+      ],
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000002",
+    {
+     "content": "<@&1>",
+     "allowed_mentions": {
+      "roles": [
+       "400000000000000001",
+       "x"
+      ],
+      "users": [
+       "111111111111111111"
+      ],
+      "replied_user": true
+     }
+    }
+   ],
+   "result": {
+    "value": {
+     "id": "310000000000000050",
+     "channelId": "310000000000000002"
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000002/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "<@&1>",
+      "allowed_mentions": {
+       "parse": [],
+       "users": [
+        "111111111111111111"
+       ],
+       "roles": [
+        "400000000000000001"
+       ],
+       "replied_user": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000002",
+    {
+     "allowed_mentions": {
+      "parse": [
+       "users"
+      ],
+      "users": [
+       "111111111111111111"
+      ]
+     },
+     "content": "x"
+    }
+   ],
+   "result": {
+    "value": {
+     "id": "310000000000000050",
+     "channelId": "310000000000000002"
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000002/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "allowed_mentions": {
+       "parse": [
+        "users"
+       ]
+      },
+      "content": "x"
+     }
+    }
+   ]
+  },
+  {
+   "op": "editMessage",
+   "args": [
+    "310000000000000002",
+    "310000000000000050",
+    {
+     "content": "edited"
+    }
+   ],
+   "result": {
+    "value": {
+     "id": "310000000000000050",
+     "channelId": "310000000000000002"
+    }
+   },
+   "calls": [
+    {
+     "method": "PATCH",
+     "path": "/channels/310000000000000002/messages/310000000000000050",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "edited",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "deleteMessage",
+   "args": [
+    "310000000000000002",
+    "310000000000000050"
+   ],
+   "result": {
+    "value": null
+   },
+   "calls": [
+    {
+     "method": "DELETE",
+     "path": "/channels/310000000000000002/messages/310000000000000050",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "deleteMessage",
+   "args": [
+    "310000000000000002",
+    "310000000000000051"
+   ],
+   "result": {
+    "value": null
+   },
+   "calls": [
+    {
+     "method": "DELETE",
+     "path": "/channels/310000000000000002/messages/310000000000000051",
+     "auth": "Bot bot-token",
+     "contentType": null,
+     "reason": null,
+     "body": null
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000003",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 403 for POST /channels/310000000000000003/messages",
+     "status": 403,
+     "code": "forbidden",
+     "retryAfter": null,
+     "discordCode": 50013
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000003/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000004",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 429 for POST /channels/310000000000000004/messages",
+     "status": 429,
+     "code": "rate_limited",
+     "retryAfter": 2,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000004/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000005",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 429 for POST /channels/310000000000000005/messages",
+     "status": 429,
+     "code": "rate_limited",
+     "retryAfter": 7,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000005/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000006",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 429 for POST /channels/310000000000000006/messages",
+     "status": 429,
+     "code": "rate_limited",
+     "retryAfter": 1,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000006/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000007",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned invalid JSON for POST /channels/310000000000000007/messages",
+     "status": 200,
+     "code": "unavailable",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000007/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000008",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned an unexpected message",
+     "status": 0,
+     "code": "unavailable",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000008/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000009",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 500 for POST /channels/310000000000000009/messages",
+     "status": 500,
+     "code": "unavailable",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000009/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "310000000000000010",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 429 for POST /channels/310000000000000010/messages",
+     "status": 429,
+     "code": "rate_limited",
+     "retryAfter": 3600,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/310000000000000010/messages",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "editMessage",
+   "args": [
+    "310000000000000003",
+    "310000000000000050",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned HTTP 404 for PATCH /channels/310000000000000003/messages/310000000000000050",
+     "status": 404,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": 0
+    }
+   },
+   "calls": [
+    {
+     "method": "PATCH",
+     "path": "/channels/310000000000000003/messages/310000000000000050",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "content": "x",
+      "allowed_mentions": {
+       "parse": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "op": "sendMessage",
+   "args": [
+    "nope",
+    {
+     "content": "x"
+    }
+   ],
+   "result": {
+    "error": {
+     "message": "Invalid channel id",
+     "status": 0,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": []
+  },
+  {
+   "op": "deleteMessage",
+   "args": [
+    "310000000000000002",
+    "../x"
+   ],
+   "result": {
+    "error": {
+     "message": "Invalid message id",
+     "status": 0,
+     "code": "not_found",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": []
+  },
+  {
+   "op": "createInvite",
+   "args": [
+    "300000000000000001",
+    "Requested by the bot owner from the dashboard (ünï & co)"
+   ],
+   "result": {
+    "value": {
+     "code": "aB-9",
+     "url": "https://discord.gg/aB-9",
+     "expiresAt": "2026-10-13T12:30:00.000Z"
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/300000000000000001/invites",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": "Requested%20by%20the%20bot%20owner%20from%20the%20dashboard%20(%C3%BCn%C3%AF%20%26%20co)",
+     "body": {
+      "max_age": 1800,
+      "max_uses": 1,
+      "unique": true,
+      "temporary": false
+     }
+    }
+   ]
+  },
+  {
+   "op": "createInvite",
+   "args": [
+    "300000000000000002",
+    ""
+   ],
+   "result": {
+    "error": {
+     "message": "Discord returned an unexpected invite",
+     "status": 0,
+     "code": "unavailable",
+     "retryAfter": null,
+     "discordCode": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/300000000000000002/invites",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "max_age": 1800,
+      "max_uses": 1,
+      "unique": true,
+      "temporary": false
+     }
+    }
+   ]
+  },
+  {
+   "op": "createInvite",
+   "args": [
+    "300000000000000004",
+    ""
+   ],
+   "result": {
+    "value": {
+     "code": "abc",
+     "url": "https://discord.gg/abc",
+     "expiresAt": null
+    }
+   },
+   "calls": [
+    {
+     "method": "POST",
+     "path": "/channels/300000000000000004/invites",
+     "auth": "Bot bot-token",
+     "contentType": "application/json",
+     "reason": null,
+     "body": {
+      "max_age": 1800,
+      "max_uses": 1,
+      "unique": true,
+      "temporary": false
+     }
+    }
+   ]
+  }
+ ],
+ "urls": {
+  "invite": [
+   "https://discord.com/oauth2/authorize?client_id=123456789012345678&scope=bot+applications.commands&permissions=1393066110199",
+   "https://discord.com/oauth2/authorize?client_id=123456789012345678&scope=bot+applications.commands&permissions=1393066110199&guild_id=200000000000000001&disable_guild_select=true",
+   "https://discord.com/oauth2/authorize?client_id=123456789012345678&scope=bot+applications.commands&permissions=1393066110199"
+  ],
+  "avatars": [
+   {
+    "id": "111111111111111111",
+    "avatar": null,
+    "url": "https://cdn.discordapp.com/embed/avatars/1.png"
+   },
+   {
+    "id": "80351110224678912",
+    "avatar": null,
+    "url": "https://cdn.discordapp.com/embed/avatars/5.png"
+   },
+   {
+    "id": "111111111111111111",
+    "avatar": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "url": "https://cdn.discordapp.com/avatars/111111111111111111/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp?size=128"
+   },
+   {
+    "id": "111111111111111111",
+    "avatar": "a_ffffffffffffffffffffffffffffffff",
+    "url": "https://cdn.discordapp.com/avatars/111111111111111111/a_ffffffffffffffffffffffffffffffff.webp?size=128"
+   },
+   {
+    "id": "111111111111111111",
+    "avatar": "../../x",
+    "url": "https://cdn.discordapp.com/embed/avatars/1.png"
+   },
+   {
+    "id": "x",
+    "avatar": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "url": "https://cdn.discordapp.com/avatars/0/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp?size=128"
+   },
+   {
+    "id": null,
+    "avatar": null,
+    "url": "https://cdn.discordapp.com/embed/avatars/0.png"
+   },
+   {
+    "id": "99999999999999999999",
+    "avatar": null,
+    "url": "https://cdn.discordapp.com/embed/avatars/0.png"
+   }
+  ],
+  "icons": [
+   {
+    "id": "200000000000000001",
+    "icon": null,
+    "url": null
+   },
+   {
+    "id": "200000000000000001",
+    "icon": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "url": "https://cdn.discordapp.com/icons/200000000000000001/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp?size=128"
+   },
+   {
+    "id": "x",
+    "icon": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "url": null
+   },
+   {
+    "id": "200000000000000001",
+    "icon": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "url": null
+   }
+  ],
+  "invitePermissions": "1393066110199",
+  "dangerousPermissions": "1100317073470"
+ },
+ "sortCases": [
+  {
+   "input": [
+    {
+     "id": "310000000000000001",
+     "type": 2,
+     "kind": "voice",
+     "position": 0,
+     "parentId": null
+    },
+    {
+     "id": "310000000000000002",
+     "type": 4,
+     "kind": "category",
+     "position": 0,
+     "parentId": null
+    },
+    {
+     "id": "310000000000000003",
+     "type": 13,
+     "kind": "stage",
+     "position": 0,
+     "parentId": "310000000000000002"
+    },
+    {
+     "id": "310000000000000004",
+     "type": 0,
+     "kind": "text",
+     "position": 9,
+     "parentId": "310000000000000002"
+    },
+    {
+     "id": "310000000000000005",
+     "type": 0,
+     "kind": "text",
+     "position": 1,
+     "parentId": null
+    },
+    {
+     "id": "310000000000000006",
+     "type": 0,
+     "kind": "text",
+     "position": 1,
+     "parentId": null
+    }
+   ],
+   "output": [
+    "310000000000000005",
+    "310000000000000006",
+    "310000000000000001",
+    "310000000000000002",
+    "310000000000000004",
+    "310000000000000003"
+   ]
+  },
+  {
+   "input": [
+    {
+     "id": "310000000000000009",
+     "type": 4,
+     "kind": "category",
+     "position": 1,
+     "parentId": null
+    },
+    {
+     "id": "310000000000000008",
+     "type": 4,
+     "kind": "category",
+     "position": 1,
+     "parentId": null
+    },
+    {
+     "id": "310000000000000007",
+     "type": 2,
+     "kind": "voice",
+     "position": 0,
+     "parentId": "310000000000000009"
+    },
+    {
+     "id": "310000000000000006",
+     "type": 0,
+     "kind": "text",
+     "position": 0,
+     "parentId": "310000000000000008"
+    },
+    {
+     "id": "310000000000000005",
+     "type": 15,
+     "kind": "forum",
+     "position": 0,
+     "parentId": "310000000000000008"
+    },
+    {
+     "id": "310000000000000004",
+     "type": 13,
+     "kind": "stage",
+     "position": -1,
+     "parentId": null
+    }
+   ],
+   "output": [
+    "310000000000000004",
+    "310000000000000008",
+    "310000000000000005",
+    "310000000000000006",
+    "310000000000000009",
+    "310000000000000007"
+   ]
+  }
+ ]
+}

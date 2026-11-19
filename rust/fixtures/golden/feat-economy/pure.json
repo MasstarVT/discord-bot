@@ -1,0 +1,4173 @@
+{
+ "economyConfig": {
+  "none": {
+   "currencyName": "coins",
+   "currencyEmoji": "🪙",
+   "startingBalance": 1000,
+   "maxBalance": 1000000000,
+   "maxBet": 0,
+   "dailyMin": 50,
+   "dailyMax": 120,
+   "workMin": 100,
+   "workMax": 300,
+   "workCooldownMinutes": 60,
+   "gameChannelIds": [],
+   "gameChannelMode": "ALLOW",
+   "maxPayout": 0
+  },
+  "defaults": {
+   "currencyName": "coins",
+   "currencyEmoji": "🪙",
+   "startingBalance": 1000,
+   "maxBalance": 1000000000,
+   "maxBet": 0,
+   "dailyMin": 50,
+   "dailyMax": 120,
+   "workMin": 100,
+   "workMax": 300,
+   "workCooldownMinutes": 60,
+   "gameChannelIds": [],
+   "gameChannelMode": "ALLOW",
+   "maxPayout": 0
+  },
+  "big": {
+   "currencyName": "coins",
+   "currencyEmoji": "🪙",
+   "startingBalance": 1000000000,
+   "maxBalance": 1000000000,
+   "maxBet": 0,
+   "dailyMin": 300,
+   "dailyMax": 300,
+   "workMin": 100,
+   "workMax": 300,
+   "workCooldownMinutes": 60,
+   "gameChannelIds": [],
+   "gameChannelMode": "ALLOW",
+   "maxPayout": 0
+  },
+  "deny": {
+   "currencyName": "coins",
+   "currencyEmoji": "🪙",
+   "startingBalance": 1000,
+   "maxBalance": 1000000000,
+   "maxBet": 0,
+   "dailyMin": 50,
+   "dailyMax": 120,
+   "workMin": 100,
+   "workMax": 300,
+   "workCooldownMinutes": 1,
+   "gameChannelIds": [],
+   "gameChannelMode": "DENY",
+   "maxPayout": 750
+  },
+  "empty": {
+   "currencyName": "coins",
+   "currencyEmoji": "🪙",
+   "startingBalance": 1000,
+   "maxBalance": 1000000000,
+   "maxBet": 0,
+   "dailyMin": 50,
+   "dailyMax": 120,
+   "workMin": 100,
+   "workMax": 300,
+   "workCooldownMinutes": 60,
+   "gameChannelIds": [],
+   "gameChannelMode": "ALLOW",
+   "maxPayout": 0
+  },
+  "gems": {
+   "currencyName": "gems",
+   "currencyEmoji": "💎",
+   "startingBalance": 3,
+   "maxBalance": 3,
+   "maxBet": 0,
+   "dailyMin": 1,
+   "dailyMax": 120,
+   "workMin": 500,
+   "workMax": 500,
+   "workCooldownMinutes": 10080,
+   "gameChannelIds": [
+    "1",
+    "2",
+    "7"
+   ],
+   "gameChannelMode": "ALLOW",
+   "maxPayout": 0
+  }
+ },
+ "formatCoins": [
+  {
+   "settings": "none",
+   "n": 0,
+   "bold": "🪙 **0** coins",
+   "plain": "🪙 0 coins",
+   "net": "±🪙 **0** coins"
+  },
+  {
+   "settings": "none",
+   "n": 5,
+   "bold": "🪙 **5** coins",
+   "plain": "🪙 5 coins",
+   "net": "+🪙 **5** coins"
+  },
+  {
+   "settings": "none",
+   "n": 1234,
+   "bold": "🪙 **1,234** coins",
+   "plain": "🪙 1,234 coins",
+   "net": "+🪙 **1,234** coins"
+  },
+  {
+   "settings": "none",
+   "n": 1000000000,
+   "bold": "🪙 **1,000,000,000** coins",
+   "plain": "🪙 1,000,000,000 coins",
+   "net": "+🪙 **1,000,000,000** coins"
+  },
+  {
+   "settings": "none",
+   "n": -7,
+   "bold": "🪙 **-7** coins",
+   "plain": "🪙 -7 coins",
+   "net": "−🪙 **7** coins"
+  },
+  {
+   "settings": "defaults",
+   "n": 0,
+   "bold": "🪙 **0** coins",
+   "plain": "🪙 0 coins",
+   "net": "±🪙 **0** coins"
+  },
+  {
+   "settings": "defaults",
+   "n": 5,
+   "bold": "🪙 **5** coins",
+   "plain": "🪙 5 coins",
+   "net": "+🪙 **5** coins"
+  },
+  {
+   "settings": "defaults",
+   "n": 1234,
+   "bold": "🪙 **1,234** coins",
+   "plain": "🪙 1,234 coins",
+   "net": "+🪙 **1,234** coins"
+  },
+  {
+   "settings": "defaults",
+   "n": 1000000000,
+   "bold": "🪙 **1,000,000,000** coins",
+   "plain": "🪙 1,000,000,000 coins",
+   "net": "+🪙 **1,000,000,000** coins"
+  },
+  {
+   "settings": "defaults",
+   "n": -7,
+   "bold": "🪙 **-7** coins",
+   "plain": "🪙 -7 coins",
+   "net": "−🪙 **7** coins"
+  },
+  {
+   "settings": "big",
+   "n": 0,
+   "bold": "🪙 **0** coins",
+   "plain": "🪙 0 coins",
+   "net": "±🪙 **0** coins"
+  },
+  {
+   "settings": "big",
+   "n": 5,
+   "bold": "🪙 **5** coins",
+   "plain": "🪙 5 coins",
+   "net": "+🪙 **5** coins"
+  },
+  {
+   "settings": "big",
+   "n": 1234,
+   "bold": "🪙 **1,234** coins",
+   "plain": "🪙 1,234 coins",
+   "net": "+🪙 **1,234** coins"
+  },
+  {
+   "settings": "big",
+   "n": 1000000000,
+   "bold": "🪙 **1,000,000,000** coins",
+   "plain": "🪙 1,000,000,000 coins",
+   "net": "+🪙 **1,000,000,000** coins"
+  },
+  {
+   "settings": "big",
+   "n": -7,
+   "bold": "🪙 **-7** coins",
+   "plain": "🪙 -7 coins",
+   "net": "−🪙 **7** coins"
+  },
+  {
+   "settings": "deny",
+   "n": 0,
+   "bold": "🪙 **0** coins",
+   "plain": "🪙 0 coins",
+   "net": "±🪙 **0** coins"
+  },
+  {
+   "settings": "deny",
+   "n": 5,
+   "bold": "🪙 **5** coins",
+   "plain": "🪙 5 coins",
+   "net": "+🪙 **5** coins"
+  },
+  {
+   "settings": "deny",
+   "n": 1234,
+   "bold": "🪙 **1,234** coins",
+   "plain": "🪙 1,234 coins",
+   "net": "+🪙 **1,234** coins"
+  },
+  {
+   "settings": "deny",
+   "n": 1000000000,
+   "bold": "🪙 **1,000,000,000** coins",
+   "plain": "🪙 1,000,000,000 coins",
+   "net": "+🪙 **1,000,000,000** coins"
+  },
+  {
+   "settings": "deny",
+   "n": -7,
+   "bold": "🪙 **-7** coins",
+   "plain": "🪙 -7 coins",
+   "net": "−🪙 **7** coins"
+  },
+  {
+   "settings": "empty",
+   "n": 0,
+   "bold": "🪙 **0** coins",
+   "plain": "🪙 0 coins",
+   "net": "±🪙 **0** coins"
+  },
+  {
+   "settings": "empty",
+   "n": 5,
+   "bold": "🪙 **5** coins",
+   "plain": "🪙 5 coins",
+   "net": "+🪙 **5** coins"
+  },
+  {
+   "settings": "empty",
+   "n": 1234,
+   "bold": "🪙 **1,234** coins",
+   "plain": "🪙 1,234 coins",
+   "net": "+🪙 **1,234** coins"
+  },
+  {
+   "settings": "empty",
+   "n": 1000000000,
+   "bold": "🪙 **1,000,000,000** coins",
+   "plain": "🪙 1,000,000,000 coins",
+   "net": "+🪙 **1,000,000,000** coins"
+  },
+  {
+   "settings": "empty",
+   "n": -7,
+   "bold": "🪙 **-7** coins",
+   "plain": "🪙 -7 coins",
+   "net": "−🪙 **7** coins"
+  },
+  {
+   "settings": "gems",
+   "n": 0,
+   "bold": "💎 **0** gems",
+   "plain": "💎 0 gems",
+   "net": "±💎 **0** gems"
+  },
+  {
+   "settings": "gems",
+   "n": 5,
+   "bold": "💎 **5** gems",
+   "plain": "💎 5 gems",
+   "net": "+💎 **5** gems"
+  },
+  {
+   "settings": "gems",
+   "n": 1234,
+   "bold": "💎 **1,234** gems",
+   "plain": "💎 1,234 gems",
+   "net": "+💎 **1,234** gems"
+  },
+  {
+   "settings": "gems",
+   "n": 1000000000,
+   "bold": "💎 **1,000,000,000** gems",
+   "plain": "💎 1,000,000,000 gems",
+   "net": "+💎 **1,000,000,000** gems"
+  },
+  {
+   "settings": "gems",
+   "n": -7,
+   "bold": "💎 **-7** gems",
+   "plain": "💎 -7 gems",
+   "net": "−💎 **7** gems"
+  }
+ ],
+ "daily": [
+  {
+   "base": 1,
+   "streak": 0,
+   "amount": 1,
+   "label": "×1"
+  },
+  {
+   "base": 1,
+   "streak": 1,
+   "amount": 1,
+   "label": "×1"
+  },
+  {
+   "base": 1,
+   "streak": 2,
+   "amount": 1,
+   "label": "×1.1"
+  },
+  {
+   "base": 1,
+   "streak": 3,
+   "amount": 1,
+   "label": "×1.2"
+  },
+  {
+   "base": 1,
+   "streak": 4,
+   "amount": 1,
+   "label": "×1.4"
+  },
+  {
+   "base": 1,
+   "streak": 5,
+   "amount": 2,
+   "label": "×1.8"
+  },
+  {
+   "base": 1,
+   "streak": 6,
+   "amount": 3,
+   "label": "×2.5"
+  },
+  {
+   "base": 1,
+   "streak": 7,
+   "amount": 4,
+   "label": "×4"
+  },
+  {
+   "base": 1,
+   "streak": 8,
+   "amount": 4,
+   "label": "×4"
+  },
+  {
+   "base": 1,
+   "streak": 9,
+   "amount": 4,
+   "label": "×4"
+  },
+  {
+   "base": 50,
+   "streak": 0,
+   "amount": 50,
+   "label": "×1"
+  },
+  {
+   "base": 50,
+   "streak": 1,
+   "amount": 50,
+   "label": "×1"
+  },
+  {
+   "base": 50,
+   "streak": 2,
+   "amount": 55,
+   "label": "×1.1"
+  },
+  {
+   "base": 50,
+   "streak": 3,
+   "amount": 60,
+   "label": "×1.2"
+  },
+  {
+   "base": 50,
+   "streak": 4,
+   "amount": 70,
+   "label": "×1.4"
+  },
+  {
+   "base": 50,
+   "streak": 5,
+   "amount": 90,
+   "label": "×1.8"
+  },
+  {
+   "base": 50,
+   "streak": 6,
+   "amount": 125,
+   "label": "×2.5"
+  },
+  {
+   "base": 50,
+   "streak": 7,
+   "amount": 200,
+   "label": "×4"
+  },
+  {
+   "base": 50,
+   "streak": 8,
+   "amount": 200,
+   "label": "×4"
+  },
+  {
+   "base": 50,
+   "streak": 9,
+   "amount": 200,
+   "label": "×4"
+  },
+  {
+   "base": 51,
+   "streak": 0,
+   "amount": 51,
+   "label": "×1"
+  },
+  {
+   "base": 51,
+   "streak": 1,
+   "amount": 51,
+   "label": "×1"
+  },
+  {
+   "base": 51,
+   "streak": 2,
+   "amount": 56,
+   "label": "×1.1"
+  },
+  {
+   "base": 51,
+   "streak": 3,
+   "amount": 61,
+   "label": "×1.2"
+  },
+  {
+   "base": 51,
+   "streak": 4,
+   "amount": 71,
+   "label": "×1.4"
+  },
+  {
+   "base": 51,
+   "streak": 5,
+   "amount": 92,
+   "label": "×1.8"
+  },
+  {
+   "base": 51,
+   "streak": 6,
+   "amount": 128,
+   "label": "×2.5"
+  },
+  {
+   "base": 51,
+   "streak": 7,
+   "amount": 204,
+   "label": "×4"
+  },
+  {
+   "base": 51,
+   "streak": 8,
+   "amount": 204,
+   "label": "×4"
+  },
+  {
+   "base": 51,
+   "streak": 9,
+   "amount": 204,
+   "label": "×4"
+  },
+  {
+   "base": 55,
+   "streak": 0,
+   "amount": 55,
+   "label": "×1"
+  },
+  {
+   "base": 55,
+   "streak": 1,
+   "amount": 55,
+   "label": "×1"
+  },
+  {
+   "base": 55,
+   "streak": 2,
+   "amount": 61,
+   "label": "×1.1"
+  },
+  {
+   "base": 55,
+   "streak": 3,
+   "amount": 66,
+   "label": "×1.2"
+  },
+  {
+   "base": 55,
+   "streak": 4,
+   "amount": 77,
+   "label": "×1.4"
+  },
+  {
+   "base": 55,
+   "streak": 5,
+   "amount": 99,
+   "label": "×1.8"
+  },
+  {
+   "base": 55,
+   "streak": 6,
+   "amount": 138,
+   "label": "×2.5"
+  },
+  {
+   "base": 55,
+   "streak": 7,
+   "amount": 220,
+   "label": "×4"
+  },
+  {
+   "base": 55,
+   "streak": 8,
+   "amount": 220,
+   "label": "×4"
+  },
+  {
+   "base": 55,
+   "streak": 9,
+   "amount": 220,
+   "label": "×4"
+  },
+  {
+   "base": 100,
+   "streak": 0,
+   "amount": 100,
+   "label": "×1"
+  },
+  {
+   "base": 100,
+   "streak": 1,
+   "amount": 100,
+   "label": "×1"
+  },
+  {
+   "base": 100,
+   "streak": 2,
+   "amount": 110,
+   "label": "×1.1"
+  },
+  {
+   "base": 100,
+   "streak": 3,
+   "amount": 120,
+   "label": "×1.2"
+  },
+  {
+   "base": 100,
+   "streak": 4,
+   "amount": 140,
+   "label": "×1.4"
+  },
+  {
+   "base": 100,
+   "streak": 5,
+   "amount": 180,
+   "label": "×1.8"
+  },
+  {
+   "base": 100,
+   "streak": 6,
+   "amount": 250,
+   "label": "×2.5"
+  },
+  {
+   "base": 100,
+   "streak": 7,
+   "amount": 400,
+   "label": "×4"
+  },
+  {
+   "base": 100,
+   "streak": 8,
+   "amount": 400,
+   "label": "×4"
+  },
+  {
+   "base": 100,
+   "streak": 9,
+   "amount": 400,
+   "label": "×4"
+  },
+  {
+   "base": 999999,
+   "streak": 0,
+   "amount": 999999,
+   "label": "×1"
+  },
+  {
+   "base": 999999,
+   "streak": 1,
+   "amount": 999999,
+   "label": "×1"
+  },
+  {
+   "base": 999999,
+   "streak": 2,
+   "amount": 1099999,
+   "label": "×1.1"
+  },
+  {
+   "base": 999999,
+   "streak": 3,
+   "amount": 1199999,
+   "label": "×1.2"
+  },
+  {
+   "base": 999999,
+   "streak": 4,
+   "amount": 1399999,
+   "label": "×1.4"
+  },
+  {
+   "base": 999999,
+   "streak": 5,
+   "amount": 1799998,
+   "label": "×1.8"
+  },
+  {
+   "base": 999999,
+   "streak": 6,
+   "amount": 2499998,
+   "label": "×2.5"
+  },
+  {
+   "base": 999999,
+   "streak": 7,
+   "amount": 3999996,
+   "label": "×4"
+  },
+  {
+   "base": 999999,
+   "streak": 8,
+   "amount": 3999996,
+   "label": "×4"
+  },
+  {
+   "base": 999999,
+   "streak": 9,
+   "amount": 3999996,
+   "label": "×4"
+  }
+ ],
+ "periodKeys": [
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2026-06-30"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2026-06"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2026-07-01"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2026-07"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-06-30"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-06"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2026-07-01"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2026-07"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2026-07-01"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2026-07"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2026-06-30"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W27"
+  },
+  {
+   "date": "2026-06-30T23:30:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2026-06"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2026-01-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2026-01-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-01-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2026-01-02"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2026-01-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2026-01-01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2026-01-01T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2026-01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2025-12-29"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2025-12-29"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2025-12-29"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2025-12-30"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2025-12-29"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2025-12-29"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W01"
+  },
+  {
+   "date": "2025-12-29T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2025-12"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2021-01-03"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2020-W53"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2021-01-03"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2020-W53"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2021-01-03"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2020-W53"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2021-01-04"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2021-W01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2021-01-03"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2020-W53"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2021-01-03"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2020-W53"
+  },
+  {
+   "date": "2021-01-03T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2021-01"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2026-12-28"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2026-12-28"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-12-28"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2026-12-29"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2026-12-28"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2026-12-28"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2026-12-28T12:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2024-02-29"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2024-02"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2024-02-29"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2024-02"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2024-02-29"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2024-02"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2024-03-01"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2024-03"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2024-03-01"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2024-03"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2024-02-29"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2024-W09"
+  },
+  {
+   "date": "2024-02-29T23:59:59Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2024-02"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2027-01-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2027-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2027-01-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2027-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-12-31"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-12"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2027-01-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2027-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2027-01-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2027-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2027-01-01"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W53"
+  },
+  {
+   "date": "2027-01-01T05:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2027-01"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2026-03-29"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2026-03-29"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-03-28"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2026-03-29"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2026-03-29"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2026-03-29"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W13"
+  },
+  {
+   "date": "2026-03-29T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2026-03"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:2026-10-25"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:2026-10-25"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:2026-10-24"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2026-10-25"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2026-10-25"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:2026-10-25"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:2026-W43"
+  },
+  {
+   "date": "2026-10-25T00:30:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:2026-10"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "UTC",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "UTC",
+   "period": "DAILY",
+   "key": "D:1999-12-31"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "UTC",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "UTC",
+   "period": "MONTHLY",
+   "key": "M:1999-12"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Europe/London",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Europe/London",
+   "period": "DAILY",
+   "key": "D:1999-12-31"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Europe/London",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Europe/London",
+   "period": "MONTHLY",
+   "key": "M:1999-12"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "DAILY",
+   "key": "D:1999-12-31"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "America/Los_Angeles",
+   "period": "MONTHLY",
+   "key": "M:1999-12"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "DAILY",
+   "key": "D:2000-01-01"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Pacific/Kiritimati",
+   "period": "MONTHLY",
+   "key": "M:2000-01"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "DAILY",
+   "key": "D:2000-01-01"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Asia/Kolkata",
+   "period": "MONTHLY",
+   "key": "M:2000-01"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Not/AZone",
+   "period": "ONE_TIME",
+   "key": "once"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Not/AZone",
+   "period": "DAILY",
+   "key": "D:1999-12-31"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Not/AZone",
+   "period": "WEEKLY",
+   "key": "W:1999-W52"
+  },
+  {
+   "date": "1999-12-31T23:00:00Z",
+   "tz": "Not/AZone",
+   "period": "MONTHLY",
+   "key": "M:1999-12"
+  }
+ ],
+ "emoji": [
+  {
+   "input": "🪙",
+   "result": {
+    "ok": true,
+    "value": "🪙",
+    "customId": null
+   }
+  },
+  {
+   "input": "<:coin:123456789012345678>",
+   "result": {
+    "ok": true,
+    "value": "<:coin:123456789012345678>",
+    "customId": "123456789012345678"
+   }
+  },
+  {
+   "input": "<a:spin:123456789012345678>",
+   "result": {
+    "ok": true,
+    "value": "<a:spin:123456789012345678>",
+    "customId": "123456789012345678"
+   }
+  },
+  {
+   "input": "❤️",
+   "result": {
+    "ok": true,
+    "value": "❤️",
+    "customId": null
+   }
+  },
+  {
+   "input": "👍🏽",
+   "result": {
+    "ok": true,
+    "value": "👍🏽",
+    "customId": null
+   }
+  },
+  {
+   "input": "abc",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "<@123456789012345678>",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "🪙 coins",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "🇺🇸",
+   "result": {
+    "ok": true,
+    "value": "🇺🇸",
+    "customId": null
+   }
+  },
+  {
+   "input": "1️⃣",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "👨‍👩‍👧",
+   "result": {
+    "ok": true,
+    "value": "👨‍👩‍👧",
+    "customId": null
+   }
+  },
+  {
+   "input": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "#️⃣",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "  💎  ",
+   "result": {
+    "ok": true,
+    "value": "💎",
+    "customId": null
+   }
+  },
+  {
+   "input": "<:c:123456789012345678>",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "<:coin:1234567890123456>",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "©",
+   "result": {
+    "ok": true,
+    "value": "©",
+    "customId": null
+   }
+  },
+  {
+   "input": "☺",
+   "result": {
+    "ok": true,
+    "value": "☺",
+    "customId": null
+   }
+  },
+  {
+   "input": "🏳️‍🌈",
+   "result": {
+    "ok": true,
+    "value": "🏳️‍🌈",
+    "customId": null
+   }
+  },
+  {
+   "input": "x🪙",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "🪙x",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  },
+  {
+   "input": "‍",
+   "result": {
+    "ok": false,
+    "reason": "That is not an emoji. Use a standard emoji like 🪙 or a custom emoji like <:coin:123…>."
+   }
+  }
+ ],
+ "names": [
+  {
+   "input": "  gold   coins ",
+   "currency": {
+    "ok": true,
+    "value": "gold coins"
+   },
+   "item": {
+    "ok": true,
+    "value": "gold coins"
+   },
+   "boost": {
+    "ok": true,
+    "value": "gold coins"
+   }
+  },
+  {
+   "input": "**x**",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": true,
+    "value": "**x**"
+   },
+   "boost": {
+    "ok": true,
+    "value": "**x**"
+   }
+  },
+  {
+   "input": "@everyone",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": true,
+    "value": "@everyone"
+   },
+   "boost": {
+    "ok": true,
+    "value": "@everyone"
+   }
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": true,
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "currency": {
+    "ok": true,
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "item": {
+    "ok": true,
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "boost": {
+    "ok": true,
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   }
+  },
+  {
+   "input": "line\nbreak",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   }
+  },
+  {
+   "input": "",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be 1 to 50 characters."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "`code`",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": true,
+    "value": "`code`"
+   },
+   "boost": {
+    "ok": true,
+    "value": "`code`"
+   }
+  },
+  {
+   "input": "<#1>",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": true,
+    "value": "<#1>"
+   },
+   "boost": {
+    "ok": true,
+    "value": "<#1>"
+   }
+  },
+  {
+   "input": "none",
+   "currency": {
+    "ok": true,
+    "value": "none"
+   },
+   "item": {
+    "ok": false,
+    "reason": "Pick a different name."
+   },
+   "boost": {
+    "ok": true,
+    "value": "none"
+   }
+  },
+  {
+   "input": "NONE",
+   "currency": {
+    "ok": true,
+    "value": "NONE"
+   },
+   "item": {
+    "ok": false,
+    "reason": "Pick a different name."
+   },
+   "boost": {
+    "ok": true,
+    "value": "NONE"
+   }
+  },
+  {
+   "input": "None ",
+   "currency": {
+    "ok": true,
+    "value": "None"
+   },
+   "item": {
+    "ok": false,
+    "reason": "Pick a different name."
+   },
+   "boost": {
+    "ok": true,
+    "value": "None"
+   }
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be 1 to 50 characters."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": true,
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "   ",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be 1 to 50 characters."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "two\nlines",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   }
+  },
+  {
+   "input": "tab\there",
+   "currency": {
+    "ok": true,
+    "value": "tab here"
+   },
+   "item": {
+    "ok": true,
+    "value": "tab here"
+   },
+   "boost": {
+    "ok": true,
+    "value": "tab here"
+   }
+  },
+  {
+   "input": "émoji 🪙",
+   "currency": {
+    "ok": true,
+    "value": "émoji 🪙"
+   },
+   "item": {
+    "ok": true,
+    "value": "émoji 🪙"
+   },
+   "boost": {
+    "ok": true,
+    "value": "émoji 🪙"
+   }
+  },
+  {
+   "input": " nbsp ",
+   "currency": {
+    "ok": true,
+    "value": "nbsp"
+   },
+   "item": {
+    "ok": true,
+    "value": "nbsp"
+   },
+   "boost": {
+    "ok": true,
+    "value": "nbsp"
+   }
+  },
+  {
+   "input": "back\\slash",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": true,
+    "value": "back\\slash"
+   },
+   "boost": {
+    "ok": true,
+    "value": "back\\slash"
+   }
+  },
+  {
+   "input": "r\rx",
+   "currency": {
+    "ok": false,
+    "reason": "Use letters, numbers, spaces and simple punctuation only (no markdown, mentions or newlines)."
+   },
+   "item": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be a single line."
+   }
+  },
+  {
+   "input": "Ⅻ",
+   "currency": {
+    "ok": true,
+    "value": "Ⅻ"
+   },
+   "item": {
+    "ok": true,
+    "value": "Ⅻ"
+   },
+   "boost": {
+    "ok": true,
+    "value": "Ⅻ"
+   }
+  },
+  {
+   "input": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙",
+   "currency": {
+    "ok": true,
+    "value": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙"
+   },
+   "item": {
+    "ok": true,
+    "value": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙"
+   },
+   "boost": {
+    "ok": true,
+    "value": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙"
+   }
+  },
+  {
+   "input": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": true,
+    "value": "🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙"
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxx🪙🪙🪙🪙",
+   "currency": {
+    "ok": false,
+    "reason": "The currency name must be 1 to 32 characters."
+   },
+   "item": {
+    "ok": true,
+    "value": "xxxxxxxxxxxxxxxxxxxxxxxxx🪙🪙🪙🪙"
+   },
+   "boost": {
+    "ok": false,
+    "reason": "The name must be 1 to 32 characters."
+   }
+  }
+ ],
+ "orderBoosts": {
+  "boosts": [
+   {
+    "id": "a",
+    "percent": 50,
+    "roleId": null,
+    "createdAt": "2026-01-02T00:00:00.000Z",
+    "enabled": true
+   },
+   {
+    "id": "b",
+    "percent": 100,
+    "roleId": "R1",
+    "createdAt": "2026-01-03T00:00:00.000Z",
+    "enabled": true
+   },
+   {
+    "id": "c",
+    "percent": 100,
+    "roleId": null,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "enabled": true
+   },
+   {
+    "id": "d",
+    "percent": 200,
+    "roleId": "R2",
+    "createdAt": "2026-01-04T00:00:00.000Z",
+    "enabled": true
+   },
+   {
+    "id": "e",
+    "percent": 300,
+    "roleId": null,
+    "createdAt": "2026-01-05T00:00:00.000Z",
+    "enabled": false
+   },
+   {
+    "id": "f",
+    "percent": 50,
+    "roleId": null,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "enabled": true
+   },
+   {
+    "id": "g",
+    "percent": 50,
+    "roleId": null,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "enabled": true
+   }
+  ],
+  "cases": [
+   {
+    "roles": [],
+    "ids": [
+     "c",
+     "f",
+     "g",
+     "a"
+    ]
+   },
+   {
+    "roles": [
+     "R1"
+    ],
+    "ids": [
+     "c",
+     "b",
+     "f",
+     "g",
+     "a"
+    ]
+   },
+   {
+    "roles": [
+     "R1",
+     "R2"
+    ],
+    "ids": [
+     "d",
+     "c",
+     "b",
+     "f",
+     "g",
+     "a"
+    ]
+   },
+   {
+    "roles": [
+     "R9"
+    ],
+    "ids": [
+     "c",
+     "f",
+     "g",
+     "a"
+    ]
+   }
+  ]
+ },
+ "clampPayout": [
+  {
+   "payout": 1000,
+   "stake": 100,
+   "max": 500,
+   "result": {
+    "payout": 600,
+    "capped": true
+   }
+  },
+  {
+   "payout": 1000,
+   "stake": 1000,
+   "max": 500,
+   "result": {
+    "payout": 1000,
+    "capped": false
+   }
+  },
+  {
+   "payout": 2000,
+   "stake": 1000,
+   "max": 500,
+   "result": {
+    "payout": 1500,
+    "capped": true
+   }
+  },
+  {
+   "payout": 0,
+   "stake": 1000,
+   "max": 500,
+   "result": {
+    "payout": 0,
+    "capped": false
+   }
+  },
+  {
+   "payout": 36000,
+   "stake": 1000,
+   "max": 0,
+   "result": {
+    "payout": 36000,
+    "capped": false
+   }
+  },
+  {
+   "payout": 600,
+   "stake": 100,
+   "max": 500,
+   "result": {
+    "payout": 600,
+    "capped": false
+   }
+  }
+ ],
+ "boosted": [
+  {
+   "base": 120,
+   "pct": 50,
+   "amount": 180
+  },
+  {
+   "base": 101,
+   "pct": 50,
+   "amount": 151
+  },
+  {
+   "base": 100,
+   "pct": 500,
+   "amount": 600
+  },
+  {
+   "base": 7,
+   "pct": 1,
+   "amount": 7
+  },
+  {
+   "base": 0,
+   "pct": 10,
+   "amount": 0
+  },
+  {
+   "base": 999999,
+   "pct": 333,
+   "amount": 4329995
+  }
+ ],
+ "itemVars": [
+  {
+   "name": "VIP",
+   "price": 500,
+   "quantity": 3,
+   "total": 1500,
+   "settings": "none",
+   "vars": {
+    "item": "VIP",
+    "quantity": "3",
+    "coins": "1,500",
+    "price": "500",
+    "currency": "coins",
+    "currency.emoji": "🪙"
+   },
+   "buy": "You bought **3× VIP** for 🪙 **1,500** coins!",
+   "use": "{user} used **VIP**!"
+  },
+  {
+   "name": "Gem *x*",
+   "price": 1234567,
+   "quantity": 1,
+   "total": 1234567,
+   "settings": "gems",
+   "vars": {
+    "item": "Gem *x*",
+    "quantity": "1",
+    "coins": "1,234,567",
+    "price": "1,234,567",
+    "currency": "gems",
+    "currency.emoji": "💎"
+   },
+   "buy": "You bought **1× Gem *x*** for 💎 **1,234,567** gems!",
+   "use": "{user} used **Gem *x***!"
+  }
+ ],
+ "itemLabel": [
+  {
+   "name": "VIP",
+   "label": "**VIP**"
+  },
+  {
+   "name": "**bold**",
+   "label": "**\\*\\*bold\\*\\***"
+  },
+  {
+   "name": "under_score",
+   "label": "**under\\_score**"
+  },
+  {
+   "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "label": "**xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…**"
+  },
+  {
+   "name": "`tick`",
+   "label": "**\\`tick\\`**"
+  }
+ ],
+ "ownership": [
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "STATIC",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": false
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": false
+  },
+  {
+   "type": "USABLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": false
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": false,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": false,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": true
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": false,
+   "maxPerUser": 200,
+   "max": 1,
+   "toInventory": false
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 500,
+   "max": 200,
+   "toInventory": false
+  },
+  {
+   "type": "ROLE",
+   "useOnBuy": true,
+   "destroyOnUse": true,
+   "canBuyMultiple": true,
+   "maxPerUser": 3,
+   "max": 3,
+   "toInventory": false
+  }
+ ],
+ "gameChannels": [
+  {
+   "mode": "ALLOW",
+   "ids": [],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1",
+     "2"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "ALLOW",
+    "allowedIds": [
+     "1",
+     "2"
+    ]
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "ALLOW",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "7",
+    "1"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "1",
+   "parent": null,
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1",
+     "2"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "3",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "7",
+   "parent": null,
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "9",
+   "parent": "1",
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1",
+     "2"
+    ]
+   }
+  },
+  {
+   "mode": "DENY",
+   "ids": [
+    "1",
+    "2"
+   ],
+   "channel": "9",
+   "parent": "2",
+   "result": {
+    "ok": false,
+    "mode": "DENY",
+    "deniedIds": [
+     "1",
+     "2"
+    ]
+   }
+  }
+ ],
+ "streakWindows": [
+  {
+   "hours": 0,
+   "next": 4,
+   "active": 5
+  },
+  {
+   "hours": 1,
+   "next": 4,
+   "active": 5
+  },
+  {
+   "hours": 24,
+   "next": 4,
+   "active": 5
+  },
+  {
+   "hours": 47.99,
+   "next": 4,
+   "active": 5
+  },
+  {
+   "hours": 48,
+   "next": 4,
+   "active": 5
+  },
+  {
+   "hours": 48.01,
+   "next": 1,
+   "active": 0
+  },
+  {
+   "hours": 200,
+   "next": 1,
+   "active": 0
+  }
+ ],
+ "constants": {
+  "PITY_THRESHOLD": 100,
+  "PITY_AMOUNT": 500,
+  "PITY_COOLDOWN_MS": 43200000,
+  "DAILY_COOLDOWN_MS": 86400000,
+  "DAILY_STREAK_WINDOW_MS": 172800000,
+  "DAILY_MULTIPLIER_TENTHS": [
+   10,
+   11,
+   12,
+   14,
+   18,
+   25,
+   40
+  ],
+  "ITEM_NAME_MAX": 50,
+  "ITEM_DESCRIPTION_MAX": 200,
+  "ITEM_MESSAGE_MAX": 1000,
+  "ITEM_IMAGE_MAX": 500,
+  "MAX_STOCK": 1000000,
+  "RANGE_MAX": 1000000,
+  "WORK_COOLDOWN_MAX_MINUTES": 10080,
+  "RICHEST_LIMIT": 100,
+  "GAME_CHANNELS_MAX": 25,
+  "BOOST_NAME_MAX": 32,
+  "BOOST_PERCENT_MAX": 500,
+  "DEFAULT_BUY_MESSAGE": "You bought **{quantity}× {item}** for {currency.emoji} **{coins}** {currency}!",
+  "DEFAULT_USE_MESSAGE": "{user} used **{item}**!",
+  "ITEM_TYPE_LABELS": {
+   "STATIC": "📦 Collectible",
+   "USABLE": "✨ Usable",
+   "ROLE": "🎭 Role"
+  },
+  "BOOST_PERIOD_LABELS": {
+   "ONE_TIME": "One-time",
+   "DAILY": "Daily",
+   "WEEKLY": "Weekly",
+   "MONTHLY": "Monthly"
+  },
+  "WORK_LINES": [
+   "You delivered pizzas all over town",
+   "You fixed a bug in production",
+   "You walked the neighbours' dogs",
+   "You streamed for six hours straight",
+   "You moderated a very busy chat",
+   "You baked bread at the local bakery",
+   "You mowed lawns all afternoon",
+   "You tutored a student in maths",
+   "You drove a taxi through rush hour",
+   "You washed cars at the car wash",
+   "You sold lemonade on the corner",
+   "You designed a logo for a client"
+  ]
+ },
+ "settings": {
+  "none": null,
+  "defaults": {},
+  "big": {
+   "economyMaxBalance": 2000000000,
+   "economyStartingBalance": 2000000000,
+   "dailyMin": 300,
+   "dailyMax": 100
+  },
+  "deny": {
+   "economyGameChannelMode": "DENY",
+   "economyMaxPayout": 750,
+   "economyMaxBet": -5,
+   "workCooldownMinutes": 0
+  },
+  "empty": {
+   "currencyName": "",
+   "currencyEmoji": ""
+  },
+  "gems": {
+   "currencyName": "gems",
+   "currencyEmoji": "💎",
+   "workMin": 500,
+   "workMax": 20,
+   "dailyMin": 0,
+   "workCooldownMinutes": 99999,
+   "economyGameChannelIds": [
+    "1",
+    "2",
+    "7"
+   ],
+   "economyStartingBalance": 5,
+   "economyMaxBalance": 3
+  }
+ },
+ "rawSql": [
+  {
+   "name": "economy.insertAccount",
+   "sql": "\n    INSERT INTO \"EconomyAccount\" (\"id\",\"guildId\",\"userId\",\"balance\",\"dailyStreak\",\"importedGlobal\",\"createdAt\",\"updatedAt\")\n    VALUES (?, ?, ?, ?::bigint::int, 0, ?, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))\n    ON CONFLICT (\"guildId\",\"userId\") DO NOTHING",
+   "values": [
+    "9918bb13-9c84-43e7-a464-929c3c126b70",
+    "0",
+    "0",
+    0,
+    false
+   ]
+  },
+  {
+   "name": "economy.credit",
+   "sql": "\n    UPDATE \"EconomyAccount\"\n    SET \"balance\" = GREATEST(\"balance\"::bigint, LEAST(\"balance\"::bigint + ?::bigint, ?::bigint))::int,\n        \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"guildId\" = ? AND \"userId\" = ?\n    RETURNING \"balance\"",
+   "values": [
+    1,
+    1000000000,
+    "0",
+    "0"
+   ]
+  },
+  {
+   "name": "economy.debit",
+   "sql": "\n    UPDATE \"EconomyAccount\"\n    SET \"balance\" = (\"balance\"::bigint - ?::bigint)::int, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"guildId\" = ? AND \"userId\" = ? AND \"balance\" >= ?::bigint\n    RETURNING \"balance\"",
+   "values": [
+    1,
+    "0",
+    "0",
+    1
+   ]
+  },
+  {
+   "name": "economy.lockAccounts",
+   "sql": "\n    SELECT \"id\" FROM \"EconomyAccount\"\n    WHERE \"guildId\" = ? AND \"userId\" IN (?, ?)\n    ORDER BY \"userId\" FOR UPDATE",
+   "values": [
+    "0",
+    "1",
+    "2"
+   ]
+  },
+  {
+   "name": "economy.creditChecked",
+   "sql": "\n    UPDATE \"EconomyAccount\"\n    SET \"balance\" = (\"balance\"::bigint + ?::bigint)::int, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"guildId\" = ? AND \"userId\" = ?\n      AND \"balance\"::bigint + ?::bigint <= ?::bigint\n    RETURNING \"balance\"",
+   "values": [
+    1,
+    "0",
+    "0",
+    1,
+    1000000000
+   ]
+  },
+  {
+   "name": "economy.removeCoins",
+   "sql": "\n    WITH old AS (\n      SELECT \"id\", \"balance\" FROM \"EconomyAccount\"\n      WHERE \"guildId\" = ? AND \"userId\" = ? FOR UPDATE\n    )\n    UPDATE \"EconomyAccount\" a\n    SET \"balance\" = GREATEST(old.\"balance\"::bigint - ?::bigint, 0)::int, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    FROM old WHERE a.\"id\" = old.\"id\"\n    RETURNING a.\"balance\" AS \"balance\", old.\"balance\" AS \"before\"",
+   "values": [
+    "0",
+    "0",
+    1
+   ]
+  },
+  {
+   "name": "economy.claimDaily",
+   "sql": "\n    WITH cur AS (\n      SELECT \"id\",\n             CASE WHEN \"lastDaily\" IS NULL OR \"lastDaily\" < (now() AT TIME ZONE 'UTC') - interval '48 hours'\n                  THEN 1 ELSE LEAST(\"dailyStreak\", 999999) + 1 END AS ns\n      FROM \"EconomyAccount\"\n      WHERE \"guildId\" = ? AND \"userId\" = ?\n        AND (\"lastDaily\" IS NULL OR \"lastDaily\" <= (now() AT TIME ZONE 'UTC') - interval '24 hours')\n      FOR UPDATE\n    )\n    UPDATE \"EconomyAccount\" a SET\n      \"dailyStreak\" = cur.ns,\n      \"balance\" = GREATEST(a.\"balance\"::bigint, LEAST(\n          a.\"balance\"::bigint\n          + (((?::bigint * (CASE LEAST(cur.ns, 7) WHEN 1 THEN 10 WHEN 2 THEN 11 WHEN 3 THEN 12\n                                       WHEN 4 THEN 14 WHEN 5 THEN 18 WHEN 6 THEN 25 ELSE 40 END) + 5) / 10)\n             * (100 + ?::bigint)) / 100,\n          ?::bigint))::int,\n      \"lastDaily\" = (now() AT TIME ZONE 'UTC'),\n      \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    FROM cur\n    WHERE a.\"id\" = cur.\"id\"\n    RETURNING a.\"balance\" AS \"balance\", a.\"dailyStreak\" AS \"dailyStreak\", a.\"lastDaily\" AS \"lastDaily\"",
+   "values": [
+    "0",
+    "0",
+    100,
+    50,
+    1000000000
+   ]
+  },
+  {
+   "name": "economy.claimWork",
+   "sql": "\n    UPDATE \"EconomyAccount\"\n    SET \"balance\" = GREATEST(\"balance\"::bigint, LEAST(\"balance\"::bigint + ?::bigint, ?::bigint))::int,\n        \"lastWork\" = (now() AT TIME ZONE 'UTC'), \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"guildId\" = ? AND \"userId\" = ?\n      AND (\"lastWork\" IS NULL OR \"lastWork\" <= (now() AT TIME ZONE 'UTC') - make_interval(mins => ?::int))\n    RETURNING \"balance\", \"lastWork\"",
+   "values": [
+    100,
+    1000000000,
+    "0",
+    "0",
+    60
+   ]
+  },
+  {
+   "name": "economy.claimPity",
+   "sql": "\n    UPDATE \"EconomyAccount\"\n    SET \"balance\" = GREATEST(\"balance\"::bigint, LEAST(\"balance\"::bigint + ?::bigint, ?::bigint))::int,\n        \"lastPity\" = (now() AT TIME ZONE 'UTC'), \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"guildId\" = ? AND \"userId\" = ?\n      AND \"balance\" < ?::int\n      AND (\"lastPity\" IS NULL OR \"lastPity\" <= (now() AT TIME ZONE 'UTC') - interval '12 hours')\n    RETURNING \"balance\"",
+   "values": [
+    500,
+    1000000000,
+    "0",
+    "0",
+    100
+   ]
+  },
+  {
+   "name": "economy.insertBoostUse",
+   "sql": "\n    INSERT INTO \"EconomyBoostUse\" (\"id\",\"boostId\",\"userId\",\"periodKey\",\"createdAt\")\n    VALUES (?, ?, ?, ?, (now() AT TIME ZONE 'UTC'))\n    ON CONFLICT (\"boostId\",\"userId\",\"periodKey\") DO NOTHING\n    RETURNING \"id\"",
+   "values": [
+    "9861a07c-d142-4b5b-96c2-d33fa654b789",
+    "0",
+    "0",
+    "once"
+   ]
+  },
+  {
+   "name": "economy.lockSettingsRow",
+   "sql": "SELECT 1 FROM \"GuildSettings\" WHERE \"guildId\" = ? FOR UPDATE",
+   "values": [
+    "0"
+   ]
+  },
+  {
+   "name": "economy.reserveStock",
+   "sql": "\n    UPDATE \"ShopItem\"\n    SET \"stock\" = CASE WHEN \"stock\" IS NULL THEN NULL ELSE \"stock\" - ?::int END, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"id\" = ? AND \"guildId\" = ? AND \"enabled\" = true AND (\"stock\" IS NULL OR \"stock\" >= ?::int)\n    RETURNING *",
+   "values": [
+    1,
+    "0",
+    "0",
+    1
+   ]
+  },
+  {
+   "name": "economy.addInventoryCapped",
+   "sql": "\n    INSERT INTO \"InventoryItem\" (\"id\",\"guildId\",\"userId\",\"itemId\",\"quantity\",\"createdAt\",\"updatedAt\")\n    VALUES (?, ?, ?, ?, ?::int, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))\n    ON CONFLICT (\"itemId\",\"userId\") DO UPDATE\n    SET \"quantity\" = \"InventoryItem\".\"quantity\" + EXCLUDED.\"quantity\", \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"InventoryItem\".\"quantity\" + EXCLUDED.\"quantity\" <= ?::int\n    RETURNING \"quantity\"",
+   "values": [
+    "f536446d-4e9b-420b-924f-48336eb3a844",
+    "0",
+    "0",
+    "0",
+    1,
+    200
+   ]
+  },
+  {
+   "name": "economy.addInventory",
+   "sql": "\n    INSERT INTO \"InventoryItem\" (\"id\",\"guildId\",\"userId\",\"itemId\",\"quantity\",\"createdAt\",\"updatedAt\")\n    VALUES (?, ?, ?, ?, ?::int, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))\n    ON CONFLICT (\"itemId\",\"userId\") DO UPDATE\n    SET \"quantity\" = \"InventoryItem\".\"quantity\" + EXCLUDED.\"quantity\", \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    RETURNING \"quantity\"",
+   "values": [
+    "fa81a8b5-2a9d-44f1-830d-639a7088cb32",
+    "0",
+    "0",
+    "0",
+    1
+   ]
+  },
+  {
+   "name": "economy.restoreStock",
+   "sql": "\n    UPDATE \"ShopItem\" SET \"stock\" = \"stock\" + ?::int, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"id\" = ? AND \"guildId\" = ? AND \"stock\" IS NOT NULL",
+   "values": [
+    1,
+    "0",
+    "0"
+   ]
+  },
+  {
+   "name": "economy.reduceInventory",
+   "sql": "\n    UPDATE \"InventoryItem\"\n    SET \"quantity\" = GREATEST(\"quantity\" - ?::int, 0), \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"itemId\" = ? AND \"userId\" = ? AND \"guildId\" = ?",
+   "values": [
+    1,
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "name": "economy.deleteEmptyInventory",
+   "sql": "\n    DELETE FROM \"InventoryItem\"\n    WHERE \"itemId\" = ? AND \"userId\" = ? AND \"guildId\" = ? AND \"quantity\" <= 0",
+   "values": [
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "name": "economy.consumeItem",
+   "sql": "\n    UPDATE \"InventoryItem\"\n    SET \"quantity\" = \"quantity\" - 1, \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    WHERE \"itemId\" = ? AND \"userId\" = ? AND \"guildId\" = ? AND \"quantity\" >= 1\n    RETURNING \"quantity\"",
+   "values": [
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "name": "economy.takeItem",
+   "sql": "\n    WITH old AS (\n      SELECT \"id\", \"quantity\" FROM \"InventoryItem\"\n      WHERE \"itemId\" = ? AND \"userId\" = ? AND \"guildId\" = ? FOR UPDATE\n    )\n    UPDATE \"InventoryItem\" i\n    SET \"quantity\" = GREATEST(old.\"quantity\" - ?::int, 0), \"updatedAt\" = (now() AT TIME ZONE 'UTC')\n    FROM old WHERE i.\"id\" = old.\"id\"\n    RETURNING i.\"quantity\" AS \"remaining\", old.\"quantity\" AS \"before\"",
+   "values": [
+    "0",
+    "0",
+    "0",
+    1
+   ]
+  }
+ ]
+}

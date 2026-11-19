@@ -1,0 +1,60 @@
+[package]
+name = "bot"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "The Discord bot: index.js and src/bot.js (start, deploy, shutdown)."
+
+[lib]
+name = "bot"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bot"
+path = "src/main.rs"
+
+[dependencies]
+bot-config.workspace = true
+bot-db.workspace = true
+bot-util.workspace = true
+bot-core.workspace = true
+feat-achievements.workspace = true
+feat-automations.workspace = true
+feat-automod.workspace = true
+feat-backups.workspace = true
+feat-captcha.workspace = true
+feat-community-a.workspace = true
+feat-community-b.workspace = true
+feat-counting.workspace = true
+feat-dashboard-tasks.workspace = true
+feat-economy.workspace = true
+feat-embeds.workspace = true
+feat-events.workspace = true
+feat-feeds.workspace = true
+feat-games.workspace = true
+feat-general.workspace = true
+feat-giveaways-polls.workspace = true
+feat-levels.workspace = true
+feat-logging.workspace = true
+feat-moderation.workspace = true
+feat-reactionroles.workspace = true
+feat-search.workspace = true
+feat-starboard-stats.workspace = true
+feat-tags.workspace = true
+feat-tempvoice.workspace = true
+feat-tickets.workspace = true
+feat-translation.workspace = true
+feat-welcome.workspace = true
+tokio.workspace = true
+serenity.workspace = true
+serde_json.workspace = true
+regress.workspace = true
+anyhow.workspace = true
+indexmap.workspace = true
+
+[dev-dependencies]
+sqlx.workspace = true
+chrono.workspace = true
+tokio = { workspace = true, features = ["test-util"] }

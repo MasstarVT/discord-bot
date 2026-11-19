@@ -1,0 +1,9 @@
+{
+  "name": "discord-bot-mockdb",
+  "private": true,
+  "type": "module",
+  "description": "Local PostgreSQL 17 and a Redis-protocol mock for testing the Rust port. Not part of the bot.",
+  "dependencies": {
+    "embedded-postgres": "17.11.0-beta.19"
+  }
+}

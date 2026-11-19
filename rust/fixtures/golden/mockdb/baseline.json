@@ -1,0 +1,2863 @@
+{
+  "GuildSettings": {
+    "table": "GuildSettings",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2rf00001hmzkohtl6mn",
+      "guildId": "900000000000000001",
+      "createdAt": "2026-11-18T21:01:55.895Z",
+      "updatedAt": "2026-11-18T21:01:55.895Z",
+      "modEnabled": true,
+      "loggingEnabled": false,
+      "welcomeEnabled": false,
+      "reactionRolesEnabled": true,
+      "levelingEnabled": false,
+      "customCommandsEnabled": false,
+      "autoTriggersEnabled": true,
+      "automodEnabled": false,
+      "translationEnabled": false,
+      "captchaEnabled": false,
+      "invitesEnabled": true,
+      "embedsEnabled": true,
+      "remindersEnabled": true,
+      "giveawaysEnabled": true,
+      "pollsEnabled": true,
+      "starboardEnabled": true,
+      "ticketsEnabled": true,
+      "tempVoiceEnabled": true,
+      "statsEnabled": true,
+      "birthdaysEnabled": true,
+      "achievementsEnabled": false,
+      "automationsEnabled": false,
+      "economyEnabled": true,
+      "gamesEnabled": true,
+      "feedsEnabled": true,
+      "searchEnabled": true,
+      "liveRoleEnabled": false,
+      "countingEnabled": false,
+      "autoTimeEnabled": false,
+      "suggestionsEnabled": false,
+      "modmailEnabled": false,
+      "applicationsEnabled": false,
+      "stickyEnabled": false,
+      "afkEnabled": false,
+      "antiRaidEnabled": false,
+      "eventsEnabled": false,
+      "rolePersistEnabled": false,
+      "boostsEnabled": false,
+      "backupsEnabled": false,
+      "confessionsEnabled": false,
+      "autoThreadsEnabled": false,
+      "voiceRolesEnabled": false,
+      "bumpsEnabled": false,
+      "timezone": "UTC",
+      "timezoneRoles": null,
+      "embedColor": null,
+      "customPrefix": "!",
+      "modLogChannelId": null,
+      "modRoleIds": [],
+      "muteRoleId": null,
+      "automodConfig": null,
+      "infractionEscalation": null,
+      "immuneRoleIds": [],
+      "modVisibility": "PUBLIC",
+      "modDmTargets": true,
+      "messageLogChannelId": null,
+      "memberLogChannelId": null,
+      "serverLogChannelId": null,
+      "voiceLogChannelId": null,
+      "joinLeaveChannelId": null,
+      "disabledLogEvents": [],
+      "logIgnoredChannelIds": [],
+      "welcomeChannelId": null,
+      "welcomeEmbed": null,
+      "welcomeMessage": null,
+      "autoroleIds": [],
+      "autoroleDelay": 0,
+      "welcomeMessageEnabled": true,
+      "welcomeUseEmbed": true,
+      "welcomeCardStyle": null,
+      "welcomeDmEnabled": false,
+      "welcomeDmMessage": null,
+      "welcomeDmEmbed": null,
+      "welcomeDmCard": false,
+      "goodbyeEnabled": false,
+      "goodbyeChannelId": null,
+      "goodbyeMessage": null,
+      "goodbyeEmbed": null,
+      "goodbyeUseEmbed": false,
+      "captchaChannelId": null,
+      "captchaMessageId": null,
+      "captchaRoleId": null,
+      "captchaMode": "IMAGE",
+      "captchaTimeoutMinutes": 0,
+      "captchaTemplate": null,
+      "captchaLockdownPrior": null,
+      "captchaRequiredRoleIds": [],
+      "captchaFallbackFormId": null,
+      "xpEnabled": false,
+      "xpRate": 15,
+      "xpCooldown": 60,
+      "xpMultiplier": 1,
+      "levelUpChannelId": null,
+      "levelUpMessage": null,
+      "noXpRoleIds": [],
+      "noXpChannelIds": [],
+      "levelRolesStack": true,
+      "voiceXpEnabled": false,
+      "voiceXpRate": 5,
+      "levelUpMode": "CURRENT",
+      "levelUpUseEmbed": false,
+      "xpMin": 15,
+      "xpMax": 25,
+      "levelRolesSyncOnDemotion": true,
+      "xpBoostRoles": null,
+      "rankCardStyle": null,
+      "statsCategoryId": null,
+      "birthdayChannelId": null,
+      "birthdayRoleId": null,
+      "birthdayHour": 9,
+      "birthdayMessage": null,
+      "birthdayMessageAge": null,
+      "birthdayRequireYear": false,
+      "currencyName": "coins",
+      "currencyEmoji": "🪙",
+      "economyStartingBalance": 1000,
+      "economyMaxBalance": 1000000000,
+      "economyMaxBet": 0,
+      "dailyMin": 50,
+      "dailyMax": 120,
+      "workMin": 100,
+      "workMax": 300,
+      "workCooldownMinutes": 60,
+      "economyGameChannelIds": [],
+      "economyGameChannelMode": "ALLOW",
+      "economyMaxPayout": 0,
+      "economyImportGlobal": true,
+      "achievementAnnounceMode": "CURRENT",
+      "achievementChannelId": null,
+      "achievementMessage": null,
+      "achievementUseEmbed": false,
+      "urbanNsfwOnly": true,
+      "liveRoleId": null,
+      "liveRoleRequiredRoleId": null,
+      "liveRoleAnnounceChannelId": null,
+      "liveRoleAnnounceMessage": null,
+      "liveRoleAnnouncePingRoleId": null,
+      "countingChannelId": null,
+      "autoTimeIgnoredChannelIds": [],
+      "suggestionChannelId": null,
+      "suggestionThreads": true,
+      "suggestionAllowAnonymous": false,
+      "suggestionDmOnUpdate": true,
+      "suggestionCooldownSeconds": 300,
+      "modmailChannelId": null,
+      "modmailPingRoleIds": [],
+      "modmailGreeting": null,
+      "modmailAnonymousReplies": false,
+      "modmailBlockedUserIds": [],
+      "afkNicknamePrefix": true,
+      "afkIgnoredChannelIds": [],
+      "antiRaidJoinThreshold": 10,
+      "antiRaidJoinSeconds": 10,
+      "antiRaidAction": "ALERT",
+      "antiRaidPauseInvites": true,
+      "antiRaidLockChat": false,
+      "antiRaidLockdownMinutes": 30,
+      "antiRaidMinAccountAgeDays": 0,
+      "antiRaidYoungAction": "KICK",
+      "antiRaidAlertChannelId": null,
+      "eventChannelId": null,
+      "eventCreateDiscordEvent": true,
+      "eventReminderMinutes": 15,
+      "eventChannelsEnabled": false,
+      "eventCategoryId": null,
+      "eventVoiceLeadMinutes": 30,
+      "rolePersistNicknames": true,
+      "rolePersistIgnoredRoleIds": [],
+      "rolePersistDays": 90,
+      "boostChannelId": null,
+      "boostMessage": null,
+      "boostCustomRoles": false,
+      "boostRoleAnchorId": null,
+      "boostRoleGraceDays": 0,
+      "backupIntervalHours": 0,
+      "backupKeep": 7,
+      "confessionChannelId": null,
+      "confessionReviewChannelId": null,
+      "confessionAllowImages": false,
+      "confessionBlockLinks": true,
+      "confessionCooldownSeconds": 300,
+      "confessionBlockedUserIds": [],
+      "autoThreadChannels": [],
+      "autoPublishChannelIds": [],
+      "voiceRoleLinks": [],
+      "voiceRoleAnyRoleIds": [],
+      "voiceRoleIgnoreAfk": true,
+      "bumpChannelId": null,
+      "bumpRoleId": null,
+      "bumpReminderMessage": null,
+      "bumpThanks": true,
+      "bumpThanksMessage": null,
+      "bumpRewardCoins": 0
+    },
+    "full": {
+      "id": "cmwmlx2sa00011hmz8zk4r7mn",
+      "guildId": "900000000000000002",
+      "createdAt": "2026-01-03T03:04:05.679Z",
+      "updatedAt": "2026-11-18T21:01:55.930Z",
+      "modEnabled": false,
+      "loggingEnabled": true,
+      "welcomeEnabled": true,
+      "reactionRolesEnabled": false,
+      "levelingEnabled": true,
+      "customCommandsEnabled": true,
+      "autoTriggersEnabled": false,
+      "automodEnabled": true,
+      "translationEnabled": true,
+      "captchaEnabled": true,
+      "invitesEnabled": false,
+      "embedsEnabled": false,
+      "remindersEnabled": false,
+      "giveawaysEnabled": false,
+      "pollsEnabled": false,
+      "starboardEnabled": false,
+      "ticketsEnabled": false,
+      "tempVoiceEnabled": false,
+      "statsEnabled": false,
+      "birthdaysEnabled": false,
+      "achievementsEnabled": true,
+      "automationsEnabled": true,
+      "economyEnabled": false,
+      "gamesEnabled": false,
+      "feedsEnabled": false,
+      "searchEnabled": false,
+      "liveRoleEnabled": true,
+      "countingEnabled": true,
+      "autoTimeEnabled": true,
+      "suggestionsEnabled": true,
+      "modmailEnabled": true,
+      "applicationsEnabled": true,
+      "stickyEnabled": true,
+      "afkEnabled": true,
+      "antiRaidEnabled": true,
+      "eventsEnabled": true,
+      "rolePersistEnabled": true,
+      "boostsEnabled": true,
+      "backupsEnabled": true,
+      "confessionsEnabled": true,
+      "autoThreadsEnabled": true,
+      "voiceRolesEnabled": true,
+      "bumpsEnabled": true,
+      "timezone": "GuildSettings.timezone ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "timezoneRoles": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "embedColor": 1999999953,
+      "customPrefix": "GuildSettings.customPrefix ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "modLogChannelId": "800000000000000049",
+      "modRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "muteRoleId": "800000000000000051",
+      "automodConfig": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "infractionEscalation": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "immuneRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "modVisibility": "PRIVATE",
+      "modDmTargets": false,
+      "messageLogChannelId": "800000000000000057",
+      "memberLogChannelId": "800000000000000058",
+      "serverLogChannelId": "800000000000000059",
+      "voiceLogChannelId": "800000000000000060",
+      "joinLeaveChannelId": "800000000000000061",
+      "disabledLogEvents": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "logIgnoredChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "welcomeChannelId": "800000000000000064",
+      "welcomeEmbed": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "welcomeMessage": "GuildSettings.welcomeMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "autoroleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "autoroleDelay": 1999999932,
+      "welcomeMessageEnabled": false,
+      "welcomeUseEmbed": false,
+      "welcomeCardStyle": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "welcomeDmEnabled": true,
+      "welcomeDmMessage": "GuildSettings.welcomeDmMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "welcomeDmEmbed": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "welcomeDmCard": true,
+      "goodbyeEnabled": true,
+      "goodbyeChannelId": "800000000000000077",
+      "goodbyeMessage": "GuildSettings.goodbyeMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "goodbyeEmbed": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "goodbyeUseEmbed": true,
+      "captchaChannelId": "800000000000000081",
+      "captchaMessageId": "800000000000000082",
+      "captchaRoleId": "800000000000000083",
+      "captchaMode": "IMAGE",
+      "captchaTimeoutMinutes": 1999999915,
+      "captchaTemplate": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "captchaLockdownPrior": true,
+      "captchaRequiredRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "captchaFallbackFormId": "800000000000000089",
+      "xpEnabled": true,
+      "xpRate": 1999999909,
+      "xpCooldown": 1999999908,
+      "xpMultiplier": 1234.5678,
+      "levelUpChannelId": "800000000000000094",
+      "levelUpMessage": "GuildSettings.levelUpMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "noXpRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "noXpChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "levelRolesStack": false,
+      "voiceXpEnabled": true,
+      "voiceXpRate": 1999999900,
+      "levelUpMode": "CHANNEL",
+      "levelUpUseEmbed": true,
+      "xpMin": 1999999897,
+      "xpMax": 1999999896,
+      "levelRolesSyncOnDemotion": false,
+      "xpBoostRoles": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "rankCardStyle": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "statsCategoryId": "800000000000000108",
+      "birthdayChannelId": "800000000000000109",
+      "birthdayRoleId": "800000000000000110",
+      "birthdayHour": 1999999889,
+      "birthdayMessage": "GuildSettings.birthdayMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "birthdayMessageAge": "GuildSettings.birthdayMessageAge ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "birthdayRequireYear": true,
+      "currencyName": "GuildSettings.currencyName ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "currencyEmoji": "GuildSettings.currencyEmoji ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "economyStartingBalance": 1999999883,
+      "economyMaxBalance": 1999999882,
+      "economyMaxBet": 1999999881,
+      "dailyMin": 1999999880,
+      "dailyMax": 1999999879,
+      "workMin": 1999999878,
+      "workMax": 1999999877,
+      "workCooldownMinutes": 1999999876,
+      "economyGameChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "economyGameChannelMode": "DENY",
+      "economyMaxPayout": 1999999873,
+      "economyImportGlobal": false,
+      "achievementAnnounceMode": "CHANNEL",
+      "achievementChannelId": "800000000000000130",
+      "achievementMessage": "GuildSettings.achievementMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "achievementUseEmbed": true,
+      "urbanNsfwOnly": false,
+      "liveRoleId": "800000000000000134",
+      "liveRoleRequiredRoleId": "800000000000000135",
+      "liveRoleAnnounceChannelId": "800000000000000136",
+      "liveRoleAnnounceMessage": "GuildSettings.liveRoleAnnounceMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "liveRoleAnnouncePingRoleId": "800000000000000138",
+      "countingChannelId": "800000000000000139",
+      "autoTimeIgnoredChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "suggestionChannelId": "800000000000000141",
+      "suggestionThreads": false,
+      "suggestionAllowAnonymous": true,
+      "suggestionDmOnUpdate": false,
+      "suggestionCooldownSeconds": 1999999855,
+      "modmailChannelId": "800000000000000146",
+      "modmailPingRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "modmailGreeting": "GuildSettings.modmailGreeting ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "modmailAnonymousReplies": true,
+      "modmailBlockedUserIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "afkNicknamePrefix": false,
+      "afkIgnoredChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "antiRaidJoinThreshold": 1999999847,
+      "antiRaidJoinSeconds": 1999999846,
+      "antiRaidAction": "BAN",
+      "antiRaidPauseInvites": false,
+      "antiRaidLockChat": true,
+      "antiRaidLockdownMinutes": 1999999842,
+      "antiRaidMinAccountAgeDays": 1999999841,
+      "antiRaidYoungAction": "BAN",
+      "antiRaidAlertChannelId": "800000000000000161",
+      "eventChannelId": "800000000000000162",
+      "eventCreateDiscordEvent": false,
+      "eventReminderMinutes": 1999999836,
+      "eventChannelsEnabled": true,
+      "eventCategoryId": "800000000000000166",
+      "eventVoiceLeadMinutes": 1999999833,
+      "rolePersistNicknames": false,
+      "rolePersistIgnoredRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "rolePersistDays": 1999999830,
+      "boostChannelId": "800000000000000171",
+      "boostMessage": "GuildSettings.boostMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "boostCustomRoles": true,
+      "boostRoleAnchorId": "800000000000000174",
+      "boostRoleGraceDays": 1999999825,
+      "backupIntervalHours": 1999999824,
+      "backupKeep": 1999999823,
+      "confessionChannelId": "800000000000000178",
+      "confessionReviewChannelId": "800000000000000179",
+      "confessionAllowImages": true,
+      "confessionBlockLinks": false,
+      "confessionCooldownSeconds": 1999999818,
+      "confessionBlockedUserIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "autoThreadChannels": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "autoPublishChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "voiceRoleLinks": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "voiceRoleAnyRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "voiceRoleIgnoreAfk": false,
+      "bumpChannelId": "800000000000000189",
+      "bumpRoleId": "800000000000000190",
+      "bumpReminderMessage": "GuildSettings.bumpReminderMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "bumpThanks": false,
+      "bumpThanksMessage": "GuildSettings.bumpThanksMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "bumpRewardCoins": 1999999806
+    }
+  },
+  "ScheduledJob": {
+    "table": "ScheduledJob",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2sg00031hmzoxvk0kzs",
+      "guildId": "900000000000000001",
+      "type": "ScheduledJob.type",
+      "dedupeKey": null,
+      "runAt": "2026-07-17T03:04:05.874Z",
+      "payload": {},
+      "status": "PENDING",
+      "attempts": 0,
+      "maxAttempts": 5,
+      "lastError": null,
+      "lockedBy": null,
+      "lockedUntil": null,
+      "version": 0,
+      "createdAt": "2026-11-18T21:01:55.936Z",
+      "updatedAt": "2026-11-18T21:01:55.936Z"
+    },
+    "full": {
+      "id": "cmwmlx2sk00051hmzow5vj7nw",
+      "guildId": "900000000000000002",
+      "type": "ScheduledJob.type ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "dedupeKey": "ScheduledJob.dedupeKey ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "runAt": "2026-07-20T03:04:05.877Z",
+      "payload": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "status": "CANCELLED",
+      "attempts": 1999999798,
+      "maxAttempts": 1999999797,
+      "lastError": "ScheduledJob.lastError ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lockedBy": "ScheduledJob.lockedBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lockedUntil": "2026-07-27T03:04:05.884Z",
+      "version": 1999999793,
+      "createdAt": "2026-07-29T03:04:05.886Z",
+      "updatedAt": "2026-11-18T21:01:55.940Z"
+    }
+  },
+  "Infraction": {
+    "table": "Infraction",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": 1,
+      "caseId": 1,
+      "guildId": "900000000000000001",
+      "targetUserId": "800000000000000210",
+      "moderatorId": "800000000000000211",
+      "type": "WARN",
+      "reason": null,
+      "proofUrl": null,
+      "active": true,
+      "expiresAt": null,
+      "escalationTierId": null,
+      "createdAt": "2026-11-18T21:01:55.941Z",
+      "updatedAt": "2026-11-18T21:01:55.941Z"
+    },
+    "full": {
+      "id": 2,
+      "caseId": 1999999787,
+      "guildId": "900000000000000002",
+      "targetUserId": "800000000000000214",
+      "moderatorId": "800000000000000215",
+      "type": "NOTE",
+      "reason": "Infraction.reason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "proofUrl": "Infraction.proofUrl ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "active": false,
+      "expiresAt": "2026-08-10T03:04:05.898Z",
+      "escalationTierId": 1999999779,
+      "createdAt": "2026-08-12T03:04:05.900Z",
+      "updatedAt": "2026-11-18T21:01:55.944Z"
+    }
+  },
+  "UserLevel": {
+    "table": "UserLevel",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2sp00071hmz56hxaicq",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000223",
+      "xp": 0,
+      "level": 0,
+      "messageCount": 0,
+      "voiceMinutes": 0,
+      "lastXpAt": null,
+      "createdAt": "2026-11-18T21:01:55.945Z",
+      "updatedAt": "2026-11-18T21:01:55.945Z"
+    },
+    "full": {
+      "id": "cmwmlx2sr00091hmzs2atjh4v",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000224",
+      "xp": 1999999775,
+      "level": 1999999774,
+      "messageCount": 1999999773,
+      "voiceMinutes": 1999999772,
+      "lastXpAt": "2026-08-19T03:04:05.907Z",
+      "createdAt": "2026-08-20T03:04:05.908Z",
+      "updatedAt": "2026-11-18T21:01:55.947Z"
+    }
+  },
+  "LevelRole": {
+    "table": "LevelRole",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2ss000b1hmzzxmsfzs0",
+      "guildId": "900000000000000001",
+      "level": 1,
+      "roleId": "800000000000000232"
+    },
+    "full": {
+      "id": "cmwmlx2su000d1hmz2pg7g7hd",
+      "guildId": "900000000000000002",
+      "level": 1999999767,
+      "roleId": "800000000000000234"
+    }
+  },
+  "ReactionRoleGroup": {
+    "table": "ReactionRoleGroup",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2sv000f1hmzv0l6aali",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000235",
+      "messageId": "800000000000000236",
+      "title": "ReactionRoleGroup.title",
+      "description": null,
+      "maxRoles": null,
+      "type": "NORMAL",
+      "layout": "BUTTONS",
+      "plainText": false,
+      "messageContent": null,
+      "attached": false,
+      "placeholder": null,
+      "messageMissingAt": null,
+      "createdAt": "2026-11-18T21:01:55.951Z",
+      "updatedAt": "2026-11-18T21:01:55.951Z"
+    },
+    "full": {
+      "id": "cmwmlx2sx000h1hmzkexglt9p",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000238",
+      "messageId": "800000000000000239",
+      "title": "ReactionRoleGroup.title ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "ReactionRoleGroup.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "maxRoles": 1999999758,
+      "type": "REVERSE",
+      "layout": "REACTIONS",
+      "plainText": true,
+      "messageContent": "ReactionRoleGroup.messageContent ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "attached": true,
+      "placeholder": "ReactionRoleGroup.placeholder ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "messageMissingAt": "2026-09-08T03:04:05.927Z",
+      "createdAt": "2026-09-09T03:04:05.928Z",
+      "updatedAt": "2026-11-18T21:01:55.954Z"
+    }
+  },
+  "ReactionRoleItem": {
+    "table": "ReactionRoleItem",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2sy000j1hmz0rqkfgsp",
+      "groupId": "cmwmlx2sv000f1hmzv0l6aali",
+      "customId": "800000000000000251",
+      "roleId": "800000000000000252",
+      "label": "ReactionRoleItem.label",
+      "emoji": null,
+      "style": 1,
+      "position": 0,
+      "description": null
+    },
+    "full": {
+      "id": "cmwmlx2t0000l1hmzcgh79duy",
+      "groupId": "cmwmlx2sx000h1hmzkexglt9p",
+      "customId": "800000000000000254",
+      "roleId": "800000000000000255",
+      "label": "ReactionRoleItem.label ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "emoji": "ReactionRoleItem.emoji ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "style": 1999999742,
+      "position": 1999999741,
+      "description": "ReactionRoleItem.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}"
+    }
+  },
+  "CustomTag": {
+    "table": "CustomTag",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2t1000n1hmzwohjegwu",
+      "guildId": "900000000000000001",
+      "name": "CustomTag.name",
+      "content": "CustomTag.content",
+      "createdBy": "CustomTag.createdBy",
+      "uses": 0,
+      "createdAt": "2026-11-18T21:01:55.957Z",
+      "updatedAt": "2026-11-18T21:01:55.957Z",
+      "useEmbed": false,
+      "description": null,
+      "enabled": true,
+      "actions": null,
+      "allowRoleIds": [],
+      "denyRoleIds": [],
+      "allowChannelIds": [],
+      "denyChannelIds": [],
+      "cooldownScope": "NONE",
+      "cooldownSeconds": 0,
+      "deleteInvocation": false
+    },
+    "full": {
+      "id": "cmwmlx2t3000p1hmz6dlb4hnr",
+      "guildId": "900000000000000002",
+      "name": "CustomTag.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "content": "CustomTag.content ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdBy": "CustomTag.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "uses": 1999999733,
+      "createdAt": "2026-09-27T03:04:05.946Z",
+      "updatedAt": "2026-11-18T21:01:55.960Z",
+      "useEmbed": true,
+      "description": "CustomTag.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "enabled": false,
+      "actions": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "allowRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "denyRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "allowChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "denyChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "cooldownScope": "USER",
+      "cooldownSeconds": 1999999722,
+      "deleteInvocation": true
+    }
+  },
+  "AutoTrigger": {
+    "table": "AutoTrigger",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2t4000r1hmzedqolz1x",
+      "guildId": "900000000000000001",
+      "trigger": "AutoTrigger.trigger",
+      "response": "AutoTrigger.response",
+      "matchType": "CONTAINS",
+      "caseSensitive": false,
+      "enabled": true,
+      "cooldown": 0,
+      "deleteMessage": false,
+      "channelIds": [],
+      "exemptRoleIds": [],
+      "uses": 0,
+      "createdBy": "AutoTrigger.createdBy",
+      "createdAt": "2026-11-18T21:01:55.960Z",
+      "updatedAt": "2026-11-18T21:01:55.960Z"
+    },
+    "full": {
+      "id": "cmwmlx2t6000t1hmzhjphc8y8",
+      "guildId": "900000000000000002",
+      "trigger": "AutoTrigger.trigger ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "response": "AutoTrigger.response ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "matchType": "REGEX",
+      "caseSensitive": true,
+      "enabled": false,
+      "cooldown": 1999999712,
+      "deleteMessage": true,
+      "channelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "exemptRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "uses": 1999999708,
+      "createdBy": "AutoTrigger.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2026-10-23T03:04:05.972Z",
+      "updatedAt": "2026-11-18T21:01:55.963Z"
+    }
+  },
+  "TranslateChannel": {
+    "table": "TranslateChannel",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2t7000v1hmzi86s0y2a",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000295",
+      "targetLangs": [],
+      "createdAt": "2026-11-18T21:01:55.963Z",
+      "updatedAt": "2026-11-18T21:01:55.963Z"
+    },
+    "full": {
+      "id": "cmwmlx2t9000x1hmzigadi53n",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000296",
+      "targetLangs": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "createdAt": "2026-10-27T03:04:05.976Z",
+      "updatedAt": "2026-11-18T21:01:55.966Z"
+    }
+  },
+  "TranslateStat": {
+    "table": "TranslateStat",
+    "primaryKey": [
+      "guildId",
+      "channelId",
+      "via",
+      "direction",
+      "lang"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000299",
+      "via": "TranslateStat.via",
+      "direction": "TranslateStat.direction",
+      "lang": "TranslateStat.lang",
+      "count": 0,
+      "firstAt": "2026-11-18T21:01:55.966Z",
+      "lastAt": "2026-11-18T21:01:55.966Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000303",
+      "via": "TranslateStat.via ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "direction": "TranslateStat.direction ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lang": "TranslateStat.lang ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "count": 1999999693,
+      "firstAt": "2026-11-06T03:04:05.986Z",
+      "lastAt": "2026-11-07T03:04:05.987Z"
+    }
+  },
+  "CountingState": {
+    "table": "CountingState",
+    "primaryKey": [
+      "guildId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000310",
+      "count": 0,
+      "lastUserId": null,
+      "lastMessageId": null,
+      "best": 0,
+      "updatedAt": "2026-11-18T21:01:55.968Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000311",
+      "count": 1999999688,
+      "lastUserId": "800000000000000313",
+      "lastMessageId": "800000000000000314",
+      "best": 1999999685,
+      "updatedAt": "2026-11-18T21:01:55.970Z"
+    }
+  },
+  "BotJoin": {
+    "table": "BotJoin",
+    "primaryKey": [
+      "guildId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "inviterId": null,
+      "inviterName": null,
+      "source": null,
+      "joinedAt": "2026-11-14T03:04:05.994Z",
+      "checkedAt": "2026-11-18T21:01:55.970Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "inviterId": "800000000000000317",
+      "inviterName": "BotJoin.inviterName ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "source": "BotJoin.source ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "joinedAt": "2026-11-18T03:04:05.998Z",
+      "checkedAt": "2026-11-18T21:01:55.971Z"
+    }
+  },
+  "GuildMemberCache": {
+    "table": "GuildMemberCache",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tg000z1hmzwces8h8u",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000321",
+      "joinedAt": "2026-11-20T03:04:06.000Z",
+      "inviterId": null,
+      "inviteCode": null,
+      "leftAt": null,
+      "createdAt": "2026-11-18T21:01:55.972Z"
+    },
+    "full": {
+      "id": "cmwmlx2ti00111hmz5jpju4qh",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000323",
+      "joinedAt": "2026-11-22T03:04:06.002Z",
+      "inviterId": "800000000000000325",
+      "inviteCode": "GuildMemberCache.inviteCode ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "leftAt": "2026-11-25T03:04:06.005Z",
+      "createdAt": "2026-11-26T03:04:06.006Z"
+    }
+  },
+  "PersonalInvite": {
+    "table": "PersonalInvite",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tj00131hmzxdn983nn",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000329",
+      "code": "PersonalInvite.code",
+      "channelId": "800000000000000331",
+      "createdAt": "2026-11-18T21:01:55.975Z"
+    },
+    "full": {
+      "id": "cmwmlx2tl00151hmz3zcsa0mt",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000332",
+      "code": "PersonalInvite.code ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "channelId": "800000000000000334",
+      "createdAt": "2026-12-03T03:04:06.013Z"
+    }
+  },
+  "SavedEmbed": {
+    "table": "SavedEmbed",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tl00171hmzw1a0553k",
+      "guildId": "900000000000000001",
+      "name": "SavedEmbed.name",
+      "template": {},
+      "channelId": null,
+      "messageId": null,
+      "createdBy": "SavedEmbed.createdBy",
+      "createdAt": "2026-11-18T21:01:55.978Z",
+      "updatedAt": "2026-11-18T21:01:55.978Z"
+    },
+    "full": {
+      "id": "cmwmlx2tn00191hmzh2c5yclo",
+      "guildId": "900000000000000002",
+      "name": "SavedEmbed.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "template": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "channelId": "800000000000000341",
+      "messageId": "800000000000000342",
+      "createdBy": "SavedEmbed.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2026-12-12T03:04:06.022Z",
+      "updatedAt": "2026-11-18T21:01:55.980Z"
+    }
+  },
+  "Reminder": {
+    "table": "Reminder",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2to001b1hmz9it4h14r",
+      "guildId": "900000000000000001",
+      "name": "Reminder.name",
+      "channelId": "800000000000000346",
+      "template": {},
+      "mode": "TIME_OF_DAY",
+      "weekdays": [],
+      "timeOfDay": null,
+      "intervalMinutes": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "runAt": null,
+      "requireActivity": false,
+      "pingRoleId": null,
+      "lastSentAt": null,
+      "lastMessageId": null,
+      "enabled": true,
+      "createdBy": "Reminder.createdBy",
+      "createdAt": "2026-11-18T21:01:55.980Z",
+      "updatedAt": "2026-11-18T21:01:55.980Z"
+    },
+    "full": {
+      "id": "cmwmlx2tq001d1hmzdpsqng4q",
+      "guildId": "900000000000000002",
+      "name": "Reminder.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "channelId": "800000000000000351",
+      "template": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "mode": "ONE_SHOT",
+      "weekdays": [
+        1,
+        2,
+        3
+      ],
+      "timeOfDay": "Reminder.timeOfDay ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "intervalMinutes": 1999999644,
+      "windowStart": "Reminder.windowStart ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "windowEnd": "Reminder.windowEnd ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "runAt": "2026-12-27T03:04:06.037Z",
+      "requireActivity": true,
+      "pingRoleId": "800000000000000361",
+      "lastSentAt": "2026-12-30T03:04:06.040Z",
+      "lastMessageId": "800000000000000363",
+      "enabled": false,
+      "createdBy": "Reminder.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-01-03T03:04:06.044Z",
+      "updatedAt": "2026-11-18T21:01:55.982Z"
+    }
+  },
+  "Giveaway": {
+    "table": "Giveaway",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tr001f1hmzugebmgjt",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000367",
+      "messageId": null,
+      "hostId": "800000000000000368",
+      "prize": "Giveaway.prize",
+      "description": null,
+      "winnerCount": 1,
+      "requiredRoleIds": [],
+      "deniedRoleIds": [],
+      "roleWeights": null,
+      "xpPrize": null,
+      "coinPrize": null,
+      "pingRoleId": null,
+      "embedColor": null,
+      "endsAt": "2027-01-07T03:04:06.048Z",
+      "endedAt": null,
+      "status": "ACTIVE",
+      "winnerIds": [],
+      "createdAt": "2026-11-18T21:01:55.983Z",
+      "updatedAt": "2026-11-18T21:01:55.983Z"
+    },
+    "full": {
+      "id": "cmwmlx2tt001h1hmzlcfo2qlm",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000371",
+      "messageId": "800000000000000372",
+      "hostId": "800000000000000373",
+      "prize": "Giveaway.prize ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "Giveaway.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "winnerCount": 1999999624,
+      "requiredRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "deniedRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "roleWeights": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "xpPrize": 1999999620,
+      "coinPrize": 1999999619,
+      "pingRoleId": "800000000000000382",
+      "embedColor": 1999999617,
+      "endsAt": "2027-01-21T03:04:06.062Z",
+      "endedAt": "2027-01-22T03:04:06.063Z",
+      "status": "CANCELLED",
+      "winnerIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "createdAt": "2027-01-25T03:04:06.066Z",
+      "updatedAt": "2026-11-18T21:01:55.986Z"
+    }
+  },
+  "GiveawayEntry": {
+    "table": "GiveawayEntry",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tu001j1hmzu5wegj82",
+      "giveawayId": "cmwmlx2tr001f1hmzugebmgjt",
+      "userId": "800000000000000389",
+      "createdAt": "2026-11-18T21:01:55.987Z"
+    },
+    "full": {
+      "id": "cmwmlx2tw001l1hmzx63mkms7",
+      "giveawayId": "cmwmlx2tt001h1hmzlcfo2qlm",
+      "userId": "800000000000000390",
+      "createdAt": "2027-01-28T03:04:06.069Z"
+    }
+  },
+  "Poll": {
+    "table": "Poll",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2tx001n1hmzg082ighu",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000392",
+      "messageId": null,
+      "authorId": "800000000000000393",
+      "question": "Poll.question",
+      "options": [],
+      "maxChoices": 1,
+      "allowedRoleIds": [],
+      "deniedRoleIds": [],
+      "hideResults": false,
+      "endsAt": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-11-18T21:01:55.989Z",
+      "updatedAt": "2026-11-18T21:01:55.989Z"
+    },
+    "full": {
+      "id": "cmwmlx2tz001p1hmzrpq5541x",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000395",
+      "messageId": "800000000000000396",
+      "authorId": "800000000000000397",
+      "question": "Poll.question ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "options": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "maxChoices": 1999999600,
+      "allowedRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "deniedRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "hideResults": true,
+      "endsAt": "2027-02-10T03:04:06.082Z",
+      "status": "ENDED",
+      "createdAt": "2027-02-12T03:04:06.084Z",
+      "updatedAt": "2026-11-18T21:01:55.991Z"
+    }
+  },
+  "PollVote": {
+    "table": "PollVote",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2u0001r1hmzeuwckt78",
+      "pollId": "cmwmlx2tx001n1hmzg082ighu",
+      "userId": "800000000000000407",
+      "optionIndex": 1,
+      "createdAt": "2026-11-18T21:01:55.992Z"
+    },
+    "full": {
+      "id": "cmwmlx2u2001t1hmz4gj30f6d",
+      "pollId": "cmwmlx2tz001p1hmzrpq5541x",
+      "userId": "800000000000000409",
+      "optionIndex": 1999999590,
+      "createdAt": "2027-02-17T03:04:06.089Z"
+    }
+  },
+  "Starboard": {
+    "table": "Starboard",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2u2001v1hmzkh8pqx2y",
+      "guildId": "900000000000000001",
+      "name": "Starboard.name",
+      "channelId": "800000000000000413",
+      "emojis": [
+        "⭐"
+      ],
+      "threshold": 3,
+      "selfStar": false,
+      "ignoreBots": true,
+      "removeBelowThreshold": true,
+      "autoReact": false,
+      "maxMessageAgeDays": 0,
+      "allowNsfw": false,
+      "ignoredChannelIds": [],
+      "removeSelfStars": false,
+      "enabled": true,
+      "createdAt": "2026-11-18T21:01:55.995Z",
+      "updatedAt": "2026-11-18T21:01:55.995Z"
+    },
+    "full": {
+      "id": "cmwmlx2u5001x1hmzg9ld46ye",
+      "guildId": "900000000000000002",
+      "name": "Starboard.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "channelId": "800000000000000415",
+      "emojis": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "threshold": 1999999583,
+      "selfStar": true,
+      "ignoreBots": false,
+      "removeBelowThreshold": false,
+      "autoReact": true,
+      "maxMessageAgeDays": 1999999578,
+      "allowNsfw": true,
+      "ignoredChannelIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "removeSelfStars": true,
+      "enabled": false,
+      "createdAt": "2027-03-05T03:04:06.105Z",
+      "updatedAt": "2026-11-18T21:01:55.997Z"
+    }
+  },
+  "StarboardEntry": {
+    "table": "StarboardEntry",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2u5001z1hmzdysd4lqx",
+      "starboardId": "cmwmlx2u2001v1hmzkh8pqx2y",
+      "sourceChannelId": "800000000000000428",
+      "sourceMessageId": "800000000000000429",
+      "authorId": "800000000000000430",
+      "boardMessageId": null,
+      "count": 0,
+      "blocked": false,
+      "createdAt": "2026-11-18T21:01:55.998Z",
+      "updatedAt": "2026-11-18T21:01:55.998Z"
+    },
+    "full": {
+      "id": "cmwmlx2u800211hmz1m1pyrbm",
+      "starboardId": "cmwmlx2u5001x1hmzg9ld46ye",
+      "sourceChannelId": "800000000000000431",
+      "sourceMessageId": "800000000000000432",
+      "authorId": "800000000000000433",
+      "boardMessageId": "800000000000000434",
+      "count": 1999999565,
+      "blocked": true,
+      "createdAt": "2027-03-15T03:04:06.115Z",
+      "updatedAt": "2026-11-18T21:01:56.000Z"
+    }
+  },
+  "TicketPanel": {
+    "table": "TicketPanel",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2u900231hmzmbii8tfu",
+      "guildId": "900000000000000001",
+      "name": "TicketPanel.name",
+      "channelId": null,
+      "messageId": null,
+      "template": null,
+      "style": "BUTTONS",
+      "managerRoleIds": [],
+      "openCategoryId": null,
+      "claimedCategoryId": null,
+      "closedCategoryId": null,
+      "introTemplate": null,
+      "transcriptChannelId": null,
+      "dmTranscript": false,
+      "maxOpenPerUser": 1,
+      "channelNameFormat": "ticket-{number}",
+      "askReason": false,
+      "createdAt": "2026-11-18T21:01:56.001Z",
+      "updatedAt": "2026-11-18T21:01:56.001Z"
+    },
+    "full": {
+      "id": "cmwmlx2ub00251hmz7ctr8onb",
+      "guildId": "900000000000000002",
+      "name": "TicketPanel.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "channelId": "800000000000000440",
+      "messageId": "800000000000000441",
+      "template": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "style": "SELECT",
+      "managerRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "openCategoryId": "800000000000000445",
+      "claimedCategoryId": "800000000000000446",
+      "closedCategoryId": "800000000000000447",
+      "introTemplate": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "transcriptChannelId": "800000000000000449",
+      "dmTranscript": true,
+      "maxOpenPerUser": 1999999549,
+      "channelNameFormat": "TicketPanel.channelNameFormat ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "askReason": true,
+      "createdAt": "2027-04-01T03:04:06.132Z",
+      "updatedAt": "2026-11-18T21:01:56.003Z"
+    }
+  },
+  "TicketPanelOption": {
+    "table": "TicketPanelOption",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2ub00271hmzz9rmjzpj",
+      "panelId": "cmwmlx2u900231hmzmbii8tfu",
+      "label": "TicketPanelOption.label",
+      "emoji": null,
+      "description": null,
+      "buttonStyle": 1,
+      "position": 0,
+      "introTemplate": null,
+      "categoryId": null
+    },
+    "full": {
+      "id": "cmwmlx2ud00291hmzz5fo8wrd",
+      "panelId": "cmwmlx2ub00251hmz7ctr8onb",
+      "label": "TicketPanelOption.label ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "emoji": "TicketPanelOption.emoji ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "TicketPanelOption.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "buttonStyle": 1999999541,
+      "position": 1999999540,
+      "introTemplate": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "categoryId": "800000000000000462"
+    }
+  },
+  "Ticket": {
+    "table": "Ticket",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2ue002b1hmzo4id7qyl",
+      "guildId": "900000000000000001",
+      "panelId": "cmwmlx2u900231hmzmbii8tfu",
+      "optionId": "cmwmlx2ub00271hmzz9rmjzpj",
+      "number": 1,
+      "channelId": "800000000000000464",
+      "ownerId": "800000000000000465",
+      "status": "OPEN",
+      "claimedById": null,
+      "closedById": null,
+      "closedAt": null,
+      "reason": null,
+      "addedUserIds": [],
+      "createdAt": "2026-11-18T21:01:56.007Z",
+      "updatedAt": "2026-11-18T21:01:56.007Z"
+    },
+    "full": {
+      "id": "cmwmlx2uh002d1hmzpwfxsgo5",
+      "guildId": "900000000000000002",
+      "panelId": "cmwmlx2ub00251hmz7ctr8onb",
+      "optionId": "cmwmlx2ud00291hmzz5fo8wrd",
+      "number": 1999999534,
+      "channelId": "800000000000000467",
+      "ownerId": "800000000000000468",
+      "status": "DELETED",
+      "claimedById": "800000000000000470",
+      "closedById": "800000000000000471",
+      "closedAt": "2027-04-19T03:04:06.150Z",
+      "reason": "Ticket.reason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "addedUserIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "createdAt": "2027-04-22T03:04:06.153Z",
+      "updatedAt": "2026-11-18T21:01:56.009Z"
+    }
+  },
+  "TempVoiceHub": {
+    "table": "TempVoiceHub",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2ui002f1hmz732bbsaa",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000476",
+      "categoryId": null,
+      "nameFormat": "#{index} - {username}'s Channel",
+      "userLimit": 0,
+      "bitrate": null,
+      "keepAliveMinutes": 0,
+      "ownershipLockMinutes": 0,
+      "syncPermissions": true,
+      "createTextChannel": false,
+      "textChannelMembersOnly": true,
+      "ignoredRoleIds": [],
+      "moderatorRoleIds": [],
+      "createdAt": "2026-11-18T21:01:56.010Z",
+      "updatedAt": "2026-11-18T21:01:56.010Z"
+    },
+    "full": {
+      "id": "cmwmlx2ul002h1hmzn1jiv4px",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000477",
+      "categoryId": "800000000000000478",
+      "nameFormat": "TempVoiceHub.nameFormat ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "userLimit": 1999999520,
+      "bitrate": 1999999519,
+      "keepAliveMinutes": 1999999518,
+      "ownershipLockMinutes": 1999999517,
+      "syncPermissions": false,
+      "createTextChannel": true,
+      "textChannelMembersOnly": false,
+      "ignoredRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "moderatorRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "createdAt": "2027-05-06T03:04:06.167Z",
+      "updatedAt": "2026-11-18T21:01:56.013Z"
+    }
+  },
+  "TempVoiceChannel": {
+    "table": "TempVoiceChannel",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2um002j1hmzht06lhjd",
+      "guildId": "900000000000000001",
+      "hubId": "cmwmlx2ui002f1hmz732bbsaa",
+      "channelId": "800000000000000490",
+      "textChannelId": null,
+      "controlMessageId": null,
+      "ownerId": "800000000000000491",
+      "index": 1,
+      "locked": false,
+      "hidden": false,
+      "bannedUserIds": [],
+      "ownerLeftAt": null,
+      "emptySince": null,
+      "createdAt": "2026-11-18T21:01:56.014Z",
+      "updatedAt": "2026-11-18T21:01:56.014Z"
+    },
+    "full": {
+      "id": "cmwmlx2up002l1hmzg8h2fpbh",
+      "guildId": "900000000000000002",
+      "hubId": "cmwmlx2ul002h1hmzn1jiv4px",
+      "channelId": "800000000000000493",
+      "textChannelId": "800000000000000494",
+      "controlMessageId": "800000000000000495",
+      "ownerId": "800000000000000496",
+      "index": 1999999503,
+      "locked": true,
+      "hidden": true,
+      "bannedUserIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "ownerLeftAt": "2027-05-18T03:04:06.179Z",
+      "emptySince": "2027-05-19T03:04:06.180Z",
+      "createdAt": "2027-05-20T03:04:06.181Z",
+      "updatedAt": "2026-11-18T21:01:56.018Z"
+    }
+  },
+  "StatChannel": {
+    "table": "StatChannel",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2uq002n1hmzo1cp390w",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000504",
+      "kind": "MEMBERS",
+      "roleId": null,
+      "template": "StatChannel.template",
+      "lastValue": null,
+      "lastRenamedAt": null,
+      "peakValue": null,
+      "createdAt": "2026-11-18T21:01:56.018Z",
+      "updatedAt": "2026-11-18T21:01:56.018Z"
+    },
+    "full": {
+      "id": "cmwmlx2us002p1hmzp539jdsz",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000507",
+      "kind": "BOOSTS",
+      "roleId": "800000000000000509",
+      "template": "StatChannel.template ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lastValue": 1999999489,
+      "lastRenamedAt": "2027-05-29T03:04:06.190Z",
+      "peakValue": 1999999487,
+      "createdAt": "2027-05-31T03:04:06.192Z",
+      "updatedAt": "2026-11-18T21:01:56.021Z"
+    }
+  },
+  "Birthday": {
+    "table": "Birthday",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2ut002r1hmzf0sbsffi",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000515",
+      "month": 1,
+      "day": 1,
+      "year": null,
+      "lastAnnouncedYear": null,
+      "roleGrantedAt": null,
+      "createdAt": "2026-11-18T21:01:56.022Z",
+      "updatedAt": "2026-11-18T21:01:56.022Z"
+    },
+    "full": {
+      "id": "cmwmlx2uv002t1hmzsanz47qr",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000518",
+      "month": 1999999481,
+      "day": 1999999480,
+      "year": 1999999479,
+      "lastAnnouncedYear": 1999999478,
+      "roleGrantedAt": "2027-06-09T03:04:06.201Z",
+      "createdAt": "2027-06-10T03:04:06.202Z",
+      "updatedAt": "2026-11-18T21:01:56.024Z"
+    }
+  },
+  "Achievement": {
+    "table": "Achievement",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2uw002v1hmzorab1lsv",
+      "guildId": "900000000000000001",
+      "name": "Achievement.name",
+      "description": null,
+      "emoji": null,
+      "trigger": "MESSAGES",
+      "tiers": {},
+      "trackPastProgress": true,
+      "deadline": null,
+      "enabled": true,
+      "createdAt": "2026-11-18T21:01:56.025Z",
+      "updatedAt": "2026-11-18T21:01:56.025Z"
+    },
+    "full": {
+      "id": "cmwmlx2uy002x1hmz2xyt650x",
+      "guildId": "900000000000000002",
+      "name": "Achievement.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "Achievement.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "emoji": "Achievement.emoji ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "trigger": "PURCHASES",
+      "tiers": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "trackPastProgress": false,
+      "deadline": "2027-06-20T03:04:06.212Z",
+      "enabled": false,
+      "createdAt": "2027-06-22T03:04:06.214Z",
+      "updatedAt": "2026-11-18T21:01:56.027Z"
+    }
+  },
+  "AchievementProgress": {
+    "table": "AchievementProgress",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2uz002z1hmz35kdkvt1",
+      "guildId": "900000000000000001",
+      "achievementId": "cmwmlx2uw002v1hmzorab1lsv",
+      "userId": "800000000000000537",
+      "progress": 0,
+      "tier": 0,
+      "almostNotified": false,
+      "completedAt": null,
+      "createdAt": "2026-11-18T21:01:56.027Z",
+      "updatedAt": "2026-11-18T21:01:56.027Z"
+    },
+    "full": {
+      "id": "cmwmlx2v100311hmzr63r34xa",
+      "guildId": "900000000000000002",
+      "achievementId": "cmwmlx2uy002x1hmz2xyt650x",
+      "userId": "800000000000000538",
+      "progress": 1999999461,
+      "tier": 1999999460,
+      "almostNotified": true,
+      "completedAt": "2027-06-28T03:04:06.220Z",
+      "createdAt": "2027-06-29T03:04:06.221Z",
+      "updatedAt": "2026-11-18T21:01:56.030Z"
+    }
+  },
+  "Automation": {
+    "table": "Automation",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2v200331hmzh5rpfpvi",
+      "guildId": "900000000000000001",
+      "name": "Automation.name",
+      "trigger": "MESSAGE_SENT",
+      "conditions": [],
+      "actions": [],
+      "enabled": true,
+      "cooldownSeconds": 0,
+      "buttonSeq": 0,
+      "uses": 0,
+      "createdBy": "Automation.createdBy",
+      "createdAt": "2026-11-18T21:01:56.030Z",
+      "updatedAt": "2026-11-18T21:01:56.030Z"
+    },
+    "full": {
+      "id": "cmwmlx2v400351hmzd0zfl6oc",
+      "guildId": "900000000000000002",
+      "name": "Automation.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "trigger": "MEMBER_JOINED",
+      "conditions": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "actions": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "enabled": false,
+      "cooldownSeconds": 1999999448,
+      "buttonSeq": 1999999447,
+      "uses": 1999999446,
+      "createdBy": "Automation.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-07-12T03:04:06.234Z",
+      "updatedAt": "2026-11-18T21:01:56.033Z"
+    }
+  },
+  "UserEconomy": {
+    "table": "UserEconomy",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2v500361hmzh9c7qexv",
+      "userId": "800000000000000557",
+      "balance": 1000,
+      "lastDaily": null,
+      "lastPity": null,
+      "createdAt": "2026-11-18T21:01:56.034Z",
+      "updatedAt": "2026-11-18T21:01:56.034Z"
+    },
+    "full": {
+      "id": "cmwmlx2v700371hmz63ien1bf",
+      "userId": "800000000000000558",
+      "balance": 1999999441,
+      "lastDaily": "2027-07-16T03:04:06.238Z",
+      "lastPity": "2027-07-17T03:04:06.239Z",
+      "createdAt": "2027-07-18T03:04:06.240Z",
+      "updatedAt": "2026-11-18T21:01:56.035Z"
+    }
+  },
+  "EconomyAccount": {
+    "table": "EconomyAccount",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2v700391hmzklqopo1x",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000563",
+      "balance": 0,
+      "dailyStreak": 0,
+      "lastDaily": null,
+      "lastWork": null,
+      "lastPity": null,
+      "importedGlobal": false,
+      "createdAt": "2026-11-18T21:01:56.036Z",
+      "updatedAt": "2026-11-18T21:01:56.036Z"
+    },
+    "full": {
+      "id": "cmwmlx2va003b1hmz8lcfhf03",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000564",
+      "balance": 1999999435,
+      "dailyStreak": 1999999434,
+      "lastDaily": "2027-07-23T03:04:06.245Z",
+      "lastWork": "2027-07-24T03:04:06.246Z",
+      "lastPity": "2027-07-25T03:04:06.247Z",
+      "importedGlobal": true,
+      "createdAt": "2027-07-27T03:04:06.249Z",
+      "updatedAt": "2026-11-18T21:01:56.038Z"
+    }
+  },
+  "EconomyBoost": {
+    "table": "EconomyBoost",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2va003d1hmz6idqgqar",
+      "guildId": "900000000000000001",
+      "name": "EconomyBoost.name",
+      "roleId": null,
+      "percent": 1,
+      "period": "ONE_TIME",
+      "enabled": true,
+      "createdBy": "EconomyBoost.createdBy",
+      "createdAt": "2026-11-18T21:01:56.039Z",
+      "updatedAt": "2026-11-18T21:01:56.039Z"
+    },
+    "full": {
+      "id": "cmwmlx2vc003f1hmz0plf0aq4",
+      "guildId": "900000000000000002",
+      "name": "EconomyBoost.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "roleId": "800000000000000577",
+      "percent": 1999999422,
+      "period": "MONTHLY",
+      "enabled": false,
+      "createdBy": "EconomyBoost.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-08-07T03:04:06.260Z",
+      "updatedAt": "2026-11-18T21:01:56.041Z"
+    }
+  },
+  "EconomyBoostUse": {
+    "table": "EconomyBoostUse",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vd003h1hmzmunc3id7",
+      "boostId": "cmwmlx2va003d1hmz6idqgqar",
+      "userId": "800000000000000583",
+      "periodKey": "EconomyBoostUse.periodKey",
+      "createdAt": "2026-11-18T21:01:56.041Z"
+    },
+    "full": {
+      "id": "cmwmlx2ve003j1hmz6yb718dc",
+      "boostId": "cmwmlx2vc003f1hmz0plf0aq4",
+      "userId": "800000000000000585",
+      "periodKey": "EconomyBoostUse.periodKey ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-08-12T03:04:06.265Z"
+    }
+  },
+  "ShopItem": {
+    "table": "ShopItem",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vf003l1hmzaha93ksn",
+      "guildId": "900000000000000001",
+      "name": "ShopItem.name",
+      "description": null,
+      "price": 1,
+      "type": "STATIC",
+      "roleId": null,
+      "imageUrl": null,
+      "useOnBuy": false,
+      "destroyOnUse": true,
+      "useMessage": null,
+      "buyMessage": null,
+      "canBuyMultiple": true,
+      "maxPerUser": 200,
+      "stock": null,
+      "enabled": true,
+      "createdAt": "2026-11-18T21:01:56.044Z",
+      "updatedAt": "2026-11-18T21:01:56.044Z"
+    },
+    "full": {
+      "id": "cmwmlx2vi003n1hmzlng11k2s",
+      "guildId": "900000000000000002",
+      "name": "ShopItem.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "ShopItem.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "price": 1999999408,
+      "type": "STATIC",
+      "roleId": "800000000000000594",
+      "imageUrl": "ShopItem.imageUrl ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "useOnBuy": true,
+      "destroyOnUse": false,
+      "useMessage": "ShopItem.useMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "buyMessage": "ShopItem.buyMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "canBuyMultiple": false,
+      "maxPerUser": 1999999399,
+      "stock": 1999999398,
+      "enabled": false,
+      "createdAt": "2027-08-29T03:04:06.282Z",
+      "updatedAt": "2026-11-18T21:01:56.046Z"
+    }
+  },
+  "InventoryItem": {
+    "table": "InventoryItem",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vj003p1hmz89fufjnl",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000605",
+      "itemId": "cmwmlx2vf003l1hmzaha93ksn",
+      "quantity": 0,
+      "createdAt": "2026-11-18T21:01:56.047Z",
+      "updatedAt": "2026-11-18T21:01:56.047Z"
+    },
+    "full": {
+      "id": "cmwmlx2vm003r1hmzqrh4d9p9",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000606",
+      "itemId": "cmwmlx2vi003n1hmzlng11k2s",
+      "quantity": 1999999393,
+      "createdAt": "2027-09-02T03:04:06.286Z",
+      "updatedAt": "2026-11-18T21:01:56.050Z"
+    }
+  },
+  "Feed": {
+    "table": "Feed",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vm003t1hmzcr7hy4vk",
+      "guildId": "900000000000000001",
+      "type": "RSS",
+      "source": "Feed.source",
+      "displayName": "Feed.displayName",
+      "fetchUrl": "Feed.fetchUrl",
+      "channelId": "800000000000000613",
+      "pingRoleId": null,
+      "messageTemplate": null,
+      "includeReposts": false,
+      "enabled": true,
+      "initialized": false,
+      "seenIds": [],
+      "etag": null,
+      "lastModified": null,
+      "lastCheckedAt": null,
+      "lastSuccessAt": null,
+      "lastPostedAt": null,
+      "failureCount": 0,
+      "lastError": null,
+      "disabledReason": null,
+      "createdBy": "Feed.createdBy",
+      "createdAt": "2026-11-18T21:01:56.051Z",
+      "updatedAt": "2026-11-18T21:01:56.051Z"
+    },
+    "full": {
+      "id": "cmwmlx2vp003v1hmz9wl3te8r",
+      "guildId": "900000000000000002",
+      "type": "PODCAST",
+      "source": "Feed.source ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "displayName": "Feed.displayName ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "fetchUrl": "Feed.fetchUrl ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "channelId": "800000000000000619",
+      "pingRoleId": "800000000000000620",
+      "messageTemplate": "Feed.messageTemplate ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "includeReposts": true,
+      "enabled": false,
+      "initialized": true,
+      "seenIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "etag": "Feed.etag ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lastModified": "Feed.lastModified ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lastCheckedAt": "2027-09-22T03:04:06.306Z",
+      "lastSuccessAt": "2027-09-23T03:04:06.307Z",
+      "lastPostedAt": "2027-09-24T03:04:06.308Z",
+      "failureCount": 1999999369,
+      "lastError": "Feed.lastError ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "disabledReason": "Feed.disabledReason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdBy": "Feed.createdBy ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-09-29T03:04:06.313Z",
+      "updatedAt": "2026-11-18T21:01:56.054Z"
+    }
+  },
+  "CaptchaVerification": {
+    "table": "CaptchaVerification",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vq003x1hmz5u9t8pzj",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000636",
+      "answerHash": null,
+      "attempts": 0,
+      "expiresAt": null,
+      "createdAt": "2026-11-18T21:01:56.054Z",
+      "updatedAt": "2026-11-18T21:01:56.054Z"
+    },
+    "full": {
+      "id": "cmwmlx2vs003z1hmzs5dq8hvj",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000637",
+      "answerHash": "CaptchaVerification.answerHash ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "attempts": 1999999361,
+      "expiresAt": "2027-10-04T03:04:06.318Z",
+      "createdAt": "2027-10-05T03:04:06.319Z",
+      "updatedAt": "2026-11-18T21:01:56.056Z"
+    }
+  },
+  "UserTimezone": {
+    "table": "UserTimezone",
+    "primaryKey": [
+      "userId"
+    ],
+    "min": {
+      "userId": "800000000000000642",
+      "zone": "UserTimezone.zone",
+      "createdAt": "2026-11-18T21:01:56.057Z",
+      "updatedAt": "2026-11-18T21:01:56.057Z"
+    },
+    "full": {
+      "userId": "800000000000000644",
+      "zone": "UserTimezone.zone ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "createdAt": "2027-10-10T03:04:06.324Z",
+      "updatedAt": "2026-11-18T21:01:56.058Z"
+    }
+  },
+  "Suggestion": {
+    "table": "Suggestion",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2vu00411hmz0joaestf",
+      "guildId": "900000000000000001",
+      "number": 1,
+      "authorId": "800000000000000648",
+      "anonymous": false,
+      "content": "Suggestion.content",
+      "status": "OPEN",
+      "channelId": "800000000000000650",
+      "messageId": null,
+      "threadId": null,
+      "upvotes": 0,
+      "downvotes": 0,
+      "reviewerId": null,
+      "reviewNote": null,
+      "reviewedAt": null,
+      "createdAt": "2026-11-18T21:01:56.058Z",
+      "updatedAt": "2026-11-18T21:01:56.058Z"
+    },
+    "full": {
+      "id": "cmwmlx2vy00431hmztiz0vbfi",
+      "guildId": "900000000000000002",
+      "number": 1999999349,
+      "authorId": "800000000000000652",
+      "anonymous": true,
+      "content": "Suggestion.content ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "status": "IMPLEMENTED",
+      "channelId": "800000000000000656",
+      "messageId": "800000000000000657",
+      "threadId": "800000000000000658",
+      "upvotes": 1999999341,
+      "downvotes": 1999999340,
+      "reviewerId": "800000000000000661",
+      "reviewNote": "Suggestion.reviewNote ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "reviewedAt": "2027-10-27T03:04:06.341Z",
+      "createdAt": "2027-10-28T03:04:06.342Z",
+      "updatedAt": "2026-11-18T21:01:56.062Z"
+    }
+  },
+  "SuggestionVote": {
+    "table": "SuggestionVote",
+    "primaryKey": [
+      "suggestionId",
+      "userId"
+    ],
+    "min": {
+      "suggestionId": "cmwmlx2vu00411hmz0joaestf",
+      "userId": "800000000000000665",
+      "value": 1,
+      "createdAt": "2026-11-18T21:01:56.063Z"
+    },
+    "full": {
+      "suggestionId": "cmwmlx2vy00431hmztiz0vbfi",
+      "userId": "800000000000000667",
+      "value": 1999999332,
+      "createdAt": "2027-11-02T03:04:06.347Z"
+    }
+  },
+  "ModmailThread": {
+    "table": "ModmailThread",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2w000451hmz3vcqox3m",
+      "guildId": "900000000000000001",
+      "userId": "800000000000000670",
+      "threadId": "800000000000000671",
+      "status": "OPEN",
+      "closedById": null,
+      "closedAt": null,
+      "closeReason": null,
+      "lastActivityAt": "2026-11-18T21:01:56.064Z",
+      "createdAt": "2026-11-18T21:01:56.064Z",
+      "updatedAt": "2026-11-18T21:01:56.064Z"
+    },
+    "full": {
+      "id": "cmwmlx2w200471hmzvavz8vne",
+      "guildId": "900000000000000002",
+      "userId": "800000000000000672",
+      "threadId": "800000000000000673",
+      "status": "CLOSED",
+      "closedById": "800000000000000675",
+      "closedAt": "2027-11-09T03:04:06.354Z",
+      "closeReason": "ModmailThread.closeReason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lastActivityAt": "2027-11-11T03:04:06.356Z",
+      "createdAt": "2027-11-12T03:04:06.357Z",
+      "updatedAt": "2026-11-18T21:01:56.067Z"
+    }
+  },
+  "ApplicationForm": {
+    "table": "ApplicationForm",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2w300491hmzpj46prby",
+      "guildId": "900000000000000001",
+      "name": "ApplicationForm.name",
+      "description": null,
+      "questions": [],
+      "reviewChannelId": null,
+      "acceptRoleIds": [],
+      "requiredRoleIds": [],
+      "cooldownHours": 24,
+      "acceptMessage": null,
+      "denyMessage": null,
+      "panelChannelId": null,
+      "panelMessageId": null,
+      "enabled": true,
+      "createdAt": "2026-11-18T21:01:56.067Z",
+      "updatedAt": "2026-11-18T21:01:56.067Z"
+    },
+    "full": {
+      "id": "cmwmlx2w5004b1hmzzun93kx9",
+      "guildId": "900000000000000002",
+      "name": "ApplicationForm.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "ApplicationForm.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "questions": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "reviewChannelId": "800000000000000684",
+      "acceptRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "requiredRoleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "cooldownHours": 1999999313,
+      "acceptMessage": "ApplicationForm.acceptMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "denyMessage": "ApplicationForm.denyMessage ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "panelChannelId": "800000000000000690",
+      "panelMessageId": "800000000000000691",
+      "enabled": false,
+      "createdAt": "2027-11-26T03:04:06.371Z",
+      "updatedAt": "2026-11-18T21:01:56.070Z"
+    }
+  },
+  "ApplicationSubmission": {
+    "table": "ApplicationSubmission",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2w6004d1hmzksaey18g",
+      "guildId": "900000000000000001",
+      "formId": "cmwmlx2w300491hmzpj46prby",
+      "userId": "800000000000000694",
+      "answers": [],
+      "status": "DRAFT",
+      "reviewerId": null,
+      "reviewNote": null,
+      "reviewMessageId": null,
+      "submittedAt": null,
+      "reviewedAt": null,
+      "createdAt": "2026-11-18T21:01:56.070Z",
+      "updatedAt": "2026-11-18T21:01:56.070Z"
+    },
+    "full": {
+      "id": "cmwmlx2w9004f1hmztvexq4f4",
+      "guildId": "900000000000000002",
+      "formId": "cmwmlx2w5004b1hmzzun93kx9",
+      "userId": "800000000000000695",
+      "answers": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "status": "DENIED",
+      "reviewerId": "800000000000000698",
+      "reviewNote": "ApplicationSubmission.reviewNote ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "reviewMessageId": "800000000000000700",
+      "submittedAt": "2027-12-04T03:04:06.379Z",
+      "reviewedAt": "2027-12-05T03:04:06.380Z",
+      "createdAt": "2027-12-06T03:04:06.381Z",
+      "updatedAt": "2026-11-18T21:01:56.073Z"
+    }
+  },
+  "StickyMessage": {
+    "table": "StickyMessage",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2w9004h1hmzjwonypjd",
+      "guildId": "900000000000000001",
+      "channelId": "800000000000000704",
+      "content": null,
+      "embed": null,
+      "lastMessageId": null,
+      "enabled": true,
+      "createdById": "800000000000000705",
+      "createdAt": "2026-11-18T21:01:56.074Z",
+      "updatedAt": "2026-11-18T21:01:56.074Z"
+    },
+    "full": {
+      "id": "cmwmlx2wc004j1hmzza095g91",
+      "guildId": "900000000000000002",
+      "channelId": "800000000000000706",
+      "content": "StickyMessage.content ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "embed": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "lastMessageId": "800000000000000709",
+      "enabled": false,
+      "createdById": "800000000000000711",
+      "createdAt": "2027-12-15T03:04:06.390Z",
+      "updatedAt": "2026-11-18T21:01:56.076Z"
+    }
+  },
+  "AfkStatus": {
+    "table": "AfkStatus",
+    "primaryKey": [
+      "guildId",
+      "userId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "userId": "800000000000000713",
+      "reason": null,
+      "nickChanged": false,
+      "previousNick": null,
+      "pings": [],
+      "pingCount": 0,
+      "since": "2026-11-18T21:01:56.077Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "userId": "800000000000000714",
+      "reason": "AfkStatus.reason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "nickChanged": true,
+      "previousNick": "AfkStatus.previousNick ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "pings": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "pingCount": 1999999281,
+      "since": "2027-12-23T03:04:06.398Z"
+    }
+  },
+  "AntiRaidState": {
+    "table": "AntiRaidState",
+    "primaryKey": [
+      "guildId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "lockedAt": null,
+      "lockedUntil": null,
+      "lockedById": null,
+      "reason": null,
+      "priorEveryoneSend": null,
+      "invitesPausedUntil": null,
+      "updatedAt": "2026-11-18T21:01:56.079Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "lockedAt": "2027-12-24T03:04:06.399Z",
+      "lockedUntil": "2027-12-25T03:04:06.400Z",
+      "lockedById": "800000000000000723",
+      "reason": "AntiRaidState.reason ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "priorEveryoneSend": "AntiRaidState.priorEveryoneSend ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "invitesPausedUntil": "2027-12-29T03:04:06.404Z",
+      "updatedAt": "2026-11-18T21:01:56.080Z"
+    }
+  },
+  "GuildEvent": {
+    "table": "GuildEvent",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2wg004l1hmz51kh47c9",
+      "guildId": "900000000000000001",
+      "title": "GuildEvent.title",
+      "description": null,
+      "location": null,
+      "startsAt": "2027-12-31T03:04:06.406Z",
+      "endsAt": null,
+      "hostId": "800000000000000729",
+      "channelId": "800000000000000730",
+      "messageId": null,
+      "roleId": null,
+      "capacity": null,
+      "reminderMinutes": 15,
+      "reminderSentAt": null,
+      "reminderMessageIds": [],
+      "discordEventId": null,
+      "textChannelId": null,
+      "voiceChannelId": null,
+      "accessRoleId": null,
+      "status": "SCHEDULED",
+      "createdAt": "2026-11-18T21:01:56.081Z",
+      "updatedAt": "2026-11-18T21:01:56.081Z"
+    },
+    "full": {
+      "id": "cmwmlx2wj004n1hmzdwl0nwao",
+      "guildId": "900000000000000002",
+      "title": "GuildEvent.title ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "description": "GuildEvent.description ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "location": "GuildEvent.location ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "startsAt": "2028-01-06T03:04:06.412Z",
+      "endsAt": "2028-01-07T03:04:06.413Z",
+      "hostId": "800000000000000736",
+      "channelId": "800000000000000737",
+      "messageId": "800000000000000738",
+      "roleId": "800000000000000739",
+      "capacity": 1999999260,
+      "reminderMinutes": 1999999259,
+      "reminderSentAt": "2028-01-14T03:04:06.420Z",
+      "reminderMessageIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "discordEventId": "800000000000000744",
+      "textChannelId": "800000000000000745",
+      "voiceChannelId": "800000000000000746",
+      "accessRoleId": "800000000000000747",
+      "status": "CANCELLED",
+      "createdAt": "2028-01-21T03:04:06.427Z",
+      "updatedAt": "2026-11-18T21:01:56.083Z"
+    }
+  },
+  "EventRsvp": {
+    "table": "EventRsvp",
+    "primaryKey": [
+      "eventId",
+      "userId"
+    ],
+    "min": {
+      "eventId": "cmwmlx2wg004l1hmz51kh47c9",
+      "userId": "800000000000000750",
+      "status": "GOING",
+      "roleGranted": false,
+      "createdAt": "2026-11-18T21:01:56.084Z",
+      "updatedAt": "2026-11-18T21:01:56.084Z"
+    },
+    "full": {
+      "eventId": "cmwmlx2wj004n1hmzdwl0nwao",
+      "userId": "800000000000000752",
+      "status": "DECLINED",
+      "roleGranted": true,
+      "createdAt": "2028-01-27T03:04:06.433Z",
+      "updatedAt": "2026-11-18T21:01:56.086Z"
+    }
+  },
+  "PersistedMember": {
+    "table": "PersistedMember",
+    "primaryKey": [
+      "guildId",
+      "userId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "userId": "800000000000000756",
+      "roleIds": [],
+      "nickname": null,
+      "leftAt": "2026-11-18T21:01:56.086Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "userId": "800000000000000757",
+      "roleIds": [
+        "a",
+        "b ✨",
+        "800000000000000042"
+      ],
+      "nickname": "PersistedMember.nickname ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "leftAt": "2028-02-01T03:04:06.438Z"
+    }
+  },
+  "BoosterRole": {
+    "table": "BoosterRole",
+    "primaryKey": [
+      "guildId",
+      "userId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "userId": "800000000000000761",
+      "roleId": "800000000000000762",
+      "boostEndedAt": null,
+      "createdAt": "2026-11-18T21:01:56.088Z",
+      "updatedAt": "2026-11-18T21:01:56.088Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "userId": "800000000000000763",
+      "roleId": "800000000000000764",
+      "boostEndedAt": "2028-02-06T03:04:06.443Z",
+      "createdAt": "2028-02-07T03:04:06.444Z",
+      "updatedAt": "2026-11-18T21:01:56.090Z"
+    }
+  },
+  "ServerBackup": {
+    "table": "ServerBackup",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2wq004p1hmz8paz3tzx",
+      "guildId": "900000000000000001",
+      "name": null,
+      "automatic": false,
+      "createdById": null,
+      "data": {},
+      "sizeBytes": 1,
+      "roleCount": 1,
+      "channelCount": 1,
+      "createdAt": "2026-11-18T21:01:56.091Z"
+    },
+    "full": {
+      "id": "cmwmlx2ws004r1hmzqk2wsc5r",
+      "guildId": "900000000000000002",
+      "name": "ServerBackup.name ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "automatic": true,
+      "createdById": "800000000000000773",
+      "data": {
+        "n": 1.5,
+        "big": 9007199254740991,
+        "list": [
+          1,
+          "two",
+          null,
+          {
+            "three": true
+          }
+        ],
+        "text": "ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+        "nested": {
+          "none": null,
+          "empty": {}
+        }
+      },
+      "sizeBytes": 1999999225,
+      "roleCount": 1999999224,
+      "channelCount": 1999999223,
+      "createdAt": "2028-02-19T03:04:06.456Z"
+    }
+  },
+  "Confession": {
+    "table": "Confession",
+    "primaryKey": [
+      "id"
+    ],
+    "min": {
+      "id": "cmwmlx2wt004t1hmznsopkm3j",
+      "guildId": "900000000000000001",
+      "number": 1,
+      "authorId": "800000000000000780",
+      "content": "Confession.content",
+      "hasImage": false,
+      "status": "PENDING",
+      "channelId": null,
+      "messageId": null,
+      "reviewMessageId": null,
+      "reviewerId": null,
+      "reviewedAt": null,
+      "createdAt": "2026-11-18T21:01:56.094Z"
+    },
+    "full": {
+      "id": "cmwmlx2wy004v1hmzt90esr1w",
+      "guildId": "900000000000000002",
+      "number": 1999999218,
+      "authorId": "800000000000000783",
+      "content": "Confession.content ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "hasImage": true,
+      "status": "DELETED",
+      "channelId": "800000000000000787",
+      "messageId": "800000000000000788",
+      "reviewMessageId": "800000000000000789",
+      "reviewerId": "800000000000000790",
+      "reviewedAt": "2028-03-03T03:04:06.469Z",
+      "createdAt": "2028-03-04T03:04:06.470Z"
+    }
+  },
+  "BumpState": {
+    "table": "BumpState",
+    "primaryKey": [
+      "guildId",
+      "site"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "site": "BumpState.site",
+      "lastBumpAt": "2028-03-06T03:04:06.472Z",
+      "lastBumperId": null,
+      "channelId": "800000000000000795",
+      "nextBumpAt": "2028-03-08T03:04:06.474Z",
+      "remindedAt": null
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "site": "BumpState.site ünïcödé ✨ 'single' \"double\" \\ back\nnewline <@123> {user}",
+      "lastBumpAt": "2028-03-10T03:04:06.476Z",
+      "lastBumperId": "800000000000000799",
+      "channelId": "800000000000000800",
+      "nextBumpAt": "2028-03-13T03:04:06.479Z",
+      "remindedAt": "2028-03-14T03:04:06.480Z"
+    }
+  },
+  "BumpCount": {
+    "table": "BumpCount",
+    "primaryKey": [
+      "guildId",
+      "userId"
+    ],
+    "min": {
+      "guildId": "900000000000000001",
+      "userId": "800000000000000803",
+      "count": 0,
+      "lastBumpAt": "2028-03-16T03:04:06.482Z"
+    },
+    "full": {
+      "guildId": "900000000000000002",
+      "userId": "800000000000000805",
+      "count": 1999999194,
+      "lastBumpAt": "2028-03-19T03:04:06.485Z"
+    }
+  }
+}

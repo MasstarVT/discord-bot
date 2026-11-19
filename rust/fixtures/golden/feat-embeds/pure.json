@@ -1,0 +1,3245 @@
+{
+  "names": [
+    [
+      "My Rules!",
+      "my-rules"
+    ],
+    [
+      "  Welcome  Greeting ",
+      "welcome-greeting"
+    ],
+    [
+      "Ünïcode",
+      "unicode"
+    ],
+    [
+      "--x--",
+      "x"
+    ],
+    [
+      "🎉",
+      null
+    ],
+    [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    [
+      "welcome-greeting",
+      "welcome-greeting"
+    ],
+    [
+      "a_b",
+      "a_b"
+    ],
+    [
+      "A_B c",
+      "a_b-c"
+    ],
+    [
+      "Ｆｕｌｌｗｉｄｔｈ",
+      "fullwidth"
+    ],
+    [
+      "ﬁle",
+      "file"
+    ],
+    [
+      "Ⅻ roman",
+      "xii-roman"
+    ],
+    [
+      "İstanbul",
+      "istanbul"
+    ],
+    [
+      "straße",
+      "strae"
+    ],
+    [
+      "café\tbar\nbaz",
+      "cafe-bar-baz"
+    ],
+    [
+      "x y",
+      "x-y"
+    ],
+    [
+      "x y　z",
+      "x-y-z"
+    ],
+    [
+      "ı dotless",
+      "dotless"
+    ],
+    [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-c",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb--c",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    [
+      "-_-",
+      "_"
+    ],
+    [
+      "____",
+      "____"
+    ],
+    [
+      "日本語",
+      null
+    ],
+    [
+      "Ω omega",
+      "omega"
+    ],
+    [
+      "Å",
+      "a"
+    ],
+    [
+      "ǅ",
+      "dz"
+    ],
+    [
+      "́a",
+      "a"
+    ],
+    [
+      "é",
+      "e"
+    ],
+    [
+      "1/2 ½",
+      "12-12"
+    ],
+    [
+      "mixed-CASE_name 99",
+      "mixed-case_name-99"
+    ],
+    [
+      "",
+      null
+    ],
+    [
+      "   ",
+      null
+    ],
+    [
+      "- -",
+      null
+    ],
+    [
+      "tab\tsep",
+      "tab-sep"
+    ],
+    [
+      "a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-",
+      "a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a"
+    ],
+    [
+      "​zero",
+      "zero"
+    ],
+    [
+      "kK",
+      "kk"
+    ],
+    [
+      "ŉ",
+      "n"
+    ],
+    [
+      "ﬀ",
+      "ff"
+    ],
+    [
+      "①②",
+      "12"
+    ]
+  ],
+  "emoji": [
+    [
+      "🎉",
+      true
+    ],
+    [
+      "🛡️",
+      true
+    ],
+    [
+      "1️⃣",
+      true
+    ],
+    [
+      "1⃣",
+      true
+    ],
+    [
+      "#️⃣",
+      true
+    ],
+    [
+      "*️⃣",
+      true
+    ],
+    [
+      "🇺🇸",
+      true
+    ],
+    [
+      "👍🏽",
+      true
+    ],
+    [
+      "👨‍👩‍👧",
+      true
+    ],
+    [
+      "<:x:123456789012345678>",
+      true
+    ],
+    [
+      "<a:wave:123456789012345678>",
+      true
+    ],
+    [
+      "abc",
+      false
+    ],
+    [
+      ":smile:",
+      false
+    ],
+    [
+      "🎉🎉",
+      false
+    ],
+    [
+      "a🎉",
+      false
+    ],
+    [
+      "",
+      false
+    ],
+    [
+      "1",
+      false
+    ],
+    [
+      "🇺",
+      false
+    ],
+    [
+      "🇺🇸🇫🇷",
+      false
+    ],
+    [
+      "🇺🇸🎉",
+      false
+    ],
+    [
+      "👍🏽👍",
+      false
+    ],
+    [
+      "👨‍👩‍👧‍👦",
+      true
+    ],
+    [
+      "🏳️‍🌈",
+      true
+    ],
+    [
+      "🏴‍☠️",
+      true
+    ],
+    [
+      "❤️",
+      true
+    ],
+    [
+      "❤",
+      true
+    ],
+    [
+      "©",
+      true
+    ],
+    [
+      "©️",
+      true
+    ],
+    [
+      "™️",
+      true
+    ],
+    [
+      "☺️",
+      true
+    ],
+    [
+      " 🎉 ",
+      true
+    ],
+    [
+      "🎉‍",
+      true
+    ],
+    [
+      "‍🎉",
+      false
+    ],
+    [
+      "🎉️️",
+      true
+    ],
+    [
+      "🏽",
+      false
+    ],
+    [
+      "👍‍🏽",
+      true
+    ],
+    [
+      "1️⃣🎉",
+      false
+    ],
+    [
+      "1️⃣‍🎉",
+      false
+    ],
+    [
+      "🇺🇸‍🎉",
+      false
+    ],
+    [
+      "🎉‍‍🎉",
+      false
+    ],
+    [
+      "🎉️‍🎉",
+      true
+    ],
+    [
+      "🎉🏽‍🎉",
+      true
+    ],
+    [
+      "👨‍👩‍👧‍👦👨‍👩‍👧‍👦",
+      false
+    ],
+    [
+      "🧑🏽‍🤝‍🧑🏻",
+      true
+    ],
+    [
+      "<:x:1234>",
+      false
+    ],
+    [
+      "<:toolongxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:123456789012345678>",
+      false
+    ],
+    [
+      "<:a:123456789012345678>",
+      true
+    ],
+    [
+      "<b:x:123456789012345678>",
+      false
+    ],
+    [
+      "<:x:123456789012345678",
+      false
+    ],
+    [
+      "🎉🎉🎉🎉🎉🎉🎉🎉🎉",
+      false
+    ],
+    [
+      "👨‍👨‍👨‍👨‍👨‍👨‍👨‍👨‍👨",
+      true
+    ],
+    [
+      "🫠",
+      true
+    ],
+    [
+      "🪿",
+      true
+    ],
+    [
+      "🀀",
+      false
+    ],
+    [
+      "🀄",
+      true
+    ],
+    [
+      "#",
+      false
+    ],
+    [
+      "*",
+      false
+    ],
+    [
+      "0️⃣",
+      true
+    ],
+    [
+      "9️⃣",
+      true
+    ],
+    [
+      "🔟",
+      true
+    ],
+    [
+      "x️⃣",
+      false
+    ]
+  ],
+  "buttonEmoji": [
+    [
+      "<:x:123456789012345678>",
+      {
+        "ok": "<:x:123456789012345678>"
+      }
+    ],
+    [
+      "hello",
+      {
+        "err": "That isn't a valid emoji. Use a standard emoji or a custom emoji from a server I'm in.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      " 🎉 ",
+      {
+        "ok": "🎉"
+      }
+    ]
+  ],
+  "imageUrls": [
+    [
+      "https://a.b/c.png",
+      {
+        "ok": "https://a.b/c.png"
+      }
+    ],
+    [
+      " {user.avatar} ",
+      {
+        "ok": "{user.avatar}"
+      }
+    ],
+    [
+      "{server.icon}",
+      {
+        "ok": "{server.icon}"
+      }
+    ],
+    [
+      "javascript:alert(1)",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{user.avatar} x",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "http://x.y/a",
+      {
+        "ok": "http://x.y/a"
+      }
+    ],
+    [
+      "ftp://x.y",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{user.avatar}",
+      {
+        "ok": "{user.avatar}"
+      }
+    ],
+    [
+      "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      {
+        "ok": "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    [
+      "HTTPS://A.B/x",
+      {
+        "ok": "HTTPS://A.B/x"
+      }
+    ],
+    [
+      "https://",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "https:// space",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{a-b}",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{}",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      {
+        "err": "Images must be an http(s) link or a variable like {user.avatar} or {server.icon}.",
+        "code": "INVALID"
+      }
+    ]
+  ],
+  "linkUrls": [
+    [
+      "https://a.b/c.png",
+      {
+        "ok": "https://a.b/c.png"
+      },
+      {
+        "ok": "https://a.b/c.png"
+      }
+    ],
+    [
+      " {user.avatar} ",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{server.icon}",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "javascript:alert(1)",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{user.avatar} x",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "http://x.y/a",
+      {
+        "ok": "http://x.y/a"
+      },
+      {
+        "ok": "http://x.y/a"
+      }
+    ],
+    [
+      "ftp://x.y",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{user.avatar}",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      {
+        "ok": "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "HTTPS://A.B/x",
+      {
+        "ok": "HTTPS://A.B/x"
+      },
+      {
+        "ok": "HTTPS://A.B/x"
+      }
+    ],
+    [
+      "https://",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "https:// space",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{a-b}",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "{}",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ],
+    [
+      "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      {
+        "err": "Links must start with http:// or https:// and be at most 2048 characters.",
+        "code": "INVALID"
+      },
+      {
+        "err": "Links must start with http:// or https:// and be at most 512 characters.",
+        "code": "INVALID"
+      }
+    ]
+  ],
+  "validate": [
+    [
+      {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      [
+        "The message is empty. Add some text or an embed."
+      ]
+    ],
+    [
+      {
+        "content": "hi"
+      },
+      []
+    ],
+    [
+      {
+        "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      [
+        "Message content is 2001 characters (max 2000)."
+      ]
+    ],
+    [
+      {
+        "content": "hi",
+        "buttons": [
+          {
+            "label": "L",
+            "url": "https://a.b",
+            "emoji": "not an emoji"
+          }
+        ]
+      },
+      [
+        "Button 1 emoji is not a valid emoji.",
+        "Button 1 has an invalid emoji."
+      ]
+    ],
+    [
+      {
+        "content": "hi",
+        "buttons": [
+          {
+            "label": "L",
+            "url": "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      [
+        "Button 1 URL is 522 characters (max 512).",
+        "Button 1 needs an http(s) link of at most 512 characters."
+      ]
+    ],
+    [
+      {
+        "content": "hi",
+        "buttons": [
+          {
+            "label": "L",
+            "url": "{server.icon}"
+          }
+        ]
+      },
+      [
+        "Button 1 needs an http(s) link of at most 512 characters."
+      ]
+    ],
+    [
+      {
+        "content": "hi",
+        "buttons": [
+          {
+            "label": "L",
+            "url": "HTTP://a.b"
+          },
+          {
+            "label": "M",
+            "url": "https://a.b",
+            "emoji": "<:x:1>"
+          }
+        ]
+      },
+      [
+        "Button 2 emoji is not a valid emoji.",
+        "Button 2 has an invalid emoji."
+      ]
+    ],
+    [
+      {
+        "embed": {
+          "title": "T",
+          "color": 1193046
+        },
+        "buttons": [
+          {
+            "label": "L",
+            "url": "https://a.b",
+            "emoji": "🎉"
+          }
+        ]
+      },
+      []
+    ],
+    [
+      {
+        "embed": {
+          "color": 5
+        }
+      },
+      [
+        "The message is empty. Add some text or an embed."
+      ]
+    ]
+  ],
+  "mutators": [
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "A",
+          "value": "B"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "A",
+              "value": "B",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "A",
+              "value": "B",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "zero",
+          "value": "0",
+          "position": 1
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "zero",
+              "value": "0",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "zero",
+              "value": "0",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "last",
+          "value": "L",
+          "position": 99
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            },
+            {
+              "name": "last",
+              "value": "L",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            },
+            {
+              "name": "last",
+              "value": "L",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "mid",
+          "value": "M",
+          "position": 2,
+          "inline": true
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "mid",
+              "value": "M",
+              "inline": true
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "mid",
+              "value": "M",
+              "inline": true
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "neg",
+          "value": "N",
+          "position": -5
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "neg",
+              "value": "N",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "neg",
+              "value": "N",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "title": "  ",
+          "value": "y"
+        }
+      ],
+      "err": "Field title and text cannot be empty.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "addField",
+      "tpl": {
+        "content": "x",
+        "embed": {
+          "color": 5
+        }
+      },
+      "args": [
+        {
+          "title": " T ",
+          "value": " V "
+        }
+      ],
+      "ok": {
+        "content": "x",
+        "embed": {
+          "color": 5,
+          "fields": [
+            {
+              "name": "T",
+              "value": "V",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": "x",
+        "embed": {
+          "color": 5,
+          "fields": [
+            {
+              "name": "T",
+              "value": "V",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        3,
+        {
+          "title": "x"
+        }
+      ],
+      "err": "There is no field 3.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        0,
+        {
+          "title": "x"
+        }
+      ],
+      "err": "There is no field 0.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        2,
+        {
+          "position": 1,
+          "inline": true
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": true
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": true
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        1,
+        {
+          "value": " new "
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "new",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "new",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        1,
+        {
+          "title": ""
+        }
+      ],
+      "err": "Field title and text cannot be empty.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "editField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        1,
+        {
+          "position": 9
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            },
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "removeField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        1
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "removeField",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "fields": [
+            {
+              "name": "one",
+              "value": "1",
+              "inline": false
+            },
+            {
+              "name": "two",
+              "value": "2",
+              "inline": false
+            }
+          ]
+        },
+        "buttons": []
+      },
+      "args": [
+        5
+      ],
+      "err": "There is no field 5.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "removeField",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        1
+      ],
+      "err": "There is no field 1.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "addButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "label": " Site ",
+          "url": "https://example.com",
+          "emoji": "🌐"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      }
+    },
+    {
+      "fn": "addButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "label": "x",
+          "url": "ftp://x.y"
+        }
+      ],
+      "err": "Links must start with http:// or https:// and be at most 512 characters.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "addButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "label": "x",
+          "url": "https://a.b/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "err": "Links must start with http:// or https:// and be at most 512 characters.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "addButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "label": "  ",
+          "url": "https://a.b"
+        }
+      ],
+      "err": "The button needs a label.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "addButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      },
+      "args": [
+        {
+          "label": "First",
+          "url": "https://a.b",
+          "position": 1
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "First",
+            "url": "https://a.b",
+            "emoji": null
+          },
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "First",
+            "url": "https://a.b",
+            "emoji": null
+          },
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      }
+    },
+    {
+      "fn": "removeButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      },
+      "args": [
+        1
+      ],
+      "ok": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      }
+    },
+    {
+      "fn": "removeButton",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": [
+          {
+            "label": "Site",
+            "url": "https://example.com",
+            "emoji": "🌐"
+          }
+        ]
+      },
+      "args": [
+        2
+      ],
+      "err": "There is no button 2.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "iconUrl": "https://a.b/i.png"
+        }
+      ],
+      "err": "Set the author text first (text:).",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": "X"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": "none"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "author": null
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "iconUrl": "https://a.b/i.png"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": "https://a.b/i.png",
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": "https://a.b/i.png",
+            "url": null
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": "https://a.b/i.png",
+            "url": "https://a.b"
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "iconUrl": null
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": "https://a.b"
+          }
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": "https://a.b"
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setAuthor",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": "   "
+        }
+      ],
+      "err": "The author text cannot be empty.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "timestamp": true
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          },
+          "timestamp": true
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "author": {
+            "name": "X",
+            "iconUrl": null,
+            "url": null
+          },
+          "timestamp": true
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": "Foot",
+          "iconUrl": "https://a.b/f.png"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": "clear"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "footer": null
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "iconUrl": null
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": null
+          }
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": null
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "Foot",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": " New ",
+          "timestamp": false
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "New",
+            "iconUrl": "https://a.b/f.png"
+          },
+          "timestamp": false
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "footer": {
+            "text": "New",
+            "iconUrl": "https://a.b/f.png"
+          }
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "iconUrl": "https://a.b/f.png"
+        }
+      ],
+      "err": "Set the footer text first (text:).",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "setFooter",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "text": " "
+        }
+      ],
+      "err": "The footer text cannot be empty.",
+      "code": "INVALID",
+      "normalized": null
+    },
+    {
+      "fn": "setImages",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png"
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setImages",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      },
+      "args": [
+        {
+          "image": null
+        }
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": null
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setImages",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      },
+      "args": [
+        {}
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png"
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png"
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setColor",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        16711680
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "color": 16711680
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "color": 16711680
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setColor",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      },
+      "args": [
+        null
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png",
+          "color": null
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png"
+        },
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setTitleUrl",
+      "tpl": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      },
+      "args": [
+        "https://a.b"
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "url": "https://a.b"
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": null,
+        "buttons": []
+      }
+    },
+    {
+      "fn": "setTitleUrl",
+      "tpl": {
+        "content": null,
+        "embed": {
+          "image": "https://a.b/i.png",
+          "thumbnail": "{server.icon}"
+        },
+        "buttons": []
+      },
+      "args": [
+        null
+      ],
+      "ok": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png",
+          "url": null
+        },
+        "buttons": []
+      },
+      "normalized": {
+        "content": null,
+        "embed": {
+          "thumbnail": "{server.icon}",
+          "image": "https://a.b/i.png"
+        },
+        "buttons": []
+      }
+    }
+  ],
+  "imports": [
+    [
+      "{\"content\":\"Hey {user}, here are the rules!\",\"embed\":{\"title\":\"📜 Rules\",\"description\":\"**1.** Be nice.\",\"url\":null,\"color\":5793266,\"author\":{\"name\":\"{server}\",\"iconUrl\":\"{server.icon}\",\"url\":null},\"footer\":{\"text\":\"Thanks for reading\",\"iconUrl\":null},\"thumbnail\":\"{server.icon}\",\"image\":null,\"fields\":[{\"name\":\"Contact\",\"value\":\"Ask a moderator\",\"inline\":false}],\"timestamp\":false},\"buttons\":[{\"label\":\"Website\",\"url\":\"https://example.com\",\"emoji\":\"🌐\"}]}",
+      {
+        "template": {
+          "content": "Hey {user}, here are the rules!",
+          "embed": {
+            "title": "📜 Rules",
+            "description": "**1.** Be nice.",
+            "color": 5793266,
+            "author": {
+              "name": "{server}",
+              "iconUrl": "{server.icon}",
+              "url": null
+            },
+            "footer": {
+              "text": "Thanks for reading",
+              "iconUrl": null
+            },
+            "thumbnail": "{server.icon}",
+            "fields": [
+              {
+                "name": "Contact",
+                "value": "Ask a moderator",
+                "inline": false
+              }
+            ]
+          },
+          "buttons": [
+            {
+              "label": "Website",
+              "url": "https://example.com",
+              "emoji": "🌐"
+            }
+          ]
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\n  \"content\": \"Hey {user}, here are the rules!\",\n  \"embed\": {\n    \"title\": \"📜 Rules\",\n    \"description\": \"**1.** Be nice.\",\n    \"color\": 5793266,\n    \"author\": {\n      \"name\": \"{server}\",\n      \"iconUrl\": \"{server.icon}\",\n      \"url\": null\n    },\n    \"footer\": {\n      \"text\": \"Thanks for reading\",\n      \"iconUrl\": null\n    },\n    \"thumbnail\": \"{server.icon}\",\n    \"fields\": [\n      {\n        \"name\": \"Contact\",\n        \"value\": \"Ask a moderator\",\n        \"inline\": false\n      }\n    ]\n  },\n  \"buttons\": [\n    {\n      \"label\": \"Website\",\n      \"url\": \"https://example.com\",\n      \"emoji\": \"🌐\"\n    }\n  ]\n}",
+      {
+        "template": {
+          "content": "Hey {user}, here are the rules!",
+          "embed": {
+            "title": "📜 Rules",
+            "description": "**1.** Be nice.",
+            "color": 5793266,
+            "author": {
+              "name": "{server}",
+              "iconUrl": "{server.icon}",
+              "url": null
+            },
+            "footer": {
+              "text": "Thanks for reading",
+              "iconUrl": null
+            },
+            "thumbnail": "{server.icon}",
+            "fields": [
+              {
+                "name": "Contact",
+                "value": "Ask a moderator",
+                "inline": false
+              }
+            ]
+          },
+          "buttons": [
+            {
+              "label": "Website",
+              "url": "https://example.com",
+              "emoji": "🌐"
+            }
+          ]
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"content\":\"hi\",\"embeds\":[{\"title\":\"T\"},{\"title\":\"U\"}],\"components\":[{\"type\":1,\"components\":[{\"type\":2,\"style\":5,\"label\":\"L\",\"url\":\"https://x.y\"},{\"type\":2,\"style\":1,\"label\":\"B\",\"custom_id\":\"z\"}]}]}",
+      {
+        "template": {
+          "content": "hi",
+          "embed": {
+            "title": "T"
+          },
+          "buttons": [
+            {
+              "label": "L",
+              "url": "https://x.y",
+              "emoji": null
+            }
+          ]
+        },
+        "errors": [],
+        "warnings": [
+          "Only the first embed was imported.",
+          "Only link buttons were imported."
+        ]
+      }
+    ],
+    [
+      "{\"components\":[{\"type\":1,\"components\":[{\"type\":2,\"style\":5,\"label\":\"L\",\"url\":\"https://x.y\",\"emoji\":{\"id\":\"123456789012345678\",\"name\":\"wave\",\"animated\":true}}]}]}",
+      {
+        "template": {
+          "content": null,
+          "embed": null,
+          "buttons": [
+            {
+              "label": "L",
+              "url": "https://x.y",
+              "emoji": "<a:wave:123456789012345678>"
+            }
+          ]
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"components\":[{\"type\":1,\"components\":[{\"type\":2,\"style\":5,\"label\":\"L\",\"url\":\"https://x.y\",\"emoji\":{\"name\":\"🎉\"}}]}]}",
+      {
+        "template": {
+          "content": null,
+          "embed": null,
+          "buttons": [
+            {
+              "label": "L",
+              "url": "https://x.y",
+              "emoji": "🎉"
+            }
+          ]
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"components\":[{\"type\":1,\"components\":[{\"type\":2,\"style\":5,\"url\":\"https://x.y\"}]}]}",
+      {
+        "template": null,
+        "errors": [
+          "The message is empty. Add some text or an embed."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"embeds\":[{\"title\":\"T\",\"color\":255,\"footer\":{\"text\":\"f\",\"icon_url\":\"https://a.b/i.png\"},\"author\":{\"name\":\"a\",\"url\":\"https://a.b\"},\"fields\":[{\"name\":\"n\",\"value\":\"v\",\"inline\":true}],\"thumbnail\":{\"url\":\"https://a.b/t.png\"},\"image\":{\"url\":\"https://a.b/i.png\"},\"timestamp\":\"2026-01-01T00:00:00.000Z\"}]}",
+      {
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "T",
+            "color": 255,
+            "author": {
+              "name": "a",
+              "iconUrl": null,
+              "url": "https://a.b"
+            },
+            "footer": {
+              "text": "f",
+              "iconUrl": "https://a.b/i.png"
+            },
+            "thumbnail": "https://a.b/t.png",
+            "image": "https://a.b/i.png",
+            "fields": [
+              {
+                "name": "n",
+                "value": "v",
+                "inline": true
+              }
+            ],
+            "timestamp": true
+          },
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"embeds\":[],\"content\":\"only\"}",
+      {
+        "template": {
+          "content": "only",
+          "embed": null,
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"embeds\":[{\"title\":\"T\"}],\"embed\":{\"title\":\"E\"}}",
+      {
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "E"
+          },
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"messages\":[{\"data\":{\"content\":\"x\"}},{\"data\":{\"content\":\"y\"}}]}",
+      {
+        "template": {
+          "content": "x",
+          "embed": null,
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": [
+          "Only the first message was imported."
+        ]
+      }
+    ],
+    [
+      "{\"messages\":[{\"data\":{\"content\":\"x\"}}]}",
+      {
+        "template": {
+          "content": "x",
+          "embed": null,
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"messages\":[]}",
+      {
+        "template": null,
+        "errors": [
+          "The message is empty. Add some text or an embed."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"messages\":[{}]}",
+      {
+        "template": null,
+        "errors": [
+          "The message is empty. Add some text or an embed."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{",
+      {
+        "template": null,
+        "errors": [
+          "That is not valid JSON."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{}",
+      {
+        "template": null,
+        "errors": [
+          "The message is empty. Add some text or an embed."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be 20 KB or smaller."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "[1,2]",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be an object."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "\"just text\"",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be an object."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "null",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be an object."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "42",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be an object."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "true",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be an object."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"content\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      {
+        "template": null,
+        "errors": [
+          "Message content is 2001 characters (max 2000)."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"title\":\"Bare\",\"description\":\"embed\"}",
+      {
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "Bare",
+            "description": "embed"
+          },
+          "buttons": []
+        },
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"content\":\"hi\",\"buttons\":[{\"label\":\"L\",\"url\":\"https://a.b\",\"emoji\":\"bad\"}]}",
+      {
+        "template": null,
+        "errors": [
+          "Button 1 emoji is not a valid emoji.",
+          "Button 1 has an invalid emoji."
+        ],
+        "warnings": []
+      }
+    ],
+    [
+      "{\"content\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\"}",
+      {
+        "template": null,
+        "errors": [
+          "The JSON must be 20 KB or smaller."
+        ],
+        "warnings": []
+      }
+    ]
+  ],
+  "presets": {
+    "default": [
+      {
+        "name": "welcome-greeting",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "👋 Welcome to {server}!",
+            "description": "We're glad you're here.\n\n📜 Read the rules below.\n🔗 Check out the links.\n💬 Then come and say hi!",
+            "footer": {
+              "text": "{server}",
+              "iconUrl": "{server.icon}"
+            },
+            "thumbnail": "{server.icon}"
+          },
+          "buttons": []
+        }
+      },
+      {
+        "name": "welcome-rules",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "📜 Server Rules",
+            "description": "**1.** Be respectful. No harassment, hate speech or discrimination.\n**2.** No spam or self-promotion without permission.\n**3.** Keep content safe for work and in the right channels.\n**4.** No illegal content and no sharing of personal information.\n**5.** Follow the Discord Terms of Service and Community Guidelines.\n**6.** The moderators have the final say.",
+            "footer": {
+              "text": "Breaking the rules can lead to a warning, mute, kick or ban.",
+              "iconUrl": null
+            }
+          },
+          "buttons": [
+            {
+              "label": "Discord Terms",
+              "url": "https://discord.com/terms",
+              "emoji": "📄"
+            },
+            {
+              "label": "Community Guidelines",
+              "url": "https://discord.com/guidelines",
+              "emoji": "🛡️"
+            }
+          ]
+        }
+      },
+      {
+        "name": "welcome-links",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🔗 Links",
+            "description": "Admins: add your website, socials and an invite link with `/embed button add name:welcome-links`."
+          },
+          "buttons": []
+        }
+      },
+      {
+        "name": "welcome-team",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🛡️ Staff Team",
+            "description": "**Owner:** {server.owner}\n\nNeed help? Reach out to a member of the staff team."
+          },
+          "buttons": []
+        }
+      }
+    ],
+    "invite": [
+      {
+        "name": "welcome-greeting",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "👋 Welcome to {server}!",
+            "description": "We're glad you're here.\n\n📜 Read the rules below.\n🔗 Check out the links.\n💬 Then come and say hi!",
+            "footer": {
+              "text": "{server}",
+              "iconUrl": "{server.icon}"
+            },
+            "thumbnail": "{server.icon}"
+          },
+          "buttons": []
+        }
+      },
+      {
+        "name": "welcome-rules",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "📜 Server Rules",
+            "description": "**1.** Be respectful. No harassment, hate speech or discrimination.\n**2.** No spam or self-promotion without permission.\n**3.** Keep content safe for work and in the right channels.\n**4.** No illegal content and no sharing of personal information.\n**5.** Follow the Discord Terms of Service and Community Guidelines.\n**6.** The moderators have the final say.",
+            "footer": {
+              "text": "Breaking the rules can lead to a warning, mute, kick or ban.",
+              "iconUrl": null
+            }
+          },
+          "buttons": [
+            {
+              "label": "Discord Terms",
+              "url": "https://discord.com/terms",
+              "emoji": "📄"
+            },
+            {
+              "label": "Community Guidelines",
+              "url": "https://discord.com/guidelines",
+              "emoji": "🛡️"
+            }
+          ]
+        }
+      },
+      {
+        "name": "welcome-links",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🔗 Links",
+            "description": "Invite your friends with the button below!\n\nAdmins: add your website and socials with `/embed button add name:welcome-links`."
+          },
+          "buttons": [
+            {
+              "label": "Invite your friends",
+              "url": "https://discord.gg/abc",
+              "emoji": "📨"
+            }
+          ]
+        }
+      },
+      {
+        "name": "welcome-team",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🛡️ Staff Team",
+            "description": "**Owner:** {server.owner}\n**Moderators:** <@&1> <@&2>\n\nNeed help? Reach out to a member of the staff team."
+          },
+          "buttons": []
+        }
+      }
+    ],
+    "many": [
+      {
+        "name": "welcome-greeting",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "👋 Welcome to {server}!",
+            "description": "We're glad you're here.\n\n📜 Read the rules below.\n🔗 Check out the links.\n💬 Then come and say hi!",
+            "footer": {
+              "text": "{server}",
+              "iconUrl": "{server.icon}"
+            },
+            "thumbnail": "{server.icon}"
+          },
+          "buttons": []
+        }
+      },
+      {
+        "name": "welcome-rules",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "📜 Server Rules",
+            "description": "**1.** Be respectful. No harassment, hate speech or discrimination.\n**2.** No spam or self-promotion without permission.\n**3.** Keep content safe for work and in the right channels.\n**4.** No illegal content and no sharing of personal information.\n**5.** Follow the Discord Terms of Service and Community Guidelines.\n**6.** The moderators have the final say.",
+            "footer": {
+              "text": "Breaking the rules can lead to a warning, mute, kick or ban.",
+              "iconUrl": null
+            }
+          },
+          "buttons": [
+            {
+              "label": "Discord Terms",
+              "url": "https://discord.com/terms",
+              "emoji": "📄"
+            },
+            {
+              "label": "Community Guidelines",
+              "url": "https://discord.com/guidelines",
+              "emoji": "🛡️"
+            }
+          ]
+        }
+      },
+      {
+        "name": "welcome-links",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🔗 Links",
+            "description": "Admins: add your website, socials and an invite link with `/embed button add name:welcome-links`."
+          },
+          "buttons": []
+        }
+      },
+      {
+        "name": "welcome-team",
+        "template": {
+          "content": null,
+          "embed": {
+            "title": "🛡️ Staff Team",
+            "description": "**Owner:** {server.owner}\n**Moderators:** <@&100000000000000000> <@&100000000000000001> <@&100000000000000002> <@&100000000000000003> <@&100000000000000004> <@&100000000000000005> <@&100000000000000006> <@&100000000000000007> <@&100000000000000008> <@&100000000000000009> <@&100000000000000010> <@&100000000000000011> <@&100000000000000012> <@&100000000000000013> <@&100000000000000014> <@&100000000000000015> <@&100000000000000016> <@&100000000000000017> <@&100000000000000018> <@&100000000000000019> <@&100000000000000020> <@&100000000000000021> <@&100000000000000022> <@&100000000000000023> <@&100000000000000024> <@&100000000000000025> <@&100000000000000026> <@&100000000000000027> <@&100000000000000028> <@&100000000000000029> <@&100000000000000030> <@&100000000000000031> <@&100000000000000032> <@&100000000000000033> <@&100000000000000034> <@&100000000000000035> <@&100000000000000036> <@&100000000000000037> <@&100000000000000038> <@&100000000000000039> <@&100000000000000040> <@&100000000000000041> <@&100000000000000042> <@&100000000000000043> <@&100000000000000044> <@&100000000000000045> <@&100000000000000046> <@&100000000000000047> <@&100000000000000048> <@&100000000000000049> <@&100000000000000050> <@&100000000000000051> <@&100000000000000052> <@&100000000000000053> <@&100000000000000054> <@&100000000000000055> <@&100000000000000056> <@&100000000000000057> <@&100000000000000058> <@&100000000000000059> <@&100000000000000060> <@&100000000000000061> <@&100000000000000062> <@&100000000000000063> … and 136 more\n\nNeed help? Reach out to a member of the staff team."
+          },
+          "buttons": []
+        }
+      }
+    ]
+  },
+  "misc": {
+    "cacheKey": "guild:900000000000000001:embed:my-rules",
+    "formatErrors": "• a\n• b\n• e0\n• e1\n• e2\n• e3\n• e4\n• e5\n• e6\n• e7",
+    "publishHint": [
+      "",
+      "\nIt is published in <#5>. Run `/embed update name:rules` to apply the change there.",
+      ""
+    ],
+    "customIds": [
+      "embed-modal:new:rules",
+      "embed-modal:new:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "embed-modal:cm1234567890abcdefghijklm"
+    ],
+    "roleMentions": [
+      [
+        "<@&123456789012345678> hi <@&123456789012345678> <@&223456789012345678> @everyone @here",
+        [
+          "123456789012345678",
+          "223456789012345678"
+        ]
+      ],
+      [
+        "<@&1234> <@&123456789012345678901> <@&12345678901234567> <<@&123456789012345678>>",
+        [
+          "12345678901234567",
+          "123456789012345678"
+        ]
+      ],
+      [
+        "",
+        []
+      ],
+      [
+        "many",
+        100
+      ]
+    ],
+    "defaultColor": [
+      16711680,
+      5793266,
+      5793266,
+      5793266,
+      0
+    ],
+    "mentionNone": {
+      "parse": []
+    },
+    "mentionNoChannel": {
+      "parse": [
+        "users"
+      ],
+      "roles": []
+    },
+    "unknownNoCtx": [
+      [
+        "{nope}",
+        "{btn}"
+      ],
+      10,
+      "\n⚠️ Unknown variables are shown as typed: `{nope}`, `{zip}`, `{au}`, `{fo}`, `{f}`, `{v}`"
+    ],
+    "modals": [
+      {
+        "custom_id": "embed-modal:new:rules",
+        "title": "New embed: rules",
+        "components": [
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-content",
+                "label": "Message text (outside the embed)",
+                "style": 2,
+                "max_length": 2000,
+                "required": false,
+                "placeholder": "Hey {user}, welcome to {server}!"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-title",
+                "label": "Embed title",
+                "style": 1,
+                "max_length": 256,
+                "required": false,
+                "placeholder": "Welcome to {server}!"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-description",
+                "label": "Embed description",
+                "style": 2,
+                "max_length": 4000,
+                "required": false,
+                "placeholder": "Use {user}, {server}, {server.member_count} …"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-color",
+                "label": "Embed colour (hex or name)",
+                "style": 1,
+                "max_length": 16,
+                "required": false,
+                "placeholder": "#5865F2"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-footer",
+                "label": "Embed footer",
+                "style": 2,
+                "max_length": 2048,
+                "required": false,
+                "placeholder": "{server.member_count} members"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "custom_id": "embed-modal:cid",
+        "title": "Edit embed: rules",
+        "components": [
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-content",
+                "label": "Message text (outside the embed)",
+                "style": 2,
+                "max_length": 2000,
+                "required": false,
+                "placeholder": "Hey {user}, welcome to {server}!",
+                "value": "Hey {user}, here are the rules!"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-title",
+                "label": "Embed title",
+                "style": 1,
+                "max_length": 256,
+                "required": false,
+                "placeholder": "Welcome to {server}!",
+                "value": "📜 Rules"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-description",
+                "label": "Embed description",
+                "style": 2,
+                "max_length": 4000,
+                "required": false,
+                "placeholder": "Use {user}, {server}, {server.member_count} …",
+                "value": "**1.** Be nice."
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-color",
+                "label": "Embed colour (hex or name)",
+                "style": 1,
+                "max_length": 16,
+                "required": false,
+                "placeholder": "#5865F2",
+                "value": "#5865F2"
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 4,
+                "custom_id": "tpl-footer",
+                "label": "Embed footer",
+                "style": 2,
+                "max_length": 2048,
+                "required": false,
+                "placeholder": "{server.member_count} members",
+                "value": "Thanks for reading"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "draft": "{\n  \"content\": \"keep me\",\n  \"embed\": {\n    \"title\": \"T\"\n  },\n  \"buttons\": []\n}",
+    "render": {
+      "content": "Hello <@&123456789012345678>",
+      "embeds": [
+        {
+          "title": "Welcome",
+          "fields": [
+            {
+              "name": "a",
+              "value": "b",
+              "inline": false
+            }
+          ],
+          "color": 1122867
+        }
+      ],
+      "components": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 2,
+              "style": 5,
+              "label": "L",
+              "url": "https://a.b",
+              "emoji": {
+                "name": "🎉"
+              }
+            }
+          ]
+        }
+      ],
+      "allowedMentions": {
+        "parse": []
+      }
+    }
+  }
+}

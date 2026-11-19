@@ -1,0 +1,424 @@
+{
+ "NOW": 1800000000000,
+ "cleanReason": [
+  [
+   "  at\nthe   gym \t",
+   "at the gym"
+  ],
+  [
+   "   ",
+   null
+  ],
+  [
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+  ],
+  [
+   "ok",
+   "ok"
+  ],
+  [
+   "tab nbsp",
+   "tab nbsp"
+  ]
+ ],
+ "plainText": [
+  [
+   "hi @everyone and @here <@123> <@&456> <#789> :smile:",
+   200,
+   "hi @​everyone and @​here <​@123> <​@&456> <​#789> :smile:"
+  ],
+  [
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   40,
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+  ],
+  [
+   "",
+   200,
+   ""
+  ],
+  [
+   "@EVERYONE <a:x:1>",
+   200,
+   "@​EVERYONE <a:x:1>"
+  ],
+  [
+   "  multi \n line  ",
+   5,
+   "mult…"
+  ]
+ ],
+ "nameWithoutPrefix": [
+  [
+   "[AFK] Bob",
+   "Bob"
+  ],
+  [
+   "Bob",
+   "Bob"
+  ],
+  [
+   "[AFK]Bob",
+   "[AFK]Bob"
+  ],
+  [
+   "",
+   ""
+  ]
+ ],
+ "afkLength": [
+  [
+   300000,
+   "5m"
+  ],
+  [
+   7509000,
+   "2h 5m"
+  ],
+  [
+   30000,
+   "30s"
+  ],
+  [
+   -5,
+   "0s"
+  ],
+  [
+   0,
+   "0s"
+  ],
+  [
+   999,
+   "0s"
+  ],
+  [
+   1000,
+   "1s"
+  ],
+  [
+   266400001,
+   "3d 2h"
+  ],
+  [
+   34560000000,
+   "57w 1d"
+  ]
+ ],
+ "readPings": [
+  [
+   [
+    {
+     "channelId": "C",
+     "messageId": "M",
+     "authorId": "A",
+     "at": 5
+    },
+    {
+     "channelId": "C"
+    },
+    null,
+    "x",
+    {
+     "channelId": "C",
+     "messageId": "N",
+     "at": "7"
+    },
+    {
+     "channelId": "C",
+     "messageId": "O",
+     "authorId": 3,
+     "at": "x"
+    }
+   ],
+   [
+    {
+     "channelId": "C",
+     "messageId": "M",
+     "authorId": "A",
+     "at": 5
+    },
+    {
+     "channelId": "C",
+     "messageId": "N",
+     "authorId": null,
+     "at": 7
+    },
+    {
+     "channelId": "C",
+     "messageId": "O",
+     "authorId": null,
+     "at": 0
+    }
+   ]
+  ],
+  [
+   {},
+   []
+  ],
+  [
+   [],
+   []
+  ]
+ ],
+ "prefixedNickname": [
+  [
+   "Bob",
+   "[AFK] Bob"
+  ],
+  [
+   "[AFK] Bob",
+   null
+  ],
+  [
+   "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+   "[AFK] nnnnnnnnnnnnnnnnnnnnnnnnnn"
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaa😀😀",
+   "[AFK] aaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  [
+   "",
+   "[AFK] "
+  ],
+  [
+   "xxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "[AFK] xxxxxxxxxxxxxxxxxxxxxxxxxx"
+  ],
+  [
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "[AFK] xxxxxxxxxxxxxxxxxxxxxxxxxx"
+  ]
+ ],
+ "restoredNickname": [
+  [
+   "[AFK] Bobster",
+   "Bobster",
+   "Bobster"
+  ],
+  [
+   "[AFK] Bob",
+   null,
+   null
+  ],
+  [
+   "[AFK] ",
+   null,
+   null
+  ],
+  [
+   "Robert",
+   "Bobster",
+   "undefined"
+  ],
+  [
+   null,
+   "Bobster",
+   "undefined"
+  ],
+  [
+   "[AFK] x",
+   "",
+   null
+  ]
+ ],
+ "ignored": [
+  [
+   [
+    "CAT",
+    "C1"
+   ],
+   {
+    "id": "C1",
+    "parentId": null,
+    "grandparentId": null
+   },
+   true
+  ],
+  [
+   [
+    "CAT",
+    "C1"
+   ],
+   {
+    "id": "C2",
+    "parentId": "CAT",
+    "grandparentId": null
+   },
+   true
+  ],
+  [
+   [
+    "CAT",
+    "C1"
+   ],
+   {
+    "id": "T",
+    "parentId": "C9",
+    "grandparentId": "CAT"
+   },
+   true
+  ],
+  [
+   [
+    "CAT",
+    "C1"
+   ],
+   {
+    "id": "C2",
+    "parentId": "OTHER",
+    "grandparentId": null
+   },
+   false
+  ],
+  [
+   [],
+   {
+    "id": "C1",
+    "parentId": null,
+    "grandparentId": null
+   },
+   false
+  ]
+ ],
+ "welcome": [
+  [
+   0,
+   [],
+   "👋 Welcome back, **Bob**! You were AFK for **2h 5m**."
+  ],
+  [
+   12,
+   [
+    {
+     "channelId": "C",
+     "messageId": "M0",
+     "authorId": "A",
+     "at": 0
+    },
+    {
+     "channelId": "C",
+     "messageId": "M1",
+     "authorId": "A",
+     "at": 1
+    },
+    {
+     "channelId": "C",
+     "messageId": "M2",
+     "authorId": "A",
+     "at": 2
+    },
+    {
+     "channelId": "C",
+     "messageId": "M3",
+     "authorId": "A",
+     "at": 3
+    },
+    {
+     "channelId": "C",
+     "messageId": "M4",
+     "authorId": "A",
+     "at": 4
+    },
+    {
+     "channelId": "C",
+     "messageId": "M5",
+     "authorId": "A",
+     "at": 5
+    },
+    {
+     "channelId": "C",
+     "messageId": "M6",
+     "authorId": "A",
+     "at": 6
+    },
+    {
+     "channelId": "C",
+     "messageId": "M7",
+     "authorId": "A",
+     "at": 7
+    }
+   ],
+   "👋 Welcome back, **Bob**! You were AFK for **2h 5m**.\nYou were mentioned **12** times: [1](https://discord.com/channels/G/C/M3) · [2](https://discord.com/channels/G/C/M4) · [3](https://discord.com/channels/G/C/M5) · [4](https://discord.com/channels/G/C/M6) · [5](https://discord.com/channels/G/C/M7)"
+  ],
+  [
+   1,
+   [],
+   "👋 Welcome back, **Bob**! You were AFK for **2h 5m**.\nYou were mentioned **1** time."
+  ],
+  [
+   2,
+   [
+    {
+     "channelId": "C",
+     "messageId": "M0",
+     "authorId": "A",
+     "at": 0
+    },
+    {
+     "channelId": "C",
+     "messageId": "M1",
+     "authorId": "A",
+     "at": 1
+    }
+   ],
+   "👋 Welcome back, **Bob**! You were AFK for **2h 5m**.\nYou were mentioned **2** times: [1](https://discord.com/channels/G/C/M0) · [2](https://discord.com/channels/G/C/M1)"
+  ],
+  [
+   3,
+   "bad",
+   "👋 Welcome back, **Bob**! You were AFK for **2h 5m**.\nYou were mentioned **3** times."
+  ]
+ ],
+ "notice": [
+  [
+   "at the gym",
+   "💤 **Bob** is AFK: at the gym (since <t:1799992500:R>)"
+  ],
+  [
+   null,
+   "💤 **Bob** is AFK (since <t:1799992500:R>)"
+  ],
+  [
+   "@everyone <@1> \n two",
+   "💤 **Bob** is AFK: @​everyone <​@1> two (since <t:1799992500:R>)"
+  ],
+  [
+   "",
+   "💤 **Bob** is AFK (since <t:1799992500:R>)"
+  ]
+ ],
+ "since": 1799992500000,
+ "shownName": [
+  [
+   "[AFK] **Bob**",
+   "\\*\\*Bob\\*\\*"
+  ],
+  [
+   "@everyone",
+   "@​everyone"
+  ],
+  [
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+  ],
+  [
+   "",
+   "Someone"
+  ],
+  [
+   null,
+   "Someone"
+  ],
+  [
+   "[AFK] ",
+   "Someone"
+  ],
+  [
+   "_under_ <@1>",
+   "\\_under\\_ <​@1>"
+  ]
+ ],
+ "jumpLink": "https://discord.com/channels/G/C/M"
+}
