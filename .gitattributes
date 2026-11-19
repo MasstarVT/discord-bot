@@ -1,0 +1,3 @@
+src/dashboard/public/** text=auto eol=lf
+CHANGELOG.md text eol=lf
+rust/fixtures/** text=auto eol=lf

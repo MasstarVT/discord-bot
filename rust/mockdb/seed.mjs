@@ -4,7 +4,7 @@
 // Each model gets two rows: "min" (only the required fields, so every database and Prisma default applies) and "full"
 // (every column filled, with awkward text). The values are synthetic: they test encoding, not feature behaviour.
 // Usage: DATABASE_URL=<url> node seed.mjs
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -58,6 +58,8 @@ function value(model, field, variant) {
 }
 
 const created = {}; // model -> [minRow, fullRow]
+let previous = {};
+try { previous = JSON.parse(readFileSync(join(OUT_DIR, 'baseline.json'), 'utf8')); } catch { /* first run: Prisma generates them */ }
 for (const model of order) {
   const fks = new Map(); // scalar field -> { parent, toField }
   for (const f of model.fields) {
@@ -82,6 +84,14 @@ for (const model of order) {
         if (!f.isRequired || f.hasDefaultValue || f.isList) continue;
       } else if (generated && f.default.name !== 'now') continue; // cuid(), uuid(), autoincrement(): let Prisma do it
       data[f.name] = value(model, f, variant);
+    }
+    // Values Prisma would make up (cuid(), uuid(), now(), @updatedAt) are taken from the committed snapshot when there
+    // is one, so every machine seeds the same rows and the goldens generated from them stay valid.
+    const pinned = previous[model.name]?.[variant === 0 ? 'min' : 'full'];
+    for (const f of model.fields) {
+      if (f.kind === 'object' || f.name in data || pinned?.[f.name] == null) continue;
+      const fn = typeof f.default === 'object' && f.default !== null && !Array.isArray(f.default) ? f.default.name : null;
+      if (f.isUpdatedAt || fn === 'cuid' || fn === 'uuid' || fn === 'now') data[f.name] = f.type === 'DateTime' ? new Date(pinned[f.name]) : pinned[f.name];
     }
     try {
       created[model.name].push(await delegate(model.name).create({ data }));
