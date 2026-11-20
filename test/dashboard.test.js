@@ -1180,12 +1180,12 @@ describe('discordApi', () => {
     assert.equal(a, b);
     assert.deepEqual(a.map((g) => g.id), [G.zeta], 'invalid entries are dropped');
     assert.equal(calls[0].auth, `Bearer ${TOKEN}`);
-    t += 59_000;
+    t += 29_000;
     await api.getUserGuilds(USER_ID, TOKEN);
-    assert.equal(calls.length, 1);
-    t += 2_000;
+    assert.equal(calls.length, 1, 'under half the TTL: no refresh');
+    t += 32_000;
     await api.getUserGuilds(USER_ID, TOKEN);
-    assert.equal(calls.length, 2);
+    assert.equal(calls.length, 2, 'older than the TTL: loaded again');
     await api.getUserGuilds(USER_ID, 'another-token');
     assert.equal(calls.length, 3, 'a different token does not reuse the cache');
     api.forgetUser(USER_ID);
@@ -1249,6 +1249,351 @@ describe('discordApi', () => {
     await api.getUserGuilds(USER_ID, TOKEN);
     await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true });
     assert.equal(calls.length, cached);
+  });
+
+  // ── Speed-ups: refresh-ahead, stale-while-revalidate, warm-up ──────────────────
+
+  /** A fake fetch whose answers wait on `gate.open()` while `gate.closed` is true. `route(url)` gives [status, body]. */
+  function gatedFetch(route) {
+    const gate = { closed: false, waiting: [], open() { this.closed = false; for (const r of this.waiting.splice(0)) r(); } };
+    const calls = [];
+    const impl = async (url, init) => {
+      calls.push(String(url));
+      if (gate.closed) await new Promise((res) => gate.waiting.push(res));
+      const [status, body] = await route(String(url), init);
+      return new Response(body === undefined ? null : JSON.stringify(body), { status });
+    };
+    return { impl, calls, gate };
+  }
+  const flush = async () => { for (let i = 0; i < 10; i++) await new Promise((res) => setImmediate(res)); };
+  /** Runs `fn` and returns the unhandled rejections seen while it ran (and settled). */
+  async function unhandledDuring(fn) {
+    const seen = [];
+    const on = (e) => seen.push(e);
+    process.on('unhandledRejection', on);
+    try {
+      await fn();
+      await flush();
+    } finally {
+      process.off('unhandledRejection', on);
+    }
+    return seen;
+  }
+  const userList = (name) => [200, [{ id: G.zeta, name, icon: null, owner: true, permissions: '0' }]];
+
+  test('getUserGuilds refreshes ahead past half the TTL, never serves an entry older than 60 s, and shares one refresh', async () => {
+    let t = 0;
+    let name = 'v1';
+    const { impl, calls, gate } = gatedFetch(async () => userList(name));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    assert.equal((await api.getUserGuilds(USER_ID, TOKEN))[0].name, 'v1');
+    t += 29_000;
+    await api.getUserGuilds(USER_ID, TOKEN);
+    assert.equal(calls.length, 1, 'under half the TTL: nothing in the background');
+
+    name = 'v2';
+    gate.closed = true;
+    t += 2_000; // 31 s old
+    const served = await api.getUserGuilds(USER_ID, TOKEN); // does not wait for the refresh
+    assert.equal(served[0].name, 'v1', 'the entry is still under the TTL, so it is served at once');
+    await api.getUserGuilds(USER_ID, TOKEN);
+    await api.getUserGuilds(USER_ID, TOKEN, { allowStale: true });
+    assert.equal(calls.length, 2, 'one background refresh, however many callers');
+    gate.open();
+    await flush();
+    t += 1_000;
+    assert.equal((await api.getUserGuilds(USER_ID, TOKEN))[0].name, 'v2', 'the refreshed entry replaced it');
+    assert.equal(calls.length, 2);
+
+    // The refresh is gated and never lands: past the 60 s the old entry is not served, the caller waits for a live list.
+    name = 'v3';
+    gate.closed = true;
+    t += 31_000; // v2 is 32 s old: refresh ahead
+    await api.getUserGuilds(USER_ID, TOKEN);
+    assert.equal(calls.length, 3);
+    t += 30_000; // v2 is now 62 s old
+    let settled = false;
+    const waiting = api.getUserGuilds(USER_ID, TOKEN).then((g) => { settled = true; return g; });
+    await flush();
+    assert.equal(settled, false, 'a non-stale caller waits instead of taking a list older than 60 s');
+    gate.open();
+    assert.equal((await waiting)[0].name, 'v3');
+    assert.equal(calls.length, 3, 'it joined the refresh already in flight');
+  });
+
+  test('getUserGuilds: a failed background refresh keeps the entry, spaces its retries and rejects nothing unhandled', async () => {
+    let t = 0;
+    let fail = false;
+    const { impl, calls } = gatedFetch(async () => (fail ? [503, {}] : userList('keep')));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    await api.getUserGuilds(USER_ID, TOKEN);
+    fail = true;
+    t += 31_000;
+    const unhandled = await unhandledDuring(async () => {
+      assert.equal((await api.getUserGuilds(USER_ID, TOKEN))[0].name, 'keep');
+    });
+    assert.deepEqual(unhandled, []);
+    assert.equal(calls.length, 2);
+    t += 1_000;
+    assert.equal((await api.getUserGuilds(USER_ID, TOKEN))[0].name, 'keep', 'the entry is still there');
+    assert.equal(calls.length, 2, 'no retry on every request');
+    t += discordApi.USER_GUILDS_REFRESH_RETRY_MS;
+    await api.getUserGuilds(USER_ID, TOKEN);
+    await flush();
+    assert.equal(calls.length, 3, 'retried after the pause');
+  });
+
+  test('forgetUser also stops a refresh still in flight from putting the list back', async () => {
+    let t = 0;
+    const { impl, calls, gate } = gatedFetch(async () => userList('late'));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    await api.getUserGuilds(USER_ID, TOKEN);
+    t += 31_000;
+    gate.closed = true;
+    await api.getUserGuilds(USER_ID, TOKEN); // starts the background refresh
+    assert.equal(calls.length, 2);
+    api.forgetUser(USER_ID); // logout while it is in flight
+    gate.open();
+    await flush();
+    t += 1_000;
+    gate.closed = false;
+    await api.getUserGuilds(USER_ID, TOKEN);
+    assert.equal(calls.length, 3, 'the late answer was dropped: the next call loads again');
+    // Same for a first load (the warm-up) that is still running at logout.
+    const w = gatedFetch(async () => userList('warm'));
+    const api2 = discordApi.createDiscordApi({ config, fetchImpl: w.impl, now: () => t });
+    w.gate.closed = true;
+    api2.warmUserGuilds(USER_ID, TOKEN);
+    api2.forgetUser(USER_ID);
+    w.gate.open();
+    await flush();
+    await api2.getUserGuilds(USER_ID, TOKEN);
+    assert.equal(w.calls.length, 2);
+  });
+
+  test('warmUserGuilds loads the list once with the given token, uses the user\'s own slot, and never rejects', async () => {
+    let t = 0;
+    const { impl, calls } = gatedFetch(async () => userList('warm'));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    api.warmUserGuilds(USER_ID, TOKEN);
+    api.warmUserGuilds(USER_ID, TOKEN);
+    await flush();
+    assert.equal(calls.length, 1, 'one load');
+    assert.equal((await api.getUserGuilds(USER_ID, TOKEN))[0].name, 'warm');
+    assert.equal(calls.length, 1, 'the first page after login is served from it');
+    api.warmUserGuilds(USER_ID, TOKEN);
+    await flush();
+    assert.equal(calls.length, 1, 'a current entry is not reloaded');
+    assert.equal((await api.getUserGuilds(USER_ID, 'another-token'))[0].name, 'warm');
+    assert.equal(calls.length, 2, 'another token never uses it');
+    const bad = createBad();
+    assert.deepEqual(await unhandledDuring(async () => { bad.warmUserGuilds(USER_ID, TOKEN); }), []);
+    function createBad() {
+      return discordApi.createDiscordApi({ config, fetchImpl: async () => { throw new Error('network down'); }, now: () => t });
+    }
+  });
+
+  const botRoute = (state) => async (url) => {
+    if (url.includes('/users/@me/guilds')) return [200, state.list.map((id) => ({ id, name: `g${id.slice(-2)}` }))];
+    if (url.includes(`/guilds/${G.beta}`)) return state.betaIn ? [200, { id: G.beta }] : [403, { code: 50001 }];
+    return [404, { code: 10004 }];
+  };
+
+  test('bot guild list: stale-while-revalidate serves up to 10 minutes while refreshing, waits past that, and the default waits past 60 s', async () => {
+    let t = 0;
+    const state = { list: [G.zeta], betaIn: false };
+    const { impl, calls, gate } = gatedFetch(botRoute(state));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t, logger: { warn() {} } });
+    assert.equal(await api.isBotInGuild(G.zeta, { verify: false, swr: true }), true, 'nothing cached: it waits for the first list');
+    assert.equal(calls.length, 1);
+
+    state.list = [G.zeta, G.alpha];
+    gate.closed = true;
+    t += 61_000;
+    assert.equal(await api.isBotInGuild(G.alpha, { verify: false, swr: true }), false, 'the old list is served at once');
+    assert.equal(await api.isBotInGuild(G.zeta, { verify: false, swr: true }), true);
+    assert.equal(calls.length, 2, 'one background refresh');
+    gate.open();
+    await flush();
+    assert.equal(await api.isBotInGuild(G.alpha, { verify: false, swr: true }), true, 'the refresh landed');
+    assert.equal((await api.getBotGuilds({ swr: true })).length, 2);
+
+    // Without swr (the default) a list past 60 s is waited for, as before.
+    state.list = [G.zeta];
+    t += 61_000;
+    assert.equal(await api.isBotInGuild(G.alpha, { verify: false }), false, 'the default path reloaded');
+    assert.equal(calls.length, 3);
+
+    // Past the max-stale bound even an swr caller waits.
+    state.list = [G.zeta, G.beta];
+    gate.closed = true;
+    t += discordApi.BOT_GUILDS_MAX_STALE_MS + 1_000;
+    let settled = false;
+    const waiting = api.isBotInGuild(G.beta, { verify: false, swr: true }).then((v) => { settled = true; return v; });
+    await flush();
+    assert.equal(settled, false, 'older than the bound: it waits');
+    gate.open();
+    assert.equal(await waiting, true);
+  });
+
+  test('bot guild list: a miss is still double-checked live with verify, even on a stale list, and a failed refresh keeps the list', async () => {
+    let t = 0;
+    const state = { list: [G.zeta], betaIn: true };
+    const { impl, calls } = gatedFetch(botRoute(state));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t, logger: { warn() {} } });
+    await api.getBotGuildIds();
+    t += 120_000;
+    assert.equal(await api.isBotInGuild(G.beta, { swr: true }), true, 'a fresh invite shows at once');
+    assert.ok(calls.some((u) => u.endsWith(`/guilds/${G.beta}`)), 'GET /guilds/{id} ran');
+    state.betaIn = false;
+    assert.equal(await api.isBotInGuild(G.alpha, { swr: true }), false);
+
+    const down = gatedFetch(async (url) => (down.fail ? [503, {}] : botRoute(state)(url)));
+    down.fail = false;
+    const api2 = discordApi.createDiscordApi({ config, fetchImpl: down.impl, now: () => t, logger: { warn() {} } });
+    await api2.getBotGuildIds();
+    down.fail = true;
+    t += 61_000;
+    const unhandled = await unhandledDuring(async () => {
+      assert.equal((await api2.getBotGuildIds({ swr: true })).has(G.zeta), true);
+    });
+    assert.deepEqual(unhandled, []);
+    const after = down.calls.length;
+    assert.equal((await api2.getBotGuildIds({ swr: true })).has(G.zeta), true, 'the previous list stays');
+    assert.equal(down.calls.length, after, 'and the retry waits another TTL');
+  });
+
+  test('bot guild list: refresh ahead past half the TTL serves the list at once, refreshes once, and never serves past the TTL', async () => {
+    let t = 0;
+    const state = { list: [G.zeta], betaIn: false };
+    const { impl, calls, gate } = gatedFetch(botRoute(state));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t, logger: { warn() {} } });
+    assert.equal((await api.getBotGuildIds()).has(G.alpha), false);
+    assert.equal(calls.length, 1);
+
+    state.list = [G.zeta, G.alpha];
+    t += 20_000;
+    assert.equal((await api.getBotGuildIds()).has(G.alpha), false, 'under half the TTL: served, no refresh');
+    assert.equal(calls.length, 1);
+
+    gate.closed = true;
+    t += 11_000; // 31 s old
+    assert.equal((await api.getBotGuildIds()).has(G.alpha), false, 'past half: the entry is served at once');
+    assert.equal((await api.getBotGuildIds()).has(G.alpha), false);
+    await flush();
+    assert.equal(calls.length, 2, 'one background refresh through the single in-flight slot');
+    gate.open();
+    await flush();
+    t += 29_000; // 60 s after the first load, 29 s after the refresh
+    assert.equal((await api.getBotGuildIds()).has(G.alpha), true, 'the refresh landed before the old list expired');
+    assert.equal(calls.length, 2, 'and nothing waited or loaded again');
+
+    // A failed refresh-ahead keeps the list, retries after a pause and never rejects unhandled.
+    const down = gatedFetch(async (url) => (down.fail ? [503, {}] : botRoute(state)(url)));
+    down.fail = false;
+    const api2 = discordApi.createDiscordApi({ config, fetchImpl: down.impl, now: () => t, logger: { warn() {} } });
+    await api2.getBotGuildIds();
+    down.fail = true;
+    t += 31_000;
+    const unhandled = await unhandledDuring(async () => {
+      assert.equal((await api2.getBotGuildIds()).has(G.zeta), true);
+      await flush();
+    });
+    assert.deepEqual(unhandled, []);
+    const after = down.calls.length;
+    await api2.getBotGuildIds();
+    await flush();
+    assert.equal(down.calls.length, after, 'the retry waits');
+  });
+
+  test('bot guild list: a bot that was kicked is not served from a list older than the TTL, even with refresh ahead', async () => {
+    let t = 0;
+    const state = { list: [G.zeta, G.beta], betaIn: true };
+    const { impl } = gatedFetch(botRoute(state));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t, logger: { warn() {} } });
+    assert.equal(await api.isBotInGuild(G.beta), true);
+    state.list = [G.zeta];
+    state.betaIn = false;
+    t += 61_000;
+    assert.equal(await api.isBotInGuild(G.beta), false, 'past the TTL the check waits for a live list');
+  });
+
+  test('getGuildResources: stale-while-revalidate for display reads only, fresh always live, max-stale waits', async () => {
+    let t = 0;
+    const base = resourcesApi();
+    const gate = { closed: false, waiting: [] };
+    let requests = 0;
+    const impl = async (url, init) => {
+      requests++;
+      if (gate.closed) await new Promise((res) => gate.waiting.push(res));
+      return base.impl(url, init);
+    };
+    const open = () => { gate.closed = false; for (const r of gate.waiting.splice(0)) r(); };
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    const first = await api.getGuildResources(G.zeta, { swr: true });
+    const loads = () => requests / 3;
+    assert.equal(loads(), 1, 'nothing cached: it waits for a live load');
+
+    gate.closed = true;
+    t += 31_000;
+    assert.equal(await api.getGuildResources(G.zeta, { swr: true }), first, 'older than 30 s: served at once');
+    assert.equal(await api.getGuildResources(G.zeta, { swr: true }), first);
+    assert.equal(loads(), 2, 'one background reload');
+    open();
+    await flush();
+    const second = await api.getGuildResources(G.zeta, { swr: true });
+    assert.notEqual(second, first, 'the reload replaced the entry');
+    assert.equal(loads(), 2);
+
+    // The default (what every id check uses) never takes an entry older than 30 s.
+    t += 31_000;
+    gate.closed = true;
+    let settled = false;
+    const strict = api.getGuildResources(G.zeta).then((v) => { settled = true; return v; });
+    await flush();
+    assert.equal(settled, false, 'no swr: it waits for a live load');
+    open();
+    assert.notEqual(await strict, second);
+
+    // fresh is live even with swr set, and does not join a plain background load.
+    t += 31_000;
+    gate.closed = true;
+    await api.getGuildResources(G.zeta, { swr: true });
+    const before = loads();
+    const fresh = api.getGuildResources(G.zeta, { fresh: true, swr: true });
+    await flush();
+    assert.equal(loads() > before, true, 'a separate live load started');
+    open();
+    await fresh;
+
+    // Past the max-stale bound, an swr caller waits.
+    t += discordApi.RESOURCES_MAX_STALE_MS + 1_000;
+    gate.closed = true;
+    settled = false;
+    const late = api.getGuildResources(G.zeta, { swr: true }).then((v) => { settled = true; return v; });
+    await flush();
+    assert.equal(settled, false);
+    open();
+    await late;
+  });
+
+  test('getGuildResources: a failed background reload keeps the entry and spaces its retries', async () => {
+    let t = 0;
+    let down = false;
+    const base = resourcesApi();
+    const impl = async (url, init) => (down ? new Response('{}', { status: 503 }) : base.impl(url, init));
+    const api = discordApi.createDiscordApi({ config, fetchImpl: impl, now: () => t });
+    const first = await api.getGuildResources(G.zeta);
+    down = true;
+    t += 31_000;
+    const unhandled = await unhandledDuring(async () => {
+      assert.equal(await api.getGuildResources(G.zeta, { swr: true }), first);
+    });
+    assert.deepEqual(unhandled, []);
+    const spent = base.calls.length;
+    assert.equal(await api.getGuildResources(G.zeta, { swr: true }), first, 'still served');
+    assert.equal(base.calls.length, spent, 'the retry waits another 30 s');
+    await assert.rejects(api.getGuildResources(G.zeta), (err) => err.code === 'unavailable', 'a strict caller is not given the old entry');
   });
 
   test('createInvite: one use, 30 minutes, not temporary, with the audit-log reason', async () => {
@@ -1618,7 +1963,7 @@ function fakeResources(guildId) {
 function createFakes() {
   const calls = {
     writeSettings: [], exchangeCode: [], revokeToken: [], forgetUser: [], getUserGuilds: [], resources: [], getMember: [],
-    invites: [],
+    invites: [], presence: [], botLists: [], warm: [],
   };
   /** Channels where the fake bot is refused an invite (Discord 50013); CH.text by default, so the next one is tried. */
   const inviteDeny = new Set([CH.text]);
@@ -1643,8 +1988,9 @@ function createFakes() {
       if (token === 'broken-token') return null;
       return USER_GUILDS;
     },
-    async isBotInGuild(guildId) { return BOT_GUILDS.has(guildId); },
-    async getBotGuilds() { return BOT_GUILD_ENTRIES; },
+    async isBotInGuild(guildId, opts) { calls.presence.push({ guildId, swr: opts?.swr === true, verify: opts?.verify }); return BOT_GUILDS.has(guildId); },
+    async getBotGuilds(opts) { calls.botLists.push({ swr: opts?.swr === true }); return BOT_GUILD_ENTRIES; },
+    warmUserGuilds(uid, token) { calls.warm.push({ uid, token }); },
     async createInvite(channelId, opts) {
       calls.invites.push({ channelId, opts });
       if (inviteDeny.has(channelId)) {
@@ -1662,7 +2008,7 @@ function createFakes() {
     async revokeToken(token) { calls.revokeToken.push(token); return true; },
     forgetUser(uid) { calls.forgetUser.push(uid); },
     async getGuildResources(guildId, opts = {}) {
-      calls.resources.push({ guildId, fresh: opts.fresh === true });
+      calls.resources.push({ guildId, fresh: opts.fresh === true, swr: opts.swr === true });
       if (guildId === G.beta) throw new DiscordApiError('Discord returned HTTP 503', { status: 503, code: 'unavailable' });
       return fakeResources(guildId);
     },
@@ -2143,9 +2489,10 @@ describe('HTTP server', () => {
     assert.deepEqual(Object.keys(r.json.roles[0]).sort(), ['assignable', 'color', 'everyone', 'id', 'managed', 'mentionable', 'name', 'position']);
     assert.deepEqual(Object.keys(r.json.channels[0]).sort(), ['id', 'kind', 'name', 'nsfw', 'parentId', 'position', 'type']);
     assert.deepEqual(r.json.emojis, [{ id: '600000000000000001', name: 'coin', animated: false }]);
-    assert.equal(fakes.calls.resources.at(-1).fresh, false);
+    assert.deepEqual(fakes.calls.resources.at(-1), { guildId: G.zeta, fresh: false, swr: true }, 'a display read may be served stale');
+    assert.equal(fakes.calls.presence.at(-1).swr, false, 'but the bot presence behind it never may');
     await authed(`/api/guilds/${G.zeta}/resources?fresh=1`, { cookie });
-    assert.equal(fakes.calls.resources.at(-1).fresh, true);
+    assert.deepEqual(fakes.calls.resources.at(-1), { guildId: G.zeta, fresh: true, swr: false }, 'fresh forces a live load');
     assert.equal((await call(port, 'POST', `/api/guilds/${G.zeta}/resources`, { headers: { cookie, ...WRITE_HEADERS }, body: '{}' })).status, 405);
   });
 
@@ -2323,6 +2670,156 @@ describe('HTTP server', () => {
     await new Promise((res) => setImmediate(res));
     assert.deepEqual(fakes.calls.revokeToken, [TOKEN]);
     assert.deepEqual(fakes.calls.forgetUser, [USER_ID]);
+  });
+
+  test('the callback warms the guild list of the user in the background; a failing warm-up does not touch the redirect', async () => {
+    fakes.calls.warm.length = 0;
+    const r = await get('/auth/callback?code=good-code&state=s9', { cookie: `${auth.STATE_COOKIE}=s9` });
+    assert.equal(r.status, 302);
+    assert.deepEqual(fakes.calls.warm, [{ uid: USER_ID, token: TOKEN }]);
+    const failing = createDashboardServer({
+      config, logger: recordingLogger(),
+      deps: { discord: { ...fakes.discord, warmUserGuilds() { throw new Error('boom'); } }, settings: fakes.settings },
+    });
+    const p = await listen(failing);
+    try {
+      const again = await call(p, 'GET', '/auth/callback?code=good-code&state=s9', { headers: { cookie: `${auth.STATE_COOKIE}=s9` } });
+      assert.equal(again.status, 302);
+      assert.equal(again.headers.location, '/dashboard');
+    } finally {
+      await close(failing);
+    }
+  });
+
+  test('the catalog is gzipped once and served compressed to clients that accept it; no other API JSON is', async () => {
+    const cookie = sessionCookie();
+    const plain = await get('/api/catalog', { cookie });
+    assert.equal(plain.status, 200);
+    assert.equal(plain.headers['content-encoding'], undefined);
+    assert.equal(plain.headers.vary, 'Accept-Encoding');
+    assert.equal(plain.headers['cache-control'], 'no-store');
+    const zipped = await new Promise((resolve, reject) => {
+      const req = request({ host: '127.0.0.1', port, path: '/api/catalog', headers: { cookie, 'accept-encoding': 'gzip, br' } }, (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }));
+      });
+      req.on('error', reject);
+      req.end();
+    });
+    assert.equal(zipped.status, 200);
+    assert.equal(zipped.headers['content-encoding'], 'gzip');
+    assert.equal(zipped.headers.vary, 'Accept-Encoding');
+    assert.equal(zipped.headers['cache-control'], 'no-store');
+    assert.ok(zipped.body.length < plain.text.length / 2);
+    assert.equal(gunzipSync(zipped.body).toString('utf8'), plain.text, 'the same bytes');
+    const refused = await get('/api/catalog', { cookie, 'accept-encoding': 'gzip;q=0' });
+    assert.equal(refused.headers['content-encoding'], undefined);
+    assert.equal((await get('/api/catalog', { 'accept-encoding': 'gzip' })).status, 401, 'the session check stays');
+    for (const path of ['/api/guilds', `/api/guilds/${G.zeta}/settings`, `/api/guilds/${G.zeta}/resources`, '/api/me']) {
+      const r = await get(path, { cookie, 'accept-encoding': 'gzip' });
+      assert.equal(r.status, 200, path);
+      assert.equal(r.headers['content-encoding'], undefined, `${path} is per-user: never compressed (BREACH)`);
+    }
+  });
+
+  test('GET /api/guilds starts the bot list while the user list loads, and keeps the error precedence', async () => {
+    const order = [];
+    let releaseUser;
+    const userGate = new Promise((res) => { releaseUser = res; });
+    const slow = {
+      ...fakes.discord,
+      async getUserGuilds(uid, token, opts) {
+        order.push('user:start');
+        await userGate;
+        order.push('user:done');
+        return fakes.discord.getUserGuilds(uid, token, opts);
+      },
+      async getBotGuildIds(opts) { order.push(`bot:start:${opts?.swr === true}`); return BOT_GUILDS; },
+    };
+    const srv = createDashboardServer({ config, logger: recordingLogger(), deps: { discord: slow, settings: fakes.settings } });
+    const p = await listen(srv);
+    try {
+      const pending = call(p, 'GET', '/api/guilds', { headers: { cookie: sessionCookie() } });
+      for (let i = 0; i < 50 && !order.includes('bot:start:true'); i++) await new Promise((res) => setTimeout(res, 5));
+      assert.deepEqual([...order].sort(), ['bot:start:true', 'user:start'], 'the bot list was asked before the user list answered');
+      releaseUser();
+      const ok = await pending;
+      assert.equal(ok.status, 200);
+      assert.equal(ok.headers['cache-control'], 'no-store');
+      assert.ok(ok.json.guilds.length > 0);
+      assert.ok(fakes.calls.presence.length > 0);
+    } finally {
+      await close(srv);
+    }
+    // A user-list failure is still answered first, and a failing bot list does not reject unhandled.
+    const unhandled = [];
+    const onUnhandled = (e) => unhandled.push(e);
+    process.on('unhandledRejection', onUnhandled);
+    const both = createDashboardServer({
+      config, logger: recordingLogger(),
+      deps: { discord: { ...fakes.discord, async getBotGuildIds() { throw new DiscordApiError('down', { code: 'unavailable' }); } }, settings: fakes.settings },
+    });
+    const p2 = await listen(both);
+    try {
+      const limited = await call(p2, 'GET', '/api/guilds', { headers: { cookie: sessionCookie({ accessToken: 'limited-token' }) } });
+      assert.equal(limited.status, 429);
+      assert.equal(limited.json.error, 'rate_limited');
+      await new Promise((res) => setImmediate(res));
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+      await close(both);
+    }
+    assert.deepEqual(unhandled, []);
+  });
+
+  test('a bot that was removed answers 404 bot_not_in_guild on the first read past the list TTL (GET settings and resources)', async () => {
+    let t = 0;
+    const state = { list: [G.zeta], zetaIn: true };
+    const impl = async (url) => {
+      const body = (status, b) => new Response(b === undefined ? null : JSON.stringify(b), { status });
+      if (url.includes('/users/@me/guilds')) return body(200, state.list.map((id) => ({ id, name: 'Zeta' })));
+      if (url.includes(`/guilds/${G.zeta}`)) return state.zetaIn ? body(200, { id: G.zeta }) : body(404, { code: 10004 });
+      return body(404, { code: 10004 });
+    };
+    const real = discordApi.createDiscordApi({
+      config: { clientId: '123456789012345678', clientSecret: 's', botToken: 'bot-token', redirectUri: 'http://localhost:8080/auth/callback' },
+      fetchImpl: impl, now: () => t, logger: { warn() {} },
+    });
+    const srv = createDashboardServer({
+      config, logger: recordingLogger(),
+      deps: { discord: { ...fakes.discord, isBotInGuild: real.isBotInGuild, getBotGuilds: real.getBotGuilds, getBotGuildIds: real.getBotGuildIds }, settings: fakes.settings },
+    });
+    const p = await listen(srv);
+    const owner = { cookie: sessionCookie({ uid: OWNER_ID }) };
+    try {
+      assert.equal((await call(p, 'GET', `/api/guilds/${G.zeta}/settings`, { headers: owner })).status, 200);
+      state.list = [];
+      state.zetaIn = false; // the bot is removed
+      t += 61_000;
+      const settings = await call(p, 'GET', `/api/guilds/${G.zeta}/settings`, { headers: owner });
+      assert.equal(settings.status, 404);
+      assert.equal(settings.json.error, 'bot_not_in_guild');
+      const resources = await call(p, 'GET', `/api/guilds/${G.zeta}/resources`, { headers: owner });
+      assert.equal(resources.status, 404);
+      assert.equal(resources.json.error, 'bot_not_in_guild');
+    } finally {
+      await close(srv);
+    }
+  });
+
+  test('only display reads take the stale-tolerant lists: writes and settings checks keep the 30 s and 60 s ones', async () => {
+    const cookie = sessionCookie({ uid: '700000000000000013' });
+    fakes.calls.presence.length = 0;
+    await authed(`/api/guilds/${G.zeta}/settings`, { cookie });
+    assert.equal(fakes.calls.presence.at(-1).swr, false, 'GET settings checks the bot presence against a list within the TTL');
+    fakes.calls.presence.length = 0;
+    fakes.calls.resources.length = 0;
+    const r = await patch(G.zeta, { changes: { welcomeChannelId: CH.text } });
+    assert.ok(r.status === 200 || r.status === 400, `PATCH answered ${r.status}`);
+    assert.equal(fakes.calls.presence.at(-1)?.swr, false, 'PATCH presence is not stale-tolerant');
+    for (const c of fakes.calls.resources) assert.equal(c.swr, false, 'the id checks never use a stale list');
+    assert.ok(fakes.calls.resources.length > 0, 'the PATCH did check the channel against the server');
   });
 
   test('POST /api/guilds/:id/invite: the bot owner gets a single-use invite; nobody else, and only where the bot is', async () => {

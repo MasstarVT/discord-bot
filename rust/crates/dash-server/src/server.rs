@@ -53,6 +53,13 @@ pub const RECORD_BODY_LIMIT_BYTES: usize = 128 * 1024;
 pub const PROPAGATION_SECONDS: u64 = 30;
 /// Channels tried for a bot-owner invite before giving up.
 const OWNER_INVITE_ATTEMPTS: usize = 5;
+
+/// The gzip copy of the catalog (level 9, as the static files), None when it would not be smaller.
+fn catalog_gzip() -> Option<&'static [u8]> {
+    static PACKED: LazyLock<Option<Vec<u8>>> =
+        LazyLock::new(|| make_entry(dash_collections::catalog_json().as_bytes().to_vec(), "text/plain").gzip);
+    PACKED.as_deref()
+}
 /// Where the dashboard app lives (the landing page has `/`).
 const DASHBOARD_PATH: &str = "/dashboard";
 const LOGIN_FAILED: &str = "/dashboard?error=login_failed";
@@ -136,6 +143,7 @@ pub struct ServerOptions {
 
 impl ServerOptions {
     pub fn new(config: DashboardConfig, deps: DashboardDeps) -> Self {
+        let _ = catalog_gzip(); // compressed once, at startup
         Self { config, deps, logger: None, public_dir: PublicDir::Embedded, changelog_path: None }
     }
 }
@@ -475,6 +483,10 @@ impl App {
     }
 
     /// The guild entry the routes use when the user may manage the guild and the bot is in it (`managedGuild`).
+    ///
+    /// The bot's presence is always checked against a list at most BOT_GUILDS_TTL_MS old (refreshed ahead of expiry), for
+    /// every method: after the bot is removed, the next read past the TTL answers bot_not_in_guild. Only the picker list
+    /// and name/icon lookups may use the stale-while-revalidate list.
     async fn managed_guild(&self, ctx: &mut Ctx, session: &Session, guild_id: &str) -> R<ManagedGuild> {
         let guilds = self.user_guilds(ctx, session, false).await?;
         let guild = guilds.iter().find(|g| g.id == guild_id).cloned();
@@ -504,7 +516,7 @@ impl App {
         }
         let (name, icon) = match &guild {
             Some(g) => (Some(g.name.clone()), g.icon.clone()),
-            None => match self.discord.get_bot_guilds().await {
+            None => match self.discord.get_bot_guilds_swr().await {
                 Ok(list) => match list.iter().find(|g| g.id == guild_id) {
                     Some(b) => (Some(b.name.clone()), b.icon.clone()),
                     None => (None, None),
@@ -606,6 +618,8 @@ impl App {
             Err(e) => return failed(ctx, &for_log(&e.message)),
         };
         self.logins.resolved(&source);
+        // The first page after login needs the user's server list: load it now, off the redirect's path.
+        self.discord.warm_user_guilds(&user.id, &token.access_token);
         let issued = self.now();
         let exp = issued + token.expires_in.min(SESSION_MAX_AGE_SECONDS as f64) * 1000.0;
         let payload = json!({
@@ -653,21 +667,30 @@ impl App {
     fn catalog(&self, ctx: &mut Ctx) -> R<Response> {
         self.allow(ctx, &["GET"])?;
         self.require_session(ctx)?;
-        let body = dash_collections::catalog_json().as_bytes().to_vec();
-        Ok(self.send(
-            ctx,
-            200,
-            Some(body),
-            &[("Content-Type", "application/json; charset=utf-8".into()), ("Cache-Control", "no-store".into())],
-        ))
+        // The same public content for every user: one gzip copy, made once. No other API JSON is compressed (BREACH).
+        let plain = dash_collections::catalog_json().as_bytes();
+        let packed = catalog_gzip().filter(|_| accepts_gzip(ctx.header("accept-encoding").as_deref()));
+        let zipped = packed.is_some();
+        let mut headers = vec![
+            ("Content-Type", "application/json; charset=utf-8".to_string()),
+            ("Cache-Control", "no-store".to_string()),
+            ("Vary", "Accept-Encoding".to_string()),
+        ];
+        if zipped {
+            headers.push(("Content-Encoding", "gzip".to_string()));
+        }
+        let body = packed.map_or_else(|| plain.to_vec(), <[u8]>::to_vec);
+        Ok(self.send(ctx, 200, Some(body), &headers))
     }
 
     async fn guild_list(&self, ctx: &mut Ctx) -> R<Response> {
         self.allow(ctx, &["GET"])?;
         let session = self.require_session(ctx)?;
+        // The bot's list loads while the user's does (an error of either is handled below, as before).
+        self.discord.prefetch_bot_guilds();
         let guilds = self.user_guilds(ctx, &session, true).await?;
         let manageable: Vec<&OAuthGuild> = guilds.iter().filter(|g| can_manage_guild(Some(&g.to_json()))).collect();
-        let checks = futures::future::try_join_all(manageable.iter().map(|g| self.discord.is_bot_in_guild(&g.id, false))).await;
+        let checks = futures::future::try_join_all(manageable.iter().map(|g| self.discord.is_bot_in_guild_swr(&g.id, false))).await;
         let present = match checks {
             Ok(p) => p,
             Err(e) => return Err(self.discord_failure(ctx, &e, false)),
@@ -729,7 +752,7 @@ impl App {
 
     /// For the bot owner: every server the bot is in that is not in their own list (`ownerGuildList`).
     async fn owner_guild_list(&self, skip: &HashSet<String>, member_of: &HashSet<&str>) -> Vec<Map<String, Value>> {
-        let all = match self.discord.get_bot_guilds().await {
+        let all = match self.discord.get_bot_guilds_swr().await {
             Ok(a) => a,
             Err(e) => {
                 self.logger.warn(&format!("Dashboard: could not list the bot's servers for the bot owner: {}", e.message));
@@ -1071,7 +1094,9 @@ impl App {
             self.within_write_limit(ctx, &session)?;
         }
         self.managed_guild(ctx, &session, guild_id).await?;
-        let res = match self.discord.get_guild_resources(guild_id, fresh).await {
+        // A display list: it may be up to 10 minutes old while it reloads in the background; `fresh` forces a live load.
+        // Every check of ids or roles (verify_refs, the stores) uses the plain read, so it stays within 30 s.
+        let res = match if fresh { self.discord.get_guild_resources(guild_id, true).await } else { self.discord.get_guild_resources_display(guild_id).await } {
             Ok(r) => r,
             Err(e) => return Err(self.discord_failure(ctx, &e, false)),
         };

@@ -223,6 +223,12 @@ pub struct InviteRef {
 pub trait DashboardDiscord: Send + Sync {
     /// `getGuildResources(guildId, { fresh })`: cached for 30 s unless `fresh`.
     async fn get_guild_resources(&self, guild_id: &str, fresh: bool) -> Result<Arc<DiscordResources>, DiscordApiError>;
+    /// `getGuildResources(guildId, { swr: true })`: for a display read only (never a check of ids or roles). A client
+    /// with a stale-tolerant cache may answer from an entry up to 10 minutes old while it reloads in the background;
+    /// the default is the plain 30 s read.
+    async fn get_guild_resources_display(&self, guild_id: &str) -> Result<Arc<DiscordResources>, DiscordApiError> {
+        self.get_guild_resources(guild_id, false).await
+    }
     /// `getMember(guildId, userId)`: None when the user is not in the guild.
     async fn get_member(&self, guild_id: &str, user_id: &str) -> Result<Option<MemberRoles>, DiscordApiError>;
     /// `searchMembers(guildId, query)` (at most 25; a user id finds that one member).

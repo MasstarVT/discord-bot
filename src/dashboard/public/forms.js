@@ -518,11 +518,18 @@ function zoneList() {
   return zoneCache;
 }
 
+const zoneFormats = new Map(); // one formatter per time zone: building them is the slow part
+
 function zoneOffset(zone) {
   if (offsetCache.has(zone)) return offsetCache.get(zone);
   let text = '';
   try {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'shortOffset' }).formatToParts(new Date());
+    let format = zoneFormats.get(zone);
+    if (!format) {
+      format = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'shortOffset' });
+      zoneFormats.set(zone, format);
+    }
+    const parts = format.formatToParts(new Date());
     text = parts.find((p) => p.type === 'timeZoneName')?.value ?? '';
   } catch { /* the offset is only a hint */ }
   offsetCache.set(zone, text);

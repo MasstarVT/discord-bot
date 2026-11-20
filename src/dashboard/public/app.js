@@ -19,8 +19,8 @@ import {
   initialsOf, avatar, banner, statusCard, backLink, retryButton, describeError,
   createSwitch, paintSwitch,
 } from './lib.js';
-import { createForm } from './forms.js';
-import { mountCollection } from './collections.js';
+// forms.js, collections.js (and embed-editor.js behind it) are loaded on demand by loadUi(): the picker and the boot
+// requests do not wait for them.
 
 const APP_NAME = 'Frost.Byte';
 const SAVE_DEBOUNCE_MS = 120; // lets a double-click on one switch collapse into a no-op
@@ -37,8 +37,49 @@ const state = {
   guildsPromise: null,
   catalog: null, // /api/catalog, cached for the session
   catalogPromise: null,
+  resources: null, // { guildId, value }: the last /resources payload of the guild on screen (this tab only)
   loginError: false,
 };
+
+const FONTS_HREF = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap';
+const LAZY_STYLES = ['/forms.css', '/collections.css'];
+let bootGuilds = null; // the /api/guilds request boot() started next to /api/me, taken by the picker
+let uiPromise = null;
+
+/** Adds a stylesheet link without blocking rendering; resolves when it loaded (or failed: unstyled beats stuck). */
+function addStylesheet(href) {
+  return new Promise((resolve) => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.addEventListener('load', () => resolve(), { once: true });
+    link.addEventListener('error', () => resolve(), { once: true });
+    document.head.append(link);
+  });
+}
+
+/**
+ * forms.js and collections.js with the stylesheets they need, loaded once on first use. Guild and module views await
+ * it next to their own requests, so no field is built before its CSS applied. A failed load is not cached: the
+ * error view's retry starts it again.
+ */
+function loadUi() {
+  if (!uiPromise) {
+    const promise = Promise.all([import('./forms.js'), import('./collections.js'), Promise.all(LAZY_STYLES.map(addStylesheet))])
+      .then(([forms, collections]) => ({ createForm: forms.createForm, mountCollection: collections.mountCollection }));
+    promise.catch(() => {
+      if (uiPromise === promise) uiPromise = null;
+    });
+    uiPromise = promise;
+  }
+  return uiPromise;
+}
+
+/** The remembered /resources payload of this guild; switching guild drops the other one. */
+function rememberedResources(guildId) {
+  if (state.resources && state.resources.guildId !== guildId) state.resources = null;
+  return state.resources ? state.resources.value : null;
+}
 
 let routeToken = 0; // bumped on every navigation so late responses can be dropped
 let currentRoute = null;
@@ -83,7 +124,19 @@ function loadGuilds({ force = false } = {}) {
 }
 
 /** Group modules by category; modules the API forgot to categorise land in "Other". */
+const catalogModels = new WeakMap();
 function normalizeCatalog(raw) {
+  if (raw && typeof raw === 'object') {
+    const known = catalogModels.get(raw);
+    if (known) return known;
+    const model = buildCatalogModel(raw);
+    catalogModels.set(raw, model);
+    return model;
+  }
+  return buildCatalogModel(raw);
+}
+
+function buildCatalogModel(raw) {
   const modules = raw && typeof raw.modules === 'object' && raw.modules ? raw.modules : {};
   const placed = new Set();
   const categories = [];
@@ -503,6 +556,7 @@ function renderLoggedOut({ notice = '', error = false } = {}) {
   routeToken++;
   currentRoute = null;
   state.user = null;
+  state.resources = null;
   document.title = APP_NAME;
 
   const banners = [];
@@ -758,6 +812,7 @@ function renderPickerError(body, err) {
 async function showPicker() {
   const token = ++routeToken;
   teardownView();
+  state.resources = null;
   document.title = APP_NAME;
   const shell = buildShell({ sidebar: false });
   mount(shell.root);
@@ -799,14 +854,23 @@ async function showPicker() {
   );
   shell.main.append(body);
   activeSearch = search;
-  if (state.guilds) filter = renderPickerBody(lists, state.guilds, search.value);
-  else lists.append(pickerSkeleton());
+  let shown = null; // what the cards on screen were built from
+  const listKey = () => JSON.stringify([state.guilds, state.ownerGuilds]);
+  if (state.guilds) {
+    filter = renderPickerBody(lists, state.guilds, search.value);
+    shown = listKey();
+  } else lists.append(pickerSkeleton());
   shell.main.focus({ preventScroll: true });
 
+  // boot() started the request next to /api/me: use it instead of asking again.
+  const early = bootGuilds;
+  bootGuilds = null;
   try {
-    const guilds = await loadGuilds({ force: true });
+    const guilds = await (early || loadGuilds({ force: true }));
     if (token !== routeToken) return;
-    filter = renderPickerBody(lists, guilds, search.value);
+    // Rebuild the cards only when the list changed (search text and filter are kept either way).
+    if (shown === null || listKey() !== shown) filter = renderPickerBody(lists, guilds, search.value);
+    loadUi().catch(() => { /* the guild page reports it, with a retry */ }); // warm up what the next click needs
   } catch (err) {
     if (token !== routeToken || handleAuthError(err)) return;
     if (state.guilds) toast(describeError(err).message, { kind: 'error', ms: TOAST_ERROR_MS });
@@ -894,6 +958,7 @@ function showGuildError(err, onRetry) {
 async function showGuild(guildId, section) {
   const token = ++routeToken;
   teardownView();
+  rememberedResources(guildId);
   document.title = APP_NAME;
   const shell = buildShell({ sidebar: true });
   mount(shell.root);
@@ -902,20 +967,23 @@ async function showGuild(guildId, section) {
   shell.sectionsSlot.append(sidebarSkeleton());
 
   const since = getStore(guildId).mark();
-  const [settingsRes, catalogRes] = await Promise.allSettled([
+  const [settingsRes, catalogRes, uiRes] = await Promise.allSettled([
     api(`/api/guilds/${encodeURIComponent(guildId)}/settings`),
     loadCatalog(),
+    loadUi(),
   ]);
   if (token !== routeToken) return;
 
-  const failure = settingsRes.status === 'rejected' ? settingsRes.reason : catalogRes.status === 'rejected' ? catalogRes.reason : null;
+  const failure = settingsRes.status === 'rejected' ? settingsRes.reason
+    : catalogRes.status === 'rejected' ? catalogRes.reason
+      : uiRes.status === 'rejected' ? uiRes.reason : null;
   if (failure) {
     if (handleAuthError(failure)) return;
     showGuildError(failure, () => showGuild(guildId, section));
     return;
   }
 
-  const view = buildGuildView({ guildId, data: settingsRes.value, catalog: catalogRes.value, shell, since });
+  const view = buildGuildView({ guildId, data: settingsRes.value, catalog: catalogRes.value, shell, since, ui: uiRes.value });
   currentView = view;
   shell.main.replaceChildren(view.main);
   document.title = `${view.guildName} · ${APP_NAME}`;
@@ -1018,7 +1086,7 @@ function moduleCode(mod) {
  * (saved with its own Save button) and a card per module. Switches are painted from the GuildStore, so toggles never
  * re-render the page.
  */
-function buildGuildView({ guildId, data, catalog, shell, since = null }) {
+function buildGuildView({ guildId, data, catalog, shell, since = null, ui }) {
   const store = getStore(guildId);
   const values = store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
   const model = normalizeCatalog(catalog);
@@ -1178,7 +1246,7 @@ function buildGuildView({ guildId, data, catalog, shell, since = null }) {
     try {
       const initial = {};
       for (const f of gFields) initial[f.field] = values[f.field] !== undefined ? values[f.field] : f.default;
-      gForm = createForm({
+      gForm = ui.createForm({
         fields: gFields,
         values: initial,
         ctx: {
@@ -1530,16 +1598,33 @@ async function showModule(guildId, moduleKey) {
 
   const base = `/api/guilds/${encodeURIComponent(guildId)}`;
   const since = getStore(guildId).mark();
-  const [settingsRes, catalogRes, resourcesRes] = await Promise.allSettled([api(`${base}/settings`), loadCatalog(), api(`${base}/resources`)]);
+  const remembered = rememberedResources(guildId);
+  // /resources can be the slowest answer (it asks Discord): the page renders without waiting for it.
+  const resourcesReq = api(`${base}/resources`);
+  resourcesReq.catch(() => { /* handled below once the page is up */ });
+  // With the catalog in memory the lists this page shows can be asked for next to the settings.
+  const prefetched = {};
+  if (state.catalog) {
+    const early = resolvePage(state.catalog, normalizeCatalog(state.catalog), moduleKey);
+    for (const key of early ? early.collections : []) {
+      const raw = state.catalog.collections && state.catalog.collections[key];
+      if (!raw) continue;
+      const list = api(`${base}/records/${encodeURIComponent(String(raw.key ?? 'records'))}`);
+      list.catch(() => { /* mountCollection reports it */ });
+      prefetched[key] = list;
+    }
+  }
+  const [settingsRes, catalogRes, uiRes] = await Promise.allSettled([api(`${base}/settings`), loadCatalog(), loadUi()]);
   if (token !== routeToken) return;
 
-  const failure = settingsRes.status === 'rejected' ? settingsRes.reason : catalogRes.status === 'rejected' ? catalogRes.reason : null;
+  const failure = settingsRes.status === 'rejected' ? settingsRes.reason
+    : catalogRes.status === 'rejected' ? catalogRes.reason
+      : uiRes.status === 'rejected' ? uiRes.reason : null;
   if (failure) {
     if (handleAuthError(failure)) return;
     showGuildError(failure, () => showModule(guildId, moduleKey));
     return;
   }
-  if (resourcesRes.status === 'rejected' && handleAuthError(resourcesRes.reason)) return;
 
   const catalog = catalogRes.value;
   const model = normalizeCatalog(catalog);
@@ -1563,13 +1648,19 @@ async function showModule(guildId, moduleKey) {
     return;
   }
 
-  const resources = resourcesRes.status === 'fulfilled' && isResources(resourcesRes.value) ? resourcesRes.value : null;
-  const view = buildSettingsView({ guildId, data: settingsRes.value, catalog, model, page, resources, shell, since });
+  const view = buildSettingsView({ guildId, data: settingsRes.value, catalog, model, page, resources: remembered, shell, since, ui: uiRes.value, prefetched });
   currentView = view;
   shell.main.replaceChildren(view.main);
   document.title = `${page.label} · ${view.guildName} · ${APP_NAME}`;
   shell.main.focus({ preventScroll: true });
   view.revealNav();
+  resourcesReq.then(
+    (res) => { if (token === routeToken) view.resourcesArrived(res); },
+    (err) => {
+      if (token !== routeToken || handleAuthError(err)) return;
+      view.resourcesArrived(null);
+    },
+  );
 }
 
 /**
@@ -1577,7 +1668,7 @@ async function showModule(guildId, moduleKey) {
  * section per collection, and the unsaved-changes bar. Boolean flags are painted from the GuildStore, so the
  * switch here and the overview stay in sync; everything else is saved explicitly with ONE PATCH.
  */
-function buildSettingsView({ guildId, data, catalog, model, page, resources, shell, since = null }) {
+function buildSettingsView({ guildId, data, catalog, model, page, resources, shell, since = null, ui, prefetched = {} }) {
   const store = getStore(guildId);
   // The values the forms start from: the GET's, except a field a save has answered since the request was sent.
   const values = store.load(data && typeof data.values === 'object' && data.values ? data.values : {}, since);
@@ -1606,6 +1697,30 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
 
   const entries = []; // one per group: { group, form, card }
   let resourcesPromise = null;
+  let freshResources = false; // a Refresh / Retry answered: a slower first request must not overwrite it
+
+  /** The first /resources answer (null: it failed or was unusable). The page was built without waiting for it. */
+  function resourcesArrived(res) {
+    if (destroyed || freshResources) return;
+    if (isResources(res)) {
+      ctx.resources = res;
+      state.resources = { guildId, value: res };
+      for (const entry of entries) {
+        try { entry.form.setResources(res); } catch { /* one broken control must not stop the others */ }
+      }
+      refreshCollections();
+      resourcesWarning.hidden = true;
+    } else if (ctx.resources === null) {
+      resourcesWarning.hidden = false; // nothing to show the pickers: offer the retry
+    }
+  }
+
+  /** Collection rows name channels and roles through ctx.resources: redraw them when new resources land. */
+  function refreshCollections() {
+    for (const handle of handles) {
+      try { handle.resourcesChanged?.(); } catch { /* one broken list must not stop the others */ }
+    }
+  }
 
   function reloadResources() {
     if (resourcesPromise) return resourcesPromise;
@@ -1614,11 +1729,16 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     const promise = api(`/api/guilds/${encodeURIComponent(guildId)}/resources?fresh=1`)
       .then((res) => {
         if (!isResources(res)) throw new ApiError(502, 'bad_response', '', null);
+        // A late answer after the view was left (or the admin logged out) must not reach the page or the session cache.
+        if (destroyed || !state.user) return res;
         ctx.resources = res;
-        if (!destroyed) {
+        freshResources = true;
+        state.resources = { guildId, value: res };
+        {
           for (const entry of entries) {
             try { entry.form.setResources(res); } catch { /* one broken control must not stop the others */ }
           }
+          refreshCollections();
           resourcesWarning.hidden = true;
         }
         return res;
@@ -1645,7 +1765,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
       .finally(() => { retryResources.disabled = false; });
   });
   const resourcesWarning = banner('warn', "Couldn't load this server's channels, roles and emojis. You can still edit other settings; pickers may be limited.", [retryResources]);
-  resourcesWarning.hidden = resources !== null;
+  resourcesWarning.hidden = true; // shown by resourcesArrived() if the first answer fails
 
   /* ---- dirty tracking ---- */
 
@@ -1737,7 +1857,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     try {
       const initial = {};
       for (const f of group.fields) initial[f.field] = values[f.field] !== undefined ? values[f.field] : f.default;
-      entry.form = createForm({
+      entry.form = ui.createForm({
         fields: group.fields,
         values: initial,
         ctx,
@@ -1775,7 +1895,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
     const cTitleId = `${idBase}-c-${slug(key)}-title`;
     const host = h('div', { class: 'collection-host' });
     try {
-      const handle = mountCollection(host, { collection, ctx });
+      const handle = ui.mountCollection(host, { collection, ctx, initial: prefetched[key] });
       if (handle && typeof handle.destroy === 'function') handles.push(handle);
     } catch {
       host.append(banner('error', 'This list could not be displayed. Reload the page to try again.'));
@@ -2035,6 +2155,7 @@ function buildSettingsView({ guildId, data, catalog, model, page, resources, she
       for (const handle of handles) if (typeof handle.saveEditor === 'function' && handle.saveEditor()) return;
     },
     /** Scrolls the sidebar so the current module is visible. */
+    resourcesArrived,
     revealNav() {
       requestAnimationFrame(() => {
         const here = shell.sectionsSlot.querySelector('.side-module[aria-current="page"]');
@@ -2119,6 +2240,15 @@ function onHashChange() {
 
 async function boot() {
   renderLoading();
+  const first = parseRoute(location.hash);
+  // The picker needs the server list: ask for it next to /api/me. A failure (a 401 included) is handled by whoever
+  // takes the promise, or by the logged-out view; here it only must not reject unhandled.
+  if (first.name === 'picker') {
+    bootGuilds = loadGuilds({ force: true });
+    bootGuilds.catch(() => {});
+  } else {
+    loadUi().catch(() => { /* the page reports it, with a retry */ });
+  }
   try {
     const me = await api('/api/me');
     state.user = me && me.user ? me.user : null;
@@ -2136,6 +2266,7 @@ async function boot() {
   }
   state.loginError = false;
   route();
+  bootGuilds = null; // only the first picker may reuse it
 }
 
 /**
@@ -2161,6 +2292,12 @@ function handleSaveShortcut(event, view) {
 function start() {
   state.loginError = new URLSearchParams(location.search).get('error') === 'login_failed';
   if (location.search) history.replaceState(null, '', location.pathname + location.hash);
+
+  // Not in index.html: the stylesheet would block the first paint (display=swap shows text in the fallback font).
+  const fonts = document.createElement('link');
+  fonts.rel = 'stylesheet';
+  fonts.href = FONTS_HREF;
+  document.head.append(fonts);
 
   window.addEventListener('hashchange', onHashChange);
 

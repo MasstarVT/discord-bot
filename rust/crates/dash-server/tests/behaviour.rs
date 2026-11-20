@@ -54,11 +54,29 @@ impl Drop for Stub {
 }
 
 async fn stub(handler: Handler) -> Stub {
+    stub_with(handler, None).await
+}
+
+/// A closed gate is a semaphore without permits: the stub records the request, then waits for `open(&gate)`.
+fn closed_gate() -> Arc<tokio::sync::Semaphore> {
+    Arc::new(tokio::sync::Semaphore::new(0))
+}
+
+fn open(gate: &Arc<tokio::sync::Semaphore>) {
+    gate.add_permits(1_000_000);
+}
+
+fn close(gate: &Arc<tokio::sync::Semaphore>) {
+    gate.forget_permits(1_000_000);
+}
+
+async fn stub_with(handler: Handler, gate: Option<Arc<tokio::sync::Semaphore>>) -> Stub {
     let calls: Arc<Mutex<Vec<StubCall>>> = Arc::new(Mutex::new(Vec::new()));
     let c2 = calls.clone();
     let app = Router::new().fallback(move |req: axum::extract::Request| {
         let calls = c2.clone();
         let handler = handler.clone();
+        let gate = gate.clone();
         async move {
             let method = req.method().as_str().to_string();
             let full = req.uri().path_and_query().map(|p| p.as_str().to_string()).unwrap_or_default();
@@ -66,6 +84,11 @@ async fn stub(handler: Handler) -> Stub {
             let auth = req.headers().get("authorization").map(|v| String::from_utf8_lossy(v.as_bytes()).into_owned()).unwrap_or_default();
             let agent = req.headers().get("user-agent").map(|v| String::from_utf8_lossy(v.as_bytes()).into_owned()).unwrap_or_default();
             lock(&calls).push(StubCall { method: method.clone(), path: path.clone(), auth, agent });
+            if let Some(g) = &gate {
+                if let Ok(permit) = g.acquire().await {
+                    permit.forget();
+                }
+            }
             let (status, body, headers) = handler(&method, &path);
             let mut res = axum::response::Response::new(axum::body::Body::from(body));
             *res.status_mut() = http::StatusCode::from_u16(status).expect("status");
@@ -491,6 +514,563 @@ fn limits_and_a_short_session_secret() {
     cfg.session_secret = String::new();
     let deps = DashboardDeps { discord: f.discord.clone(), settings: f.settings.clone(), records: None, bot_joins: None, collections: None, now: None };
     assert!(create_dashboard_router(ServerOptions::new(cfg, deps)).is_err());
+}
+
+// ── Speed-ups: refresh-ahead, stale-while-revalidate, warm-up (test/dashboard.test.js "Speed-ups") ───────────────
+
+/// Lets background tasks run: the refreshes are spawned, so a short real pause is enough.
+async fn settle() {
+    for _ in 0..8 {
+        tokio::time::sleep(Duration::from_millis(15)).await;
+    }
+}
+
+fn user_list(name: &str) -> Reply {
+    ok(json!([{ "id": g::ZETA, "name": name, "icon": null, "owner": true, "permissions": "0" }]))
+}
+
+fn first_name(list: &[dash_server::OAuthGuild]) -> String {
+    list[0].name.clone()
+}
+
+#[tokio::test]
+async fn user_guilds_refresh_ahead_and_share_one_background_refresh() {
+    let name = Arc::new(Mutex::new("v1".to_string()));
+    let n2 = name.clone();
+    let gate = closed_gate();
+    let s = stub_with(Arc::new(move |_, _| user_list(&lock(&n2))), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    assert_eq!(first_name(&a.get_user_guilds(USER_ID, TOKEN, false).await.expect("v1")), "v1");
+    advance(&t, 29_000.0);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("cached");
+    settle().await;
+    assert_eq!(s.count(), 1, "under half the TTL: nothing in the background");
+
+    close(&gate);
+    *lock(&name) = "v2".into();
+    advance(&t, 2_000.0); // 31 s old
+    let served = a.get_user_guilds(USER_ID, TOKEN, false).await.expect("served at once");
+    assert_eq!(first_name(&served), "v1", "under the TTL, so served while the refresh runs");
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("again");
+    a.get_user_guilds(USER_ID, TOKEN, true).await.expect("again");
+    settle().await;
+    assert_eq!(s.count(), 2, "one background refresh, however many callers");
+    open(&gate);
+    settle().await;
+    advance(&t, 1_000.0);
+    assert_eq!(first_name(&a.get_user_guilds(USER_ID, TOKEN, false).await.expect("v2")), "v2", "the refreshed entry replaced it");
+    assert_eq!(s.count(), 2);
+}
+
+#[tokio::test]
+async fn a_plain_caller_waits_instead_of_taking_a_list_older_than_60_s() {
+    let gate = closed_gate();
+    let s = stub_with(Arc::new(|_, _| user_list("v3")), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("loaded");
+    close(&gate);
+    advance(&t, 31_000.0);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("ahead");
+    settle().await;
+    assert_eq!(s.count(), 2);
+    advance(&t, 30_000.0); // the entry is now 61 s old
+    let a2 = a.clone();
+    let waiting = tokio::spawn(async move { a2.get_user_guilds(USER_ID, TOKEN, false).await });
+    settle().await;
+    assert!(!waiting.is_finished(), "a non-stale caller waits instead of taking a list older than 60 s");
+    open(&gate);
+    assert_eq!(first_name(&waiting.await.expect("join").expect("v3")), "v3");
+    assert_eq!(s.count(), 2, "it joined the refresh already in flight");
+}
+
+#[tokio::test]
+async fn a_failed_background_refresh_keeps_the_entry_and_spaces_its_retries() {
+    let fail = Arc::new(Mutex::new(false));
+    let f2 = fail.clone();
+    let s = stub(Arc::new(move |_, _| if *lock(&f2) { (503, "{}".into(), Vec::new()) } else { user_list("keep") })).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("loaded");
+    *lock(&fail) = true;
+    advance(&t, 31_000.0);
+    assert_eq!(first_name(&a.get_user_guilds(USER_ID, TOKEN, false).await.expect("kept")), "keep");
+    settle().await;
+    assert_eq!(s.count(), 2);
+    advance(&t, 1_000.0);
+    assert_eq!(first_name(&a.get_user_guilds(USER_ID, TOKEN, false).await.expect("still there")), "keep");
+    settle().await;
+    assert_eq!(s.count(), 2, "no retry on every request");
+    advance(&t, 10_000.0);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("kept");
+    settle().await;
+    assert_eq!(s.count(), 3, "retried after the pause");
+}
+
+#[tokio::test]
+async fn forget_user_stops_a_refresh_in_flight_from_putting_the_list_back() {
+    let gate = closed_gate();
+    let s = stub_with(Arc::new(|_, _| user_list("late")), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("loaded");
+    close(&gate);
+    advance(&t, 31_000.0);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("starts the refresh");
+    settle().await;
+    assert_eq!(s.count(), 2);
+    a.forget_user(USER_ID); // logout while it is in flight
+    open(&gate);
+    settle().await;
+    advance(&t, 1_000.0);
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("loads again");
+    assert_eq!(s.count(), 3, "the late answer was dropped: the next call loads again");
+
+    // The same for a warm-up still running at logout.
+    let gate = closed_gate();
+    let w = stub_with(Arc::new(|_, _| user_list("warm")), Some(gate.clone())).await;
+    let a = api(&w.base, Some(t.clone()), None);
+    a.warm_user_guilds(USER_ID, TOKEN);
+    settle().await;
+    a.forget_user(USER_ID);
+    open(&gate);
+    settle().await;
+    a.get_user_guilds(USER_ID, TOKEN, false).await.expect("loads");
+    assert_eq!(w.count(), 2);
+}
+
+#[tokio::test]
+async fn warm_user_guilds_loads_once_with_the_given_token_into_its_own_slot() {
+    let s = stub(Arc::new(|_, _| user_list("warm"))).await;
+    let a = api(&s.base, Some(clock(0.0)), None);
+    a.warm_user_guilds(USER_ID, TOKEN);
+    a.warm_user_guilds(USER_ID, TOKEN);
+    settle().await;
+    assert_eq!(s.count(), 1, "one load");
+    assert_eq!(s.calls()[0].auth, format!("Bearer {TOKEN}"));
+    assert_eq!(first_name(&a.get_user_guilds(USER_ID, TOKEN, false).await.expect("cached")), "warm");
+    assert_eq!(s.count(), 1, "the first page after login is served from it");
+    a.warm_user_guilds(USER_ID, TOKEN);
+    settle().await;
+    assert_eq!(s.count(), 1, "a current entry is not reloaded");
+    a.get_user_guilds(USER_ID, "another-token", false).await.expect("other token");
+    assert_eq!(s.count(), 2, "another token never uses it");
+}
+
+fn bot_stub(list: Arc<Mutex<Vec<&'static str>>>, beta_in: Arc<Mutex<bool>>) -> Handler {
+    Arc::new(move |_, path| {
+        if path.starts_with("/users/@me/guilds") {
+            return ok(Value::Array(lock(&list).iter().map(|id| json!({ "id": id, "name": format!("g{}", &id[id.len() - 2..]) })).collect()));
+        }
+        if path == format!("/guilds/{}", g::BETA) {
+            return if *lock(&beta_in) { ok(json!({ "id": g::BETA })) } else { (403, json!({ "code": 50001 }).to_string(), Vec::new()) };
+        }
+        (404, json!({ "code": 10004 }).to_string(), Vec::new())
+    })
+}
+
+#[tokio::test]
+async fn bot_guild_list_serves_stale_while_it_refreshes_and_waits_past_the_bound() {
+    let list = Arc::new(Mutex::new(vec![g::ZETA]));
+    let gate = closed_gate();
+    let s = stub_with(bot_stub(list.clone(), Arc::new(Mutex::new(false))), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    assert!(a.is_bot_in_guild_swr(g::ZETA, false).await.expect("first"), "nothing cached: it waits for the first list");
+    assert_eq!(s.count(), 1);
+    close(&gate);
+
+    *lock(&list) = vec![g::ZETA, g::ALPHA];
+    advance(&t, 61_000.0);
+    assert!(!a.is_bot_in_guild_swr(g::ALPHA, false).await.expect("stale"), "the old list is served at once");
+    assert!(a.is_bot_in_guild_swr(g::ZETA, false).await.expect("stale"));
+    settle().await;
+    assert_eq!(s.count(), 2, "one background refresh");
+    open(&gate);
+    settle().await;
+    assert!(a.is_bot_in_guild_swr(g::ALPHA, false).await.expect("fresh"), "the refresh landed");
+    assert_eq!(a.get_bot_guilds_swr().await.expect("entries").len(), 2);
+
+    // Without swr (the default) a list past 60 s is waited for, as before.
+    *lock(&list) = vec![g::ZETA];
+    advance(&t, 61_000.0);
+    assert!(!a.is_bot_in_guild(g::ALPHA, false).await.expect("reloaded"));
+    assert_eq!(s.count(), 3);
+
+    // Past the max-stale bound even an swr caller waits.
+    *lock(&list) = vec![g::ZETA, g::BETA];
+    close(&gate);
+    advance(&t, 10.0 * 60_000.0 + 1_000.0);
+    let a2 = a.clone();
+    let waiting = tokio::spawn(async move { a2.is_bot_in_guild_swr(g::BETA, false).await });
+    settle().await;
+    assert!(!waiting.is_finished(), "older than the bound: it waits");
+    open(&gate);
+    assert!(waiting.await.expect("join").expect("loaded"));
+}
+
+#[tokio::test]
+async fn bot_guild_list_refreshes_ahead_past_half_the_ttl_and_never_serves_past_it() {
+    let list = Arc::new(Mutex::new(vec![g::ZETA]));
+    let gate = closed_gate();
+    let s = stub_with(bot_stub(list.clone(), Arc::new(Mutex::new(false))), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    assert!(!a.is_bot_in_guild(g::ALPHA, false).await.expect("first"));
+    assert_eq!(s.count(), 1);
+
+    *lock(&list) = vec![g::ZETA, g::ALPHA];
+    advance(&t, 20_000.0);
+    assert!(!a.is_bot_in_guild(g::ALPHA, false).await.expect("under half"), "served, no refresh");
+    settle().await;
+    assert_eq!(s.count(), 1);
+
+    close(&gate);
+    advance(&t, 11_000.0); // 31 s old
+    assert!(!a.is_bot_in_guild(g::ALPHA, false).await.expect("ahead"), "past half: served at once");
+    assert!(!a.is_bot_in_guild(g::ALPHA, false).await.expect("ahead"));
+    settle().await;
+    assert_eq!(s.count(), 2, "one background refresh through the single in-flight slot");
+    open(&gate);
+    settle().await;
+    advance(&t, 29_000.0); // 60 s after the first load
+    assert!(a.is_bot_in_guild(g::ALPHA, false).await.expect("landed"), "the refresh landed before the old list expired");
+    assert_eq!(s.count(), 2, "nothing waited or loaded again");
+}
+
+#[tokio::test]
+async fn a_removed_bot_answers_bot_not_in_guild_on_the_first_read_past_the_ttl() {
+    let list = Arc::new(Mutex::new(vec![g::ZETA]));
+    let s = stub(bot_stub(list.clone(), Arc::new(Mutex::new(false)))).await;
+    let t = clock(0.0);
+    let (router, _probe) = probe_router_over(Some(api(&s.base, Some(t.clone()), None)));
+    let cookie = session_cookie(json!({}));
+    let get = |path: String| {
+        let router = router.clone();
+        let cookie = cookie.clone();
+        async move { call(&router, "GET", &path, &[("cookie", cookie)], None).await }
+    };
+    assert_eq!(get(format!("/api/guilds/{}/settings", g::ZETA)).await.status, 200);
+    lock(&list).clear(); // the bot is removed
+    advance(&t, 61_000.0);
+    let r = get(format!("/api/guilds/{}/settings", g::ZETA)).await;
+    assert_eq!(r.status, 404);
+    assert_eq!(r.json()["error"], "bot_not_in_guild");
+    let r = get(format!("/api/guilds/{}/resources", g::ZETA)).await;
+    assert_eq!(r.status, 404);
+    assert_eq!(r.json()["error"], "bot_not_in_guild");
+}
+
+#[tokio::test]
+async fn bot_guild_misses_are_still_checked_live_on_a_stale_list_and_a_failed_refresh_keeps_it() {
+    let list = Arc::new(Mutex::new(vec![g::ZETA]));
+    let beta_in = Arc::new(Mutex::new(true));
+    let s = stub(bot_stub(list.clone(), beta_in.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    assert!(a.is_bot_in_guild(g::ZETA, false).await.expect("loaded"));
+    advance(&t, 120_000.0);
+    assert!(a.is_bot_in_guild_swr(g::BETA, true).await.expect("live"), "a fresh invite shows at once");
+    assert!(s.calls().iter().any(|c| c.path == format!("/guilds/{}", g::BETA)), "GET /guilds/{{id}} ran");
+    *lock(&beta_in) = false;
+    assert!(!a.is_bot_in_guild_swr(g::ALPHA, true).await.expect("miss"));
+
+    let fail = Arc::new(Mutex::new(false));
+    let f2 = fail.clone();
+    let inner = bot_stub(list.clone(), beta_in.clone());
+    let d = stub(Arc::new(move |m, p| if *lock(&f2) { (503, "{}".into(), Vec::new()) } else { inner(m, p) })).await;
+    let t = clock(0.0);
+    let a = api(&d.base, Some(t.clone()), None);
+    assert!(a.is_bot_in_guild(g::ZETA, false).await.expect("loaded"));
+    *lock(&fail) = true;
+    advance(&t, 61_000.0);
+    assert!(a.is_bot_in_guild_swr(g::ZETA, false).await.expect("stale list"));
+    settle().await;
+    let spent = d.count();
+    assert!(a.is_bot_in_guild_swr(g::ZETA, false).await.expect("the previous list stays"));
+    settle().await;
+    assert_eq!(d.count(), spent, "and the retry waits another TTL");
+}
+
+#[tokio::test]
+async fn guild_resources_display_reads_are_stale_while_revalidate_and_every_other_read_is_not() {
+    let gate = closed_gate();
+    let s = stub_with(resources_stub(true), Some(gate.clone())).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    open(&gate);
+    let first = a.get_guild_resources_display(g::ZETA).await.expect("first");
+    assert_eq!(s.count(), 3, "nothing cached: it waits for a live load");
+    close(&gate);
+
+    advance(&t, 31_000.0);
+    assert!(Arc::ptr_eq(&a.get_guild_resources_display(g::ZETA).await.expect("stale"), &first), "older than 30 s: served at once");
+    assert!(Arc::ptr_eq(&a.get_guild_resources_display(g::ZETA).await.expect("stale"), &first));
+    settle().await;
+    assert_eq!(s.count(), 6, "one background reload");
+    open(&gate);
+    settle().await;
+    let second = a.get_guild_resources_display(g::ZETA).await.expect("reloaded");
+    assert!(!Arc::ptr_eq(&second, &first), "the reload replaced the entry");
+    assert_eq!(s.count(), 6);
+
+    // The plain read (every id check) never takes an entry older than 30 s.
+    advance(&t, 31_000.0);
+    close(&gate);
+    let a2 = a.clone();
+    let strict = tokio::spawn(async move { a2.get_guild_resources(g::ZETA, false).await });
+    settle().await;
+    assert!(!strict.is_finished(), "no swr: it waits for a live load");
+    open(&gate);
+    let third = strict.await.expect("join").expect("live");
+    assert!(!Arc::ptr_eq(&third, &second));
+
+    // fresh is live, and does not join a plain background load.
+    advance(&t, 31_000.0);
+    close(&gate);
+    a.get_guild_resources_display(g::ZETA).await.expect("stale");
+    settle().await;
+    let before = s.count();
+    let a3 = a.clone();
+    let fresh = tokio::spawn(async move { a3.get_guild_resources(g::ZETA, true).await });
+    settle().await;
+    assert!(s.count() > before, "a separate live load started");
+    open(&gate);
+    fresh.await.expect("join").expect("fresh");
+
+    // Past the max-stale bound the display read waits too.
+    advance(&t, 10.0 * 60_000.0 + 1_000.0);
+    close(&gate);
+    let a4 = a.clone();
+    let late = tokio::spawn(async move { a4.get_guild_resources_display(g::ZETA).await });
+    settle().await;
+    assert!(!late.is_finished());
+    open(&gate);
+    late.await.expect("join").expect("loaded");
+}
+
+#[tokio::test]
+async fn a_failed_background_resources_reload_keeps_the_entry_and_spaces_its_retries() {
+    let down = Arc::new(Mutex::new(false));
+    let d2 = down.clone();
+    let inner = resources_stub(true);
+    let s = stub(Arc::new(move |m, p| if *lock(&d2) { (503, "{}".into(), Vec::new()) } else { inner(m, p) })).await;
+    let t = clock(0.0);
+    let a = api(&s.base, Some(t.clone()), None);
+    let first = a.get_guild_resources(g::ZETA, false).await.expect("loaded");
+    *lock(&down) = true;
+    advance(&t, 31_000.0);
+    assert!(Arc::ptr_eq(&a.get_guild_resources_display(g::ZETA).await.expect("kept"), &first));
+    settle().await;
+    let spent = s.count();
+    assert!(Arc::ptr_eq(&a.get_guild_resources_display(g::ZETA).await.expect("still served"), &first));
+    settle().await;
+    assert_eq!(s.count(), spent, "the retry waits another 30 s");
+    let e = a.get_guild_resources(g::ZETA, false).await.expect_err("a strict caller is not given the old entry");
+    assert_eq!(e.code, "unavailable");
+}
+
+// ── The server's use of them, and the gzip copy of the catalog ────────────────────────────────────────────────────
+
+type DErr = dash_collections::discord::DiscordApiError;
+
+/// A ServerDiscord that records which flavour of read the server asked for, over the usual fakes.
+struct Probe {
+    inner: Arc<FakeDiscord>,
+    /// When set, the bot's presence and server list come from this real client (over a stub) instead of the fakes.
+    real: Option<DiscordApi>,
+    log: Mutex<Vec<String>>,
+}
+
+#[async_trait::async_trait]
+impl DashboardDiscord for Probe {
+    async fn get_guild_resources(&self, guild_id: &str, fresh: bool) -> Result<Arc<dash_collections::discord::DiscordResources>, DErr> {
+        lock(&self.log).push(format!("resources:fresh={fresh}:swr=false"));
+        self.inner.get_guild_resources(guild_id, fresh).await
+    }
+    async fn get_guild_resources_display(&self, guild_id: &str) -> Result<Arc<dash_collections::discord::DiscordResources>, DErr> {
+        lock(&self.log).push("resources:fresh=false:swr=true".into());
+        self.inner.get_guild_resources(guild_id, false).await
+    }
+    async fn get_member(&self, g: &str, u: &str) -> Result<Option<dash_collections::discord::MemberRoles>, DErr> {
+        self.inner.get_member(g, u).await
+    }
+    async fn search_members(&self, g: &str, q: &str) -> Result<Vec<dash_collections::discord::MemberProfile>, DErr> {
+        self.inner.search_members(g, q).await
+    }
+    async fn get_users(&self, ids: &[String]) -> Result<std::collections::HashMap<String, Option<dash_collections::discord::MemberProfile>>, DErr> {
+        self.inner.get_users(ids).await
+    }
+    async fn send_message(&self, c: &str, p: Value) -> Result<dash_collections::discord::MessageRef, DErr> {
+        self.inner.send_message(c, p).await
+    }
+    async fn edit_message(&self, c: &str, m: &str, p: Value) -> Result<dash_collections::discord::MessageRef, DErr> {
+        self.inner.edit_message(c, m, p).await
+    }
+    async fn delete_message(&self, c: &str, m: &str) -> Result<(), DErr> {
+        self.inner.delete_message(c, m).await
+    }
+    async fn create_invite(&self, c: &str, r: &str) -> Result<dash_collections::discord::InviteRef, DErr> {
+        self.inner.create_invite(c, r).await
+    }
+}
+
+#[async_trait::async_trait]
+impl ServerDiscord for Probe {
+    async fn get_current_user(&self, t: &str) -> Result<dash_server::CurrentUser, DErr> {
+        self.inner.get_current_user(t).await
+    }
+    async fn get_user_guilds(&self, u: &str, t: &str, s: bool) -> Result<Arc<Vec<dash_server::OAuthGuild>>, DErr> {
+        self.inner.get_user_guilds(u, t, s).await
+    }
+    fn forget_user(&self, u: &str) {
+        self.inner.forget_user(u);
+    }
+    fn warm_user_guilds(&self, u: &str, t: &str) {
+        lock(&self.log).push(format!("warm:{u}:{t}"));
+    }
+    fn prefetch_bot_guilds(&self) {
+        lock(&self.log).push("prefetch".into());
+    }
+    async fn get_bot_guilds(&self) -> Result<Arc<Vec<dash_server::BotGuild>>, DErr> {
+        lock(&self.log).push("botGuilds:swr=false".into());
+        if let Some(r) = &self.real {
+            return r.get_bot_guilds().await;
+        }
+        self.inner.get_bot_guilds().await
+    }
+    async fn get_bot_guilds_swr(&self) -> Result<Arc<Vec<dash_server::BotGuild>>, DErr> {
+        lock(&self.log).push("botGuilds:swr=true".into());
+        if let Some(r) = &self.real {
+            return r.get_bot_guilds_swr().await;
+        }
+        self.inner.get_bot_guilds().await
+    }
+    async fn is_bot_in_guild(&self, g: &str, v: bool) -> Result<bool, DErr> {
+        lock(&self.log).push(format!("presence:verify={v}:swr=false"));
+        if let Some(r) = &self.real {
+            return r.is_bot_in_guild(g, v).await;
+        }
+        self.inner.is_bot_in_guild(g, v).await
+    }
+    async fn is_bot_in_guild_swr(&self, g: &str, v: bool) -> Result<bool, DErr> {
+        lock(&self.log).push(format!("presence:verify={v}:swr=true"));
+        if let Some(r) = &self.real {
+            return r.is_bot_in_guild_swr(g, v).await;
+        }
+        self.inner.is_bot_in_guild(g, v).await
+    }
+    fn invite_url(&self, g: Option<&str>) -> String {
+        self.inner.invite_url(g)
+    }
+    async fn exchange_code(&self, c: &str) -> anyhow::Result<dash_auth::auth::TokenGrant> {
+        self.inner.exchange_code(c).await
+    }
+}
+
+fn probe_router() -> (Router, Arc<Probe>) {
+    probe_router_over(None)
+}
+
+fn probe_router_over(real: Option<DiscordApi>) -> (Router, Arc<Probe>) {
+    let f = create_fakes();
+    let probe = Arc::new(Probe { inner: f.discord.clone(), real, log: Mutex::new(Vec::new()) });
+    let deps = DashboardDeps {
+        discord: probe.clone(),
+        settings: f.settings.clone(),
+        records: None,
+        bot_joins: None,
+        collections: None,
+        now: Some(Arc::new(|| NOW)),
+    };
+    let mut opts = ServerOptions::new(config(&[("BOT_OWNER_ID", OWNER_ID)]), deps);
+    opts.logger = Some(Arc::new(RecordingLogger::new()));
+    opts.public_dir = PublicDir::Path(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/golden/dash-server/public-test"));
+    (create_dashboard_router(opts).expect("router"), probe)
+}
+
+#[tokio::test]
+async fn the_server_takes_stale_tolerant_lists_for_display_reads_only() {
+    let (router, probe) = probe_router();
+    let cookie = session_cookie(json!({}));
+    let get = |path: String| {
+        let router = router.clone();
+        let cookie = cookie.clone();
+        async move { call(&router, "GET", &path, &[("cookie", cookie)], None).await }
+    };
+    let r = get("/api/guilds".into()).await;
+    assert_eq!(r.status, 200);
+    assert_eq!(r.header("cache-control").as_deref(), Some("no-store"));
+    {
+        let log = lock(&probe.log);
+        assert_eq!(log.first().map(String::as_str), Some("prefetch"), "the bot list starts before the user's list is awaited");
+        assert!(log.iter().any(|l| l == "presence:verify=false:swr=true"));
+    }
+    lock(&probe.log).clear();
+    assert_eq!(get(format!("/api/guilds/{}/settings", g::ZETA)).await.status, 200);
+    assert_eq!(lock(&probe.log).as_slice(), ["presence:verify=true:swr=false"], "GET settings checks the bot presence within the TTL");
+    lock(&probe.log).clear();
+    assert_eq!(get(format!("/api/guilds/{}/resources", g::ZETA)).await.status, 200);
+    assert_eq!(lock(&probe.log).as_slice(), ["presence:verify=true:swr=false", "resources:fresh=false:swr=true"]);
+    lock(&probe.log).clear();
+    assert_eq!(get(format!("/api/guilds/{}/resources?fresh=1", g::ZETA)).await.status, 200);
+    assert_eq!(lock(&probe.log).as_slice(), ["presence:verify=true:swr=false", "resources:fresh=true:swr=false"], "fresh forces a live load");
+    lock(&probe.log).clear();
+    let body = serde_json::to_vec(&json!({ "changes": { "welcomeChannelId": ch::TEXT } })).expect("json");
+    let r = call(&router, "PATCH", &format!("/api/guilds/{}/settings", g::ZETA), &write_headers(&cookie), Some(body)).await;
+    assert!(r.status == 200 || r.status == 400, "PATCH answered {}", r.status);
+    let log = lock(&probe.log).clone();
+    assert_eq!(log.first().map(String::as_str), Some("presence:verify=true:swr=false"), "PATCH presence is not stale-tolerant");
+    assert!(log.iter().any(|l| l.starts_with("resources:")) && log.iter().all(|l| !l.ends_with("swr=true")), "the id checks never use a stale list: {log:?}");
+}
+
+#[tokio::test]
+async fn the_callback_warms_the_users_guild_list_off_the_redirect() {
+    let (router, probe) = probe_router();
+    let h = [("cookie", "dash_oauth_state=s9".to_string())];
+    let r = call(&router, "GET", "/auth/callback?code=good-code&state=s9", &h, None).await;
+    assert_eq!(r.status, 302);
+    assert_eq!(r.header("location").as_deref(), Some("/dashboard"));
+    assert_eq!(lock(&probe.log).as_slice(), [format!("warm:{USER_ID}:{TOKEN}")]);
+}
+
+#[tokio::test]
+async fn the_catalog_is_gzipped_once_and_nothing_else_is() {
+    let router = main_router().0;
+    let cookie = session_cookie(json!({}));
+    let plain = call(&router, "GET", "/api/catalog", &[("cookie", cookie.clone())], None).await;
+    assert_eq!(plain.status, 200);
+    assert_eq!(plain.header("content-encoding"), None);
+    assert_eq!(plain.header("vary").as_deref(), Some("Accept-Encoding"));
+    assert_eq!(plain.header("cache-control").as_deref(), Some("no-store"));
+
+    let zipped = call(&router, "GET", "/api/catalog", &[("cookie", cookie.clone()), ("accept-encoding", "gzip, br".into())], None).await;
+    assert_eq!(zipped.status, 200);
+    assert_eq!(zipped.header("content-encoding").as_deref(), Some("gzip"));
+    assert_eq!(zipped.header("vary").as_deref(), Some("Accept-Encoding"));
+    assert_eq!(zipped.header("cache-control").as_deref(), Some("no-store"));
+    assert!(zipped.body.len() < plain.body.len() / 2);
+    let mut unpacked = Vec::new();
+    std::io::Read::read_to_end(&mut flate2::read::GzDecoder::new(&zipped.body[..]), &mut unpacked).expect("gunzip");
+    assert_eq!(unpacked, plain.body, "the same bytes");
+
+    let refused = call(&router, "GET", "/api/catalog", &[("cookie", cookie.clone()), ("accept-encoding", "gzip;q=0".into())], None).await;
+    assert_eq!(refused.header("content-encoding"), None);
+    let anon = call(&router, "GET", "/api/catalog", &[("accept-encoding", "gzip".into())], None).await;
+    assert_eq!(anon.status, 401, "the session check stays");
+
+    // No other API JSON is compressed (BREACH).
+    for path in ["/api/guilds".to_string(), format!("/api/guilds/{}/settings", g::ZETA), format!("/api/guilds/{}/resources", g::ZETA), "/api/me".to_string()] {
+        let r = call(&router, "GET", &path, &[("cookie", cookie.clone()), ("accept-encoding", "gzip".into())], None).await;
+        assert_eq!(r.status, 200, "{path}");
+        assert_eq!(r.header("content-encoding"), None, "{path}");
+    }
 }
 
 // ── On a real socket ─────────────────────────────────────────────────────────────────────────────────────────────

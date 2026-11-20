@@ -12,7 +12,17 @@ export const REQUEST_TIMEOUT_MS = 10_000;
 export const USER_GUILDS_TTL_MS = 60_000;
 export const USER_GUILDS_MAX_STALE_MS = 5 * 60_000;
 export const USER_GUILDS_CACHE_MAX = 5_000;
+/** An entry this old is returned and refreshed in the background (never served past USER_GUILDS_TTL_MS). */
+export const USER_GUILDS_REFRESH_AHEAD_MS = USER_GUILDS_TTL_MS / 2;
+/** After a failed background refresh, the next one waits this long. */
+export const USER_GUILDS_REFRESH_RETRY_MS = 10_000;
 export const BOT_GUILDS_TTL_MS = 60_000;
+/** A bot list this old is returned and refreshed in the background (never served past BOT_GUILDS_TTL_MS). */
+export const BOT_GUILDS_REFRESH_AHEAD_MS = BOT_GUILDS_TTL_MS / 2;
+/** After a failed background refresh-ahead, the next one waits this long. */
+export const BOT_GUILDS_REFRESH_RETRY_MS = 10_000;
+/** With `swr`, the bot's guild list is served up to this old while it refreshes in the background. */
+export const BOT_GUILDS_MAX_STALE_MS = 10 * 60_000;
 export const BOT_GUILDS_MAX_PAGES = 100;
 /** How long a bot-owner invite lasts (it also works only once). */
 export const OWNER_INVITE_MAX_AGE_SECONDS = 1800;
@@ -21,6 +31,8 @@ export const BOT_GUILDS_MAX_RETRIES = 3;
 export const BOT_GUILDS_MAX_WAIT_SECONDS = 10;
 export const RESOURCES_TTL_MS = 30_000;
 export const RESOURCES_CACHE_MAX = 500;
+/** With `swr`, a guild's resources are served up to this old while they refresh in the background. */
+export const RESOURCES_MAX_STALE_MS = 10 * 60_000;
 export const USERS_TTL_MS = 60 * 60_000;
 export const USERS_CACHE_MAX = 5_000;
 export const MEMBER_SEARCH_MAX = 25;
@@ -328,14 +340,18 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
 
   /** userId -> { fp, guilds, fetchedAt }; insertion order = age. */
   const userGuilds = new Map();
-  /** `${userId}:${fp}` -> Promise */
+  /** `${userId}:${fp}` -> { promise, cancelled }; forgetUser cancels a user's slots so a late answer is not stored. */
   const userInflight = new Map();
 
   let botGuilds = null;
   /** The bot's servers as Discord listed them, `[{ id, name, icon }]`; refreshed together with botGuilds. */
   let botGuildEntries = Object.freeze([]);
   let botGuildsAt = 0;
+  /** When the list last loaded successfully (botGuildsAt also moves on a failed refresh, to space retries). */
+  let botLoadedAt = 0;
   let botInflight = null;
+  /** No refresh-ahead before this time (set after a failed one). */
+  let botRetryAt = 0;
   /** guildId -> expiry of a recent "bot is not there" answer. */
   const botMisses = new Map();
 
@@ -374,7 +390,7 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     ]);
     const value = mapGuildResources(guildId, config.clientId, guild, channels, roles, emojis, botMember);
     resources.delete(guildId);
-    resources.set(guildId, { value, at: now() });
+    resources.set(guildId, { value, at: now(), retryAt: 0 });
     while (resources.size > RESOURCES_CACHE_MAX) resources.delete(resources.keys().next().value);
     return value;
   }
@@ -385,17 +401,32 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     while (userGuilds.size > USER_GUILDS_CACHE_MAX) userGuilds.delete(userGuilds.keys().next().value);
   }
 
-  async function fetchUserGuilds(userId, accessToken, fp) {
+  async function fetchUserGuilds(userId, accessToken, fp, slot) {
     try {
       const data = await getJson(fetchImpl, `${Routes.userGuilds()}?limit=200`, `Bearer ${accessToken}`);
       if (!Array.isArray(data)) throw new DiscordApiError('Discord returned an unexpected guild list', { code: 'unavailable' });
       const guilds = Object.freeze(data.map(normalizeGuild).filter(Boolean));
-      rememberUserGuilds(userId, { fp, guilds, fetchedAt: now() });
+      if (!slot.cancelled) rememberUserGuilds(userId, { fp, guilds, fetchedAt: now(), retryAt: 0 });
       return guilds;
     } catch (err) {
       if (err instanceof DiscordApiError && err.code === 'unauthenticated') userGuilds.delete(userId);
       throw err;
     }
+  }
+
+  /** The shared load of one user's list (one per user and token). */
+  function startUserFetch(userId, accessToken, fp) {
+    const key = `${userId}:${fp}`;
+    let slot = userInflight.get(key);
+    if (!slot) {
+      const mine = { cancelled: false, promise: null };
+      mine.promise = fetchUserGuilds(userId, accessToken, fp, mine).finally(() => {
+        if (userInflight.get(key) === mine) userInflight.delete(key);
+      });
+      userInflight.set(key, mine);
+      slot = mine;
+    }
+    return slot.promise;
   }
 
   async function refreshBotGuilds() {
@@ -436,22 +467,48 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     botGuilds = ids;
     botGuildEntries = Object.freeze(entries);
     botGuildsAt = now();
+    botLoadedAt = botGuildsAt;
     botMisses.clear();
     return ids;
   }
 
+  function startBotRefresh() {
+    if (!botInflight) botInflight = refreshBotGuilds().finally(() => { botInflight = null; });
+    return botInflight;
+  }
+
   /**
-   * The bot's guild ids, refreshed at most every BOT_GUILDS_TTL_MS. A failed refresh keeps the old set.
+   * The bot's guild ids, refreshed at most every BOT_GUILDS_TTL_MS. A failed refresh keeps the old set. With `swr`
+   * (display and presence reads, never a check that must be current) a list younger than BOT_GUILDS_MAX_STALE_MS is
+   * returned at once and refreshed in the background once it is past the TTL.
+   * @param {{ swr?: boolean }} [opts]
    * @returns {Promise<Set<string>>}
    * @throws {DiscordApiError} only when no list was ever loaded
    */
-  async function getBotGuildIds() {
-    if (botGuilds && now() - botGuildsAt < BOT_GUILDS_TTL_MS) return botGuilds;
-    if (!botInflight) {
-      botInflight = refreshBotGuilds().finally(() => { botInflight = null; });
+  async function getBotGuildIds({ swr = false } = {}) {
+    if (botGuilds && now() - botGuildsAt < BOT_GUILDS_TTL_MS) {
+      // Refresh ahead: past half the TTL the list is still returned (it is under the TTL) and one background refresh
+      // through the single in-flight slot replaces it before it expires, so presence checks rarely wait on Discord.
+      if (now() - botGuildsAt >= BOT_GUILDS_REFRESH_AHEAD_MS && now() >= botRetryAt && !botInflight) {
+        startBotRefresh().catch((err) => {
+          logger?.warn?.(`Dashboard: could not refresh the bot's server list ahead of time (${err.message}); retrying shortly.`);
+          botRetryAt = now() + BOT_GUILDS_REFRESH_RETRY_MS;
+        });
+      }
+      return botGuilds;
     }
+    if (swr && botGuilds && now() - botLoadedAt < BOT_GUILDS_MAX_STALE_MS) {
+      if (!botInflight) {
+        startBotRefresh().catch((err) => {
+          logger?.warn?.(`Dashboard: could not refresh the bot's server list (${err.message}); using the previous one.`);
+          botGuildsAt = now();
+        });
+      }
+      return botGuilds;
+    }
+    const pending = startBotRefresh();
     try {
-      return await botInflight;
+      return await pending;
     } catch (err) {
       if (botGuilds) {
         logger?.warn?.(`Dashboard: could not refresh the bot's server list (${err.message}); using the previous one.`);
@@ -495,15 +552,18 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     async getUserGuilds(userId, accessToken, { allowStale = false } = {}) {
       const fp = tokenFingerprint(accessToken);
       const hit = userGuilds.get(userId);
-      if (hit && hit.fp === fp && now() - hit.fetchedAt < USER_GUILDS_TTL_MS) return hit.guilds;
-      const key = `${userId}:${fp}`;
-      let pending = userInflight.get(key);
-      if (!pending) {
-        pending = fetchUserGuilds(userId, accessToken, fp).finally(() => userInflight.delete(key));
-        userInflight.set(key, pending);
+      if (hit && hit.fp === fp && now() - hit.fetchedAt < USER_GUILDS_TTL_MS) {
+        // Refresh ahead: past half the TTL the entry is still returned (it is under the TTL) and one background
+        // refresh with this session's own token replaces it before it expires.
+        if (now() - hit.fetchedAt >= USER_GUILDS_REFRESH_AHEAD_MS && now() >= (hit.retryAt ?? 0) && !userInflight.has(`${userId}:${fp}`)) {
+          startUserFetch(userId, accessToken, fp).catch(() => {
+            if (userGuilds.get(userId) === hit) hit.retryAt = now() + USER_GUILDS_REFRESH_RETRY_MS;
+          });
+        }
+        return hit.guilds;
       }
       try {
-        return await pending;
+        return await startUserFetch(userId, accessToken, fp);
       } catch (err) {
         if (allowStale && err instanceof DiscordApiError && (err.code === 'rate_limited' || err.code === 'unavailable')) {
           const stale = userGuilds.get(userId);
@@ -513,9 +573,31 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
       }
     },
 
+    /**
+     * Starts loading a user's guild list in the background with the token just issued, so the first page after login
+     * finds it cached. Does nothing when a current entry or a load already exists. Never throws or rejects.
+     * @param {string} userId
+     * @param {string} accessToken
+     */
+    warmUserGuilds(userId, accessToken) {
+      try {
+        const fp = tokenFingerprint(accessToken);
+        const hit = userGuilds.get(userId);
+        if (hit && hit.fp === fp && now() - hit.fetchedAt < USER_GUILDS_TTL_MS) return;
+        startUserFetch(userId, accessToken, fp).catch(() => {});
+      } catch { /* a warm-up is never worth an error */ }
+    },
+
     /** Drops the cached guild list of a user (after logout). */
     forgetUser(userId) {
       userGuilds.delete(userId);
+      // A load still in flight must not put the list back after the logout.
+      const prefix = `${userId}:`;
+      for (const [key, slot] of userInflight) {
+        if (!key.startsWith(prefix)) continue;
+        slot.cancelled = true;
+        userInflight.delete(key);
+      }
     },
 
     getBotGuildIds,
@@ -526,8 +608,8 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
      * @returns {Promise<readonly { id: string, name: string, icon: string|null }[]>}
      * @throws {DiscordApiError} only when no list was ever loaded
      */
-    async getBotGuilds() {
-      await getBotGuildIds();
+    async getBotGuilds({ swr = false } = {}) {
+      await getBotGuildIds({ swr });
       return botGuildEntries;
     },
 
@@ -539,11 +621,11 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
      * @returns {Promise<boolean>}
      * @throws {DiscordApiError} when Discord cannot answer
      */
-    async isBotInGuild(guildId, { verify = true } = {}) {
+    async isBotInGuild(guildId, { verify = true, swr = false } = {}) {
       if (typeof guildId !== 'string' || !SNOWFLAKE_RE.test(guildId)) return false;
       let ids = null;
       try {
-        ids = await getBotGuildIds();
+        ids = await getBotGuildIds({ swr });
       } catch (err) {
         if (!verify) throw err;
       }
@@ -570,7 +652,8 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
     /**
      * A guild's channels (Discord sidebar order), roles (highest first), emojis (by name) and the bot's highest role
      * position, cached for RESOURCES_TTL_MS per guild (at most RESOURCES_CACHE_MAX guilds); concurrent callers share one
-     * load. `fresh` skips the cache (and refreshes it). Role entries also carry `mentionable` and `dangerous` (a permission
+     * load. `fresh` skips the cache (and refreshes it). `swr` (display only, never for a check of ids or roles) serves an
+     * entry up to RESOURCES_MAX_STALE_MS old while it reloads in the background. Role entries also carry `mentionable` and `dangerous` (a permission
      * the bot never hands out), the bot `manageRoles`, for the role checks of the server and the stores; the guild
      * carries `ownerId`, `premiumTier`, `premiumSubscriptionCount` and `verificationLevel`.
      * @param {string} guildId
@@ -579,10 +662,18 @@ export function createDiscordApi({ config, fetchImpl = fetch, now = Date.now, lo
      *   bot: { userId: string, topRolePosition: number, manageRoles: boolean, createInvite: boolean } }>>}
      * @throws {DiscordApiError}
      */
-    async getGuildResources(guildId, { fresh = false } = {}) {
+    async getGuildResources(guildId, { fresh = false, swr = false } = {}) {
       assertSnowflake(guildId, 'server');
       const hit = resources.get(guildId);
       if (!fresh && hit && now() - hit.at < RESOURCES_TTL_MS) return hit.value;
+      if (!fresh && swr && hit && now() - hit.at < RESOURCES_MAX_STALE_MS) {
+        if (now() >= hit.retryAt && !resourcesInflight.has(guildId) && !resourcesInflight.has(`${guildId}:fresh`)) {
+          const load = loadGuildResources(guildId).finally(() => resourcesInflight.delete(guildId));
+          resourcesInflight.set(guildId, load);
+          load.catch(() => { hit.retryAt = now() + RESOURCES_TTL_MS; });
+        }
+        return hit.value;
+      }
       // A plain caller may share a fresh load in flight; a fresh caller never reuses a plain one.
       const key = fresh ? `${guildId}:fresh` : guildId;
       let pending = resourcesInflight.get(key) ?? (fresh ? undefined : resourcesInflight.get(`${guildId}:fresh`));
