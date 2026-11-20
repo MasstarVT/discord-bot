@@ -33,6 +33,8 @@ export const LIMITS = Object.freeze({
   AUTOMOD_EXEMPTIONS: 50,      // automodConfig global and per-rule role/channel lists
   AUTOMOD_HONEYPOTS: 5,        // automodConfig.honeypot.channelIds
   LOG_IGNORED_CHANNELS: 100,   // GuildSettings.logIgnoredChannelIds
+  MESSAGE_SNAPSHOT_CHARS: 4000, // content kept in a Redis message snapshot (src/services/messageSnapshot.js)
+  MESSAGE_SNAPSHOT_ATTACHMENTS: 10,
   NOXP_ROLES: 100, NOXP_CHANNELS: 100,                 // GuildSettings.noXpRoleIds / noXpChannelIds
   TAG_ACCESS_ENTRIES: 25,      // each allow/deny role or channel list of a custom command
   TRIGGER_SCOPE_ENTRIES: 25,   // AutoTrigger.channelIds / exemptRoleIds

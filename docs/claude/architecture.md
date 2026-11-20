@@ -194,6 +194,7 @@ Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.e
 | `feed:fetch:{sha1(url)}`, `feed:rl:reddit:{slot}`, `feed:itunes:rl`, `feed:block:reddit` | feedService | interval - 30 s / 60 s / 60 s / 10-60 min | parsed feed, Reddit slot budget, podcast search cap, Reddit 429 block |
 | `search:{api}:{sha1}`, `search:pokeapi:index`, `search:{api}:pause`, `search:budget:{api}:{minute}`, `search:cd:{userId}` | searchService | 6 h (PokeAPI 7 d, empty 1 h) / pause / 120 s / 3 s | cache, 429 pause, budget, cooldown; fail-open |
 | `tr:{provider}:{target}:{sha1}`, `translate:{provider}:pausedUntil` | translationService | 1 h / pause length | result cache, 429 pause |
+| `msgsnap:{channelId}:{messageId}` | `src/services/messageSnapshot.js` (hook in `src/plugins/logging.js`) | `MESSAGE_SNAPSHOT_TTL_DAYS` (7 d, 1-30) | JSON copy of a human message for delete / edit logs; removed on any delete. Has no guild id, so the `guildDelete` purge does not remove it and the TTL does; fail-open |
 | `log:timeout:{g}:{userId}:{untilSec}` | `src/plugins/logging.js` | to timeout end | de-dupes timeout logs; fail-open |
 | `mod:bansync:{g}` | `src/plugins/moderation.js` | 6 h | ban import throttle |
 | `invites:link:cd:{g}:{userId}` | `src/commands/utility/invites.js` | 60 s | `/invites link` cooldown |
