@@ -1,5 +1,5 @@
 // Per-server record lists of the web dashboard (saved embeds, custom commands, level rewards, ...):
-//   mountCollection(container, { collection, ctx }) -> { destroy(), refresh() }
+//   mountCollection(container, { collection, ctx }) -> { destroy(), refresh(), resourcesChanged() }
 // A list with a count and an empty state, an editor dialog built with createForm (forms.js), actions with their own
 // small forms, and delete with a confirmation. Searchable lists get a search box and "Load more" pages; member lists
 // show an avatar per row; actions sit on the row (or in a "⋯" menu) and may be answered by the bot, so a slow
@@ -495,9 +495,9 @@ const defaultsOf = (fields) => Object.fromEntries(fields.map((f) => [f.field, cl
  * Mounts the list of one collection into `container`.
  * @param {HTMLElement} container
  * @param {{ collection: object, ctx: object }} opts collection = catalog.collections[key]; ctx = the page context
- * @returns {{ destroy: () => void, refresh: () => Promise<void> }}
+ * @returns {{ destroy: () => void, refresh: () => Promise<void>, resourcesChanged: () => void }}
  */
-export function mountCollection(container, { collection, ctx = {} } = {}) {
+export function mountCollection(container, { collection, ctx = {}, initial = null } = {}) {
   const c = normalizeCollection(collection);
   const base = `/api/guilds/${encodeURIComponent(ctx.guildId ?? '')}/records/${encodeURIComponent(c.key)}`;
   const idBase = `cl-${slug(c.key)}`;
@@ -517,6 +517,7 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
   let loadErr = null;
   let destroyed = false;
   let loadSeq = 0;
+  let firstList = initial; // the page already asked for the first list (same URL as load() builds): used once
   let loadingMore = false;
   let formSeq = 0;
   let searchTimer = 0;
@@ -816,7 +817,9 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
     }
     reloadBtn.disabled = true;
     try {
-      const data = await api(listUrl());
+      const early = firstList;
+      firstList = null;
+      const data = await (early && !query ? early : api(listUrl()));
       if (destroyed || seq !== loadSeq) return;
       items = readItems(data);
       nextCursor = readCursor(data);
@@ -1468,6 +1471,16 @@ export function mountCollection(container, { collection, ctx = {} } = {}) {
 
   return {
     refresh: () => load(),
+    // New channels/roles arrived (ctx.resources changed): redraw the rows so ids turn into names. Scroll, search text and
+    // open editors stay as they are; only the row list is rebuilt.
+    resourcesChanged() {
+      if (destroyed || phase !== 'ready' || !items.length || !listEl.isConnected) return;
+      const focusId = listEl.contains(document.activeElement) ? document.activeElement.closest('[data-id]')?.dataset.id ?? null : null;
+      closeMenus();
+      const look = lookups(ctx);
+      listEl.replaceChildren(...items.map((item) => rowFor(item, look)));
+      if (focusId !== null) listEl.querySelector(`[data-id="${CSS.escape(focusId)}"] .cl-row-main`)?.focus();
+    },
     // True while an open editor holds edits that were not saved (the page asks before it navigates away).
     isDirty: () => Boolean(editor && editor.isDirty()),
     // True while a dialog of this list is open (the editor, an action form, a question).

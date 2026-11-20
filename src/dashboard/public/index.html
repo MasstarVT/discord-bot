@@ -9,11 +9,13 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/forms.css">
-  <link rel="stylesheet" href="/collections.css">
+  <!-- The form and list stylesheets and the web fonts are added by app.js so they do not block the first paint. -->
+  <link rel="modulepreload" href="/lib.js">
+  <link rel="modulepreload" href="/forms.js">
+  <link rel="modulepreload" href="/collections.js">
+  <link rel="modulepreload" href="/embed-editor.js">
   <script type="module" src="/app.js"></script>
 </head>
 <body>

@@ -303,6 +303,24 @@ describe('page behaviour', () => {
     assert.match(app, /api\(`\$\{base\}\/resources`\)/);
   });
 
+  test('boot loads forms and collections lazily and asks for the server list next to /api/me', () => {
+    assert.equal(/^import .* from '\.\/(forms|collections)\.js'/m.test(app), false, 'no static import of the form and list modules');
+    assert.match(app, /import\('\.\/forms\.js'\), import\('\.\/collections\.js'\)/);
+    const boot = body('async function boot()', app);
+    assert.ok(boot.indexOf('bootGuilds = loadGuilds') >= 0 && boot.indexOf('bootGuilds = loadGuilds') < boot.indexOf("api('/api/me')"));
+    assert.match(boot, /bootGuilds\.catch\(\(\) => \{\}\)/);
+    const html = read('index.html');
+    for (const f of ['lib', 'forms', 'collections', 'embed-editor']) assert.match(html, new RegExp(`rel="modulepreload" href="/${f}\.js"`));
+    assert.equal(/forms\.css|collections\.css|fonts\.googleapis\.com\/css2/.test(html), false, 'only tokens.css and styles.css block the first paint');
+  });
+
+  test('the module page renders without /resources and applies it when it lands', () => {
+    const fn = app.slice(app.indexOf('async function showModule'), app.indexOf('function buildSettingsView'));
+    assert.doesNotMatch(fn, /allSettled\(\[[^\]]*resources/);
+    assert.match(fn, /view\.resourcesArrived\(res\)/);
+    assert.match(app, /state\.resources = null/);
+  });
+
   test('log out asks about unsaved work before the session is revoked, and does not ask twice', () => {
     const fn = body('async function logout(btn)', app);
     assert.ok(fn.indexOf('hasUnsavedWork()') >= 0 && fn.indexOf('hasUnsavedWork()') < fn.indexOf("api('/auth/logout'"));

@@ -22,6 +22,8 @@ use futures::{StreamExt, TryStreamExt};
 use indexmap::IndexMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
 
@@ -37,7 +39,17 @@ pub const REQUEST_TIMEOUT_MS: u64 = 10_000;
 pub const USER_GUILDS_TTL_MS: f64 = 60_000.0;
 pub const USER_GUILDS_MAX_STALE_MS: f64 = 5.0 * 60_000.0;
 pub const USER_GUILDS_CACHE_MAX: usize = 5_000;
+/// An entry this old is returned and refreshed in the background (never served past USER_GUILDS_TTL_MS).
+pub const USER_GUILDS_REFRESH_AHEAD_MS: f64 = USER_GUILDS_TTL_MS / 2.0;
+/// After a failed background refresh, the next one waits this long.
+pub const USER_GUILDS_REFRESH_RETRY_MS: f64 = 10_000.0;
 pub const BOT_GUILDS_TTL_MS: f64 = 60_000.0;
+/// A bot list this old is returned and refreshed in the background (never served past BOT_GUILDS_TTL_MS).
+pub const BOT_GUILDS_REFRESH_AHEAD_MS: f64 = BOT_GUILDS_TTL_MS / 2.0;
+/// After a failed background refresh-ahead, the next one waits this long.
+pub const BOT_GUILDS_REFRESH_RETRY_MS: f64 = 10_000.0;
+/// With `swr`, the bot's guild list is served up to this old while it refreshes in the background.
+pub const BOT_GUILDS_MAX_STALE_MS: f64 = 10.0 * 60_000.0;
 pub const BOT_GUILDS_MAX_PAGES: usize = 100;
 /// How long a bot-owner invite lasts (it also works only once).
 pub const OWNER_INVITE_MAX_AGE_SECONDS: u64 = 1800;
@@ -45,6 +57,8 @@ pub const BOT_GUILDS_MAX_RETRIES: u32 = 3;
 pub const BOT_GUILDS_MAX_WAIT_SECONDS: u64 = 10;
 pub const RESOURCES_TTL_MS: f64 = 30_000.0;
 pub const RESOURCES_CACHE_MAX: usize = 500;
+/// With `swr`, a guild's resources are served up to this old while they reload in the background.
+pub const RESOURCES_MAX_STALE_MS: f64 = 10.0 * 60_000.0;
 pub const USERS_TTL_MS: f64 = 60.0 * 60_000.0;
 pub const USERS_CACHE_MAX: usize = 5_000;
 pub const MEMBER_SEARCH_MAX: usize = 25;
@@ -427,12 +441,28 @@ pub trait ServerDiscord: DashboardDiscord {
     async fn get_current_user(&self, access_token: &str) -> Result<CurrentUser, DiscordApiError>;
     /// `getUserGuilds(userId, accessToken, { allowStale })`.
     async fn get_user_guilds(&self, user_id: &str, access_token: &str, allow_stale: bool) -> Result<Arc<Vec<OAuthGuild>>, DiscordApiError>;
-    /// `forgetUser(userId)`: drops the cached guild list of a user (after logout).
+    /// `forgetUser(userId)`: drops the cached guild list of a user (after logout) and stops a load still in flight
+    /// from putting it back.
     fn forget_user(&self, _user_id: &str) {}
+    /// `warmUserGuilds(userId, accessToken)`: starts loading the user's list in the background with the token just
+    /// issued. Never fails; the default does nothing.
+    fn warm_user_guilds(&self, _user_id: &str, _access_token: &str) {}
+    /// `getBotGuildIds({ swr: true })` started without waiting for it (the server list loads the bot's list while the
+    /// user's loads). Never fails; the default does nothing.
+    fn prefetch_bot_guilds(&self) {}
     /// `getBotGuilds()`: the servers the bot is in.
     async fn get_bot_guilds(&self) -> Result<Arc<Vec<BotGuild>>, DiscordApiError>;
+    /// `getBotGuilds({ swr: true })`: display only; a list up to 10 minutes old may be served while it refreshes.
+    async fn get_bot_guilds_swr(&self) -> Result<Arc<Vec<BotGuild>>, DiscordApiError> {
+        self.get_bot_guilds().await
+    }
     /// `isBotInGuild(guildId, { verify })`.
     async fn is_bot_in_guild(&self, guild_id: &str, verify: bool) -> Result<bool, DiscordApiError>;
+    /// `isBotInGuild(guildId, { verify, swr: true })`: a hit may come from a list up to 10 minutes old (a miss with
+    /// `verify` is still checked live).
+    async fn is_bot_in_guild_swr(&self, guild_id: &str, verify: bool) -> Result<bool, DiscordApiError> {
+        self.is_bot_in_guild(guild_id, verify).await
+    }
     /// `inviteUrl(guildId?)`.
     fn invite_url(&self, guild_id: Option<&str>) -> String;
     /// `exchangeCode(code)`: the error's message is logged.
@@ -502,6 +532,21 @@ struct UserGuildsEntry {
     fp: String,
     guilds: Arc<Vec<OAuthGuild>>,
     fetched_at: f64,
+    /// No background refresh before this (after a failed one).
+    retry_at: f64,
+}
+
+/// A user's load in flight; `cancelled` is set by forget_user so a late answer is not stored.
+struct UserSlot {
+    load: SharedLoad<Arc<Vec<OAuthGuild>>>,
+    cancelled: Arc<AtomicBool>,
+}
+
+struct ResourcesEntry {
+    value: Arc<DiscordResources>,
+    at: f64,
+    /// No background reload before this (after a failed one).
+    retry_at: f64,
 }
 
 #[derive(Default)]
@@ -509,16 +554,20 @@ struct BotGuildsState {
     ids: Option<HashSet<String>>,
     entries: Arc<Vec<BotGuild>>,
     at: f64,
+    /// When the list last loaded successfully (`at` also moves on a failed refresh, to space retries).
+    loaded_at: f64,
+    /// No refresh-ahead before this (after a failed one).
+    retry_at: f64,
 }
 
 #[derive(Default)]
 struct State {
     user_guilds: IndexMap<String, UserGuildsEntry>,
-    user_inflight: HashMap<String, SharedLoad<Arc<Vec<OAuthGuild>>>>,
+    user_inflight: HashMap<String, UserSlot>,
     bot: BotGuildsState,
     bot_inflight: Option<SharedLoad<()>>,
     bot_misses: IndexMap<String, f64>,
-    resources: IndexMap<String, (Arc<DiscordResources>, f64)>,
+    resources: IndexMap<String, ResourcesEntry>,
     resources_inflight: HashMap<String, SharedLoad<Arc<DiscordResources>>>,
     users: IndexMap<String, (Option<MemberProfile>, f64)>,
 }
@@ -589,7 +638,7 @@ impl DiscordApi {
     /// `getBotGuildIds()`: the bot's guild ids, refreshed at most every BOT_GUILDS_TTL_MS. A failed refresh keeps the
     /// old set; an error only when no list was ever loaded.
     pub async fn get_bot_guild_ids(&self) -> Result<HashSet<String>, DiscordApiError> {
-        self.inner.ensure_bot_guilds().await?;
+        self.inner.ensure_bot_guilds(false).await?;
         Ok(self.inner.state.lock().bot.ids.clone().unwrap_or_default())
     }
 }
@@ -704,14 +753,41 @@ impl Inner {
         let at = self.now();
         let mut st = self.state.lock();
         st.resources.shift_remove(&guild_id);
-        st.resources.insert(guild_id.clone(), (value.clone(), at));
+        st.resources.insert(guild_id.clone(), ResourcesEntry { value: value.clone(), at, retry_at: 0.0 });
         while st.resources.len() > RESOURCES_CACHE_MAX {
             st.resources.shift_remove_index(0);
         }
         Ok(value)
     }
 
-    async fn fetch_user_guilds(self: Arc<Self>, user_id: String, token: String, fp: String) -> Result<Arc<Vec<OAuthGuild>>, DiscordApiError> {
+    /// The shared load of one user's list (one per user and token). Called with the state locked.
+    fn start_user_fetch(self: &Arc<Self>, st: &mut State, user_id: &str, token: &str, fp: &str) -> SharedLoad<Arc<Vec<OAuthGuild>>> {
+        let key = format!("{user_id}:{fp}");
+        if let Some(slot) = st.user_inflight.get(&key) {
+            return slot.load.clone();
+        }
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let me = self.clone();
+        let (uid, tok, f, k, c) = (user_id.to_string(), token.to_string(), fp.to_string(), key.clone(), cancelled.clone());
+        let load = spawn_shared(async move {
+            let result = me.clone().fetch_user_guilds(uid, tok, f, c.clone()).await;
+            let mut st = me.state.lock();
+            if st.user_inflight.get(&k).is_some_and(|s| Arc::ptr_eq(&s.cancelled, &c)) {
+                st.user_inflight.remove(&k);
+            }
+            result
+        });
+        st.user_inflight.insert(key, UserSlot { load: load.clone(), cancelled });
+        load
+    }
+
+    async fn fetch_user_guilds(
+        self: Arc<Self>,
+        user_id: String,
+        token: String,
+        fp: String,
+        cancelled: Arc<AtomicBool>,
+    ) -> Result<Arc<Vec<OAuthGuild>>, DiscordApiError> {
         let result = async {
             let data = self.get_json("/users/@me/guilds?limit=200", &format!("Bearer {token}")).await?;
             let Some(list) = data.as_array() else {
@@ -720,18 +796,26 @@ impl Inner {
             let guilds = Arc::new(list.iter().filter_map(normalize_guild).collect::<Vec<_>>());
             let at = self.now();
             let mut st = self.state.lock();
-            st.user_guilds.shift_remove(&user_id);
-            st.user_guilds.insert(user_id.clone(), UserGuildsEntry { fp: fp.clone(), guilds: guilds.clone(), fetched_at: at });
-            while st.user_guilds.len() > USER_GUILDS_CACHE_MAX {
-                st.user_guilds.shift_remove_index(0);
+            if !cancelled.load(Ordering::SeqCst) {
+                st.user_guilds.shift_remove(&user_id);
+                st.user_guilds.insert(user_id.clone(), UserGuildsEntry { fp: fp.clone(), guilds: guilds.clone(), fetched_at: at, retry_at: 0.0 });
+                while st.user_guilds.len() > USER_GUILDS_CACHE_MAX {
+                    st.user_guilds.shift_remove_index(0);
+                }
             }
             Ok(guilds)
         }
         .await;
-        if let Err(e) = &result
-            && e.code == "unauthenticated"
-        {
-            self.state.lock().user_guilds.shift_remove(&user_id);
+        if let Err(e) = &result {
+            let mut st = self.state.lock();
+            if e.code == "unauthenticated" {
+                st.user_guilds.shift_remove(&user_id);
+            } else if let Some(entry) = st.user_guilds.get_mut(&user_id)
+                && entry.fp == fp
+            {
+                // A failed refresh keeps the entry; the next try waits a little.
+                entry.retry_at = self.now() + USER_GUILDS_REFRESH_RETRY_MS;
+            }
         }
         result
     }
@@ -785,46 +869,142 @@ impl Inner {
         st.bot.ids = Some(ids);
         st.bot.entries = Arc::new(entries);
         st.bot.at = at;
+        st.bot.loaded_at = at;
         st.bot_misses.clear();
         Ok(())
     }
 
-    async fn ensure_bot_guilds(self: &Arc<Self>) -> Result<(), DiscordApiError> {
+    /// The shared refresh of the bot's list. Called with the state locked.
+    fn start_bot_refresh(self: &Arc<Self>, st: &mut State) -> SharedLoad<()> {
+        if let Some(p) = &st.bot_inflight {
+            return p.clone();
+        }
+        let me = self.clone();
+        let p = spawn_shared(async move {
+            let result = me.clone().refresh_bot_guilds().await;
+            me.state.lock().bot_inflight = None;
+            result
+        });
+        st.bot_inflight = Some(p.clone());
+        p
+    }
+
+    /// A failed refresh keeps the old list and retries after another TTL instead of on every request.
+    fn bot_refresh_failed(&self, err: &DiscordApiError) {
+        if let Some(l) = &self.logger {
+            l.warn(&format!("Dashboard: could not refresh the bot's server list ({}); using the previous one.", err.message));
+        }
+        self.state.lock().bot.at = self.now();
+    }
+
+    /// The bot's list, refreshed at most every BOT_GUILDS_TTL_MS. With `swr` (display and presence reads, never a check
+    /// that must be current) a list younger than BOT_GUILDS_MAX_STALE_MS is returned at once and refreshed in the
+    /// background once it is past the TTL.
+    async fn ensure_bot_guilds(self: &Arc<Self>, swr: bool) -> Result<(), DiscordApiError> {
         let pending = {
             let mut st = self.state.lock();
-            if st.bot.ids.is_some() && self.now() - st.bot.at < BOT_GUILDS_TTL_MS {
+            let now = self.now();
+            if st.bot.ids.is_some() && now - st.bot.at < BOT_GUILDS_TTL_MS {
+                // Refresh ahead: past half the TTL the list is still returned (it is under the TTL) and one background
+                // refresh through the single in-flight slot replaces it before it expires.
+                if now - st.bot.at >= BOT_GUILDS_REFRESH_AHEAD_MS && now >= st.bot.retry_at && st.bot_inflight.is_none() {
+                    let p = self.start_bot_refresh(&mut st);
+                    let me = self.clone();
+                    tokio::spawn(async move {
+                        if let Err(err) = p.await {
+                            if let Some(l) = &me.logger {
+                                l.warn(&format!(
+                                    "Dashboard: could not refresh the bot's server list ahead of time ({}); retrying shortly.",
+                                    err.message
+                                ));
+                            }
+                            let retry = me.now() + BOT_GUILDS_REFRESH_RETRY_MS;
+                            me.state.lock().bot.retry_at = retry;
+                        }
+                    });
+                }
                 return Ok(());
             }
-            match &st.bot_inflight {
-                Some(p) => p.clone(),
-                None => {
+            if swr && st.bot.ids.is_some() && now - st.bot.loaded_at < BOT_GUILDS_MAX_STALE_MS {
+                if st.bot_inflight.is_none() {
+                    let p = self.start_bot_refresh(&mut st);
                     let me = self.clone();
-                    let p = spawn_shared(async move {
-                        let result = me.clone().refresh_bot_guilds().await;
-                        me.state.lock().bot_inflight = None;
-                        result
+                    tokio::spawn(async move {
+                        if let Err(err) = p.await {
+                            me.bot_refresh_failed(&err);
+                        }
                     });
-                    st.bot_inflight = Some(p.clone());
-                    p
                 }
+                return Ok(());
             }
+            self.start_bot_refresh(&mut st)
         };
         match pending.await {
             Ok(()) => Ok(()),
             Err(err) => {
-                let mut st = self.state.lock();
-                if st.bot.ids.is_some() {
-                    if let Some(l) = &self.logger {
-                        l.warn(&format!("Dashboard: could not refresh the bot's server list ({}); using the previous one.", err.message));
-                    }
-                    // Retry after another TTL instead of on every request.
-                    st.bot.at = self.now();
+                if self.state.lock().bot.ids.is_some() {
+                    self.bot_refresh_failed(&err);
                     Ok(())
                 } else {
                     Err(err)
                 }
             }
         }
+    }
+
+    /// `getGuildResources(guildId, { fresh, swr })`. Called with the state locked.
+    fn start_resources_load(self: &Arc<Self>, st: &mut State, guild_id: &str, fresh: bool, background: bool) -> SharedLoad<Arc<DiscordResources>> {
+        let key = if fresh { format!("{guild_id}:fresh") } else { guild_id.to_string() };
+        let existing = st
+            .resources_inflight
+            .get(&key)
+            .cloned()
+            .or_else(|| if fresh { None } else { st.resources_inflight.get(&format!("{guild_id}:fresh")).cloned() });
+        if let Some(p) = existing {
+            return p;
+        }
+        let me = self.clone();
+        let (gid, k) = (guild_id.to_string(), key.clone());
+        let p = spawn_shared(async move {
+            let result = me.clone().load_guild_resources(gid.clone()).await;
+            let mut st = me.state.lock();
+            st.resources_inflight.remove(&k);
+            if result.is_err() && background {
+                // A failed reload keeps the entry; the next try waits another TTL.
+                let retry = me.now() + RESOURCES_TTL_MS;
+                if let Some(e) = st.resources.get_mut(&gid) {
+                    e.retry_at = retry;
+                }
+            }
+            result
+        });
+        st.resources_inflight.insert(key, p.clone());
+        p
+    }
+
+    async fn resources(self: &Arc<Self>, guild_id: &str, fresh: bool, swr: bool) -> Result<Arc<DiscordResources>, DiscordApiError> {
+        assert_snowflake(guild_id, "server")?;
+        let pending = {
+            let mut st = self.state.lock();
+            let now = self.now();
+            if !fresh && let Some(e) = st.resources.get(guild_id) {
+                if now - e.at < RESOURCES_TTL_MS {
+                    return Ok(e.value.clone());
+                }
+                if swr && now - e.at < RESOURCES_MAX_STALE_MS {
+                    let (value, retry_at) = (e.value.clone(), e.retry_at);
+                    if now >= retry_at
+                        && !st.resources_inflight.contains_key(guild_id)
+                        && !st.resources_inflight.contains_key(&format!("{guild_id}:fresh"))
+                    {
+                        let _ = self.start_resources_load(&mut st, guild_id, false, true);
+                    }
+                    return Ok(value);
+                }
+            }
+            self.start_resources_load(&mut st, guild_id, fresh, false)
+        };
+        pending.await
     }
 }
 
@@ -833,40 +1013,12 @@ impl DashboardDiscord for DiscordApi {
     /// A guild's channels (Discord sidebar order), roles (highest first), emojis (by name) and the bot, cached for
     /// RESOURCES_TTL_MS per guild; concurrent callers share one load; `fresh` skips the cache (and refreshes it).
     async fn get_guild_resources(&self, guild_id: &str, fresh: bool) -> Result<Arc<DiscordResources>, DiscordApiError> {
-        assert_snowflake(guild_id, "server")?;
-        let inner = &self.inner;
-        let pending = {
-            let mut st = inner.state.lock();
-            if !fresh
-                && let Some((value, at)) = st.resources.get(guild_id)
-                && inner.now() - at < RESOURCES_TTL_MS
-            {
-                return Ok(value.clone());
-            }
-            // A plain caller may share a fresh load in flight; a fresh caller never reuses a plain one.
-            let key = if fresh { format!("{guild_id}:fresh") } else { guild_id.to_string() };
-            let existing = st
-                .resources_inflight
-                .get(&key)
-                .cloned()
-                .or_else(|| if fresh { None } else { st.resources_inflight.get(&format!("{guild_id}:fresh")).cloned() });
-            match existing {
-                Some(p) => p,
-                None => {
-                    let me = inner.clone();
-                    let gid = guild_id.to_string();
-                    let k = key.clone();
-                    let p = spawn_shared(async move {
-                        let result = me.clone().load_guild_resources(gid).await;
-                        me.state.lock().resources_inflight.remove(&k);
-                        result
-                    });
-                    st.resources_inflight.insert(key, p.clone());
-                    p
-                }
-            }
-        };
-        pending.await
+        self.inner.resources(guild_id, fresh, false).await
+    }
+
+    /// The display read: an entry up to RESOURCES_MAX_STALE_MS old is served while it reloads in the background.
+    async fn get_guild_resources_display(&self, guild_id: &str) -> Result<Arc<DiscordResources>, DiscordApiError> {
+        self.inner.resources(guild_id, false, true).await
     }
 
     /// A member's role ids (bot token), or None when the user is not in the guild. Not cached.
@@ -1014,27 +1166,21 @@ impl ServerDiscord for DiscordApi {
         let fp = token_fingerprint(access_token);
         let pending = {
             let mut st = inner.state.lock();
-            if let Some(hit) = st.user_guilds.get(user_id)
-                && hit.fp == fp
-                && inner.now() - hit.fetched_at < USER_GUILDS_TTL_MS
-            {
-                return Ok(hit.guilds.clone());
-            }
-            let key = format!("{user_id}:{fp}");
-            match st.user_inflight.get(&key) {
-                Some(p) => p.clone(),
-                None => {
-                    let me = inner.clone();
-                    let (uid, token, f, k) = (user_id.to_string(), access_token.to_string(), fp.clone(), key.clone());
-                    let p = spawn_shared(async move {
-                        let result = me.clone().fetch_user_guilds(uid, token, f).await;
-                        me.state.lock().user_inflight.remove(&k);
-                        result
-                    });
-                    st.user_inflight.insert(key, p.clone());
-                    p
+            let now = inner.now();
+            let hit = st
+                .user_guilds
+                .get(user_id)
+                .filter(|h| h.fp == fp && now - h.fetched_at < USER_GUILDS_TTL_MS)
+                .map(|h| (h.guilds.clone(), h.fetched_at, h.retry_at));
+            if let Some((guilds, fetched_at, retry_at)) = hit {
+                // Refresh ahead: past half the TTL the entry is still returned (it is under the TTL) and one background
+                // refresh with this session's own token replaces it before it expires.
+                if now - fetched_at >= USER_GUILDS_REFRESH_AHEAD_MS && now >= retry_at {
+                    let _ = inner.start_user_fetch(&mut st, user_id, access_token, &fp);
                 }
+                return Ok(guilds);
             }
+            inner.start_user_fetch(&mut st, user_id, access_token, &fp)
         };
         match pending.await {
             Ok(g) => Ok(g),
@@ -1053,24 +1199,80 @@ impl ServerDiscord for DiscordApi {
         }
     }
 
+    fn warm_user_guilds(&self, user_id: &str, access_token: &str) {
+        let inner = &self.inner;
+        let fp = token_fingerprint(access_token);
+        let mut st = inner.state.lock();
+        let now = inner.now();
+        if st.user_guilds.get(user_id).is_some_and(|h| h.fp == fp && now - h.fetched_at < USER_GUILDS_TTL_MS) {
+            return;
+        }
+        let _ = inner.start_user_fetch(&mut st, user_id, access_token, &fp);
+    }
+
+    fn prefetch_bot_guilds(&self) {
+        let inner = self.inner.clone();
+        tokio::spawn(async move {
+            let _ = inner.ensure_bot_guilds(true).await;
+        });
+    }
+
     fn forget_user(&self, user_id: &str) {
-        self.inner.state.lock().user_guilds.shift_remove(user_id);
+        let mut st = self.inner.state.lock();
+        st.user_guilds.shift_remove(user_id);
+        // A load still in flight must not put the list back after the logout.
+        let prefix = format!("{user_id}:");
+        let keys: Vec<String> = st.user_inflight.keys().filter(|k| k.starts_with(&prefix)).cloned().collect();
+        for k in keys {
+            if let Some(slot) = st.user_inflight.remove(&k) {
+                slot.cancelled.store(true, Ordering::SeqCst);
+            }
+        }
     }
 
     /// The servers the bot is in, from the same cached list as get_bot_guild_ids.
     async fn get_bot_guilds(&self) -> Result<Arc<Vec<BotGuild>>, DiscordApiError> {
-        self.inner.ensure_bot_guilds().await?;
+        self.inner.ensure_bot_guilds(false).await?;
+        Ok(self.inner.state.lock().bot.entries.clone())
+    }
+
+    async fn get_bot_guilds_swr(&self) -> Result<Arc<Vec<BotGuild>>, DiscordApiError> {
+        self.inner.ensure_bot_guilds(true).await?;
         Ok(self.inner.state.lock().bot.entries.clone())
     }
 
     /// Whether the bot is in a guild. Uses the cached list; with `verify` a guild missing from it is double-checked
     /// with GET /guilds/{id} (403/404 = absent), so a fresh invite shows up at once.
     async fn is_bot_in_guild(&self, guild_id: &str, verify: bool) -> Result<bool, DiscordApiError> {
+        self.is_bot_in_guild_with(guild_id, verify, false).await
+    }
+
+    async fn is_bot_in_guild_swr(&self, guild_id: &str, verify: bool) -> Result<bool, DiscordApiError> {
+        self.is_bot_in_guild_with(guild_id, verify, true).await
+    }
+
+    fn invite_url(&self, guild_id: Option<&str>) -> String {
+        invite_url(&self.inner.config.client_id, guild_id)
+    }
+
+    async fn exchange_code(&self, code: &str) -> anyhow::Result<TokenGrant> {
+        let creds = self.credentials();
+        self.inner.oauth.exchange_code(&creds, code).await.map_err(|e| anyhow::anyhow!(e.message))
+    }
+
+    async fn revoke_token(&self, access_token: &str) -> bool {
+        let creds = self.credentials();
+        self.inner.oauth.revoke_token(&creds, access_token).await
+    }
+}
+
+impl DiscordApi {
+    async fn is_bot_in_guild_with(&self, guild_id: &str, verify: bool, swr: bool) -> Result<bool, DiscordApiError> {
         if !is_snowflake(guild_id) {
             return Ok(false);
         }
         let inner = &self.inner;
-        let loaded = match inner.ensure_bot_guilds().await {
+        let loaded = match inner.ensure_bot_guilds(swr).await {
             Ok(()) => true,
             Err(e) if !verify => return Err(e),
             Err(_) => false,
@@ -1105,20 +1307,6 @@ impl ServerDiscord for DiscordApi {
             }
             Err(e) => Err(e),
         }
-    }
-
-    fn invite_url(&self, guild_id: Option<&str>) -> String {
-        invite_url(&self.inner.config.client_id, guild_id)
-    }
-
-    async fn exchange_code(&self, code: &str) -> anyhow::Result<TokenGrant> {
-        let creds = self.credentials();
-        self.inner.oauth.exchange_code(&creds, code).await.map_err(|e| anyhow::anyhow!(e.message))
-    }
-
-    async fn revoke_token(&self, access_token: &str) -> bool {
-        let creds = self.credentials();
-        self.inner.oauth.revoke_token(&creds, access_token).await
     }
 }
 

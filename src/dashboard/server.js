@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { gzip } from 'node:zlib';
+import { gzip, gzipSync } from 'node:zlib';
 import defaultLogger from '../utils/logger.js';
 import {
   SESSION_COOKIE, STATE_COOKIE, SESSION_MAX_AGE_SECONDS, STATE_MAX_AGE_SECONDS,
@@ -344,6 +344,9 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     ? { ...SECURITY_HEADERS, 'Strict-Transport-Security': 'max-age=31536000' }
     : { ...SECURITY_HEADERS };
   const catalogJson = JSON.stringify(buildCatalog());
+  // The catalog is the same public content for every user (no secrets, nothing reflected), so one gzip copy made now
+  // is safe to serve. No other API JSON is compressed: per-user bodies would open the BREACH side channel.
+  const catalogGzip = gzipSync(catalogJson, { level: 9 });
   const limitWrites = createRateLimiter({ ...WRITE_RATE_LIMIT, now });
   const limitSearches = createRateLimiter({ ...SEARCH_RATE_LIMIT, now });
   const limitLoginsByAddress = createRateLimiter({ ...LOGIN_RATE_LIMIT, now });
@@ -449,7 +452,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   /** The bot's own entry for a server ({ id, name, icon }), or null when Discord cannot say. */
   async function botGuildEntry(guildId) {
     try {
-      return (await discord.getBotGuilds()).find((g) => g.id === guildId) ?? null;
+      return (await discord.getBotGuilds({ swr: true })).find((g) => g.id === guildId) ?? null;
     } catch {
       return null;
     }
@@ -459,6 +462,9 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
    * The guild entry the routes use when the user may manage the guild and the bot is in it; otherwise answers and
    * returns null. A user needs the guild in their OAuth list as owner, Administrator or Manage Server. The bot owner
    * may open any server the bot is in and acts there as its owner (`owner: true` for the ping and role rules).
+   * The bot's presence is always checked against a list at most BOT_GUILDS_TTL_MS old (refreshed ahead of expiry), for
+   * every method: after the bot is removed, the next read past the TTL answers bot_not_in_guild. Only the picker list and
+   * name/icon lookups may use the stale-while-revalidate list.
    */
   async function managedGuild(ctx, session, guildId) {
     const guilds = await userGuilds(ctx, session);
@@ -541,6 +547,10 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
       return failed(forLog(err?.message ?? err));
     }
     unresolvedLogins.delete(source);
+    // The first page after login needs the user's server list: load it now, off the redirect's path.
+    try {
+      discord.warmUserGuilds?.(user.id, token.accessToken);
+    } catch { /* only a warm-up */ }
     const issued = now();
     const exp = issued + Math.min(token.expiresIn, SESSION_MAX_AGE_SECONDS) * 1000;
     const sealed = sealSession({
@@ -585,19 +595,28 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   function catalog(ctx) {
     if (!allow(ctx, ['GET'])) return;
     if (!requireSession(ctx)) return;
-    send(ctx, 200, catalogJson, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    const zipped = catalogGzip.length < Buffer.byteLength(catalogJson) && acceptsGzip(ctx.req.headers['accept-encoding']);
+    send(ctx, 200, zipped ? catalogGzip : catalogJson, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      Vary: 'Accept-Encoding',
+      ...(zipped ? { 'Content-Encoding': 'gzip' } : {}),
+    });
   }
 
   async function guildList(ctx) {
     if (!allow(ctx, ['GET'])) return;
     const session = requireSession(ctx);
     if (!session) return;
+    // The bot's list loads while the user's does (an error of either is handled below, as before).
+    const botList = discord.getBotGuildIds?.({ swr: true });
+    botList?.catch?.(() => {});
     const guilds = await userGuilds(ctx, session, { allowStale: true });
     if (!guilds) return;
     const manageable = guilds.filter((g) => canManageGuild(g));
     let present;
     try {
-      present = await Promise.all(manageable.map((g) => discord.isBotInGuild(g.id, { verify: false })));
+      present = await Promise.all(manageable.map((g) => discord.isBotInGuild(g.id, { verify: false, swr: true })));
     } catch (err) {
       discordFailure(ctx, err, false);
       return;
@@ -652,7 +671,7 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
   async function ownerGuildList(skip, memberOf) {
     let all;
     try {
-      all = await discord.getBotGuilds();
+      all = await discord.getBotGuilds({ swr: true });
     } catch (err) {
       logger.warn(`Dashboard: could not list the bot's servers for the bot owner: ${err?.message ?? err}`);
       return [];
@@ -926,7 +945,9 @@ export function createDashboardServer({ config, deps, logger = defaultLogger, pu
     if (!guild) return;
     let res;
     try {
-      res = await discord.getGuildResources(guildId, { fresh });
+      // A display list: it may be up to 10 minutes old while it reloads in the background; `fresh` forces a live load.
+      // Every check of ids or roles (verifyRefs, the stores) calls getGuildResources without `swr`, so it stays within 30 s.
+      res = await discord.getGuildResources(guildId, fresh ? { fresh } : { swr: true });
     } catch (err) {
       discordFailure(ctx, err, false);
       return;
