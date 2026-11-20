@@ -107,10 +107,14 @@ fn configured_it_listens_and_warns_about_a_default_url() {
     ]);
     let mut seen = Vec::new();
     assert!(wait_for(&rx, &mut seen, &format!("Dashboard listening on 0.0.0.0:{port} (public URL http://localhost:8080).")), "{seen:#?}");
+    // The warning is logged before the listening line, but on stderr: the two pipes are read by separate threads, so
+    // it can reach `rx` after the stdout line. Wait for it rather than expecting it in `seen` already.
     assert!(
-        seen.iter().any(|l| l.contains(
+        wait_for(
+            &rx,
+            &mut seen,
             "Dashboard: DASHBOARD_URL is not set, so saving only works at http://localhost:8080. Browsers that open the dashboard by another address will be able to read but not save changes until DASHBOARD_URL is set to that address."
-        )),
+        ),
         "{seen:#?}"
     );
     assert_eq!(get(port, "/healthz").0, 200);

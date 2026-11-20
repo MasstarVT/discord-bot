@@ -259,6 +259,9 @@ struct FakeDiscord {
     created: Mutex<u32>,
     create_error: Mutex<Option<u64>>,
     invite_guild: Mutex<Option<Result<Option<String>, ApiError>>>,
+    /// Prefix of the codes `create_invite` hands out ("NEW" when unset). PersonalInvite.code is unique across guilds
+    /// and the tests in this file run in parallel on one database, so each test that saves a link needs its own.
+    code_prefix: Mutex<Option<&'static str>>,
 }
 
 impl FakeDiscord {
@@ -313,7 +316,7 @@ impl InviteApi for FakeDiscord {
         }
         let mut n = self.created.lock().unwrap();
         *n += 1;
-        Ok(format!("NEW{n}"))
+        Ok(format!("{}{n}", self.code_prefix.lock().unwrap().unwrap_or("NEW")))
     }
 }
 
@@ -921,6 +924,7 @@ async fn invites_link_fetches_an_uncached_option_channel() {
     const G: &str = "955010000000000404";
     const FRESH: &str = "700000000000000055";
     let api = FakeDiscord::with(&[]);
+    *api.code_prefix.lock().unwrap() = Some("FRESH"); // not NEW1, which invites_link_* saves at the same time
     let Some(url) = database_url() else { return };
     let t = DbTestApp::new(&url).await.with_guilds([G]);
     t.reset_guilds(&[G]).await;
@@ -935,7 +939,7 @@ async fn invites_link_fetches_an_uncached_option_channel() {
     t.install(reg);
     let calls = route(&t, slash(G, "link", "100000000000000021").option("channel", option_type::CHANNEL, json!(FRESH))).await;
     assert_eq!(rest.calls_to("GET", &format!("/channels/{FRESH}")).len(), 1);
-    assert_eq!(calls.last().and_then(|c| c.body["content"].as_str().map(String::from)).as_deref(), Some("https://discord.gg/NEW1"), "{:?}", embed(&calls));
+    assert_eq!(calls.last().and_then(|c| c.body["content"].as_str().map(String::from)).as_deref(), Some("https://discord.gg/FRESH1"), "{:?}", embed(&calls));
     let saved = inv::get_personal_invite(t.db(), G, "100000000000000021").await.expect("read").expect("row");
     assert_eq!(saved.channel_id, FRESH);
     t.reset_guilds(&[G]).await;
