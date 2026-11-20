@@ -39,6 +39,9 @@ Entry point: `feat_logging::register(&mut Registry)` registers both commands and
 - `log_embed`, `fit_embed`, and every `build_*_embed` / `diff_*` function, plus `classify_voice`, `is_ghost_ping`, `find_invite_codes`, `build_bulk_delete_transcript`, `format_time_in_server`, `format_bytes`, `user_tag`, `user_line`, `channel_ref`.
 - They read plain views: `LogUser`, `LogMessage`, `LogMember`, `LogChannel`, `LogThread`, `LogRole`, `LogGuild`, `LogEmoji`, `LogInvite`, `LogVoiceState`. `feat_logging::adapters::log_*` builds these from serenity objects.
 
+**Message snapshots** (`feat_logging::message_snapshot`, JS `messageSnapshot.js`):
+- Same key, JSON shape and TTL as the JS: `msgsnap:<channelId>:<messageId>`, `MESSAGE_SNAPSHOT_TTL_DAYS` (default 7, 1-30). Public: `snapshot_key`, `snapshot_ttl_seconds`, `should_snapshot`, `build_snapshot`, `snapshot_to_message`, `store_snapshot`, `load_snapshot`, `load_snapshots` (one `Cache::mget`), `forget_snapshots`. Delete, edit and bulk-delete logs read it for messages serenity no longer has cached; voice logs also name the channel, since a temporary voice channel may be gone.
+
 **Invite tracker** (`feat_logging::invite_tracker`):
 - `refresh_snapshot(&App, GuildId)` returns a `'static` future of `Refresh { ok, reason }`. feat-general can spawn it for `/module enable invites`.
 - Snapshot edits: `record_invite_create(app, g, InviteState)` and `record_invite_delete(app, g, code)`.

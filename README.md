@@ -176,6 +176,7 @@ Required: `DISCORD_TOKEN`, `CLIENT_ID`, `DATABASE_URL`, `REDIS_URL`. Everything 
 | `HTTP_CONTACT` | `n/a` | contact added to the User-Agent of feed and search requests |
 | `REDDIT_USER_AGENT` | standard User-Agent | User-Agent for Reddit feeds |
 | `BSKY_APPVIEW_URL` | `https://public.api.bsky.app` | Bluesky AppView |
+| `MESSAGE_SNAPSHOT_TTL_DAYS` | `7` | days (1-30) a copy of each human message stays in Redis so audit logs of deleted and edited messages show their content (Audit Logs) |
 | `TEST_DATABASE_URL` | none | opt-in database tests |
 | `DISCORD_CLIENT_SECRET`, `DASHBOARD_SESSION_SECRET` | none | web dashboard only, required there (below): OAuth2 client secret; session cookie key of at least 32 characters |
 | `DASHBOARD_URL`, `DASHBOARD_PORT`, `DASHBOARD_HOST` | `http://localhost:8080`, 8080, `0.0.0.0` | web dashboard only (below): public URL (https makes cookies Secure), listen port and interface |

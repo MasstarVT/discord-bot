@@ -31,7 +31,7 @@ The JS discovers files on disk. Rust needs an explicit registry: every feature c
 
 ```rust
 // crates/feat-polls/src/lib.rs
-mod commands;   // commands/poll.rs  <- src/commands/utility/poll.js
+mod commands;   // commands/poll.rs  <- src/commands/community/poll.js
 mod plugin;     // plugin.rs         <- src/plugins/polls.js
 mod service;    // poll_service.rs   <- src/services/pollService.js
 
