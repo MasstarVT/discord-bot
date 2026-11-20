@@ -90,6 +90,7 @@ Crate dash_collections. The main types are re-exported at the root.
 **Discord seam (discord.rs), implemented by dash-server's discordApi port**
 - `DashboardDiscord: Send+Sync` (async-trait):
   - `get_guild_resources(guild, fresh) -> Arc<DiscordResources>`
+  - `get_guild_resources_display(guild)`: for display reads only, never a check of ids or roles. Defaults to the plain 30 s read; dash-server's client may answer from a copy up to 10 minutes old while it reloads.
   - `get_member(guild, user) -> Option<MemberRoles{roles}>`
   - `search_members(guild, query) -> Vec<MemberProfile>`
   - `get_users(&[String]) -> HashMap<id, Option<MemberProfile>>`
