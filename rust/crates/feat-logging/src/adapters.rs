@@ -68,6 +68,13 @@ pub fn known_channels(app: &App, guild_id: GuildId) -> Option<HashSet<String>> {
     Some(g.channels.keys().map(|c| c.to_string()).chain(g.threads.iter().map(|t| t.id.to_string())).collect())
 }
 
+/// Channel id -> name for the guild's cached channels and threads, `None` when the guild is not cached.
+pub fn channel_names(app: &App, guild_id: GuildId) -> Option<std::collections::HashMap<String, String>> {
+    let d = app.discord()?;
+    let g = d.cache.guild(guild_id)?;
+    Some(g.channels.iter().map(|(id, c)| (id.to_string(), c.name.clone())).chain(g.threads.iter().map(|t| (t.id.to_string(), t.name.clone()))).collect())
+}
+
 /// A message as [`LogMessage`]. Role mentions are named from the guild's cache (unknown roles are skipped, as
 /// discord.js's `mentions.roles` does).
 pub fn log_message(app: &App, message: &Message) -> LogMessage {

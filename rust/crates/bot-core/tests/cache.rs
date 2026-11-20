@@ -44,6 +44,23 @@ async fn cache_never_fails_and_returns_the_documented_fallbacks() {
 }
 
 #[tokio::test]
+async fn mget_is_one_call_parses_values_and_fails_to_all_misses() {
+    let (cache, backend, _) = memory_cache();
+    assert!(cache.set("a", &json!({ "n": 1 }), 60).await);
+    backend.put_raw("raw", "plain text", None);
+    backend.clear_calls();
+    let got = cache.mget(&["a", "gone", "raw"]).await;
+    assert_eq!(got, vec![Some(json!({ "n": 1 })), None, Some(json!("plain text"))]);
+    assert_eq!(backend.calls().iter().filter(|c| c.op == "mget").count(), 1);
+    assert!(cache.mget::<&str>(&[]).await.is_empty());
+    backend.fail_ops(&["mget"]);
+    assert_eq!(cache.mget(&["a", "raw"]).await, vec![None, None]);
+    backend.fail_ops(&[]);
+    backend.set_available(false);
+    assert_eq!(cache.mget(&["a"]).await, vec![None]);
+}
+
+#[tokio::test]
 async fn values_are_json_and_non_json_is_the_raw_string() {
     let (cache, backend, _) = memory_cache();
     assert!(cache.set("t:a", &json!({ "x": 1, "when": "1970-01-01T00:00:00.000Z" }), 60).await);

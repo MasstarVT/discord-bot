@@ -57,6 +57,8 @@ pub trait CacheBackend: AsAny + Send + Sync + 'static {
     fn is_ready(&self) -> bool;
     /// `GET key`.
     async fn get(&self, key: &str) -> Result<Option<String>, CacheError>;
+    /// `MGET key...`: the raw values in key order (`None` for a miss).
+    async fn mget(&self, keys: &[String]) -> Result<Vec<Option<String>>, CacheError>;
     /// `SET key value [EX secs] [NX]`; `true` when the reply was OK (always for a plain SET).
     async fn set(&self, key: &str, value: &str, ex_secs: Option<u64>, nx: bool) -> Result<bool, CacheError>;
     /// `DEL key...`; the number removed.
@@ -221,6 +223,25 @@ impl Cache {
             Err(e) => {
                 self.note_failure("get", &e);
                 None
+            }
+        }
+    }
+
+    /// One `MGET` for many keys: the parsed values in key order, `None` for a miss, and all `None` on an error.
+    pub async fn mget<S: AsRef<str>>(&self, keys: &[S]) -> Vec<Option<Value>> {
+        let list: Vec<String> = keys.iter().map(|k| k.as_ref().to_string()).collect();
+        if list.is_empty() {
+            return Vec::new();
+        }
+        match self.backend.mget(&list).await {
+            Ok(raw) => {
+                let mut out: Vec<Option<Value>> = raw.into_iter().map(|r| r.map(|r| parse_cached(&r))).collect();
+                out.resize(list.len(), None);
+                out
+            }
+            Err(e) => {
+                self.note_failure("mget", &e);
+                vec![None; list.len()]
             }
         }
     }

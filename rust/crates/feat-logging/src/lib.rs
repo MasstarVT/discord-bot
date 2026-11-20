@@ -14,6 +14,7 @@ pub mod adapters;
 pub mod invite_tracker;
 pub mod log_events;
 pub mod logging_service;
+pub mod message_snapshot;
 
 pub mod plugins {
     pub mod invites;

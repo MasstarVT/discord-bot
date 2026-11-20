@@ -9,7 +9,7 @@
 //! `timestamp`, `title`, ...), passed through [`crate::logging_service::fit_embed_data`] last, or `None` when there is
 //! nothing to log.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use bot_util::text::{clamp_text, format_number, join_with_limit};
 use serde::Deserialize;
@@ -1159,20 +1159,27 @@ pub fn classify_voice(old: Option<&LogVoiceState>, new: Option<&LogVoiceState>) 
 }
 
 /// `buildVoiceEmbed({ member, guild, c })`: `None` for no change.
-pub fn build_voice_embed(member: &LogMember, known: Option<&HashSet<String>>, c: &VoiceClass, now_ms: i64) -> Option<Value> {
+pub fn build_voice_embed(member: &LogMember, known: Option<&HashSet<String>>, names: Option<&HashMap<String, String>>, c: &VoiceClass, now_ms: i64) -> Option<Value> {
+    // `voiceChannelRef`: the mention plus the cached name in code (a deleted temp channel renders as "#unknown"), else `channel_ref`.
+    let channel_ref = |cid: Option<&str>| -> String {
+        match cid.and_then(|i| names.and_then(|n| n.get(i)).filter(|n| !n.is_empty()).map(|n| (i, n))) {
+            Some((i, n)) => format!("<#{i}> `{}`", ticked(n)),
+            None => channel_ref(known, cid),
+        }
+    };
     let id = if member.id.is_empty() { member.user_id() } else { member.id.clone() };
     let (title, color, desc) = match c.kind? {
-        VoiceKind::Join => ("🔊 Joined Voice", log_colors::CREATE, format!("<@{id}> joined {}", channel_ref(known, c.new_id.as_deref()))),
-        VoiceKind::Leave => ("🔇 Left Voice", log_colors::DELETE, format!("<@{id}> left {}", channel_ref(known, c.old_id.as_deref()))),
+        VoiceKind::Join => ("🔊 Joined Voice", log_colors::CREATE, format!("<@{id}> joined {}", channel_ref(c.new_id.as_deref()))),
+        VoiceKind::Leave => ("🔇 Left Voice", log_colors::DELETE, format!("<@{id}> left {}", channel_ref(c.old_id.as_deref()))),
         VoiceKind::Move => (
             "↔️ Moved Voice Channel",
             log_colors::UPDATE,
-            format!("<@{id}> moved from {} → {}", channel_ref(known, c.old_id.as_deref()), channel_ref(known, c.new_id.as_deref())),
+            format!("<@{id}> moved from {} → {}", channel_ref(c.old_id.as_deref()), channel_ref(c.new_id.as_deref())),
         ),
         VoiceKind::State => (
             "🔔 Voice State Changed",
             log_colors::NEUTRAL,
-            format!("<@{id}> in {}\n{}", channel_ref(known, c.new_id.as_deref().or(c.old_id.as_deref())), c.changes.join(", ")),
+            format!("<@{id}> in {}\n{}", channel_ref(c.new_id.as_deref().or(c.old_id.as_deref())), c.changes.join(", ")),
         ),
     };
     Some(log_embed_builder(now_ms, color, title).desc(&desc).author(member.user.as_ref()).footer(&format!("User ID: {id}")).fit())

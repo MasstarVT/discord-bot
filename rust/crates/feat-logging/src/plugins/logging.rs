@@ -15,6 +15,7 @@ use serde_json::Value;
 use serenity::all::{ChannelId, GuildId, Permissions};
 
 use crate::adapters;
+use crate::message_snapshot as snap;
 use crate::log_events::{self as ev, InviteInfo, LogFile, LogMessage, effective_text};
 use crate::logging_service::{
     ChannelChain, LogType, MESSAGE_LOG_EVENTS, SendLogOpts, channel_cleanup_data, forget_dead_channels, is_ignored_channel, is_log_event_enabled, log_api, log_event,
@@ -80,29 +81,56 @@ fn now(app: &App) -> i64 {
 
 // ── Messages (§6.3) ───────────────────────────────────────────────────────────
 
+/// Runs `fut` without holding up the hook (`void promise`): the Redis snapshot calls never block a log.
+fn detach(fut: impl std::future::Future<Output = ()> + Send + 'static) {
+    tokio::spawn(fut);
+}
+
 async fn on_message_delete(ctx: Arc<HookCtx<MessageDelete>>) -> BotResult {
     let d = &ctx.data;
-    let app = &ctx.app;
     // Bot-authored panels (giveaways, polls, starboard posts) are never logged.
     if let Some(m) = &d.message
         && (m.author.bot || m.webhook_id.is_some())
     {
         return Ok(());
     }
-    let chain = ChannelChain::of(app, d.guild_id, d.channel_id);
-    let Some(settings) = ready(&ctx, "messageDelete", Some(&chain)).await else { return Ok(()) };
-    let bot_reason = was_deleted_by_bot(app, &d.message_id.to_string());
-    let view = match &d.message {
-        Some(m) => adapters::log_message(app, m),
-        None => LogMessage::partial(&d.message_id.to_string(), Some(&d.channel_id.to_string())),
-    };
-    if view.partial && bot_reason.is_some() {
-        return Ok(()); // nothing useful is known about it
-    }
-    let known = adapters::known_channels(app, d.guild_id);
-    let embed = ev::build_message_delete_embed(&view, bot_reason.as_deref(), bot_id(app).as_deref(), now(app), known.as_ref());
-    emit(app, d.guild_id, Some(settings), "messageDelete", Some(embed), None).await;
+    log_message_delete(&ctx).await;
+    // Whether or not the delete was logged (event off, channel ignored): the text must not outlive the message.
+    let app = ctx.app.clone();
+    let (channel_id, message_id) = (d.channel_id.to_string(), d.message_id.to_string());
+    detach(async move { snap::forget_snapshots(&app, &channel_id, &[message_id]).await });
     Ok(())
+}
+
+async fn log_message_delete(ctx: &Arc<HookCtx<MessageDelete>>) {
+    let d = &ctx.data;
+    let app = &ctx.app;
+    let chain = ChannelChain::of(app, d.guild_id, d.channel_id);
+    let Some(settings) = ready(ctx, "messageDelete", Some(&chain)).await else { return };
+    let (channel_id, message_id) = (d.channel_id.to_string(), d.message_id.to_string());
+    let bot_reason = was_deleted_by_bot(app, &message_id);
+    let mut view = match &d.message {
+        Some(m) => adapters::log_message(app, m),
+        None => LogMessage::partial(&message_id, Some(&channel_id)),
+    };
+    let mut skip = false;
+    if view.partial {
+        if bot_reason.is_some() {
+            skip = true; // nothing useful is known about it
+        } else if let Some(s) = snap::load_snapshot(app, &channel_id, &message_id).await {
+            // Not in memory (restart, eviction, an old message): the snapshot from messageCreate still knows it.
+            if s.author.bot {
+                skip = true;
+            } else {
+                view = snap::snapshot_to_message(&s);
+            }
+        }
+    }
+    if !skip {
+        let known = adapters::known_channels(app, d.guild_id);
+        let embed = ev::build_message_delete_embed(&view, bot_reason.as_deref(), bot_id(app).as_deref(), now(app), known.as_ref());
+        emit(app, d.guild_id, Some(settings), "messageDelete", Some(embed), None).await;
+    }
 }
 
 async fn on_message_edit(ctx: Arc<HookCtx<MessageUpdate>>) -> BotResult {
@@ -116,22 +144,43 @@ async fn on_message_edit(ctx: Arc<HookCtx<MessageUpdate>>) -> BotResult {
         return Ok(());
     }
     let chain = ChannelChain::of(app, d.guild_id, d.channel_id);
-    let Some(settings) = ready(&ctx, "messageEdit", Some(&chain)).await else { return Ok(()) };
-    let old = d.old_message.as_ref().map(|m| adapters::log_message(app, m));
+    let settings = ctx.get_settings().await;
+    let log_settings = ready(&ctx, "messageEdit", Some(&chain)).await;
+    let keep = snap::should_snapshot(app, settings.as_ref(), d.guild_id, &d.message);
+    if log_settings.is_none() && !keep {
+        return Ok(());
+    }
     let new = adapters::log_message(app, &d.message);
-    let known = adapters::known_channels(app, d.guild_id);
-    let embed = ev::build_message_edit_embed(old.as_ref(), &new, d.old_known, now(app), known.as_ref());
-    emit(app, d.guild_id, Some(settings), "messageEdit", Some(embed), None).await;
+    if let Some(log_settings) = log_settings {
+        let mut old = d.old_message.as_ref().map(|m| adapters::log_message(app, m));
+        let mut old_known = d.old_known;
+        if !old_known {
+            // The old text is not in memory: the snapshot is the "before" state.
+            let loaded = snap::load_snapshot(app, &d.channel_id.to_string(), &d.message.id.to_string()).await;
+            if let Some(s) = loaded.filter(|s| !s.author.bot) {
+                old = Some(snap::snapshot_to_message(&s));
+                old_known = true;
+            }
+        }
+        let unchanged = old_known && old.as_ref().map(|o| &o.content) == Some(&new.content);
+        if !unchanged {
+            let known = adapters::known_channels(app, d.guild_id);
+            let embed = ev::build_message_edit_embed(old.as_ref(), &new, old_known, now(app), known.as_ref());
+            emit(app, d.guild_id, Some(log_settings), "messageEdit", Some(embed), None).await;
+        }
+    }
+    // The next edit or delete needs the latest text, whether or not this edit was logged.
+    if keep {
+        let app = app.clone();
+        detach(async move {
+            snap::store_snapshot(&app, &new).await;
+        });
+    }
     Ok(())
 }
 
 async fn on_bulk_delete(ctx: Arc<HookCtx<MessageDeleteBulk>>) -> BotResult {
     let d = &ctx.data;
-    let app = &ctx.app;
-    let chain = ChannelChain::of(app, d.guild_id, d.channel_id);
-    let Some(settings) = ready(&ctx, "messageBulkDelete", Some(&chain)).await else { return Ok(()) };
-    let bot_reason = d.message_ids.iter().find_map(|id| was_deleted_by_bot(app, &id.to_string()));
-    let cached: HashMap<String, &serenity::all::Message> = d.messages.iter().map(|m| (m.id.to_string(), m)).collect();
     let mut ids: Vec<String> = d.message_ids.iter().map(|i| i.to_string()).collect();
     for m in &d.messages {
         let id = m.id.to_string();
@@ -139,18 +188,59 @@ async fn on_bulk_delete(ctx: Arc<HookCtx<MessageDeleteBulk>>) -> BotResult {
             ids.push(id);
         }
     }
-    let list: Vec<LogMessage> = ids
+    log_bulk_delete(&ctx, &ids).await;
+    // Whether or not the bulk delete was logged: the texts must not outlive the messages.
+    let app = ctx.app.clone();
+    let channel_id = d.channel_id.to_string();
+    detach(async move { snap::forget_snapshots(&app, &channel_id, &ids).await });
+    Ok(())
+}
+
+async fn log_bulk_delete(ctx: &Arc<HookCtx<MessageDeleteBulk>>, ids: &[String]) {
+    let d = &ctx.data;
+    let app = &ctx.app;
+    let chain = ChannelChain::of(app, d.guild_id, d.channel_id);
+    let Some(settings) = ready(ctx, "messageBulkDelete", Some(&chain)).await else { return };
+    let bot_reason = d.message_ids.iter().find_map(|id| was_deleted_by_bot(app, &id.to_string()));
+    let cached: HashMap<String, &serenity::all::Message> = d.messages.iter().map(|m| (m.id.to_string(), m)).collect();
+    let channel_id = d.channel_id.to_string();
+    let mut list: Vec<LogMessage> = ids
         .iter()
         .map(|id| match cached.get(id) {
             Some(m) => adapters::log_message(app, m),
-            None => LogMessage::partial(id, Some(&d.channel_id.to_string())),
+            None => LogMessage::partial(id, Some(&channel_id)),
         })
         .collect();
+    // Messages that are not in memory are filled in from their snapshots (one batched read).
+    let missing: Vec<String> = list.iter().filter(|m| m.partial || m.author.is_none()).map(|m| m.id.clone()).collect();
+    if !missing.is_empty() {
+        let snaps = snap::load_snapshots(app, &channel_id, &missing).await;
+        for m in list.iter_mut() {
+            if let Some(s) = snaps.get(&m.id).filter(|s| !s.author.bot) {
+                *m = snap::snapshot_to_message(s);
+            }
+        }
+    }
     let name = d.channel.as_ref().map(|c| c.name.clone()).or_else(|| bot_core::interaction_helpers::cached_channel(app, d.guild_id, d.channel_id).map(|c| c.name));
     let known = adapters::known_channels(app, d.guild_id);
-    let (embed, file) =
-        ev::build_bulk_delete_embed(Some(&d.channel_id.to_string()), name.as_deref(), &list, bot_reason.as_deref(), bot_id(app).as_deref(), now(app), known.as_ref());
+    let (embed, file) = ev::build_bulk_delete_embed(Some(&channel_id), name.as_deref(), &list, bot_reason.as_deref(), bot_id(app).as_deref(), now(app), known.as_ref());
     emit(app, d.guild_id, Some(settings), "messageBulkDelete", Some(embed), file).await;
+}
+
+/// `messageCreate`: remembers the message for later delete / edit logs, then the invite check. The Redis write is never
+/// awaited by the hook.
+async fn on_message_create(ctx: Arc<HookCtx<MessageCreate>>) -> BotResult {
+    let c = ctx.clone();
+    detach(async move {
+        let settings = c.get_settings().await;
+        if snap::should_snapshot(&c.app, settings.as_ref(), c.data.guild_id, &c.data.message) {
+            let view = adapters::log_message(&c.app, &c.data.message);
+            snap::store_snapshot(&c.app, &view).await;
+        }
+    });
+    if invite_filter(&ctx.data.message) {
+        return on_invite_posted(ctx).await;
+    }
     Ok(())
 }
 
@@ -368,7 +458,8 @@ async fn on_voice_state(ctx: Arc<HookCtx<VoiceStateUpdate>>) -> BotResult {
     let Some(settings) = ready(&ctx, event, None).await else { return Ok(()) };
     let member = adapters::log_member(app, d.guild_id, &d.member);
     let known = adapters::known_channels(app, d.guild_id);
-    emit(app, d.guild_id, Some(settings), event, ev::build_voice_embed(&member, known.as_ref(), &c, now(app)), None).await;
+    let names = adapters::channel_names(app, d.guild_id);
+    emit(app, d.guild_id, Some(settings), event, ev::build_voice_embed(&member, known.as_ref(), names.as_ref(), &c, now(app)), None).await;
     Ok(())
 }
 
@@ -641,7 +732,10 @@ pub fn invite_filter(message: &serenity::all::Message) -> bool {
 /// The plugin (`src/plugins/logging.js`). Every hook id is `logging`; all are module-gated except channelDelete.
 pub fn plugin() -> Plugin {
     Plugin::new("logging", Some(ModuleKey::Logging))
-        .hook(Hook::<MessageCreate>::new("logging", on_invite_posted).filter(|ctx| invite_filter(&ctx.data.message)))
+        .hook(Hook::<MessageCreate>::new("logging", on_message_create).filter(|ctx| {
+            invite_filter(&ctx.data.message)
+                || snap::should_snapshot(&ctx.app, ctx.app.settings().peek_settings(&ctx.data.guild_id.to_string()).as_ref(), ctx.data.guild_id, &ctx.data.message)
+        }))
         .hook(Hook::<MessageUpdate>::new("logging", on_message_edit))
         .hook(Hook::<MessageDelete>::new("logging", on_message_delete))
         .hook(Hook::<MessageDeleteBulk>::new("logging", on_bulk_delete).timeout_ms(15_000))
