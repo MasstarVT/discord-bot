@@ -21,6 +21,7 @@ for (const k of ['log', 'info', 'warn', 'error', 'debug']) console[k] = () => {}
 const ev = await imp('src', 'services', 'logEvents.js');
 const svc = await imp('src', 'services', 'loggingService.js');
 const inv = await imp('src', 'services', 'inviteTracker.js');
+const msnap = await imp('src', 'services', 'messageSnapshot.js');
 const { plugin } = await imp('src', 'plugins', 'logging.js');
 const { cache, default: redis } = await imp('src', 'services', 'redis.js');
 const { default: prisma } = await imp('src', 'database', 'client.js');
@@ -37,7 +38,7 @@ const U = (o) => (o == null ? o : {
   createdTimestamp: o.createdTimestamp, createdAt: o.createdTimestamp == null ? undefined : new Date(o.createdTimestamp),
   displayAvatarURL: (opts) => (opts?.size ? o.avatarUrl256 : o.avatarUrl) ?? null,
 });
-const guildOfKnown = (known) => (known ? { channels: { cache: new Map(known.map((id) => [id, {}])) } } : null);
+const guildOfKnown = (known, names) => (known ? { channels: { cache: new Map(known.map((id) => [id, names?.[id] == null ? {} : { name: names[id] }])) } } : null);
 const M = (o, known) => (o == null ? o : {
   id: o.id, partial: Boolean(o.partial), content: o.content ?? null, author: o.author ? U(o.author) : null,
   messageSnapshots: (o.snapshotContents ?? []).map((content) => ({ content })),
@@ -130,6 +131,18 @@ bulk('bulk with transcript', {
 });
 bulk('bulk nothing cached', { channel: { id: '7' }, messages: [{ id: '1', partial: true }] });
 
+// A snapshot JS stores (buildSnapshot) and the delete embed JS renders from it (snapshotToMessage): Rust must write the
+// same JSON and render the same embed from it.
+const snapCase = (name, a) => {
+  const snapshot = JSON.parse(JSON.stringify(msnap.buildSnapshot(M(a.message, a.known))));
+  add(name, 'messageSnapshot', a, { snapshot, embed: json(ev.buildMessageDeleteEmbed({ message: msnap.snapshotToMessage(snapshot, guildOfKnown(a.known)), botReason: null, botId: null, now: NOW })) });
+};
+snapCase('snapshot plain with attachments', { message: msg({ content: 'see `this`', attachments: [{ name: 'cat.png', size: 2_500_000, url: 'u1' }, { name: 'a.txt', size: 1280, url: 'u2' }, { name: 'b.bin', size: 100 }, { size: 5, url: 'u4' }, { name: 'long.bin', size: 1, url: `https://x/${'u'.repeat(1000)}` }] }), known: KNOWN });
+snapCase('snapshot forward and embeds', { message: msg({ content: 'top', snapshotContents: ['forwarded text', 'second'], embedCount: 2 }) });
+snapCase('snapshot huge', { message: msg({ content: 'x'.repeat(5000), attachments: Array.from({ length: 14 }, (_, i) => ({ name: `file-${i}-${'n'.repeat(120)}.png`, size: i * 1000, url: `u${i}` })) }) });
+snapCase('snapshot embeds only, no tag', { message: msg({ content: '', embedCount: 1, author: { ...alice, tag: undefined, globalName: null, avatarUrl: undefined }, createdTimestamp: undefined }) });
+snapCase('snapshot bot author', { message: msg({ author: robot }) });
+
 add('invite posted', 'invitePosted', { message: msg({ content: 'join discord.gg/Mine and https://discord.com/invite/other' }), codes: ['Mine', 'other'], vanityCode: 'mine' },
   json(ev.buildInvitePostedEmbed({ message: M(msg({ content: 'join discord.gg/Mine and https://discord.com/invite/other' })), codes: ['Mine', 'other'], vanityCode: 'mine' })));
 add('find invite codes', 'findInviteCodes', { content: `join discord.gg/abc and https://discord.com/invite/Xy-9 and discordapp.com/invite/abc http://www.discord.gg/a discord.gg/${'z'.repeat(40)} ${Array.from({ length: 12 }, (_, i) => `discord.gg/code${i}`).join(' ')}` },
@@ -183,12 +196,19 @@ add('unban unknown', 'ban', { user: robot, unban: true }, json(ev.buildBanEmbed(
 
 const voice = (name, a) => {
   const c = ev.classifyVoice(VS(a.oldState), VS(a.newState));
-  add(name, 'voice', a, { c, embed: json(ev.buildVoiceEmbed({ member: MEM(a.member), guild: guildOfKnown(a.known), c })) });
+  add(name, 'voice', a, { c, embed: json(ev.buildVoiceEmbed({ member: MEM(a.member), guild: guildOfKnown(a.known, a.names), c })) });
 };
 voice('voice leave deleted', { member: member({}), oldState: { channelId: '700000000000000009' }, newState: { channelId: null }, known: KNOWN });
 voice('voice join', { member: member({}), oldState: null, newState: { channelId: '700000000000000001' }, known: KNOWN });
 voice('voice move', { member: member({}), oldState: { channelId: '700000000000000002' }, newState: { channelId: '700000000000000003' }, known: KNOWN });
 voice('voice state', { member: member({}), oldState: { channelId: 'A', serverMute: false, serverDeaf: true, selfDeaf: false, selfMute: true, streaming: false }, newState: { channelId: 'A', serverMute: true, serverDeaf: false, selfDeaf: true, selfMute: false, streaming: true } });
+const VN = ['700000000000000001', '700000000000000002', '700000000000000003'];
+const NAMES = { '700000000000000001': 'Temp Room', '700000000000000002': 'Gaming', '700000000000000003': 'a`b' };
+voice('voice join named', { member: member({}), oldState: null, newState: { channelId: '700000000000000001' }, known: VN, names: NAMES });
+voice('voice leave named', { member: member({}), oldState: { channelId: '700000000000000002' }, newState: { channelId: null }, known: VN, names: NAMES });
+voice('voice move named and deleted', { member: member({}), oldState: { channelId: '700000000000000009' }, newState: { channelId: '700000000000000001' }, known: VN, names: NAMES });
+voice('voice state named', { member: member({}), oldState: { channelId: '700000000000000002', selfMute: false }, newState: { channelId: '700000000000000002', selfMute: true }, known: VN, names: NAMES });
+voice('voice join backtick name', { member: member({}), oldState: null, newState: { channelId: '700000000000000003' }, known: VN, names: NAMES });
 voice('voice nothing', { member: member({}), oldState: { channelId: 'A', selfMute: true }, newState: { channelId: 'A', selfMute: true } });
 
 add('channel create', 'channelCreate', { channel: chan({ topic: 'hello', parentName: 'Cat', name: 'a`b' }) }, json(ev.buildChannelCreateEmbed({ channel: CH(chan({ topic: 'hello', parentName: 'Cat', name: 'a`b' })) })));

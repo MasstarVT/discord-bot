@@ -48,6 +48,10 @@ fn known(args: &Value) -> Option<std::collections::HashSet<String>> {
     args.get("known").and_then(Value::as_array).map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect())
 }
 
+fn names(args: &Value) -> Option<std::collections::HashMap<String, String>> {
+    args.get("names").and_then(Value::as_object).map(|o| o.iter().filter_map(|(k, v)| v.as_str().map(|n| (k.clone(), n.to_string()))).collect())
+}
+
 fn opt_str(v: &Value) -> Option<&str> {
     v.as_str()
 }
@@ -141,7 +145,7 @@ fn run_embed_case(fun: &str, a: &Value, now: i64) -> Value {
                 ev::VoiceKind::Move => "move",
                 ev::VoiceKind::State => "state",
             });
-            let embed = ev::build_voice_embed(&de(&a["member"]), k.as_ref(), &c, now);
+            let embed = ev::build_voice_embed(&de(&a["member"]), k.as_ref(), names(a).as_ref(), &c, now);
             json!({ "c": { "kind": kind, "oldId": c.old_id, "newId": c.new_id, "changes": c.changes }, "embed": embed })
         }
         "channelCreate" => ev::build_channel_create_embed(&de(&a["channel"]), now),
@@ -216,7 +220,7 @@ fn every_embed_builder_matches_the_js_output() {
     let cases = g["embeds"].as_array().cloned().unwrap_or_default();
     assert!(cases.len() > 80, "{} cases", cases.len());
     let mut failures = Vec::new();
-    for c in &cases {
+    for c in cases.iter().filter(|c| c["fn"] != "messageSnapshot") {
         let got = strip(&run_embed_case(c["fn"].as_str().unwrap_or(""), &c["args"], now));
         let want = strip(&c["out"]);
         if got != want {
@@ -224,6 +228,24 @@ fn every_embed_builder_matches_the_js_output() {
         }
     }
     assert!(failures.is_empty(), "{} of {} cases differ:\n{}", failures.len(), cases.len(), failures.join("\n"));
+}
+
+#[test]
+fn message_snapshots_are_written_and_read_exactly_as_the_js_does() {
+    use feat_logging::message_snapshot::{Snapshot, build_snapshot, snapshot_to_message};
+    let g = golden();
+    let now = g["now"].as_i64().unwrap_or(0);
+    let cases: Vec<&Value> = g["embeds"].as_array().expect("embeds").iter().filter(|c| c["fn"] == "messageSnapshot").collect();
+    assert!(cases.len() >= 5, "{} cases", cases.len());
+    for c in cases {
+        let a = &c["args"];
+        let written = serde_json::to_value(build_snapshot(&de::<ev::LogMessage>(&a["message"])).expect("author")).expect("json");
+        assert_eq!(written, c["out"]["snapshot"], "{}: the JSON Rust stores differs from the JS", c["name"]);
+        // The snapshot JS wrote deserializes in Rust and renders the same delete embed.
+        let from_js: Snapshot = de(&c["out"]["snapshot"]);
+        let embed = ev::build_message_delete_embed(&snapshot_to_message(&from_js), None, None, now, known(a).as_ref());
+        assert_eq!(strip(&embed), strip(&c["out"]["embed"]), "{}: the embed rendered from the snapshot differs from the JS", c["name"]);
+    }
 }
 
 #[test]
@@ -841,6 +863,291 @@ async fn message_delete_hook_ghost_ping_bot_deletion_bots_ignored_and_partials()
     s.t.run_hooks(del(None, "807")).await;
     s.flush().await;
     assert!(s.rec.embed(before)["description"].as_str().unwrap_or("").contains("not cached"));
+}
+
+// ── Redis message snapshots ───────────────────────────────────────────────────
+
+const AUTHOR: &str = "111111111111111111";
+
+fn skey(id: &str) -> String {
+    feat_logging::message_snapshot::snapshot_key(OTHER, id)
+}
+
+fn raw(s: &Setup, key: &str) -> Option<Value> {
+    s.t.cache().memory().and_then(|m| m.raw(key)).and_then(|r| serde_json::from_str(&r).ok())
+}
+
+/// The snapshot calls run detached from the hook: wait until `cond` holds (or give up after ~1 s).
+async fn settle(cond: impl Fn() -> bool) {
+    for _ in 0..200 {
+        if cond() {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    }
+}
+
+fn create_of(m: serenity::all::Message) -> MessageCreate {
+    MessageCreate { guild_id: gid(), message: m, member: None, channel_id: ChannelId::new(OTHER.parse().unwrap()), channel: None }
+}
+
+fn delete_of(m: Option<serenity::all::Message>, id: &str) -> MessageDelete {
+    MessageDelete {
+        guild_id: gid(),
+        message_id: serenity::all::MessageId::new(id.parse().unwrap()),
+        channel_id: ChannelId::new(OTHER.parse().unwrap()),
+        partial: m.is_none(),
+        message: m,
+        channel: None,
+    }
+}
+
+fn edit_of(m: serenity::all::Message) -> MessageUpdate {
+    MessageUpdate { guild_id: gid(), old_message: None, message: m, old_known: false, member: None, channel_id: ChannelId::new(OTHER.parse().unwrap()), channel: None }
+}
+
+fn edited(id: &str, content: &str) -> serenity::all::Message {
+    message(id, AUTHOR, content, |v| v["edited_timestamp"] = json!(bot_util::js::to_iso_string(bot_util::js::now_ms()).unwrap_or_default()))
+}
+
+#[tokio::test]
+async fn message_create_stores_a_snapshot_the_js_bot_can_read() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    let m = message("1001", AUTHOR, "hello `there`", |v| {
+        v["attachments"] = json!([{ "id": "5", "filename": "cat.png", "size": 2048, "url": "https://cdn.example/cat.png", "proxy_url": "https://cdn.example/cat.png" }])
+    });
+    s.t.run_hooks(create_of(m)).await;
+    settle(|| raw(&s, &skey("1001")).is_some()).await;
+    let snap = raw(&s, &skey("1001")).expect("snapshot stored");
+    assert_eq!(snap["id"], "1001");
+    assert_eq!(snap["channelId"], OTHER);
+    assert_eq!(snap["content"], "hello `there`");
+    assert_eq!(snap["author"]["id"], AUTHOR);
+    assert_eq!(snap["author"]["bot"], false);
+    assert_eq!(snap["attachments"], json!([{ "name": "cat.png", "size": 2048, "url": "https://cdn.example/cat.png" }]));
+    assert_eq!(snap["embeds"], 0);
+    let ttl_ms = s.t.cache().memory().expect("memory").pttl(&skey("1001"));
+    assert!((6 * 86_400_000..=7 * 86_400_000).contains(&ttl_ms), "ttl {ttl_ms}");
+}
+
+#[tokio::test]
+async fn message_create_skips_bots_webhooks_empty_ignored_and_disabled() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    s.t.run_hooks(create_of(message("1101", "333333333333333333", "bot", |v| v["author"]["bot"] = json!(true)))).await;
+    s.t.run_hooks(create_of(message("1102", AUTHOR, "webhook", |v| v["webhook_id"] = json!("123456789012345678")))).await;
+    s.t.run_hooks(create_of(message("1103", AUTHOR, "", |_| {}))).await;
+    s.t.settings().update_settings(G, SettingsPatch::new().set("disabledLogEvents", json!(["messageDelete", "messageEdit"]))).await.expect("store");
+    s.t.run_hooks(create_of(message("1104", AUTHOR, "both events off", |_| {}))).await;
+    s.t.settings().update_settings(G, SettingsPatch::new().set("disabledLogEvents", json!(["messageDelete"])).set("logIgnoredChannelIds", json!([OTHER]))).await.expect("store");
+    s.t.run_hooks(create_of(message("1105", AUTHOR, "ignored channel", |_| {}))).await;
+    s.t.settings().update_settings(G, SettingsPatch::new().set("logIgnoredChannelIds", json!([])).set("loggingEnabled", false)).await.expect("store");
+    s.t.run_hooks(create_of(message("1106", AUTHOR, "module off", |_| {}))).await;
+    // One that is stored proves the hook ran at all (only messageEdit is still logged).
+    s.t.settings().update_settings(G, SettingsPatch::new().set("loggingEnabled", true)).await.expect("store");
+    s.t.run_hooks(create_of(message("1107", AUTHOR, "edit only", |_| {}))).await;
+    settle(|| raw(&s, &skey("1107")).is_some()).await;
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    for id in ["1101", "1102", "1103", "1104", "1105", "1106"] {
+        assert!(raw(&s, &skey(id)).is_none(), "{id} must not be stored");
+    }
+    assert!(raw(&s, &skey("1107")).is_some());
+}
+
+#[tokio::test]
+async fn a_partial_delete_is_rendered_from_the_snapshot_and_the_snapshot_is_forgotten() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    s.t.run_hooks(create_of(message("1201", AUTHOR, "secret words", |_| {}))).await;
+    settle(|| raw(&s, &skey("1201")).is_some()).await;
+    s.t.run_hooks(delete_of(None, "1201")).await;
+    s.flush().await;
+    let e = s.rec.embed(0);
+    assert_eq!(e["title"], "🗑️ Message Deleted");
+    let text = e.to_string();
+    assert!(text.contains("secret words") && text.contains(AUTHOR) && !text.contains("not cached"), "{text}");
+    settle(|| raw(&s, &skey("1201")).is_none()).await;
+    assert!(raw(&s, &skey("1201")).is_none(), "forgotten after the delete");
+    // The key is gone: a second delete is the plain "not cached" embed.
+    s.t.run_hooks(delete_of(None, "1201")).await;
+    s.flush().await;
+    assert!(s.rec.embed(1)["description"].as_str().unwrap_or("").contains("not cached"));
+}
+
+#[tokio::test]
+async fn a_js_written_snapshot_is_read_and_bot_or_purged_ones_are_skipped() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    let mem = s.t.cache().memory().expect("memory");
+    let js = |id: &str, bot: bool| {
+        json!({ "id": id, "channelId": OTHER, "content": "from the js bot", "author": { "id": AUTHOR, "username": "alice", "tag": "alice", "globalName": null, "avatar": null, "bot": bot },
+                "createdTimestamp": null, "attachments": [], "embeds": 0 })
+        .to_string()
+    };
+    mem.put_raw(&skey("1301"), &js("1301", false), Some(60_000));
+    mem.put_raw(&skey("1302"), &js("1302", true), Some(60_000));
+    mem.put_raw(&skey("1303"), &js("1303", false), Some(60_000));
+    mem.put_raw(&skey("1304"), "not json{", Some(60_000));
+    s.t.run_hooks(delete_of(None, "1301")).await;
+    s.t.run_hooks(delete_of(None, "1302")).await; // a bot author's snapshot: nothing logged
+    bot_core::deletion_tracker::mark_bot_deletion(&s.t, &["1303"], Some("purge"), None);
+    s.t.run_hooks(delete_of(None, "1303")).await; // a purged partial: nothing logged
+    s.t.run_hooks(delete_of(None, "1304")).await; // unreadable data is a miss
+    s.flush().await;
+    assert_eq!(s.rec.titles().concat().len(), 2, "{:?}", s.rec.titles());
+    assert!(s.rec.embed(0).to_string().contains("from the js bot"));
+    assert!(s.rec.sent.lock().unwrap()[0].1[1]["description"].as_str().unwrap_or("").contains("not cached"));
+    settle(|| raw(&s, &skey("1302")).is_none()).await;
+    assert!(raw(&s, &skey("1302")).is_none(), "even a skipped delete forgets the key");
+}
+
+#[tokio::test]
+async fn an_edit_of_an_uncached_message_uses_the_snapshot_as_the_before_text_and_rewrites_it() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    s.t.run_hooks(create_of(message("1401", AUTHOR, "old words", |_| {}))).await;
+    settle(|| raw(&s, &skey("1401")).is_some()).await;
+    s.t.run_hooks(edit_of(edited("1401", "new words"))).await;
+    s.flush().await;
+    let text = s.rec.embed(0).to_string();
+    assert!(text.contains("old words") && text.contains("new words") && !text.contains("not cached"), "{text}");
+    settle(|| raw(&s, &skey("1401")).is_some_and(|v| v["content"] == "new words")).await;
+    assert_eq!(raw(&s, &skey("1401")).expect("rewritten")["content"], "new words");
+    // Same text as the snapshot: not logged.
+    let before = s.rec.count();
+    s.t.run_hooks(edit_of(edited("1401", "new words"))).await;
+    s.flush().await;
+    assert_eq!(s.rec.count(), before);
+    // No snapshot: logged without a before text, and the new text is remembered.
+    s.t.run_hooks(edit_of(edited("1402", "fresh"))).await;
+    s.flush().await;
+    assert_eq!(s.rec.count(), before + 1);
+    settle(|| raw(&s, &skey("1402")).is_some()).await;
+    assert_eq!(raw(&s, &skey("1402")).expect("stored")["content"], "fresh");
+}
+
+#[tokio::test]
+async fn an_edit_with_the_edit_event_off_still_refreshes_the_snapshot_for_a_later_delete() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    s.t.settings().update_settings(G, SettingsPatch::new().set("disabledLogEvents", json!(["messageEdit"]))).await.expect("store");
+    s.t.run_hooks(create_of(message("1501", AUTHOR, "v1", |_| {}))).await;
+    settle(|| raw(&s, &skey("1501")).is_some()).await;
+    s.t.run_hooks(edit_of(edited("1501", "v2"))).await;
+    settle(|| raw(&s, &skey("1501")).is_some_and(|v| v["content"] == "v2")).await;
+    assert_eq!(s.rec.count(), 0, "the edit itself is not logged");
+    s.t.run_hooks(delete_of(None, "1501")).await;
+    s.flush().await;
+    assert!(s.rec.embed(0).to_string().contains("v2"));
+}
+
+#[tokio::test]
+async fn a_bulk_delete_fills_partial_messages_from_one_batched_read() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    for (id, text) in [("1601", "first words"), ("1602", "second words")] {
+        s.t.run_hooks(create_of(message(id, AUTHOR, text, |_| {}))).await;
+    }
+    settle(|| raw(&s, &skey("1601")).is_some() && raw(&s, &skey("1602")).is_some()).await;
+    s.t.cache().memory().expect("memory").clear_calls();
+    let ids: Vec<serenity::all::MessageId> = ["1601", "1602", "1603"].iter().map(|i| serenity::all::MessageId::new(i.parse().unwrap())).collect();
+    s.t.run_hooks(MessageDeleteBulk { guild_id: gid(), channel_id: ChannelId::new(OTHER.parse().unwrap()), message_ids: ids, messages: Vec::new(), channel: None }).await;
+    s.flush().await;
+    let (embed, file) = {
+        let sent = s.rec.sent.lock().unwrap();
+        (sent[0].1[0].clone(), sent[0].2.clone())
+    };
+    assert_eq!(embed["title"], "🧹 Messages Bulk-Deleted");
+    assert!(file.is_some(), "the transcript is attached");
+    let calls = s.t.cache().memory().expect("memory").calls();
+    assert_eq!(calls.iter().filter(|c| c.op == "mget").count(), 1, "{calls:?}");
+    settle(|| raw(&s, &skey("1601")).is_none() && raw(&s, &skey("1602")).is_none()).await;
+    assert!(raw(&s, &skey("1601")).is_none() && raw(&s, &skey("1602")).is_none());
+}
+
+#[tokio::test]
+async fn redis_failures_never_stop_the_logs() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    let mem = s.t.cache().memory().expect("memory");
+    mem.fail_ops(&["get", "set", "mget", "del"]);
+    s.t.run_hooks(create_of(message("1701", AUTHOR, "x", |_| {}))).await;
+    s.t.run_hooks(delete_of(None, "1701")).await;
+    s.t.run_hooks(edit_of(edited("1702", "y"))).await;
+    s.t.run_hooks(MessageDeleteBulk {
+        guild_id: gid(),
+        channel_id: ChannelId::new(OTHER.parse().unwrap()),
+        message_ids: vec![serenity::all::MessageId::new(1703)],
+        messages: Vec::new(),
+        channel: None,
+    })
+    .await;
+    mem.set_available(false);
+    s.t.run_hooks(delete_of(None, "1704")).await;
+    s.flush().await;
+    assert_eq!(s.rec.titles().concat().len(), 4, "{:?}", s.rec.titles());
+    assert!(s.rec.embed(0)["description"].as_str().unwrap_or("").contains("not cached"));
+}
+
+#[tokio::test]
+async fn nothing_is_stored_without_a_message_log_channel() {
+    // Only the member log channel is set: the message events have nowhere to go.
+    let s = setup(ALL, true, "memberLogChannelId").await;
+    installed(&s);
+    s.t.run_hooks(create_of(message("1801", AUTHOR, "no destination", |_| {}))).await;
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    assert!(raw(&s, &skey("1801")).is_none());
+    let settings = s.settings().await;
+    assert!(!feat_logging::message_snapshot::should_snapshot(&s.t, settings.as_ref(), gid(), &message("1802", AUTHOR, "x", |_| {})));
+    s.t.settings().update_settings(G, SettingsPatch::new().set("messageLogChannelId", LOG)).await.expect("store");
+    let settings = s.settings().await;
+    assert!(feat_logging::message_snapshot::should_snapshot(&s.t, settings.as_ref(), gid(), &message("1802", AUTHOR, "x", |_| {})));
+}
+
+#[tokio::test]
+async fn a_delete_or_bulk_delete_removes_the_snapshot_even_when_it_is_not_logged() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    for id in ["1901", "1902", "1903", "1904"] {
+        s.t.run_hooks(create_of(message(id, AUTHOR, "kept words", |_| {}))).await;
+    }
+    settle(|| ["1901", "1902", "1903", "1904"].iter().all(|i| raw(&s, &skey(i)).is_some())).await;
+    s.t.settings().update_settings(G, SettingsPatch::new().set("disabledLogEvents", json!(["messageDelete", "messageBulkDelete"]))).await.expect("store");
+    s.t.run_hooks(delete_of(None, "1901")).await;
+    settle(|| raw(&s, &skey("1901")).is_none()).await;
+    assert!(raw(&s, &skey("1901")).is_none(), "messageDelete is off: the key still goes");
+    let ids: Vec<serenity::all::MessageId> = ["1902", "1903"].iter().map(|i| serenity::all::MessageId::new(i.parse().unwrap())).collect();
+    s.t.run_hooks(MessageDeleteBulk { guild_id: gid(), channel_id: ChannelId::new(OTHER.parse().unwrap()), message_ids: ids, messages: Vec::new(), channel: None }).await;
+    settle(|| raw(&s, &skey("1902")).is_none() && raw(&s, &skey("1903")).is_none()).await;
+    assert!(raw(&s, &skey("1902")).is_none() && raw(&s, &skey("1903")).is_none(), "messageBulkDelete is off: the keys still go");
+    // The channel was ignored after the message was stored.
+    s.t.settings().update_settings(G, SettingsPatch::new().set("logIgnoredChannelIds", json!([OTHER]))).await.expect("store");
+    s.t.run_hooks(delete_of(None, "1904")).await;
+    settle(|| raw(&s, &skey("1904")).is_none()).await;
+    assert!(raw(&s, &skey("1904")).is_none());
+    s.flush().await;
+    assert_eq!(s.rec.count(), 0, "none of these were logged");
+}
+
+#[tokio::test]
+async fn an_edit_of_a_rest_fetched_message_without_a_guild_id_still_refreshes_the_snapshot() {
+    let s = setup(ALL, true, "messageLogChannelId").await;
+    installed(&s);
+    s.t.run_hooks(create_of(message("2001", AUTHOR, "A", |_| {}))).await;
+    settle(|| raw(&s, &skey("2001")).is_some()).await;
+    let no_guild = |content: &str| {
+        let mut m = edited("2001", content);
+        m.guild_id = None;
+        m
+    };
+    s.t.run_hooks(edit_of(no_guild("B"))).await;
+    settle(|| raw(&s, &skey("2001")).is_some_and(|v| v["content"] == "B")).await;
+    assert_eq!(raw(&s, &skey("2001")).expect("rewritten")["content"], "B");
+    s.t.run_hooks(edit_of(no_guild("C"))).await;
+    s.flush().await;
+    let befores: Vec<String> = s.rec.sent.lock().unwrap().iter().flat_map(|x| x.1.iter()).filter_map(|e| e["fields"].as_array()?.iter().find(|f| f["name"] == "Before")?["value"].as_str().map(String::from)).collect();
+    assert_eq!(befores, vec!["A", "B"], "A -> B -> C shows each previous text");
 }
 
 #[tokio::test]

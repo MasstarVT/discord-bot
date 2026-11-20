@@ -328,6 +328,8 @@ pub mod limits {
     pub const AUTOMOD_EXEMPTIONS: usize = 50;
     pub const AUTOMOD_HONEYPOTS: usize = 5;
     pub const LOG_IGNORED_CHANNELS: usize = 100;
+    pub const MESSAGE_SNAPSHOT_CHARS: usize = 4000;
+    pub const MESSAGE_SNAPSHOT_ATTACHMENTS: usize = 10;
     pub const NOXP_ROLES: usize = 100;
     pub const NOXP_CHANNELS: usize = 100;
     pub const TAG_ACCESS_ENTRIES: usize = 25;
@@ -371,7 +373,7 @@ pub mod limits {
 }
 
 /// `LIMITS` as a name/value table in declaration order.
-pub static LIMITS: [(&str, usize); 78] = [
+pub static LIMITS: [(&str, usize); 80] = [
     ("SAVED_EMBEDS", limits::SAVED_EMBEDS),
     ("REMINDERS", limits::REMINDERS),
     ("ACTIVE_GIVEAWAYS", limits::ACTIVE_GIVEAWAYS),
@@ -410,6 +412,8 @@ pub static LIMITS: [(&str, usize); 78] = [
     ("AUTOMOD_EXEMPTIONS", limits::AUTOMOD_EXEMPTIONS),
     ("AUTOMOD_HONEYPOTS", limits::AUTOMOD_HONEYPOTS),
     ("LOG_IGNORED_CHANNELS", limits::LOG_IGNORED_CHANNELS),
+    ("MESSAGE_SNAPSHOT_CHARS", limits::MESSAGE_SNAPSHOT_CHARS),
+    ("MESSAGE_SNAPSHOT_ATTACHMENTS", limits::MESSAGE_SNAPSHOT_ATTACHMENTS),
     ("NOXP_ROLES", limits::NOXP_ROLES),
     ("NOXP_CHANNELS", limits::NOXP_CHANNELS),
     ("TAG_ACCESS_ENTRIES", limits::TAG_ACCESS_ENTRIES),

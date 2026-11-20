@@ -219,6 +219,10 @@ impl CacheBackend for RedisBackend {
         self.run(|mut c| async move { redis::cmd("GET").arg(key).query_async::<Option<String>>(&mut c).await }).await
     }
 
+    async fn mget(&self, keys: &[String]) -> Result<Vec<Option<String>>, CacheError> {
+        self.run(|mut c| async move { redis::cmd("MGET").arg(keys).query_async::<Vec<Option<String>>>(&mut c).await }).await
+    }
+
     async fn set(&self, key: &str, value: &str, ex_secs: Option<u64>, nx: bool) -> Result<bool, CacheError> {
         self.run(|mut c| async move {
             let mut cmd = redis::cmd("SET");

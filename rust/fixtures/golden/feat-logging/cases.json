@@ -44,7 +44,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.902Z",
+    "timestamp": "2026-11-20T01:28:48.586Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -134,7 +134,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.588Z",
     "title": "👻 Ghost Ping Detected — Message Deleted",
     "author": {
      "name": "alice",
@@ -183,7 +183,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.588Z",
     "title": "🗑️ Message Deleted",
     "description": "*Message was not cached — content unavailable.*",
     "footer": {
@@ -229,7 +229,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.588Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -287,7 +287,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.588Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -345,7 +345,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.589Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -405,7 +405,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.589Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -699,7 +699,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.904Z",
+    "timestamp": "2026-11-20T01:28:48.589Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -1153,7 +1153,7 @@
    "out": {
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-19T00:59:02.905Z",
+     "timestamp": "2026-11-20T01:28:48.590Z",
      "title": "🧹 Messages Bulk-Deleted",
      "description": "**5** messages were deleted in <#700000000000000001> by <@999> (/purge by mod (3)).",
      "footer": {
@@ -1197,7 +1197,7 @@
    "out": {
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-19T00:59:02.906Z",
+     "timestamp": "2026-11-20T01:28:48.590Z",
      "title": "🧹 Messages Bulk-Deleted",
      "description": "**1** messages were deleted in <#7>.",
      "footer": {
@@ -1211,6 +1211,542 @@
      ]
     },
     "file": null
+   }
+  },
+  {
+   "name": "snapshot plain with attachments",
+   "fn": "messageSnapshot",
+   "args": {
+    "message": {
+     "id": "800000000000000001",
+     "content": "see `this`",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "createdTimestamp": 1743076800000,
+      "avatarUrl": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "avatarUrl256": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp?size=256"
+     },
+     "channelId": "700000000000000001",
+     "createdTimestamp": 1777636500000,
+     "url": "https://discord.com/channels/9/700000000000000001/800000000000000001",
+     "attachments": [
+      {
+       "name": "cat.png",
+       "size": 2500000,
+       "url": "u1"
+      },
+      {
+       "name": "a.txt",
+       "size": 1280,
+       "url": "u2"
+      },
+      {
+       "name": "b.bin",
+       "size": 100
+      },
+      {
+       "size": 5,
+       "url": "u4"
+      },
+      {
+       "name": "long.bin",
+       "size": 1,
+       "url": "https://x/uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+      }
+     ]
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002"
+    ]
+   },
+   "out": {
+    "snapshot": {
+     "id": "800000000000000001",
+     "channelId": "700000000000000001",
+     "content": "see `this`",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "avatar": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "bot": false
+     },
+     "createdTimestamp": 1777636500000,
+     "attachments": [
+      {
+       "name": "cat.png",
+       "size": 2500000,
+       "url": "u1"
+      },
+      {
+       "name": "a.txt",
+       "size": 1280,
+       "url": "u2"
+      },
+      {
+       "name": "b.bin",
+       "size": 100,
+       "url": ""
+      },
+      {
+       "name": "file",
+       "size": 5,
+       "url": "u4"
+      },
+      {
+       "name": "long.bin",
+       "size": 1,
+       "url": ""
+      }
+     ],
+     "embeds": 0
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.590Z",
+     "title": "🗑️ Message Deleted",
+     "author": {
+      "name": "alice",
+      "icon_url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
+     },
+     "description": "see `this`",
+     "footer": {
+      "text": "User ID: 111111111111111111 · Msg ID: 800000000000000001"
+     },
+     "fields": [
+      {
+       "name": "Author",
+       "value": "<@111111111111111111> `alice`",
+       "inline": true
+      },
+      {
+       "name": "Channel",
+       "value": "<#700000000000000001>",
+       "inline": true
+      },
+      {
+       "name": "Attachments (5)",
+       "value": "cat.png (2.4 MB)\na.txt (1.3 KB)\nb.bin (100 B)\nfile (5 B)\nlong.bin (1 B)"
+      },
+      {
+       "name": "Sent",
+       "value": "<t:1777636500:R>",
+       "inline": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "snapshot forward and embeds",
+   "fn": "messageSnapshot",
+   "args": {
+    "message": {
+     "id": "800000000000000001",
+     "content": "top",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "createdTimestamp": 1743076800000,
+      "avatarUrl": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "avatarUrl256": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp?size=256"
+     },
+     "channelId": "700000000000000001",
+     "createdTimestamp": 1777636500000,
+     "url": "https://discord.com/channels/9/700000000000000001/800000000000000001",
+     "snapshotContents": [
+      "forwarded text",
+      "second"
+     ],
+     "embedCount": 2
+    }
+   },
+   "out": {
+    "snapshot": {
+     "id": "800000000000000001",
+     "channelId": "700000000000000001",
+     "content": "top\nforwarded text\nsecond",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "avatar": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "bot": false
+     },
+     "createdTimestamp": 1777636500000,
+     "attachments": [],
+     "embeds": 2
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.591Z",
+     "title": "🗑️ Message Deleted",
+     "author": {
+      "name": "alice",
+      "icon_url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
+     },
+     "description": "top\nforwarded text\nsecond",
+     "footer": {
+      "text": "User ID: 111111111111111111 · Msg ID: 800000000000000001"
+     },
+     "fields": [
+      {
+       "name": "Author",
+       "value": "<@111111111111111111> `alice`",
+       "inline": true
+      },
+      {
+       "name": "Channel",
+       "value": "<#700000000000000001>",
+       "inline": true
+      },
+      {
+       "name": "Sent",
+       "value": "<t:1777636500:R>",
+       "inline": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "snapshot huge",
+   "fn": "messageSnapshot",
+   "args": {
+    "message": {
+     "id": "800000000000000001",
+     "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "createdTimestamp": 1743076800000,
+      "avatarUrl": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "avatarUrl256": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp?size=256"
+     },
+     "channelId": "700000000000000001",
+     "createdTimestamp": 1777636500000,
+     "url": "https://discord.com/channels/9/700000000000000001/800000000000000001",
+     "attachments": [
+      {
+       "name": "file-0-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 0,
+       "url": "u0"
+      },
+      {
+       "name": "file-1-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 1000,
+       "url": "u1"
+      },
+      {
+       "name": "file-2-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 2000,
+       "url": "u2"
+      },
+      {
+       "name": "file-3-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 3000,
+       "url": "u3"
+      },
+      {
+       "name": "file-4-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 4000,
+       "url": "u4"
+      },
+      {
+       "name": "file-5-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 5000,
+       "url": "u5"
+      },
+      {
+       "name": "file-6-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 6000,
+       "url": "u6"
+      },
+      {
+       "name": "file-7-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 7000,
+       "url": "u7"
+      },
+      {
+       "name": "file-8-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 8000,
+       "url": "u8"
+      },
+      {
+       "name": "file-9-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 9000,
+       "url": "u9"
+      },
+      {
+       "name": "file-10-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 10000,
+       "url": "u10"
+      },
+      {
+       "name": "file-11-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 11000,
+       "url": "u11"
+      },
+      {
+       "name": "file-12-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 12000,
+       "url": "u12"
+      },
+      {
+       "name": "file-13-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.png",
+       "size": 13000,
+       "url": "u13"
+      }
+     ]
+    }
+   },
+   "out": {
+    "snapshot": {
+     "id": "800000000000000001",
+     "channelId": "700000000000000001",
+     "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": "Alice",
+      "avatar": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp",
+      "bot": false
+     },
+     "createdTimestamp": 1777636500000,
+     "attachments": [
+      {
+       "name": "file-0-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 0,
+       "url": "u0"
+      },
+      {
+       "name": "file-1-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 1000,
+       "url": "u1"
+      },
+      {
+       "name": "file-2-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 2000,
+       "url": "u2"
+      },
+      {
+       "name": "file-3-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 3000,
+       "url": "u3"
+      },
+      {
+       "name": "file-4-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 4000,
+       "url": "u4"
+      },
+      {
+       "name": "file-5-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 5000,
+       "url": "u5"
+      },
+      {
+       "name": "file-6-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 6000,
+       "url": "u6"
+      },
+      {
+       "name": "file-7-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 7000,
+       "url": "u7"
+      },
+      {
+       "name": "file-8-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 8000,
+       "url": "u8"
+      },
+      {
+       "name": "file-9-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn…",
+       "size": 9000,
+       "url": "u9"
+      }
+     ],
+     "embeds": 0
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.591Z",
+     "title": "🗑️ Message Deleted",
+     "author": {
+      "name": "alice",
+      "icon_url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
+     },
+     "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+     "footer": {
+      "text": "User ID: 111111111111111111 · Msg ID: 800000000000000001"
+     },
+     "fields": [
+      {
+       "name": "Author",
+       "value": "<@111111111111111111> `alice`",
+       "inline": true
+      },
+      {
+       "name": "Channel",
+       "value": "<#700000000000000001>",
+       "inline": true
+      },
+      {
+       "name": "Attachments (10)",
+       "value": "file-0-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (0 B)\nfile-1-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (1000 B)\nfile-2-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (2.0 KB)\nfile-3-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (2.9 KB)\nfile-4-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (3.9 KB)\nfile-5-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (4.9 KB)\nfile-6-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (5.9 KB)\nfile-7-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (6.8 KB)\nfile-8-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn… (7.8 KB)\n… and 1 more"
+      },
+      {
+       "name": "Sent",
+       "value": "<t:1777636500:R>",
+       "inline": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "snapshot embeds only, no tag",
+   "fn": "messageSnapshot",
+   "args": {
+    "message": {
+     "id": "800000000000000001",
+     "content": "",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "globalName": null,
+      "createdTimestamp": 1743076800000,
+      "avatarUrl256": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp?size=256"
+     },
+     "channelId": "700000000000000001",
+     "url": "https://discord.com/channels/9/700000000000000001/800000000000000001",
+     "embedCount": 1
+    }
+   },
+   "out": {
+    "snapshot": {
+     "id": "800000000000000001",
+     "channelId": "700000000000000001",
+     "content": "",
+     "author": {
+      "id": "111111111111111111",
+      "username": "alice",
+      "tag": "alice",
+      "globalName": null,
+      "avatar": null,
+      "bot": false
+     },
+     "createdTimestamp": null,
+     "attachments": [],
+     "embeds": 1
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.591Z",
+     "title": "🗑️ Message Deleted",
+     "author": {
+      "name": "alice"
+     },
+     "description": "*[No text content]*",
+     "footer": {
+      "text": "User ID: 111111111111111111 · Msg ID: 800000000000000001"
+     },
+     "fields": [
+      {
+       "name": "Author",
+       "value": "<@111111111111111111> `alice`",
+       "inline": true
+      },
+      {
+       "name": "Channel",
+       "value": "<#700000000000000001>",
+       "inline": true
+      },
+      {
+       "name": "Embeds",
+       "value": "1 embed(s)"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "snapshot bot author",
+   "fn": "messageSnapshot",
+   "args": {
+    "message": {
+     "id": "800000000000000001",
+     "content": "hello",
+     "author": {
+      "id": "333333333333333333",
+      "username": "robot",
+      "tag": "robot#0420",
+      "bot": true,
+      "createdTimestamp": 1777550400000,
+      "avatarUrl": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
+     },
+     "channelId": "700000000000000001",
+     "createdTimestamp": 1777636500000,
+     "url": "https://discord.com/channels/9/700000000000000001/800000000000000001"
+    }
+   },
+   "out": {
+    "snapshot": {
+     "id": "800000000000000001",
+     "channelId": "700000000000000001",
+     "content": "hello",
+     "author": {
+      "id": "333333333333333333",
+      "username": "robot",
+      "tag": "robot#0420",
+      "globalName": null,
+      "avatar": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif",
+      "bot": true
+     },
+     "createdTimestamp": 1777636500000,
+     "attachments": [],
+     "embeds": 0
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.591Z",
+     "title": "🗑️ Message Deleted",
+     "author": {
+      "name": "robot#0420",
+      "icon_url": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
+     },
+     "description": "hello",
+     "footer": {
+      "text": "User ID: 333333333333333333 · Msg ID: 800000000000000001"
+     },
+     "fields": [
+      {
+       "name": "Author",
+       "value": "<@333333333333333333> `robot#0420`",
+       "inline": true
+      },
+      {
+       "name": "Channel",
+       "value": "<#700000000000000001>",
+       "inline": true
+      },
+      {
+       "name": "Sent",
+       "value": "<t:1777636500:R>",
+       "inline": true
+      }
+     ]
+    }
    }
   },
   {
@@ -1241,7 +1777,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.906Z",
+    "timestamp": "2026-11-20T01:28:48.591Z",
     "title": "📨 Invite Posted",
     "author": {
      "name": "alice",
@@ -1330,7 +1866,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.906Z",
+    "timestamp": "2026-11-20T01:28:48.591Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1394,7 +1930,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1467,7 +2003,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1540,7 +2076,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1613,7 +2149,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1686,7 +2222,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1754,7 +2290,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.602Z",
     "title": "⚠️ New Account Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -1817,7 +2353,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.603Z",
     "title": "🤖 Bot Added",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
@@ -1878,7 +2414,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.915Z",
+    "timestamp": "2026-11-20T01:28:48.603Z",
     "title": "📤 Member Left",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -1939,7 +2475,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.603Z",
     "title": "📤 Member Left",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -2592,7 +3128,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.604Z",
     "title": "🎭 Member Roles Changed",
     "author": {
      "name": "bob_`x`",
@@ -2655,7 +3191,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.604Z",
     "title": "📝 Nickname Changed",
     "author": {
      "name": "bob_`x`",
@@ -2720,7 +3256,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.604Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -2778,7 +3314,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.604Z",
     "title": "🔊 Timeout Removed",
     "author": {
      "name": "bob_`x`",
@@ -2835,7 +3371,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.604Z",
     "title": "⏱️ Timeout Changed",
     "author": {
      "name": "bob_`x`",
@@ -2900,7 +3436,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.916Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -2959,7 +3495,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -3018,7 +3554,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "🖼️ Server Avatar Changed",
     "author": {
      "name": "bob_`x`",
@@ -3071,7 +3607,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "👤 User Updated",
     "author": {
      "name": "alice",
@@ -3147,7 +3683,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "🔨 Member Banned",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -3189,7 +3725,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.605Z",
     "title": "✅ Member Unbanned",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
@@ -3266,7 +3802,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-19T00:59:02.917Z",
+     "timestamp": "2026-11-20T01:28:48.605Z",
      "title": "🔇 Left Voice",
      "description": "<@222222222222222222> left <#700000000000000009> (deleted channel)",
      "author": {
@@ -3328,7 +3864,7 @@
     },
     "embed": {
      "color": 5763719,
-     "timestamp": "2026-11-19T00:59:02.917Z",
+     "timestamp": "2026-11-20T01:28:48.605Z",
      "title": "🔊 Joined Voice",
      "description": "<@222222222222222222> joined <#700000000000000001>",
      "author": {
@@ -3392,7 +3928,7 @@
     },
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.917Z",
+     "timestamp": "2026-11-20T01:28:48.605Z",
      "title": "↔️ Moved Voice Channel",
      "description": "<@222222222222222222> moved from <#700000000000000002> → <#700000000000000003> (deleted channel)",
      "author": {
@@ -3468,9 +4004,359 @@
     },
     "embed": {
      "color": 10070709,
-     "timestamp": "2026-11-19T00:59:02.917Z",
+     "timestamp": "2026-11-20T01:28:48.606Z",
      "title": "🔔 Voice State Changed",
      "description": "<@222222222222222222> in <#A>\nServer muted, Server undeafened, Self-deafened, Self-unmuted, Started streaming",
+     "author": {
+      "name": "bob_`x`",
+      "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "footer": {
+      "text": "User ID: 222222222222222222"
+     }
+    }
+   }
+  },
+  {
+   "name": "voice join named",
+   "fn": "voice",
+   "args": {
+    "member": {
+     "id": "222222222222222222",
+     "user": {
+      "id": "222222222222222222",
+      "username": "bob_`x`",
+      "tag": "bob_`x`",
+      "createdTimestamp": 1777464000000,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "avatarUrl256": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "guildId": "955007000000000001",
+     "roles": [
+      {
+       "id": "955007000000000001",
+       "position": 0
+      },
+      {
+       "id": "444444444444444441",
+       "position": 3
+      },
+      {
+       "id": "444444444444444442",
+       "position": 7
+      }
+     ],
+     "joinedTimestamp": 1777370400000
+    },
+    "oldState": null,
+    "newState": {
+     "channelId": "700000000000000001"
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002",
+     "700000000000000003"
+    ],
+    "names": {
+     "700000000000000001": "Temp Room",
+     "700000000000000002": "Gaming",
+     "700000000000000003": "a`b"
+    }
+   },
+   "out": {
+    "c": {
+     "kind": "join",
+     "oldId": null,
+     "newId": "700000000000000001",
+     "changes": []
+    },
+    "embed": {
+     "color": 5763719,
+     "timestamp": "2026-11-20T01:28:48.606Z",
+     "title": "🔊 Joined Voice",
+     "description": "<@222222222222222222> joined <#700000000000000001> `Temp Room`",
+     "author": {
+      "name": "bob_`x`",
+      "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "footer": {
+      "text": "User ID: 222222222222222222"
+     }
+    }
+   }
+  },
+  {
+   "name": "voice leave named",
+   "fn": "voice",
+   "args": {
+    "member": {
+     "id": "222222222222222222",
+     "user": {
+      "id": "222222222222222222",
+      "username": "bob_`x`",
+      "tag": "bob_`x`",
+      "createdTimestamp": 1777464000000,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "avatarUrl256": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "guildId": "955007000000000001",
+     "roles": [
+      {
+       "id": "955007000000000001",
+       "position": 0
+      },
+      {
+       "id": "444444444444444441",
+       "position": 3
+      },
+      {
+       "id": "444444444444444442",
+       "position": 7
+      }
+     ],
+     "joinedTimestamp": 1777370400000
+    },
+    "oldState": {
+     "channelId": "700000000000000002"
+    },
+    "newState": {
+     "channelId": null
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002",
+     "700000000000000003"
+    ],
+    "names": {
+     "700000000000000001": "Temp Room",
+     "700000000000000002": "Gaming",
+     "700000000000000003": "a`b"
+    }
+   },
+   "out": {
+    "c": {
+     "kind": "leave",
+     "oldId": "700000000000000002",
+     "newId": null,
+     "changes": []
+    },
+    "embed": {
+     "color": 15548997,
+     "timestamp": "2026-11-20T01:28:48.606Z",
+     "title": "🔇 Left Voice",
+     "description": "<@222222222222222222> left <#700000000000000002> `Gaming`",
+     "author": {
+      "name": "bob_`x`",
+      "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "footer": {
+      "text": "User ID: 222222222222222222"
+     }
+    }
+   }
+  },
+  {
+   "name": "voice move named and deleted",
+   "fn": "voice",
+   "args": {
+    "member": {
+     "id": "222222222222222222",
+     "user": {
+      "id": "222222222222222222",
+      "username": "bob_`x`",
+      "tag": "bob_`x`",
+      "createdTimestamp": 1777464000000,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "avatarUrl256": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "guildId": "955007000000000001",
+     "roles": [
+      {
+       "id": "955007000000000001",
+       "position": 0
+      },
+      {
+       "id": "444444444444444441",
+       "position": 3
+      },
+      {
+       "id": "444444444444444442",
+       "position": 7
+      }
+     ],
+     "joinedTimestamp": 1777370400000
+    },
+    "oldState": {
+     "channelId": "700000000000000009"
+    },
+    "newState": {
+     "channelId": "700000000000000001"
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002",
+     "700000000000000003"
+    ],
+    "names": {
+     "700000000000000001": "Temp Room",
+     "700000000000000002": "Gaming",
+     "700000000000000003": "a`b"
+    }
+   },
+   "out": {
+    "c": {
+     "kind": "move",
+     "oldId": "700000000000000009",
+     "newId": "700000000000000001",
+     "changes": []
+    },
+    "embed": {
+     "color": 5793266,
+     "timestamp": "2026-11-20T01:28:48.606Z",
+     "title": "↔️ Moved Voice Channel",
+     "description": "<@222222222222222222> moved from <#700000000000000009> (deleted channel) → <#700000000000000001> `Temp Room`",
+     "author": {
+      "name": "bob_`x`",
+      "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "footer": {
+      "text": "User ID: 222222222222222222"
+     }
+    }
+   }
+  },
+  {
+   "name": "voice state named",
+   "fn": "voice",
+   "args": {
+    "member": {
+     "id": "222222222222222222",
+     "user": {
+      "id": "222222222222222222",
+      "username": "bob_`x`",
+      "tag": "bob_`x`",
+      "createdTimestamp": 1777464000000,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "avatarUrl256": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "guildId": "955007000000000001",
+     "roles": [
+      {
+       "id": "955007000000000001",
+       "position": 0
+      },
+      {
+       "id": "444444444444444441",
+       "position": 3
+      },
+      {
+       "id": "444444444444444442",
+       "position": 7
+      }
+     ],
+     "joinedTimestamp": 1777370400000
+    },
+    "oldState": {
+     "channelId": "700000000000000002",
+     "selfMute": false
+    },
+    "newState": {
+     "channelId": "700000000000000002",
+     "selfMute": true
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002",
+     "700000000000000003"
+    ],
+    "names": {
+     "700000000000000001": "Temp Room",
+     "700000000000000002": "Gaming",
+     "700000000000000003": "a`b"
+    }
+   },
+   "out": {
+    "c": {
+     "kind": "state",
+     "oldId": "700000000000000002",
+     "newId": "700000000000000002",
+     "changes": [
+      "Self-muted"
+     ]
+    },
+    "embed": {
+     "color": 10070709,
+     "timestamp": "2026-11-20T01:28:48.606Z",
+     "title": "🔔 Voice State Changed",
+     "description": "<@222222222222222222> in <#700000000000000002> `Gaming`\nSelf-muted",
+     "author": {
+      "name": "bob_`x`",
+      "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "footer": {
+      "text": "User ID: 222222222222222222"
+     }
+    }
+   }
+  },
+  {
+   "name": "voice join backtick name",
+   "fn": "voice",
+   "args": {
+    "member": {
+     "id": "222222222222222222",
+     "user": {
+      "id": "222222222222222222",
+      "username": "bob_`x`",
+      "tag": "bob_`x`",
+      "createdTimestamp": 1777464000000,
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png",
+      "avatarUrl256": "https://cdn.discordapp.com/embed/avatars/1.png"
+     },
+     "guildId": "955007000000000001",
+     "roles": [
+      {
+       "id": "955007000000000001",
+       "position": 0
+      },
+      {
+       "id": "444444444444444441",
+       "position": 3
+      },
+      {
+       "id": "444444444444444442",
+       "position": 7
+      }
+     ],
+     "joinedTimestamp": 1777370400000
+    },
+    "oldState": null,
+    "newState": {
+     "channelId": "700000000000000003"
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002",
+     "700000000000000003"
+    ],
+    "names": {
+     "700000000000000001": "Temp Room",
+     "700000000000000002": "Gaming",
+     "700000000000000003": "a`b"
+    }
+   },
+   "out": {
+    "c": {
+     "kind": "join",
+     "oldId": null,
+     "newId": "700000000000000003",
+     "changes": []
+    },
+    "embed": {
+     "color": 5763719,
+     "timestamp": "2026-11-20T01:28:48.606Z",
+     "title": "🔊 Joined Voice",
+     "description": "<@222222222222222222> joined <#700000000000000003> `a'b`",
      "author": {
       "name": "bob_`x`",
       "icon_url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -3549,7 +4435,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.917Z",
+    "timestamp": "2026-11-20T01:28:48.606Z",
     "title": "📢 Channel Created",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -3688,7 +4574,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.918Z",
+     "timestamp": "2026-11-20T01:28:48.607Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `new-name`",
      "footer": {
@@ -3771,7 +4657,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.918Z",
+     "timestamp": "2026-11-20T01:28:48.607Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `general`",
      "footer": {
@@ -3858,7 +4744,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.918Z",
+     "timestamp": "2026-11-20T01:28:48.607Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `general`",
      "footer": {
@@ -3897,7 +4783,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.918Z",
+    "timestamp": "2026-11-20T01:28:48.607Z",
     "title": "🗑️ Channel Deleted",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -3947,7 +4833,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.608Z",
     "title": "🗑️ Channel Deleted",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -3985,7 +4871,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.608Z",
     "title": "🧵 Thread Created",
     "footer": {
      "text": "Thread ID: 700000000000000777"
@@ -4035,7 +4921,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.608Z",
     "title": "🧵 Thread Created",
     "footer": {
      "text": "Thread ID: 9"
@@ -4124,7 +5010,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.919Z",
+     "timestamp": "2026-11-20T01:28:48.608Z",
      "title": "🧵 Thread Updated",
      "description": "<#700000000000000777> `solved`",
      "footer": {
@@ -4196,7 +5082,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.919Z",
+     "timestamp": "2026-11-20T01:28:48.608Z",
      "title": "🧵 Thread Updated",
      "description": "<#700000000000000777> `bug 'reports'`",
      "footer": {
@@ -4270,7 +5156,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.608Z",
     "title": "🗑️ Thread Deleted",
     "footer": {
      "text": "Thread ID: 700000000000000777"
@@ -4319,7 +5205,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.608Z",
     "title": "🗑️ Thread Deleted",
     "footer": {
      "text": "Thread ID: 9"
@@ -4362,7 +5248,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.609Z",
     "title": "➕ Role Created",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -4417,7 +5303,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.919Z",
+    "timestamp": "2026-11-20T01:28:48.609Z",
     "title": "➕ Role Created",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -4511,7 +5397,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.920Z",
+     "timestamp": "2026-11-20T01:28:48.609Z",
      "title": "🛠️ Role Updated",
      "description": "<@&444444444444444444> `Staff`",
      "footer": {
@@ -4603,7 +5489,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.920Z",
+    "timestamp": "2026-11-20T01:28:48.609Z",
     "title": "➖ Role Deleted",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -4764,7 +5650,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.920Z",
+     "timestamp": "2026-11-20T01:28:48.609Z",
      "title": "🏠 Server Edited",
      "thumbnail": {
       "url": "https://cdn.discordapp.com/icons/9/abc.webp"
@@ -4931,7 +5817,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-19T00:59:02.920Z",
+    "timestamp": "2026-11-20T01:28:48.609Z",
     "title": "😀 Emoji Created",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -4994,7 +5880,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-19T00:59:02.920Z",
+     "timestamp": "2026-11-20T01:28:48.610Z",
      "title": "😀 Emoji Updated",
      "thumbnail": {
       "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -5057,7 +5943,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.920Z",
+    "timestamp": "2026-11-20T01:28:48.610Z",
     "title": "😶 Emoji Deleted",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -5095,7 +5981,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.921Z",
+    "timestamp": "2026-11-20T01:28:48.610Z",
     "title": "🔗 Invite Created",
     "footer": {
      "text": "Code: abc"
@@ -5147,7 +6033,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-19T00:59:02.921Z",
+    "timestamp": "2026-11-20T01:28:48.610Z",
     "title": "🔗 Invite Created",
     "footer": {
      "text": "Code: abc"
@@ -5196,7 +6082,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-19T00:59:02.921Z",
+    "timestamp": "2026-11-20T01:28:48.610Z",
     "title": "🔗 Invite Deleted / Expired",
     "footer": {
      "text": "Code: abc"
@@ -7331,8 +8217,8 @@
  ],
  "keys": {
   "snapshot": "guild:955007000000000001:invites",
-  "timeoutUntilSec": 1795057142,
-  "timeout": "log:timeout:955007000000000001:222222222222222222:1795057142",
+  "timeoutUntilSec": 1795145328,
+  "timeout": "log:timeout:955007000000000001:222222222222222222:1795145328",
   "linkCooldown": "invites:link:cd:955007000000000001:222222222222222222",
   "slowDown": [
    "⚠️  Slow Down"

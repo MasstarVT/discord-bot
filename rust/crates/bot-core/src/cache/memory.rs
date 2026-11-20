@@ -165,6 +165,13 @@ impl CacheBackend for MemoryBackend {
         }
     }
 
+    async fn mget(&self, keys: &[String]) -> Result<Vec<Option<String>>, CacheError> {
+        let mut s = self.lock();
+        self.begin(&mut s, "mget", keys.to_vec())?;
+        // Redis answers nil for a key holding another type.
+        Ok(keys.iter().map(|k| match s.data.get(k.as_str()) { Some(Entry { data: Data::Str(v), .. }) => Some(v.clone()), _ => None }).collect())
+    }
+
     async fn set(&self, key: &str, value: &str, ex_secs: Option<u64>, nx: bool) -> Result<bool, CacheError> {
         let mut s = self.lock();
         let mut args = vec![key.to_string(), value.to_string()];
