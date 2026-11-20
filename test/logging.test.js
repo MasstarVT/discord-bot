@@ -533,8 +533,24 @@ test('buildVoiceEmbed renders deleted channels from ids', () => {
   assert.equal(leave.title, '🔇 Left Voice');
   assert.equal(leave.description, '<@222222222222222222> left <#700000000000000001> (deleted channel)');
   const move = tick(ev.buildVoiceEmbed({ member, guild, c: ev.classifyVoice({ channelId: '700000000000000002' }, { channelId: '700000000000000003' }) }));
-  assert.equal(move.description, '<@222222222222222222> moved from <#700000000000000002> → <#700000000000000003> (deleted channel)');
+  assert.equal(move.description, '<@222222222222222222> moved from <#700000000000000002> `chan-002` → <#700000000000000003> (deleted channel)');
   assert.equal(ev.buildVoiceEmbed({ member, guild, c: { kind: null } }), null);
+});
+
+test('buildVoiceEmbed names the channel so a deleted temp channel stays readable', () => {
+  const guild = fakeGuild();
+  fakeChannel(guild, '700000000000000004', ALL_PERMS, { type: ChannelType.GuildVoice, name: "Mass's `room`" });
+  const member = fakeMember({ id: '222222222222222222' });
+  const voice = (oldState, newState) => tick(ev.buildVoiceEmbed({ member, guild, c: ev.classifyVoice(oldState, newState) })).description;
+  const named = "<#700000000000000004> `Mass's 'room'`";
+  assert.equal(voice({ channelId: null }, { channelId: '700000000000000004' }), `<@222222222222222222> joined ${named}`);
+  assert.equal(voice({ channelId: '700000000000000004' }, { channelId: null }), `<@222222222222222222> left ${named}`);
+  assert.equal(
+    voice({ channelId: '700000000000000004', streaming: true }, { channelId: '700000000000000004', streaming: false }),
+    `<@222222222222222222> in ${named}\nStopped streaming`,
+  );
+  guild.channels.cache.get('700000000000000004').name = 'x'.repeat(150);
+  assert.equal(voice({ channelId: null }, { channelId: '700000000000000004' }), `<@222222222222222222> joined <#700000000000000004> \`${'x'.repeat(99)}…\``);
 });
 
 // ── 6. Channel / role / guild / emoji / invite ───────────────────────────────
@@ -1630,4 +1646,207 @@ test('channelUpdate hook skips name-only renames of stat channels (bot-managed)'
   await rename(tempId);
   await flushLogQueue();
   assert.equal(log.sent.length, 2);
+});
+
+// ── Message snapshots (Redis) ────────────────────────────────────────────────
+
+const snap = await import('../src/services/messageSnapshot.js');
+
+/** Replaces the cache helpers with an in-memory Map; returns the store and a restore function. */
+function fakeRedis() {
+  const real = { get: cache.get, set: cache.set, del: cache.del, mget: cache.mget };
+  const store = new Map();
+  const ttls = new Map();
+  cache.get = async (k) => (store.has(k) ? JSON.parse(store.get(k)) : null);
+  cache.set = async (k, v, ttl) => { store.set(k, JSON.stringify(v)); ttls.set(k, ttl); return true; };
+  cache.del = async (...ks) => { for (const k of ks) store.delete(k); return true; };
+  cache.mget = async (ks) => ks.map((k) => (store.has(k) ? JSON.parse(store.get(k)) : null));
+  return { store, ttls, restore: () => Object.assign(cache, real) };
+}
+
+const snapMsg = (guild, channel, o = {}) => fakeMessage({ guild, channelId: channel.id, channel, id: '810', content: 'old words', ...o });
+const settle = () => new Promise((r) => setImmediate(r));
+
+test('snapshot: stored with a TTL, and skipped for logging off, events off, ignored channel, bots and webhooks', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    const run = async (message, s = settings) => { await hook('messageCreate').run(fakeCtx(guild, s, { message })); await settle(); };
+    const withAtt = snapMsg(guild, channel, { attachments: [{ name: 'a.png', size: 5, url: 'https://cdn.discordapp.com/a.png' }], embeds: [{}] });
+    await run(withAtt);
+    const key = `msgsnap:${channel.id}:810`;
+    const saved = JSON.parse(r.store.get(key));
+    assert.equal(saved.content, 'old words');
+    assert.equal(saved.author.id, '111111111111111111');
+    assert.equal(saved.author.bot, false);
+    assert.deepEqual(saved.attachments, [{ name: 'a.png', size: 5, url: 'https://cdn.discordapp.com/a.png' }]);
+    assert.equal(saved.embeds, 1);
+    assert.equal(r.ttls.get(key), 7 * 86_400);
+
+    r.store.clear();
+    const skipped = [
+      [snapMsg(guild, channel), { ...settings, loggingEnabled: false }],
+      [snapMsg(guild, channel), { ...settings, disabledLogEvents: ['messageDelete', 'messageEdit'] }],
+      [snapMsg(guild, channel), { ...settings, logIgnoredChannelIds: [channel.id] }],
+      [snapMsg(guild, channel, { author: fakeUser('333333333333333333', { bot: true }) }), settings],
+      [{ ...snapMsg(guild, channel), webhookId: '999' }, settings],
+    ];
+    for (const [m, s] of skipped) await run(m, s);
+    assert.equal(r.store.size, 0);
+    // One of the two message events is enough.
+    await run(snapMsg(guild, channel), { ...settings, disabledLogEvents: ['messageDelete'] });
+    assert.equal(r.store.size, 1);
+    // The pure predicate behind the sync filter agrees.
+    assert.equal(snap.shouldSnapshot(settings, snapMsg(guild, channel)), true);
+    assert.equal(snap.shouldSnapshot({ ...settings, loggingEnabled: false }, snapMsg(guild, channel)), false);
+  } finally { r.restore(); }
+});
+
+test('snapshot: partial delete is rendered from the snapshot and the key is removed', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    await hook('messageCreate').run(fakeCtx(guild, settings, { message: snapMsg(guild, channel, { attachments: [{ name: 'doc.txt', size: 2048, url: 'https://x/doc.txt' }] }) }));
+    await settle();
+    await hook('messageDelete').run(fakeCtx(guild, settings, { message: { id: '810', partial: true, channelId: channel.id, guild } }));
+    await flushLogQueue();
+    const e = firstEmbed(channel);
+    assert.equal(e.title, '🗑️ Message Deleted');
+    assert.equal(e.description, 'old words');
+    assert.match(e.fields.find((f) => f.name === 'Author').value, /<@111111111111111111>/);
+    assert.match(e.fields.find((f) => f.name === 'Attachments (1)').value, /doc\.txt/);
+    assert.ok(e.fields.find((f) => f.name === 'Sent'));
+    await settle();
+    assert.equal(r.store.size, 0);
+
+    // A snapshot of a bot author is not logged (same skip as the cached path).
+    r.store.set(`msgsnap:${channel.id}:811`, JSON.stringify({ id: '811', channelId: channel.id, content: 'x', author: { id: '3', bot: true }, attachments: [], embeds: 0 }));
+    const before = channel.sent.length;
+    await hook('messageDelete').run(fakeCtx(guild, settings, { message: { id: '811', partial: true, channelId: channel.id, guild } }));
+    await flushLogQueue();
+    assert.equal(channel.sent.length, before);
+  } finally { r.restore(); }
+});
+
+test('snapshot: a partial delete with no snapshot still says not cached', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    await hook('messageDelete').run(fakeCtx(guild, settings, { message: { id: '812', partial: true, channelId: channel.id, guild } }));
+    await flushLogQueue();
+    assert.match(firstEmbed(channel).description, /not cached/);
+  } finally { r.restore(); }
+});
+
+test('snapshot: an edit with an uncached old message uses the snapshot, then updates it', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    await hook('messageCreate').run(fakeCtx(guild, settings, { message: snapMsg(guild, channel) }));
+    await settle();
+    const edited = snapMsg(guild, channel, { content: 'new words', editedTimestamp: Date.now() });
+    await hook('messageUpdate').run(fakeCtx(guild, settings, { oldMessage: { partial: true }, newMessage: edited, oldKnown: false }));
+    await flushLogQueue();
+    const e = firstEmbed(channel);
+    assert.equal(e.title, '✏️ Message Edited');
+    assert.equal(e.fields.find((f) => f.name === 'Before').value, 'old words');
+    assert.equal(e.fields.find((f) => f.name === 'After').value, 'new words');
+    await settle();
+    assert.equal(JSON.parse(r.store.get(`msgsnap:${channel.id}:810`)).content, 'new words');
+
+    // Without a snapshot the Before field stays "Not cached"; an unchanged text (an unfurl) logs nothing.
+    const other = snapMsg(guild, channel, { id: '813', content: 'b', editedTimestamp: Date.now() });
+    await hook('messageUpdate').run(fakeCtx(guild, settings, { oldMessage: { partial: true }, newMessage: other, oldKnown: false }));
+    await hook('messageUpdate').run(fakeCtx(guild, settings, { oldMessage: { partial: true }, newMessage: edited, oldKnown: false }));
+    await flushLogQueue();
+    assert.equal(channel.sent.length, 2);
+    assert.equal(firstEmbed(channel, 1).fields.find((f) => f.name === 'Before').value, '*Not cached*');
+  } finally { r.restore(); }
+});
+
+test('snapshot: bulk delete fills uncached messages from snapshots', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    await hook('messageCreate').run(fakeCtx(guild, settings, { message: snapMsg(guild, channel, { id: '820', content: 'from redis' }) }));
+    await settle();
+    const messages = new Map([['820', { id: '820', partial: true }], ['821', { id: '821', partial: true }]]);
+    await hook('messageDeleteBulk').run(fakeCtx(guild, settings, { messages, channel: { id: channel.id, name: 'general', guild } }));
+    await flushLogQueue();
+    assert.equal(channel.sent[0].files.length, 1);
+    const text = channel.sent[0].files[0].attachment.toString('utf8');
+    assert.match(text, /from redis/);
+    assert.match(text, /\(not cached\) message 821/);
+    await settle();
+    assert.equal(r.store.size, 0);
+  } finally { r.restore(); }
+});
+
+test('snapshot: Redis failures fail open', async () => {
+  const { guild, channel, settings } = logSetup();
+  const real = { get: cache.get, set: cache.set, del: cache.del, mget: cache.mget };
+  // Throws only for snapshot keys: the rest of the log path keeps the real (non-throwing) helpers.
+  const guard = (fn) => async (...a) => {
+    if ([a[0]].flat().some((k) => String(k).startsWith('msgsnap:'))) throw new Error('redis down');
+    return fn.apply(cache, a);
+  };
+  Object.assign(cache, { get: guard(real.get), set: guard(real.set), del: guard(real.del), mget: guard(real.mget) });
+  try {
+    await hook('messageCreate').run(fakeCtx(guild, settings, { message: snapMsg(guild, channel) }));
+    await settle();
+    await hook('messageDelete').run(fakeCtx(guild, settings, { message: { id: '830', partial: true, channelId: channel.id, guild } }));
+    await hook('messageUpdate').run(fakeCtx(guild, settings, { oldMessage: { partial: true }, newMessage: snapMsg(guild, channel, { id: '831', editedTimestamp: Date.now() }), oldKnown: false }));
+    await flushLogQueue();
+    assert.match(firstEmbed(channel).description, /not cached/);
+    assert.equal(channel.sent[0].embeds[1].fields.find((f) => f.name === 'Before').value, '*Not cached*');
+  } finally { Object.assign(cache, real); }
+  // Real client, nothing listening: the helpers resolve with their fallbacks.
+  assert.equal(await snap.loadSnapshot(channel.id, '1'), null);
+  assert.equal((await snap.loadSnapshots(channel.id, ['1', '2'])).size, 0);
+  assert.equal(await snap.storeSnapshot(snapMsg(guild, channel)), false);
+});
+
+test('snapshot: nothing is stored without a message log channel (or with a dead one)', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    for (const s of [{ ...settings, messageLogChannelId: null }, { ...settings, messageLogChannelId: '' }]) {
+      await hook('messageCreate').run(fakeCtx(guild, s, { message: snapMsg(guild, channel) }));
+      await settle();
+      assert.equal(snap.shouldSnapshot(s, snapMsg(guild, channel)), false);
+    }
+    assert.equal(r.store.size, 0);
+    // The member log channel does not count: only the message log is where these events go.
+    assert.equal(snap.shouldSnapshot({ ...settings, messageLogChannelId: null, memberLogChannelId: channel.id }, snapMsg(guild, channel)), false);
+  } finally { r.restore(); }
+});
+
+test('snapshot: a delete or bulk delete removes the snapshot even when it is not logged', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    const keyOf = (id) => `msgsnap:${channel.id}:${id}`;
+    const store = async (id) => { await hook('messageCreate').run(fakeCtx(guild, settings, { message: snapMsg(guild, channel, { id }) })); await settle(); };
+    const off = { ...settings, disabledLogEvents: ['messageDelete', 'messageBulkDelete'] };
+    await store('840');
+    await store('841');
+    await store('842');
+    assert.equal(r.store.size, 3);
+    // messageDelete is switched off: nothing is logged, the snapshot still goes.
+    await hook('messageDelete').run(fakeCtx(guild, off, { message: { id: '840', partial: true, channelId: channel.id, guild } }));
+    await settle();
+    assert.equal(r.store.has(keyOf('840')), false);
+    // Same for a bulk delete with messageBulkDelete off.
+    const messages = new Map([['841', { id: '841', partial: true }], ['842', { id: '842', partial: true }]]);
+    await hook('messageDeleteBulk').run(fakeCtx(guild, off, { messages, channel: { id: channel.id, name: 'general', guild } }));
+    await settle();
+    assert.equal(r.store.size, 0);
+    await flushLogQueue();
+    assert.equal(channel.sent.length, 0);
+    // The channel was ignored after the message was stored: still removed.
+    await store('843');
+    await hook('messageDelete').run(fakeCtx(guild, { ...settings, logIgnoredChannelIds: [channel.id] }, { message: { id: '843', partial: true, channelId: channel.id, guild } }));
+    await settle();
+    assert.equal(r.store.size, 0);
+  } finally { r.restore(); }
 });

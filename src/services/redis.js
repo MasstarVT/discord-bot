@@ -82,6 +82,18 @@ export const cache = {
     }
   },
 
+  /** One MGET for many keys. @returns {Promise<any[]>} parsed values in key order; null for a miss or on error */
+  async mget(keys) {
+    const list = [...keys];
+    if (!list.length) return [];
+    try {
+      return (await client.mget(...list)).map(parse);
+    } catch (err) {
+      noteFailure('mget', err);
+      return list.map(() => null);
+    }
+  },
+
   /**
    * @param {string} key @param {any} value @param {number} [ttl] seconds
    * @returns {Promise<boolean>} true when written

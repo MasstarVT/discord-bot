@@ -615,14 +615,24 @@ export function classifyVoice(oldState, newState) {
   return { ...out, kind: 'state', changes };
 }
 
+/**
+ * `channelRef` plus the channel's name in code while the guild still caches it. A temp voice channel is deleted
+ * right after its last member leaves, and Discord then draws the bare mention as "#unknown": the name stays readable.
+ */
+function voiceChannelRef(guild, id) {
+  const name = id ? guild?.channels?.cache?.get?.(id)?.name : null;
+  return name ? `<#${id}> \`${clampText(name, 100).replace(/`/g, "'")}\`` : channelRef(guild, id);
+}
+
 /** @param {{ member: object, guild: object, c: ReturnType<typeof classifyVoice> }} p */
 export function buildVoiceEmbed({ member, guild, c }) {
   const id = member.id ?? member.user?.id;
+  const ref = (cid) => voiceChannelRef(guild, cid);
   const meta = {
-    join:  ['🔊 Joined Voice', LOG_COLORS.CREATE, `<@${id}> joined ${channelRef(guild, c.newId)}`],
-    leave: ['🔇 Left Voice', LOG_COLORS.DELETE, `<@${id}> left ${channelRef(guild, c.oldId)}`],
-    move:  ['↔️ Moved Voice Channel', LOG_COLORS.UPDATE, `<@${id}> moved from ${channelRef(guild, c.oldId)} → ${channelRef(guild, c.newId)}`],
-    state: ['🔔 Voice State Changed', LOG_COLORS.NEUTRAL, `<@${id}> in ${channelRef(guild, c.newId ?? c.oldId)}\n${(c.changes ?? []).join(', ')}`],
+    join:  ['🔊 Joined Voice', LOG_COLORS.CREATE, `<@${id}> joined ${ref(c.newId)}`],
+    leave: ['🔇 Left Voice', LOG_COLORS.DELETE, `<@${id}> left ${ref(c.oldId)}`],
+    move:  ['↔️ Moved Voice Channel', LOG_COLORS.UPDATE, `<@${id}> moved from ${ref(c.oldId)} → ${ref(c.newId)}`],
+    state: ['🔔 Voice State Changed', LOG_COLORS.NEUTRAL, `<@${id}> in ${ref(c.newId ?? c.oldId)}\n${(c.changes ?? []).join(', ')}`],
   }[c.kind];
   if (!meta) return null;
   const embed = logEmbed(meta[1], meta[0]);

@@ -61,8 +61,16 @@ import {
   diffUser,
   findInviteCodes,
 } from '../services/logEvents.js';
+import {
+  forgetSnapshots,
+  loadSnapshot,
+  loadSnapshots,
+  shouldSnapshot,
+  snapshotToMessage,
+  storeSnapshot,
+} from '../services/messageSnapshot.js';
 import { cache } from '../services/redis.js';
-import { isModuleEnabled, updateSettingsWith } from '../services/settingsService.js';
+import { isModuleEnabled, peekSettings, updateSettingsWith } from '../services/settingsService.js';
 import { sleep } from '../utils/async.js';
 import { wasDeletedByBot } from '../utils/deletionTracker.js';
 import logger from '../utils/logger.js';
@@ -101,35 +109,104 @@ const isLogChannelOf = (settings, channelId) => Object.values(LOG_TYPES).some((f
 // ── Messages (§6.3) ───────────────────────────────────────────────────────────
 
 async function onMessageDelete(ctx) {
-  const { message } = ctx;
+  let { message } = ctx;
   // Bot-authored panels (giveaways, polls, starboard posts) are never logged.
   if (message.author?.bot || message.webhookId) return;
-  const channel = message.channel ?? ctx.guild.channels.cache.get(message.channelId);
-  if (!(await ready(ctx, 'messageDelete', channel))) return;
-  const botReason = wasDeletedByBot(message.id);
-  if (message.partial && botReason) return; // nothing useful is known about it
-  await emit(ctx, 'messageDelete', buildMessageDeleteEmbed({ message, botReason, botId: ctx.client.user?.id, now: Date.now() }));
+  const channelId = message.channelId ?? message.channel?.id;
+  try {
+    const channel = message.channel ?? ctx.guild.channels.cache.get(message.channelId);
+    if (!(await ready(ctx, 'messageDelete', channel))) return;
+    const botReason = wasDeletedByBot(message.id);
+    if (message.partial) {
+      if (botReason) return; // nothing useful is known about it
+      // Not in memory (restart, eviction, an old message): the Redis snapshot from messageCreate may still know it.
+      // Without one the partial message gives the "not cached" embed.
+      const snap = await loadSnapshot(channelId, message.id);
+      if (snap) {
+        if (snap.author.bot) return;
+        message = snapshotToMessage(snap, ctx.guild);
+      }
+    }
+    await emit(ctx, 'messageDelete', buildMessageDeleteEmbed({ message, botReason, botId: ctx.client.user?.id, now: Date.now() }));
+  } finally {
+    // Whether or not the delete was logged (event off, channel ignored): the text must not outlive the message.
+    void forgetSnapshots(channelId, ctx.message.id);
+  }
 }
 
 async function onMessageEdit(ctx) {
-  const { oldMessage, newMessage, oldKnown } = ctx;
+  const { newMessage } = ctx;
+  let { oldMessage, oldKnown } = ctx;
   // Core already dropped non-edits (R120/R121); these are the defensive repeats.
   if (!oldKnown && !newMessage.editedTimestamp) return;
   if (oldKnown && oldMessage.content === newMessage.content) return;
-  if (!(await ready(ctx, 'messageEdit', newMessage.channel))) return;
-  await emit(ctx, 'messageEdit', buildMessageEditEmbed({ oldMessage, newMessage, oldKnown, now: Date.now() }));
+  const channel = newMessage.channel;
+  const settings = await ctx.getSettings();
+  const logIt = Boolean(await ready(ctx, 'messageEdit', channel));
+  const keep = shouldSnapshot(settings, newMessage);
+  if (!logIt && !keep) return;
+  const channelId = newMessage.channelId ?? channel?.id;
+  try {
+    if (logIt) {
+      if (!oldKnown) {
+        // The old text is not in memory: the snapshot is the "before" state.
+        const snap = await loadSnapshot(channelId, newMessage.id);
+        if (snap && !snap.author.bot) {
+          oldMessage = snapshotToMessage(snap, ctx.guild);
+          oldKnown = true;
+        }
+      }
+      if (!(oldKnown && oldMessage.content === newMessage.content)) {
+        await emit(ctx, 'messageEdit', buildMessageEditEmbed({ oldMessage, newMessage, oldKnown, now: Date.now() }));
+      }
+    }
+  } finally {
+    // The next edit or delete needs the latest text, whether or not this edit was logged.
+    if (keep) void storeSnapshot(newMessage);
+  }
 }
 
 async function onBulkDelete(ctx) {
-  const { messages, channel } = ctx;
-  if (!(await ready(ctx, 'messageBulkDelete', channel))) return;
-  let botReason = null;
-  for (const id of messages.keys()) {
-    botReason = wasDeletedByBot(id);
-    if (botReason) break;
+  const { channel } = ctx;
+  let { messages } = ctx;
+  const ids = [...messages.keys()];
+  try {
+    if (!(await ready(ctx, 'messageBulkDelete', channel))) return;
+    let botReason = null;
+    for (const id of ids) {
+      botReason = wasDeletedByBot(id);
+      if (botReason) break;
+    }
+    // Messages that are not in memory are filled in from their snapshots (one batched read).
+    const missing = ids.filter((id) => { const m = messages.get(id); return m.partial || !m.author; });
+    if (missing.length) {
+      const snaps = await loadSnapshots(channel?.id, missing);
+      if (snaps.size) {
+        messages = new Map(messages);
+        for (const [id, snap] of snaps) if (!snap.author.bot) messages.set(id, snapshotToMessage(snap, ctx.guild));
+      }
+    }
+    const { embed, file } = buildBulkDeleteEmbed({ channel, messages, botReason, botId: ctx.client.user?.id });
+    await emit(ctx, 'messageBulkDelete', embed, { files: file ? [file] : [] });
+  } finally {
+    // Whether or not the bulk delete was logged: the texts must not outlive the messages.
+    void forgetSnapshots(channel?.id, ids);
   }
-  const { embed, file } = buildBulkDeleteEmbed({ channel, messages, botReason, botId: ctx.client.user?.id });
-  await emit(ctx, 'messageBulkDelete', embed, { files: file ? [file] : [] });
+}
+
+/** messageCreate: remembers the message for later delete / edit logs. Never throws, never awaited by the hook. */
+async function snapshotMessage(ctx) {
+  try {
+    const settings = await ctx.getSettings();
+    if (shouldSnapshot(settings, ctx.message)) await storeSnapshot(ctx.message);
+  } catch (err) {
+    logger.debug(`logging: message snapshot failed: ${err?.message ?? err}`);
+  }
+}
+
+async function onMessageCreate(ctx) {
+  void snapshotMessage(ctx); // the Redis write must not hold up the hooks after this one
+  if (INVITE_HINT_RE.test(effectiveText(ctx.message))) await onInvitePosted(ctx);
 }
 
 async function onInvitePosted(ctx) {
@@ -427,7 +504,7 @@ export const plugin = {
   id: 'logging',
   module: 'logging',
   hooks: [
-    { event: 'messageCreate',     id: 'logging', filter: (ctx) => ctx.message != null && INVITE_HINT_RE.test(effectiveText(ctx.message)), run: onInvitePosted },
+    { event: 'messageCreate',     id: 'logging', filter: (ctx) => ctx.message != null && (INVITE_HINT_RE.test(effectiveText(ctx.message)) || shouldSnapshot(peekSettings(ctx.guild?.id ?? ctx.message.guildId), ctx.message)), run: onMessageCreate },
     { event: 'messageUpdate',     id: 'logging', run: onMessageEdit },
     { event: 'messageDelete',     id: 'logging', run: onMessageDelete },
     { event: 'messageDeleteBulk', id: 'logging', run: onBulkDelete, timeoutMs: 15_000 },

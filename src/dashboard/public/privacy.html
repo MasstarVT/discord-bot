@@ -78,7 +78,7 @@
         <li><strong>Moderation records</strong> (warnings, timeouts, kicks and bans) with the moderator, the member and the reason given.</li>
         <li><strong>Who added the bot</strong> to each server, for the bot owner.</li>
       </ul>
-      <p>The bot reads messages to run its features: commands, auto-moderation, auto-responders, levels, translation, logging, starboards and counting. It does not save message text in its database. When a server turns logging on, edited and deleted messages are posted to that server's own log channel. Ticket transcripts are posted to the server's channel or sent to you by DM, not kept by the bot.</p>
+      <p>The bot reads messages to run its features: commands, auto-moderation, auto-responders, levels, translation, logging, starboards and counting. It does not save message text in its database. When a server has logging on with a message log channel and logs edited or deleted messages, the bot also keeps a short-lived copy of each member's messages (text, author, attachment names and links) in its cache for 7 days by default, only so a later edit or deletion can be shown in the server's log channel; the copy is removed as soon as the message is deleted (even when that deletion is not logged) or the time is up. Bots and webhooks are not copied. When logging is on, edited and deleted messages are posted to that server's own log channel. Ticket transcripts are posted to the server's channel or sent to you by DM, not kept by the bot.</p>
     </section>
 
     <section class="leaf-sec" id="dashboard" aria-labelledby="dashboard-h">
