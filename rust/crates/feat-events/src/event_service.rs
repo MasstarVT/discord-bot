@@ -2,8 +2,9 @@
 //!
 //! `/event create` posts an announcement with Going / Maybe / Can't go buttons, optionally mirrors it as a Discord
 //! Scheduled Event (one-way), gives a role to the members who are going, pings them shortly before the start
-//! (`event.remind`) and closes the event at its end (`event.end`), which also takes the role back. Everything durable
-//! is in PostgreSQL (`GuildEvent`, `EventRsvp`); the render throttle, the per-member RSVP mutex and the list of voice
+//! (`event.remind`) and closes the event at its end (`event.end`), which also takes the role back. An event whose voice
+//! channel still has people in it at the end stays open (members can still answer and get in) until the last one
+//! leaves. Everything durable is in PostgreSQL (`GuildEvent`, `EventRsvp`); the render throttle, the per-member RSVP mutex and the list of voice
 //! channels waiting for their cleanup live in the app's [`EventState`] and may vanish on a restart.
 //!
 //! Status: SCHEDULED and ACTIVE both count as open. Nothing writes ACTIVE: an open event whose start has passed is
@@ -84,7 +85,7 @@ pub mod consts {
     pub const RENAME_MS: u64 = 2_000;
     /// From the last leave to the delete: a dropped connection can come back.
     pub const EMPTY_GRACE_MS: i64 = 60_000;
-    /// How often `event.cleanup` looks at a voice channel that still has people in it.
+    /// How often `event.cleanup` and `event.end` look at a voice channel that still has people in it.
     pub const CLEANUP_RECHECK_MS: i64 = 10 * 60_000;
 }
 use consts as EVENT;
@@ -249,6 +250,12 @@ fn log_err(e: &anyhow::Error) -> bot_util::logger::LogArg {
 /// `isOpen(event)`.
 pub fn is_open(event: Option<&GuildEvent>) -> bool {
     event.is_some_and(|e| OPEN_STATUSES.contains(&e.status))
+}
+
+/// `callKeepsOpen(event, humans)`: whether the event's call keeps it open past its end: an open event whose voice channel
+/// has people in it.
+pub fn call_keeps_open(event: &GuildEvent, humans: usize) -> bool {
+    is_open(Some(event)) && event.voice_channel_id.as_deref().is_some_and(|v| !v.is_empty()) && humans > 0
 }
 
 /// `eventEnd(event)`: its end, else start + 2 h (the end job's time).
@@ -949,8 +956,12 @@ struct RenderSlot {
 pub struct EventState {
     render: Mutex<HashMap<String, RenderSlot>>,
     warned_at: Mutex<HashMap<String, i64>>,
-    /// Voice channels of closed events with people still in them: id -> (eventId, guildId).
-    waiting_voice: Mutex<HashMap<String, (String, String)>>,
+    /// Voice channels of events with people still in them: id -> (eventId, guildId, open). `open`: the event is past its
+    /// end and stays open while the call has people (`event.end` fills it; the last leave queues `event.end`); otherwise
+    /// the event is closed and waits for `event.cleanup` (which fills it; the last leave queues the cleanup). Both jobs
+    /// fill it again every CLEANUP_RECHECK_MS, so a restart only delays the close or the cleanup (by up to 10 minutes),
+    /// and voice leaves elsewhere cost no database query.
+    waiting_voice: Mutex<HashMap<String, (String, String, bool)>>,
     render_impl: Mutex<Option<RenderFn>>,
     render_mutex: KeyedMutex,
     user_mutex: KeyedMutex,
@@ -1662,6 +1673,29 @@ async fn queue_cleanup(app: &App, event_id: &str, guild_id: &str, delay_ms: i64)
     Ok(())
 }
 
+/// `queueEnd({ eventId, guildId }, delayMs)`.
+async fn queue_end(app: &App, event_id: &str, guild_id: &str, delay_ms: i64) -> anyhow::Result<()> {
+    let run_at = at(app.clock().now_ms() + delay_ms);
+    app.scheduler()
+        .schedule_job(ScheduleJob::new(guild_id, bot_config::JobType::EventEnd, run_at).payload(json!({ "eventId": event_id })).dedupe_key(end_job_key(event_id)))
+        .await?;
+    Ok(())
+}
+
+/// `callHumans(client, event)`: people in the event's voice channel: 0 when it has none, or the channel is gone or out of
+/// the bot's sight (so the event can still close; `event.cleanup` is the careful one). Never fails.
+async fn call_humans(app: &App, event: &GuildEvent) -> usize {
+    let Some(voice) = event.voice_channel_id.as_deref().filter(|v| !v.is_empty()) else { return 0 };
+    call_humans_in(app, &event.guild_id, voice).await
+}
+
+async fn call_humans_in(app: &App, guild_id: &str, voice: &str) -> usize {
+    match resolve_channel(app, guild_id, voice).await {
+        Ok(ChannelLookup::Found(c)) => feat_tempvoice::temp_voice_service::count_humans(app, c.guild_id, c.id),
+        _ => 0,
+    }
+}
+
 /// `deleteEventChannel(client, event, column)`: whether the channel is gone. One that is already gone counts as
 /// deleted; one the bot may not delete stays linked; anything else fails, so the job retries.
 async fn delete_event_channel(app: &App, event: &GuildEvent, column: &str) -> anyhow::Result<bool> {
@@ -1996,20 +2030,28 @@ pub async fn render_now(app: &App, event_id: &str) -> anyhow::Result<RenderOutco
 
 /// `reconcileOverdue(client, guildId)`: ends the open events whose end passed more than 10 minutes ago.
 pub async fn reconcile_overdue(app: &App, guild_id: &str) -> anyhow::Result<usize> {
-    let rows: Vec<(String, DateTime<Utc>, Option<DateTime<Utc>>)> = sqlx::query_as::<_, (String, chrono::NaiveDateTime, Option<chrono::NaiveDateTime>)>(
-        sqlx::AssertSqlSafe(format!(r#"SELECT "id", "startsAt", "endsAt" FROM "GuildEvent" WHERE "guildId" = $1 AND {OPEN_SQL}"#)),
-    )
-    .bind(guild_id)
-    .fetch_all(app.db())
-    .await
-    .map_err(DbError::from)?
-    .into_iter()
-    .map(|(id, s, e)| (id, s.and_utc(), e.map(|x| x.and_utc())))
-    .collect();
+    let rows: Vec<(String, DateTime<Utc>, Option<DateTime<Utc>>, Option<String>)> =
+        sqlx::query_as::<_, (String, chrono::NaiveDateTime, Option<chrono::NaiveDateTime>, Option<String>)>(sqlx::AssertSqlSafe(format!(
+            r#"SELECT "id", "startsAt", "endsAt", "voiceChannelId" FROM "GuildEvent" WHERE "guildId" = $1 AND {OPEN_SQL}"#
+        )))
+        .bind(guild_id)
+        .fetch_all(app.db())
+        .await
+        .map_err(DbError::from)?
+        .into_iter()
+        .map(|(id, s, e, v)| (id, s.and_utc(), e.map(|x| x.and_utc()), v))
+        .collect();
     let mut ended = 0;
-    for (id, s, e) in rows {
+    for (id, s, e, voice) in rows {
         if ms(&end_of(&s, e.as_ref())) + EVENT::OVERDUE_GRACE_MS > app.clock().now_ms() {
             continue;
+        }
+        // An event with people still in its voice channel stays open (the rows are open: OPEN_SQL).
+        if let Some(voice) = voice.filter(|v| !v.is_empty()) {
+            let humans = call_humans_in(app, guild_id, &voice).await;
+            if humans > 0 {
+                continue;
+            }
         }
         if let CloseOutcome::Closed { event, .. } = close_event(app, &id, GuildEventStatus::Ended, CloseReason::Expired, Some(guild_id)).await? {
             ended += 1;
@@ -3224,8 +3266,9 @@ pub async fn on_discord_event_cancelled(app: &App, guild_id: &str, discord_event
     Ok(())
 }
 
-/// voiceStateUpdate: the last human left the voice channel of a closed event, so `event.cleanup` runs after the
-/// grace.
+/// voiceStateUpdate: the last human left the voice channel of an event that is waiting on it, so after the grace
+/// `event.end` runs (an event kept open past its end by its call) or `event.cleanup` (a closed one). Each job looks at
+/// the call again.
 pub async fn on_waiting_voice_left(app: &App, guild_id: GuildId, voice_id: ChannelId) -> anyhow::Result<()> {
     let key = voice_id.to_string();
     let Some(waiting) = lock(&state(app).waiting_voice).get(&key).cloned() else { return Ok(()) };
@@ -3233,7 +3276,11 @@ pub async fn on_waiting_voice_left(app: &App, guild_id: GuildId, voice_id: Chann
         return Ok(());
     }
     lock(&state(app).waiting_voice).remove(&key);
-    queue_cleanup(app, &waiting.0, &waiting.1, EVENT::EMPTY_GRACE_MS).await
+    if waiting.2 {
+        queue_end(app, &waiting.0, &waiting.1, EVENT::EMPTY_GRACE_MS).await
+    } else {
+        queue_cleanup(app, &waiting.0, &waiting.1, EVENT::EMPTY_GRACE_MS).await
+    }
 }
 
 /// roleDelete: the event role or access role is gone, so events stop giving it.
@@ -3334,18 +3381,37 @@ pub async fn handle_remind_job(job: Job, ctx: JobCtx) -> bot_core::BotResult<Job
 }
 
 /// `handleEndJob(job, ctx)`: ends the event, then takes the role back in batches; a payload with `after` continues an
-/// earlier batch.
+/// earlier batch. An open event whose end is still ahead (moved by an edit) waits for it; one with people in its voice
+/// channel stays open, so members can still answer while the event is going on: the last one out queues this job again
+/// after EMPTY_GRACE_MS, and until then it looks again every CLEANUP_RECHECK_MS (after a restart the voice hook has
+/// nothing to go on).
 pub async fn handle_end_job(job: Job, ctx: JobCtx) -> bot_core::BotResult<JobOutcome> {
     let app = &ctx.app;
     let event_id = job_event_id(&job, "event.end")?;
     let after = job.payload.get("after").and_then(Value::as_str).map(str::to_string);
     let run = job.payload.get("run").and_then(|v| v.as_f64()).filter(|f| f.fract() == 0.0 && f.is_finite()).map(|f| f as i64).unwrap_or(0);
     let event = match &after {
-        None => match close_event(app, &event_id, GuildEventStatus::Ended, CloseReason::Timer, Some(&job.guild_id)).await? {
-            CloseOutcome::Closed { event, .. } => event.map(|e| *e),
-            CloseOutcome::AlreadyClosed(e) => Some(*e),
-            CloseOutcome::NotFound => None,
-        },
+        None => {
+            if let Some(current) = find_guild_event(app, &event_id, &job.guild_id).await?.filter(|c| is_open(Some(c))) {
+                let end = event_end(&current);
+                if ms(&end) > app.clock().now_ms() {
+                    return Ok(JobOutcome::Reschedule { next_run_at: end, payload: None });
+                }
+                if call_keeps_open(&current, call_humans(app, &current).await) {
+                    let voice = current.voice_channel_id.clone().unwrap_or_default();
+                    lock(&state(app).waiting_voice).insert(voice, (event_id.clone(), current.guild_id.clone(), true));
+                    return Ok(JobOutcome::Reschedule { next_run_at: at(app.clock().now_ms() + EVENT::CLEANUP_RECHECK_MS), payload: None });
+                }
+                if let Some(voice) = current.voice_channel_id.as_deref().filter(|v| !v.is_empty()) {
+                    lock(&state(app).waiting_voice).remove(voice);
+                }
+            }
+            match close_event(app, &event_id, GuildEventStatus::Ended, CloseReason::Timer, Some(&job.guild_id)).await? {
+                CloseOutcome::Closed { event, .. } => event.map(|e| *e),
+                CloseOutcome::AlreadyClosed(e) => Some(*e),
+                CloseOutcome::NotFound => None,
+            }
+        }
         Some(_) => find_guild_event(app, &event_id, &job.guild_id).await?,
     };
     let Some(event) = event.filter(|e| !is_open(Some(e))) else { return Ok(JobOutcome::Done) };
@@ -3480,7 +3546,7 @@ pub async fn handle_cleanup_job(job: Job, ctx: JobCtx) -> bot_core::BotResult<Jo
             ChannelLookup::Gone => false,
         };
         if occupied {
-            lock(&state(app).waiting_voice).insert(voice.clone(), (event_id.clone(), event.guild_id.clone()));
+            lock(&state(app).waiting_voice).insert(voice.clone(), (event_id.clone(), event.guild_id.clone(), false));
             return Ok(JobOutcome::Reschedule { next_run_at: at(app.clock().now_ms() + EVENT::CLEANUP_RECHECK_MS), payload: None });
         }
         lock(&state(app).waiting_voice).remove(&voice);

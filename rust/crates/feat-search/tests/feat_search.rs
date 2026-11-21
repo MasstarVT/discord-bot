@@ -346,6 +346,18 @@ fn liverole_rules_match_the_js() {
         let got = live::plan_member(mode, c[1] == true, c[2] == true, c[3] == true).map(|a| a.as_str());
         assert_eq!(got, opt_s(&c[4]), "planMember {c}");
     }
+    for c in g["defersRemoval"].as_array().into_iter().flatten() {
+        let mode = if c[0] == "clear" { live::Mode::Clear } else { live::Mode::Sync };
+        let source = match s(&c[1]) {
+            "presence" => live::Source::Presence,
+            "recheck" => live::Source::Recheck,
+            _ => live::Source::Sync,
+        };
+        assert_eq!(live::defers_removal(mode, source, c[2] == true, c[3] == true), c[4] == true, "defersRemoval {c}");
+    }
+    assert_eq!(g["STOP_GRACE_MS"].as_u64(), Some(live::limits::STOP_GRACE_MS));
+    assert_eq!(live::RECHECK_JOB_TYPE, "liverole.recheck");
+    assert_eq!(live::recheck_job_key("111", "222"), s(&g["recheckJobKey"]));
     for c in g["planSync"].as_array().into_iter().flatten() {
         let v = |x: &Value| -> Vec<String> { serde_json::from_value(x.clone()).unwrap_or_default() };
         let ok = v(&c[4]);

@@ -444,6 +444,12 @@ fn small_rules_match_the_js() {
         bot_config::custom_id!("event-modal", "cabc", "limits").unwrap_or_default(),
     ];
     assert_eq!(json!(ids), r["customIds"]);
+    for v in r["callKeepsOpen"].as_array().into_iter().flatten() {
+        let mut ev = event_of(&r["ends"][0]["event"]);
+        ev.status = serde_json::from_value(v["event"]["status"].clone()).expect("status");
+        ev.voice_channel_id = v["event"]["voiceChannelId"].as_str().map(String::from);
+        assert_eq!(json!(svc::call_keeps_open(&ev, v["humans"].as_u64().unwrap_or(0) as usize)), v["out"], "{v}");
+    }
     for v in r["voiceLeadText"].as_array().into_iter().flatten() {
         assert_eq!(svc::voice_lead_text(v["m"].as_i64().unwrap_or(0)), s(&v["out"]));
     }

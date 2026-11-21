@@ -37,6 +37,16 @@ pub mod limits {
     pub const ANNOUNCE_COOLDOWN_MS: u64 = 60 * 60_000;
     /// `liveRoleAnnounceMessage` cap.
     pub const ANNOUNCE_MAX_CHARS: u16 = 1000;
+    /// A stream stop must last this long before the role goes (Discord drops Streaming briefly mid-stream).
+    pub const STOP_GRACE_MS: u64 = 3 * 60_000;
+}
+
+/// The stream-stop re-check job type (`RECHECK_JOB_TYPE`).
+pub const RECHECK_JOB_TYPE: &str = "liverole.recheck";
+
+/// `recheckJobKey(guildId, userId)`: the dedupe key of a member's pending re-check.
+pub fn recheck_job_key(guild_id: &str, user_id: &str) -> String {
+    format!("liverole.recheck:{guild_id}:{user_id}")
 }
 
 pub const DEFAULT_LIVE_ANNOUNCE_MESSAGE: &str = "🔴 {user} is now live on {platform}!\n{url}";
@@ -448,6 +458,8 @@ pub enum Outcome {
     Blocked,
     Failed,
     RoleMissing,
+    /// A presence-sourced stream stop: the role stays until the re-check job confirms it.
+    Pending,
 }
 
 impl Outcome {
@@ -460,6 +472,7 @@ impl Outcome {
             Self::Blocked => "blocked",
             Self::Failed => "failed",
             Self::RoleMissing => "role-missing",
+            Self::Pending => "pending",
         }
     }
 }
@@ -469,6 +482,15 @@ impl Outcome {
 pub enum Source {
     Presence,
     Sync,
+    /// The `liverole.recheck` job: removes only, never adds.
+    Recheck,
+}
+
+/// `defersRemoval`: whether a planned removal waits for the stop re-check instead of happening now: only a
+/// presence-sourced stream stop of a member who still qualifies. A lost required role, `/liverole disable` (clear) and
+/// syncs remove at once.
+pub fn defers_removal(mode: Mode, source: Source, streaming: bool, qualifies: bool) -> bool {
+    mode == Mode::Sync && source == Source::Presence && !streaming && qualifies
 }
 
 async fn reconcile_locked(app: &App, guild_id: GuildId, user_id: UserId, mode: Mode, settings: &bot_db::GuildSettings, source: Source) -> Outcome {
@@ -514,8 +536,25 @@ async fn reconcile_locked(app: &App, guild_id: GuildId, user_id: UserId, mode: M
     }
     let qualifies = meets_requirement(req.as_deref(), exists, &member.roles, &guild_id.to_string());
 
-    // 4. Idempotent: add only when missing, remove only when present.
+    // 4. Idempotent: add only when missing, remove only when present. The stop re-check only ever confirms a removal.
     let Some(action) = plan_member(mode, streaming, qualifies, holds) else { return Outcome::None };
+    if source == Source::Recheck && action != Change::Remove {
+        return Outcome::None;
+    }
+
+    // 4b. A stream stop is confirmed STOP_GRACE_MS later (a later stop moves the re-check). When the job cannot be
+    // written, the role goes now, as before.
+    if action == Change::Remove && defers_removal(mode, source, streaming, qualifies) {
+        let run_at = app.clock().now() + chrono::Duration::milliseconds(limits::STOP_GRACE_MS as i64);
+        let job = ScheduleJob::new(guild_id.to_string(), JobType::LiveroleRecheck, run_at)
+            .payload(serde_json::json!({ "userId": user_id.to_string() }))
+            .dedupe_key(recheck_job_key(&guild_id.to_string(), &user_id.to_string()))
+            .on_conflict(OnConflict::Replace);
+        match app.scheduler().schedule_job(job).await {
+            Ok(_) => return Outcome::Pending,
+            Err(e) => warn(app, guild_id, "recheck", &format!("could not schedule the stream-stop re-check ({e}); removing the live role at once")),
+        }
+    }
 
     // 5. Safety check before every Discord call. Adds are refused when the role gained dangerous permissions.
     let check = match bot {
@@ -531,8 +570,8 @@ async fn reconcile_locked(app: &App, guild_id: GuildId, user_id: UserId, mode: M
     // 6. One role at a time, by id.
     let reason = match (mode, source, action) {
         (Mode::Clear, _, _) => reasons::CLEAR,
-        (_, Source::Presence, Change::Add) => reasons::PRESENCE_ADD,
-        (_, Source::Presence, Change::Remove) => reasons::PRESENCE_REMOVE,
+        (_, Source::Presence | Source::Recheck, Change::Add) => reasons::PRESENCE_ADD,
+        (_, Source::Presence | Source::Recheck, Change::Remove) => reasons::PRESENCE_REMOVE,
         (_, Source::Sync, Change::Add) => reasons::SYNC_ADD,
         (_, Source::Sync, Change::Remove) => reasons::SYNC_REMOVE,
     };
@@ -940,6 +979,24 @@ async fn on_guild_ready(ctx: Arc<HookCtx<GuildReady>>) -> BotResult {
     Ok(())
 }
 
+/// `runRecheckJob(job, { guild })`: the grace after a stream stop is over. The role goes only if the member is still not
+/// streaming (fresh presence, inside the member lock); a stream that came back keeps it. Does nothing while the module is
+/// off or has no live role, like the hooks. Idempotent.
+pub async fn run_recheck_job(job: Job, ctx: JobCtx) -> BotResult<JobOutcome> {
+    let user_id = job.payload.get("userId").and_then(serde_json::Value::as_str).filter(|u| !u.is_empty());
+    let Some(user_id) = user_id.and_then(snowflake) else {
+        return Err(PermanentJobError::new("liverole.recheck: missing userId").into());
+    };
+    let app = &ctx.app;
+    let settings = app.settings().get_settings(&job.guild_id).await?; // an error is retried with back-off
+    if !settings.live_role_enabled || settings.live_role_id.as_deref().is_none_or(str::is_empty) {
+        return Ok(JobOutcome::Done);
+    }
+    let Some(guild_id) = snowflake(&job.guild_id) else { return Ok(JobOutcome::Done) };
+    reconcile_member(app, GuildId::new(guild_id), UserId::new(user_id), Mode::Sync, settings, Source::Recheck).await;
+    Ok(JobOutcome::Done)
+}
+
 /// Tests only (`__startupSyncsIdle`): resolves once every startup sync queued so far has finished.
 pub async fn startup_syncs_idle(app: &App) {
     state(app).startup_queue.run("startup", || async {}).await;
@@ -957,6 +1014,7 @@ pub fn plugin() -> Plugin {
                 })
                 .timeout_ms(30_000),
         )
+        .job(JobType::LiveroleRecheck, job_handler(run_recheck_job))
         .hook(Hook::<GuildReady>::new("liverole", on_guild_ready)) // queues the sync and returns at once
         .hook(
             Hook::<GuildMemberUpdate>::new("liverole", on_member_update)

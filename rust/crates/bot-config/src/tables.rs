@@ -823,11 +823,13 @@ pub enum JobType {
     BumpRemind,
     /// `ticket.managersync`
     TicketManagersync,
+    /// `liverole.recheck`
+    LiveroleRecheck,
 }
 
 impl JobType {
     /// Every variant, in the JS declaration order.
-    pub const ALL: [JobType; 23] = [JobType::ModUnban, JobType::ModExpire, JobType::WelcomeAutorole, JobType::CaptchaTimeout, JobType::ReminderFire, JobType::GiveawayEnd, JobType::PollEnd, JobType::TempvoiceCleanup, JobType::StatsRefresh, JobType::BirthdayTick, JobType::FeedPoll, JobType::LevelsVoiceSweep, JobType::DashboardTask, JobType::AntiraidUnlock, JobType::EventRemind, JobType::EventEnd, JobType::EventVoice, JobType::EventCleanup, JobType::BoostsSweep, JobType::BackupAuto, JobType::BackupRestore, JobType::BumpRemind, JobType::TicketManagersync];
+    pub const ALL: [JobType; 24] = [JobType::ModUnban, JobType::ModExpire, JobType::WelcomeAutorole, JobType::CaptchaTimeout, JobType::ReminderFire, JobType::GiveawayEnd, JobType::PollEnd, JobType::TempvoiceCleanup, JobType::StatsRefresh, JobType::BirthdayTick, JobType::FeedPoll, JobType::LevelsVoiceSweep, JobType::DashboardTask, JobType::AntiraidUnlock, JobType::EventRemind, JobType::EventEnd, JobType::EventVoice, JobType::EventCleanup, JobType::BoostsSweep, JobType::BackupAuto, JobType::BackupRestore, JobType::BumpRemind, JobType::TicketManagersync, JobType::LiveroleRecheck];
 
     /// The exact JS string.
     pub const fn as_str(self) -> &'static str {
@@ -855,6 +857,7 @@ impl JobType {
             JobType::BackupRestore => "backup.restore",
             JobType::BumpRemind => "bump.remind",
             JobType::TicketManagersync => "ticket.managersync",
+            JobType::LiveroleRecheck => "liverole.recheck",
         }
     }
 
@@ -884,13 +887,14 @@ impl JobType {
             "backup.restore" => Some(JobType::BackupRestore),
             "bump.remind" => Some(JobType::BumpRemind),
             "ticket.managersync" => Some(JobType::TicketManagersync),
+            "liverole.recheck" => Some(JobType::LiveroleRecheck),
             _ => None,
         }
     }
 }
 
 /// `JOB_TYPES` in declaration order (src/config/jobTypes.js).
-pub static JOB_TYPES: [JobTypeInfo; 23] = [
+pub static JOB_TYPES: [JobTypeInfo; 24] = [
     JobTypeInfo { job_type: JobType::ModUnban, owner: "moderation", recurring: false, dedupe: "mod.unban:{guildId}:{userId}", interactive: false },
     JobTypeInfo { job_type: JobType::ModExpire, owner: "moderation", recurring: false, dedupe: "mod.expire:{infractionId}", interactive: false },
     JobTypeInfo { job_type: JobType::WelcomeAutorole, owner: "welcome", recurring: false, dedupe: "welcome.autorole:{guildId}:{userId}", interactive: false },
@@ -914,6 +918,7 @@ pub static JOB_TYPES: [JobTypeInfo; 23] = [
     JobTypeInfo { job_type: JobType::BackupRestore, owner: "backups", recurring: false, dedupe: "backup.restore:{guildId}", interactive: false },
     JobTypeInfo { job_type: JobType::BumpRemind, owner: "bumps", recurring: false, dedupe: "bump.remind:{guildId}:{site}", interactive: false },
     JobTypeInfo { job_type: JobType::TicketManagersync, owner: "tickets", recurring: false, dedupe: "ticket.managersync:{guildId}", interactive: false },
+    JobTypeInfo { job_type: JobType::LiveroleRecheck, owner: "liverole", recurring: false, dedupe: "liverole.recheck:{guildId}:{userId}", interactive: false },
 ];
 
 /// `RECURRING_JOB_TYPES`: re-seed themselves and are cancelled when the bot leaves a guild.

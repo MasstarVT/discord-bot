@@ -1054,6 +1054,11 @@
         "owner": "tickets",
         "recurring": false,
         "dedupe": "ticket.managersync:{guildId}"
+      },
+      "liverole.recheck": {
+        "owner": "liverole",
+        "recurring": false,
+        "dedupe": "liverole.recheck:{guildId}:{userId}"
       }
     },
     "RECURRING_JOB_TYPES": [

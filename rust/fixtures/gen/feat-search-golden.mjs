@@ -292,6 +292,10 @@ const liveOut = {
     [null, presence(streaming()), { liveRoleEnabled: true, liveRoleId: 'R' }], [presence(streaming()), presence(streaming()), null], [presence(streaming()), presence(), null],
   ].map(([o, n, p]) => [o, n, p, live.shouldHandlePresence(o, n, p)]),
   DEFAULT_LIVE_ANNOUNCE_MESSAGE: live.DEFAULT_LIVE_ANNOUNCE_MESSAGE,
+  defersRemoval: ['sync', 'clear'].flatMap((mode) => ['presence', 'sync', 'recheck'].flatMap((source) => [true, false].flatMap((s) => [true, false]
+    .map((q) => [mode, source, s, q, live.defersRemoval({ mode, source, streaming: s, qualifies: q })])))),
+  STOP_GRACE_MS: live.LIVEROLE.STOP_GRACE_MS,
+  recheckJobKey: live.recheckJobKey('111', '222'),
 };
 write('liverole', liveOut);
 

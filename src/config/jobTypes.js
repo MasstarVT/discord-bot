@@ -25,6 +25,7 @@ export const JOB_TYPES = Object.freeze({
   "backup.restore": Object.freeze({ owner: "backups", recurring: false, dedupe: "backup.restore:{guildId}" }),
   "bump.remind": Object.freeze({ owner: "bumps", recurring: false, dedupe: "bump.remind:{guildId}:{site}" }),
   "ticket.managersync": Object.freeze({ owner: "tickets", recurring: false, dedupe: "ticket.managersync:{guildId}" }),
+  "liverole.recheck": Object.freeze({ owner: "liverole", recurring: false, dedupe: "liverole.recheck:{guildId}:{userId}" }),
 });
 
 /** @returns {boolean} true when `type` is a registered job type */

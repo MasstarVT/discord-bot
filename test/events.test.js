@@ -921,7 +921,7 @@ test('event.end job: ends the event, strips the role, continues with a cursor wh
   const guild = fakeGuild();
   const channel = fakeChannel(guild);
   const client = fakeClient(guild);
-  const event = await seedEvent({ roleId: 'R1' });
+  const event = await seedEvent({ roleId: 'R1', startsAt: future(-3 * HOUR) }); // its end (start + 2 h) has passed
   const total = EVENT.STRIP_BATCH + 5;
   for (let i = 0; i < total; i += 1) {
     const id = `U${String(i).padStart(4, '0')}`;
@@ -2297,6 +2297,108 @@ test('cleanup: someone back within the grace keeps it open, and a restart loses 
   vc.members.clear();
   await svc.handleCleanupJob(cleanupJob(event), { client });
   assert.deepEqual(guild.deleted, ['VC', 'CHAT', 'AR']);
+});
+
+// ── An event stays open while people are in its call ─────────────────────────
+
+test('callKeepsOpen: an open event with people in its voice channel', () => {
+  assert.equal(svc.callKeepsOpen({ status: 'SCHEDULED', voiceChannelId: 'VC' }, 1), true);
+  assert.equal(svc.callKeepsOpen({ status: 'ACTIVE', voiceChannelId: 'VC' }, 3), true);
+  assert.equal(svc.callKeepsOpen({ status: 'SCHEDULED', voiceChannelId: 'VC' }, 0), false, 'an empty call');
+  assert.equal(svc.callKeepsOpen({ status: 'SCHEDULED', voiceChannelId: null }, 2), false, 'no voice channel');
+  assert.equal(svc.callKeepsOpen({ status: 'ENDED', voiceChannelId: 'VC' }, 2), false);
+  assert.equal(svc.callKeepsOpen({ status: 'CANCELLED', voiceChannelId: 'VC' }, 2), false);
+  assert.equal(svc.callKeepsOpen(null, 2), false);
+});
+
+test('event.end: people in the call keep the event open past its end, members can still answer, the last one out closes it', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, vc } = await seedChannels(guild, { startsAt: future(-3 * HOUR) }); // the 2 h default end has passed
+  vc.members.set(...human('U1'));
+  vc.members.set(...robot());
+  const job = { guildId: 'G', payload: { eventId: event.id } };
+
+  const before = Date.now();
+  const res = await svc.handleEndJob(job, { client });
+  assert.ok(res.nextRunAt.getTime() >= before + EVENT.CLEANUP_RECHECK_MS, 'it looks again later');
+  assert.equal(events.get(event.id).status, 'SCHEDULED', 'still open');
+  assert.equal((await svc.applyRsvp({ eventId: event.id, guildId: 'G', userId: 'LATE', status: 'GOING' })).result, 'set', 'a member can still join');
+
+  const hook = plugin.hooks.find((h) => h.event === 'voiceStateUpdate');
+  const left = () => ({ change: 'leave', guild, oldState: { channelId: vc.id, channel: vc } });
+  assert.equal(hook.filter(left()), true);
+  vc.members.delete('U1'); // only the bot is left
+  const at = Date.now();
+  await hook.run(left());
+  const queued = jobCalls.schedule.at(-1);
+  assert.equal(queued.type, 'event.end');
+  assert.equal(queued.dedupeKey, svc.endJobKey(event.id));
+  assert.deepEqual(queued.payload, { eventId: event.id });
+  assert.ok(queued.runAt.getTime() >= at + EVENT.EMPTY_GRACE_MS, 'a dropped connection can come back');
+  assert.equal(hook.filter(left()), false, 'it stops waiting');
+
+  // Someone is back within the grace: the queued end finds them and waits again.
+  vc.members.set(...human('U2'));
+  assert.ok((await svc.handleEndJob(job, { client })).nextRunAt);
+  assert.equal(events.get(event.id).status, 'SCHEDULED');
+  assert.equal(hook.filter(left()), true, 'waiting again');
+
+  vc.members.delete('U2');
+  await hook.run(left());
+  assert.equal(jobCalls.schedule.at(-1).type, 'event.end');
+  assert.equal(await svc.handleEndJob(job, { client }), undefined);
+  assert.equal(events.get(event.id).status, 'ENDED');
+  assert.equal((await svc.applyRsvp({ eventId: event.id, guildId: 'G', userId: 'LATER', status: 'GOING' })).result, 'closed');
+  assert.ok(jobCalls.schedule.some((j) => j.type === 'event.cleanup'), 'the channels are cleaned up as before');
+});
+
+test('event.end: an empty call, no voice channel, or one gone or out of sight closes at the end as before', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const empty = await seedChannels(guild, { startsAt: future(-3 * HOUR) });
+  assert.equal(await svc.handleEndJob(voiceJob(empty.event), { client }), undefined);
+  assert.equal(events.get(empty.event.id).status, 'ENDED');
+
+  reset();
+  const plain = await seedEvent({ startsAt: future(-3 * HOUR) });
+  await svc.handleEndJob(voiceJob(plain), { client });
+  assert.equal(events.get(plain.id).status, 'ENDED');
+
+  reset();
+  const hidden = channelGuild();
+  const hiddenClient = fakeClient(hidden);
+  hiddenClient.channels.fetch = async () => { throw Object.assign(new Error('Missing Access'), { code: 50001 }); };
+  const gone = await seedChannels(hidden, { startsAt: future(-3 * HOUR) });
+  hidden.channels.cache.delete(gone.vc.id);
+  await svc.handleEndJob(voiceJob(gone.event), { client: hiddenClient });
+  assert.equal(events.get(gone.event.id).status, 'ENDED');
+});
+
+test('event.end: an end moved later (an edit) is waited for, even after the call emptied', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const end = future(HOUR);
+  const { event } = await seedChannels(guild, { startsAt: future(-HOUR), endsAt: end });
+  const res = await svc.handleEndJob(voiceJob(event), { client });
+  assert.equal(res.nextRunAt.getTime(), end.getTime());
+  assert.equal(events.get(event.id).status, 'SCHEDULED');
+});
+
+test('reconcileOverdue: an overdue event with people in its call stays open; an empty one is ended', async () => {
+  reset();
+  const guild = channelGuild();
+  const client = fakeClient(guild);
+  const { event, vc } = await seedChannels(guild, { startsAt: future(-4 * HOUR) });
+  vc.members.set(...human('U1'));
+  assert.equal(await svc.reconcileOverdue(client, 'G'), 0);
+  assert.equal(events.get(event.id).status, 'SCHEDULED');
+  vc.members.clear();
+  assert.equal(await svc.reconcileOverdue(client, 'G'), 1);
+  assert.equal(events.get(event.id).status, 'ENDED');
 });
 
 test('cleanup: a voice channel the bot cannot see counts as occupied', async () => {
