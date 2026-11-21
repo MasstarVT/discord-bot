@@ -1,8 +1,13 @@
 // Live Role plugin (pkg-liverole.md): a role held while a member's Discord presence shows a Streaming activity (Twitch or YouTube),
 // MEE6's Twitch Alerts "live-streaming role" without the Twitch API. All logic lives here: the plugin declaration, the pure helpers,
 // and the async engine (reconcileMember, syncGuild). src/commands/admin/liverole.js imports the named exports. Nothing runs at import:
-// the only module-scope state is three keyed mutexes, two throttles, two waiting-sets and frozen constants.
+// the only module-scope state is three keyed mutexes, two throttles, two waiting-sets, the scheduler seam and frozen constants.
+//
+// A stream stop is confirmed before the role goes: Discord sometimes sends a presence without the Streaming activity in the
+// middle of a long stream and puts it back moments later, so a presence-sourced removal schedules `liverole.recheck`
+// (LIVEROLE.STOP_GRACE_MS later), which removes the role only if the member is still not streaming then.
 import { ActivityType, escapeMarkdown } from 'discord.js';
+import { PermanentJobError, scheduleJob } from '../services/scheduler.js';
 import { getSettingsSafe, peekSettings } from '../services/settingsService.js';
 import { checkAssignableRole, checkChannelUsable, pingableRoleIds } from '../utils/interactionHelpers.js';
 import { createKeyedMutex, createThrottle } from '../utils/async.js';
@@ -25,7 +30,11 @@ export const LIVEROLE = Object.freeze({
   STATUS_LIST_MAX: 15,             // holders listed by /liverole status
   ANNOUNCE_COOLDOWN_MS: 60 * 60_000, // one go-live post per member per hour (a dropped stream re-adds the role)
   ANNOUNCE_MAX_CHARS: 1000,        // liveRoleAnnounceMessage cap (/liverole announce and the dashboard)
+  STOP_GRACE_MS: 3 * 60_000,       // a stream stop must last this long before the role goes (Discord drops Streaming briefly)
 });
+
+export const RECHECK_JOB_TYPE = 'liverole.recheck';
+export const recheckJobKey = (guildId, userId) => `liverole.recheck:${guildId}:${userId}`;
 
 export const DEFAULT_LIVE_ANNOUNCE_MESSAGE = '🔴 {user} is now live on {platform}!\n{url}';
 
@@ -71,6 +80,13 @@ const announceThrottle = createThrottle(LIVEROLE.ANNOUNCE_COOLDOWN_MS);
 const warn = (guildId, kind, text) => {
   if (warnThrottle(`${guildId}:${kind}`)) logger.warn(`[liverole] ${guildId}: ${text}`);
 };
+
+/** The scheduler and the re-check job's settings loader, replaceable in tests. */
+let deps = { schedule: scheduleJob, settings: getSettingsSafe };
+/** Test hook: replaces the scheduler call and the re-check job's settings loader. Pass nothing to restore. */
+export function __setJobImpl(impl) {
+  deps = { schedule: impl?.schedule ?? scheduleJob, settings: impl?.settings ?? getSettingsSafe };
+}
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
@@ -141,6 +157,14 @@ export function meetsRequirement({ requiredRoleId, requiredRoleExists = true, me
   if (!requiredRoleId || requiredRoleId === guildId) return true;
   if (!requiredRoleExists) return false;
   return !!memberRoleIds?.has?.(requiredRoleId);
+}
+
+/**
+ * Whether a planned removal waits for the stop re-check instead of happening now: only a presence-sourced stream stop of a
+ * member who still qualifies. A lost required role, /liverole disable (clear) and syncs remove at once.
+ */
+export function defersRemoval({ mode = 'sync', source, streaming, qualifies }) {
+  return mode === 'sync' && source === 'presence' && !streaming && !!qualifies;
 }
 
 /** Desired change for one member. mode 'clear' removes from every holder. */
@@ -274,9 +298,24 @@ async function reconcileLocked(guild, userId, { mode, settings, source }) {
   });
 
   // 4. Idempotent: add only when missing, remove only when present. A stream stop removes the role
-  // whatever the required role says.
+  // whatever the required role says. The stop re-check only ever confirms a removal.
   const action = planMember({ mode, streaming, qualifies, holds });
   if (!action) return 'none';
+  if (source === 'recheck' && action !== 'remove') return 'none';
+
+  // 4b. A stream stop is confirmed LIVEROLE.STOP_GRACE_MS later (a later stop moves the re-check). When the job cannot be
+  // written, the role goes now, as before.
+  if (action === 'remove' && defersRemoval({ mode, source, streaming, qualifies })) {
+    try {
+      await deps.schedule({
+        guildId: guild.id, type: RECHECK_JOB_TYPE, runAt: new Date(Date.now() + LIVEROLE.STOP_GRACE_MS),
+        payload: { userId }, dedupeKey: recheckJobKey(guild.id, userId),
+      });
+      return 'pending';
+    } catch (err) {
+      warn(guild.id, 'recheck', `could not schedule the stream-stop re-check (${err?.message ?? err}); removing the live role at once`);
+    }
+  }
 
   // 5. Safety check before every Discord call. Adds are refused when the role gained dangerous permissions; removals never are.
   const check = checkAssignableRole(guild, role, { allowDangerous: action === 'remove' });
@@ -288,7 +327,7 @@ async function reconcileLocked(guild, userId, { mode, settings, source }) {
   // 6. One role at a time, by id (R161: the array and set forms PATCH the whole role list).
   let reason;
   if (mode === 'clear') reason = REASONS.clear;
-  else if (source === 'presence') reason = action === 'add' ? REASONS.presenceAdd : REASONS.presenceRemove;
+  else if (source === 'presence' || source === 'recheck') reason = action === 'add' ? REASONS.presenceAdd : REASONS.presenceRemove;
   else reason = action === 'add' ? REASONS.syncAdd : REASONS.syncRemove;
 
   try {
@@ -320,7 +359,9 @@ async function reconcileLocked(guild, userId, { mode, settings, source }) {
 
 /**
  * Brings one member's live role in line with their current presence. Idempotent, serialised per member, never throws.
- * @returns {Promise<'added'|'removed'|'none'|'gone'|'blocked'|'failed'|'role-missing'>}
+ * source: 'presence' (coalesced; a stream stop becomes 'pending' until the re-check), 'sync', or 'recheck' (the
+ * `liverole.recheck` job: removes only, never adds).
+ * @returns {Promise<'added'|'removed'|'pending'|'none'|'gone'|'blocked'|'failed'|'role-missing'>}
  */
 export async function reconcileMember(guild, userId, { mode = 'sync', settings, source = 'presence' } = {}) {
   try {
@@ -544,6 +585,20 @@ async function onGuildReady(ctx) {
   }).catch((err) => logger.error(`[liverole] startup sync failed for ${guild.id}`, err));
 }
 
+/**
+ * `liverole.recheck` job ({ userId }): the grace after a stream stop is over. The role goes only if the member is still not
+ * streaming (fresh presence, inside the member lock); a stream that came back keeps it. Does nothing while the module is off
+ * or has no live role, like the hooks. Idempotent.
+ */
+export async function runRecheckJob(job, { guild }) {
+  const userId = job?.payload?.userId;
+  if (typeof userId !== 'string' || !userId) throw new PermanentJobError('liverole.recheck: missing userId');
+  const settings = await deps.settings(guild.id);
+  if (!settings) throw new Error('liverole.recheck: settings unavailable'); // retried with back-off
+  if (settings.liveRoleEnabled !== true || !settings.liveRoleId) return;
+  await reconcileMember(guild, userId, { mode: 'sync', settings, source: 'recheck' });
+}
+
 /** Test-only: resolves once every startup sync queued so far has finished. */
 export function __startupSyncsIdle() {
   return startupQueue.run('startup', () => {});
@@ -577,6 +632,6 @@ export const plugin = {
     },
   ],
   components: [],
-  jobs: [],
+  jobs: [{ type: RECHECK_JOB_TYPE, handler: runRecheckJob }],
   provides: {},
 };

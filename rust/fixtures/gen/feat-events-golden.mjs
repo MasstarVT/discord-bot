@@ -258,6 +258,10 @@ const rules = {
   voiceLead: [null, {}, { eventVoiceLeadMinutes: 0 }, { eventVoiceLeadMinutes: 45 }, { eventVoiceLeadMinutes: 2.5 }].map((s) => ({ settings: s, out: svc.voiceLead(s) })),
   voiceAt: [[NOW + DAY, 30], [NOW + 10 * 60_000, 30], [NOW - HOUR, 0], [NOW + 30 * 60_000, 30]].map(([s, lead]) => ({ startsAt: iso(new Date(s)), lead, out: iso(svc.voiceAt({ startsAt: new Date(s) }, lead, NOW)) })),
   ends: [mkEvent(), mkEvent({ endsAt: null })].map((e) => ({ event: ev(e), end: iso(svc.eventEnd(e)), shown: iso(svc.shownEnd(e)), remind: iso(svc.remindAt(e)) })),
+  callKeepsOpen: [
+    [{ status: 'SCHEDULED', voiceChannelId: 'VC' }, 1], [{ status: 'ACTIVE', voiceChannelId: 'VC' }, 3], [{ status: 'SCHEDULED', voiceChannelId: 'VC' }, 0],
+    [{ status: 'SCHEDULED', voiceChannelId: null }, 2], [{ status: 'ENDED', voiceChannelId: 'VC' }, 2], [{ status: 'CANCELLED', voiceChannelId: 'VC' }, 2],
+  ].map(([event, humans]) => ({ event, humans, out: svc.callKeepsOpen(event, humans) })),
   remindAt: [0, -5, 15, 1440].map((m) => ({ m, out: iso(svc.remindAt({ startsAt: new Date(NOW), reminderMinutes: m })) })),
   startProblem: [NOW - 1, NOW, NOW + 1000, NOW + 365 * DAY, NOW + 366 * DAY].map((ms) => ({ ms, out: svc.startProblem(new Date(ms), NOW) })),
   textChannelName: ['Movie night', 'Ünïcödé Café!!', '   ', '🎉🎉', 'a'.repeat(120), 'Big -- Party -- 2026'].map((t) => ({ title: t, out: svc.textChannelName(t) })),

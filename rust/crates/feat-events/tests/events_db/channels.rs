@@ -187,6 +187,152 @@ async fn the_last_human_leaving_a_waiting_voice_channel_queues_the_cleanup_after
     env.done().await;
 }
 
+// ── An event stays open while people are in its call ─────────────────────────
+
+/// An open event linked to the voice channel whose end (start + 2 h by default) has passed.
+async fn overdue_with_call(env: &Env, voice: Option<&str>) -> bot_db::GuildEvent {
+    let now = env.t.clock().now_ms();
+    let event = env
+        .seed(|d| {
+            d.starts_at = chrono::DateTime::from_timestamp_millis(now - 3 * 3_600_000).unwrap_or_default();
+            d.ends_at = None;
+        })
+        .await;
+    link(env, &event.id, Some(TEXT), voice, Some(ACCESS), "SCHEDULED").await;
+    event
+}
+
+/// `user` leaves `VOICE`: the cache sees the channel empty, then the gateway runs the hooks.
+async fn leave_voice(env: &Env, user: &str) {
+    let state = json!({
+        "guild_id": env.g, "channel_id": null, "user_id": user, "session_id": "s", "deaf": false, "mute": false, "self_deaf": false,
+        "self_mute": false, "self_video": false, "suppress": false, "request_to_speak_timestamp": null
+    });
+    let mut ev: serenity::all::VoiceStateUpdateEvent = serde_json::from_value(state.clone()).expect("voice event");
+    if let Some(d) = env.t.discord() {
+        d.cache.update(&mut ev);
+    }
+    let mut old = state.clone();
+    old["channel_id"] = json!(VOICE);
+    let old_state: serenity::all::VoiceState = serde_json::from_value(old).expect("old state");
+    let new_state: serenity::all::VoiceState = serde_json::from_value(state).expect("new state");
+    let member = bot_core::interaction_helpers::cached_guild(&env.t, env.gid())
+        .and_then(|g| g.members.values().find(|m| m.user.id.to_string() == user).cloned())
+        .expect("member");
+    env.t.run_hooks(VoiceStateUpdate { guild_id: env.gid(), old_state: Some(old_state), new_state, member, change: VoiceChange::Leave }).await;
+}
+
+/// `user` joins `VOICE`.
+fn join_voice(env: &Env, user: &str) {
+    let state = json!({
+        "guild_id": env.g, "channel_id": VOICE, "user_id": user, "session_id": "s", "deaf": false, "mute": false, "self_deaf": false,
+        "self_mute": false, "self_video": false, "suppress": false, "request_to_speak_timestamp": null
+    });
+    let mut ev: serenity::all::VoiceStateUpdateEvent = serde_json::from_value(state).expect("voice event");
+    if let Some(d) = env.t.discord() {
+        d.cache.update(&mut ev);
+    }
+}
+
+#[tokio::test]
+async fn people_in_the_call_keep_the_event_open_past_its_end_and_the_last_one_out_closes_it() {
+    let guild = channel_guild("930000000000000080").voice_state(U1, VOICE);
+    let Some(env) = Env::with("930000000000000080", guild).await else { return };
+    let event = overdue_with_call(&env, Some(VOICE)).await;
+    let end = |id: &str| svc::handle_end_job(env.job_of("event.end", json!({ "eventId": id })), env.ctx());
+
+    let before = chrono::Utc::now().timestamp_millis();
+    match end(&event.id).await.expect("job") {
+        JobOutcome::Reschedule { next_run_at, .. } => assert!(next_run_at.timestamp_millis() >= before + svc::consts::CLEANUP_RECHECK_MS - 1_000, "it looks again later"),
+        other => panic!("{other:?}"),
+    }
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Scheduled, "still open");
+    let late = svc::apply_rsvp(&env.t, &event.id, env.g, U2, RsvpStatus::Going).await.expect("rsvp");
+    assert_eq!(late.result, RsvpResult::Set, "a member can still join");
+    assert!(svc::is_waiting_voice(&env.t, VOICE));
+
+    // U1 leaves: after the grace `event.end` runs (not the cleanup).
+    let at = chrono::Utc::now().timestamp_millis();
+    leave_voice(&env, U1).await;
+    assert!(!svc::is_waiting_voice(&env.t, VOICE), "it stops waiting");
+    let job = env.job(&svc::end_job_key(&event.id)).await.expect("end queued");
+    assert_eq!((job.r#type.as_str(), job.payload.clone()), ("event.end", json!({ "eventId": event.id })));
+    let when = job.run_at.timestamp_millis();
+    assert!(when >= at + 59_000 && when <= at + 70_000, "about a minute later: {}", when - at);
+
+    // Someone is back within the grace: the queued end finds them and waits again.
+    join_voice(&env, U2);
+    assert!(matches!(end(&event.id).await.expect("job"), JobOutcome::Reschedule { .. }));
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Scheduled);
+    assert!(svc::is_waiting_voice(&env.t, VOICE), "waiting again");
+
+    leave_voice(&env, U2).await;
+    assert_eq!(end(&event.id).await.expect("job"), JobOutcome::Done);
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Ended);
+    let closed = svc::apply_rsvp(&env.t, &event.id, env.g, U1, RsvpStatus::Going).await.expect("rsvp");
+    assert_eq!(closed.result, RsvpResult::Closed);
+    assert!(env.job(&svc::cleanup_job_key(&event.id)).await.is_some(), "the channels are cleaned up as before");
+    env.done().await;
+}
+
+#[tokio::test]
+async fn an_empty_call_no_voice_channel_or_a_gone_one_closes_at_the_end_as_before() {
+    let Some(env) = Env::with("930000000000000081", channel_guild("930000000000000081")).await else { return };
+    let end = |id: &str| svc::handle_end_job(env.job_of("event.end", json!({ "eventId": id })), env.ctx());
+    let empty = overdue_with_call(&env, Some(VOICE)).await;
+    assert_eq!(end(&empty.id).await.expect("job"), JobOutcome::Done);
+    assert_eq!(env.event(&empty.id).await.status, GuildEventStatus::Ended);
+
+    let plain = overdue_with_call(&env, None).await;
+    assert_eq!(end(&plain.id).await.expect("job"), JobOutcome::Done);
+    assert_eq!(env.event(&plain.id).await.status, GuildEventStatus::Ended);
+
+    let gone = overdue_with_call(&env, Some("810000000000000099")).await;
+    assert_eq!(end(&gone.id).await.expect("job"), JobOutcome::Done);
+    assert_eq!(env.event(&gone.id).await.status, GuildEventStatus::Ended);
+    env.done().await;
+}
+
+#[tokio::test]
+async fn an_end_moved_later_is_waited_for_even_after_the_call_emptied() {
+    let Some(env) = Env::with("930000000000000082", channel_guild("930000000000000082")).await else { return };
+    let now = env.t.clock().now_ms();
+    let end_at = now + 3_600_000;
+    let event = env
+        .seed(|d| {
+            d.starts_at = chrono::DateTime::from_timestamp_millis(now - 3_600_000).unwrap_or_default();
+            d.ends_at = chrono::DateTime::from_timestamp_millis(end_at);
+        })
+        .await;
+    link(&env, &event.id, Some(TEXT), Some(VOICE), Some(ACCESS), "SCHEDULED").await;
+    match svc::handle_end_job(env.job_of("event.end", json!({ "eventId": event.id })), env.ctx()).await.expect("job") {
+        JobOutcome::Reschedule { next_run_at, .. } => assert_eq!(next_run_at.timestamp_millis(), end_at),
+        other => panic!("{other:?}"),
+    }
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Scheduled);
+    env.done().await;
+}
+
+#[tokio::test]
+async fn reconcile_overdue_leaves_an_event_with_people_in_its_call_open_and_ends_an_empty_one() {
+    let guild = channel_guild("930000000000000083").voice_state(U1, VOICE);
+    let Some(env) = Env::with("930000000000000083", guild).await else { return };
+    let now = env.t.clock().now_ms();
+    let event = env
+        .seed(|d| {
+            d.starts_at = chrono::DateTime::from_timestamp_millis(now - 4 * 3_600_000).unwrap_or_default();
+            d.ends_at = None;
+        })
+        .await;
+    link(&env, &event.id, Some(TEXT), Some(VOICE), Some(ACCESS), "SCHEDULED").await;
+    assert_eq!(svc::reconcile_overdue(&env.t, env.g).await.expect("reconcile"), 0);
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Scheduled);
+    leave_voice(&env, U1).await;
+    assert_eq!(svc::reconcile_overdue(&env.t, env.g).await.expect("reconcile"), 1);
+    assert_eq!(env.event(&event.id).await.status, GuildEventStatus::Ended);
+    env.done().await;
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn two_events_at_once_share_one_category_and_an_existing_one_is_used() {
     let Some(env) = Env::new("930000000000000035").await else { return };

@@ -522,7 +522,13 @@ async fn strip_roles_is_bounded_with_a_cursor_and_the_end_job_continues_it() {
         other => panic!("{other:?}"),
     }
     // Without a cursor it ends an open event.
-    let open = env.seed(|_| {}).await;
+    let now = env.t.clock().now_ms();
+    let open = env
+        .seed(|d| {
+            d.starts_at = chrono::DateTime::from_timestamp_millis(now - 3 * 3_600_000).unwrap_or_default(); // its end (start + 2 h) has passed
+            d.ends_at = None;
+        })
+        .await;
     assert_eq!(svc::handle_end_job(env.job_of("event.end", json!({ "eventId": open.id })), env.ctx()).await.expect("job"), JobOutcome::Done);
     assert_eq!(env.event(&open.id).await.status, GuildEventStatus::Ended);
     let bad = svc::handle_end_job(env.job_of("event.end", json!({})), env.ctx()).await;
@@ -1027,6 +1033,7 @@ async fn js_and_rust_read_each_others_events_rsvps_and_jobs() {
     let remind = env.job(&svc::remind_job_key(&id)).await.expect("JS remind job");
     assert_eq!(remind.payload, json!({ "eventId": id }));
     // The Rust handler runs the JS job.
+    sqlx::query(r#"UPDATE "GuildEvent" SET "startsAt" = now() - interval '3 hours', "endsAt" = NULL WHERE "id" = $1"#).bind(&id).execute(env.t.db()).await.expect("end passed");
     let job = bot_core::scheduler::Job::from_row(&end);
     assert_eq!(svc::handle_end_job(job, env.ctx()).await.expect("job"), JobOutcome::Done);
     assert_eq!(env.event(&id).await.status, GuildEventStatus::Ended);

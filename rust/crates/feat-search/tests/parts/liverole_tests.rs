@@ -76,7 +76,12 @@ pub struct Live {
 }
 
 pub async fn live_app(patch: SettingsPatch) -> Live {
-    let t = TestApp::new().with_guilds([G]);
+    live_app_on(TestApp::new(), patch).await
+}
+
+/// [`live_app`] on a given test app (one whose job store fails, say).
+pub async fn live_app_on(t: TestApp, patch: SettingsPatch) -> Live {
+    let t = t.with_guilds([G]);
     let d = FakeDiscord::new(&[guild_json()]);
     ops::set_ops(&t, Arc::new(FakeOps(d.clone())));
     ops::set_presences_enabled(&t, true);
@@ -126,7 +131,11 @@ async fn reconcile_adds_to_a_streamer_by_id_and_is_idempotent() {
 #[tokio::test]
 async fn reconcile_removes_from_a_holder_who_is_not_streaming_and_uses_the_right_reasons() {
     let l = live_app(SettingsPatch::new()).await;
-    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Removed);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Pending, "a presence stop waits for its re-check");
+    assert!(l.role_calls().is_empty());
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Recheck).await, Outcome::Removed);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Recheck).await, Outcome::None);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::None);
     assert_eq!(l.role_calls(), vec![remove(H1, live::reasons::PRESENCE_REMOVE)]);
     l.d.clear();
     assert_eq!(l.reconcile(S1, Mode::Sync, Source::Sync).await, Outcome::Added);
@@ -144,7 +153,7 @@ async fn a_dangerous_role_is_never_added_but_can_be_removed() {
     assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::Blocked);
     assert!(l.role_calls().is_empty());
     l.d.edit(G, |g| g.members.get_mut(&uid(H1)).unwrap().roles.push(RoleId::new(DANGER.parse().unwrap())));
-    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Removed);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Recheck).await, Outcome::Removed);
 }
 
 #[tokio::test]
@@ -152,7 +161,7 @@ async fn a_live_role_above_the_bot_blocks_both_directions_without_a_rest_call() 
     let l = live_app(SettingsPatch::new().set("liveRoleId", HIGH)).await;
     assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::Blocked);
     l.d.edit(G, |g| g.members.get_mut(&uid(H1)).unwrap().roles.push(RoleId::new(HIGH.parse().unwrap())));
-    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Blocked);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Recheck).await, Outcome::Blocked);
     assert!(l.role_calls().is_empty());
 }
 
@@ -193,7 +202,7 @@ async fn a_partial_member_from_a_presence_is_fetched_before_any_role_logic() {
     let l = live_app(SettingsPatch::new()).await;
     l.d.edit(G, |g| g.members.insert(uid(H1), partial_member(G, H1)));
     l.d.remote_members.lock().unwrap().insert(uid(H1), member(G, H1, &[LIVE], None));
-    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Removed);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Recheck).await, Outcome::Removed);
     assert_eq!(l.d.calls()[0], Call::FetchMember { user: H1.into() });
     assert_eq!(l.role_calls(), vec![remove(H1, live::reasons::PRESENCE_REMOVE)]);
 }
@@ -217,7 +226,8 @@ async fn the_required_role_gates_adds_and_a_stop_removes_regardless() {
     l.d.edit(G, |g| g.members.get_mut(&uid(S1)).unwrap().roles.push(RoleId::new(REQ.parse().unwrap())));
     assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::Added);
     l.d.set_presence(G, S1, json!([]));
-    assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::Removed);
+    assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::Pending, "it still qualifies, so the stop waits");
+    assert_eq!(l.reconcile(S1, Mode::Sync, Source::Recheck).await, Outcome::Removed);
     // A deleted required role fails closed.
     let l = live_app(SettingsPatch::new().set("liveRoleRequiredRoleId", "840000000000000888")).await;
     assert_eq!(l.reconcile(S1, Mode::Sync, Source::Presence).await, Outcome::None);
@@ -249,6 +259,7 @@ async fn a_flapping_presence_is_coalesced_and_converges() {
     let outs = futures::future::join_all(futs).await;
     assert!(l.role_calls().len() <= 2, "at most one running and one waiting: {:?}", l.role_calls());
     assert!(outs.iter().filter(|o| **o == Outcome::None).count() >= 4);
+    l.reconcile(S1, Mode::Sync, Source::Recheck).await; // a pending stop would be confirmed here
     assert!(!l.d.roles_of(G, S1).contains(&LIVE.to_string()), "converged on the newest presence");
 }
 
@@ -728,4 +739,109 @@ async fn liverole_settings_unavailable_answers_publicly_without_pinging() {
         assert_eq!(last.embed_title(), Some("❌  Settings Unavailable"), "{sub}: {calls:?}");
         assert_eq!(last.body["allowed_mentions"]["parse"], json!([]));
     }
+}
+
+// ── Stream-stop grace: the flap seen live (Removed, then Added in the same minute, while still streaming) ──
+
+fn recheck_job(user: &str) -> Job {
+    Job {
+        id: "j".into(),
+        guild_id: G.into(),
+        job_type: live::RECHECK_JOB_TYPE.into(),
+        payload: json!({ "userId": user }),
+        run_at: chrono::Utc::now(),
+        attempts: 1,
+        max_attempts: 3,
+        dedupe_key: Some(live::recheck_job_key(G, user)),
+        version: 0,
+    }
+}
+
+impl Live {
+    async fn run_recheck(&self, payload: Value) -> BotResult<JobOutcome> {
+        let mut job = recheck_job(H1);
+        job.payload = payload;
+        let ctx = JobCtx { app: self.t.app.clone(), guild_id: G.into(), late_by_ms: 0, attempt: 1 };
+        live::run_recheck_job(job, ctx).await
+    }
+
+    async fn recheck(&self, user: &str) {
+        self.run_recheck(json!({ "userId": user })).await.expect("the re-check job");
+    }
+}
+
+#[test]
+fn defers_removal_keeps_its_names_and_grace() {
+    assert_eq!(live::RECHECK_JOB_TYPE, "liverole.recheck");
+    assert_eq!(live::recheck_job_key("G", "U"), "liverole.recheck:G:U");
+    assert_eq!(live::limits::STOP_GRACE_MS, 3 * 60_000);
+    assert!(live::defers_removal(Mode::Sync, Source::Presence, false, true));
+    assert!(!live::defers_removal(Mode::Sync, Source::Presence, false, false), "lost the required role");
+    assert!(!live::defers_removal(Mode::Sync, Source::Sync, false, true));
+    assert!(!live::defers_removal(Mode::Sync, Source::Recheck, false, true));
+    assert!(!live::defers_removal(Mode::Clear, Source::Presence, false, true));
+}
+
+#[tokio::test]
+async fn a_stream_stop_keeps_the_role_and_schedules_one_recheck_grace_later() {
+    let l = live_app(SettingsPatch::new()).await;
+    let due = l.t.app.clock().now() + chrono::Duration::milliseconds(live::limits::STOP_GRACE_MS as i64);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Pending);
+    assert!(l.role_calls().is_empty(), "no role call yet");
+    assert!(l.d.roles_of(G, H1).contains(&LIVE.to_string()));
+    let job = l.t.scheduler().get_job(&live::recheck_job_key(G, H1)).await.expect("the re-check job");
+    assert_eq!((job.r#type.as_str(), job.guild_id.as_str(), job.run_at), ("liverole.recheck", G, due));
+    assert_eq!(job.payload, json!({ "userId": H1 }));
+    // A later stop moves the one job instead of adding another.
+    l.t.clock.advance(60_000);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Pending);
+    let moved = l.t.scheduler().get_job(&live::recheck_job_key(G, H1)).await.expect("the re-check job");
+    assert_eq!(moved.run_at, due + chrono::Duration::milliseconds(60_000));
+}
+
+#[tokio::test]
+async fn a_flap_leaves_the_role_alone() {
+    let l = live_app(SettingsPatch::new()).await;
+    l.d.set_presence(G, S2, json!([])); // Discord re-sends the presence without Streaming...
+    assert_eq!(l.reconcile(S2, Mode::Sync, Source::Presence).await, Outcome::Pending);
+    l.d.set_presence(G, S2, streaming()); // ...and puts it back moments later
+    assert_eq!(l.reconcile(S2, Mode::Sync, Source::Presence).await, Outcome::None, "still holds the role, nothing to add");
+    l.recheck(S2).await;
+    assert!(l.role_calls().is_empty(), "neither removed nor added: {:?}", l.role_calls());
+    assert!(l.d.roles_of(G, S2).contains(&LIVE.to_string()));
+}
+
+#[tokio::test]
+async fn a_real_stop_is_confirmed_by_the_recheck() {
+    let l = live_app(SettingsPatch::new()).await;
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Pending);
+    l.recheck(H1).await;
+    assert_eq!(l.role_calls(), vec![remove(H1, "Live role: stopped streaming")]);
+    l.recheck(H1).await; // a repeated claim is harmless
+    assert_eq!(l.role_calls().len(), 1);
+}
+
+#[tokio::test]
+async fn the_recheck_never_adds_and_does_nothing_while_the_module_is_off_or_the_payload_is_bad() {
+    let l = live_app(SettingsPatch::new()).await;
+    assert_eq!(l.reconcile(S1, Mode::Sync, Source::Recheck).await, Outcome::None, "streaming and not holding: nothing to add");
+    l.t.settings().update_settings(G, SettingsPatch::new().set("liveRoleEnabled", false)).await.expect("settings");
+    l.recheck(H1).await;
+    l.t.settings().update_settings(G, SettingsPatch::new().set("liveRoleEnabled", true).set("liveRoleId", Value::Null)).await.expect("settings");
+    l.recheck(H1).await;
+    assert!(l.role_calls().is_empty());
+    for payload in [json!({}), json!({ "userId": "" }), json!({ "userId": 5 })] {
+        let e = l.run_recheck(payload).await.expect_err("a bad payload");
+        assert!(e.to_string().contains("missing userId"), "{e}");
+    }
+}
+
+#[tokio::test]
+async fn a_recheck_that_cannot_be_scheduled_falls_back_to_removing_the_role_at_once() {
+    let (t, failing) = TestApp::with_failing_jobs();
+    let l = live_app_on(t, SettingsPatch::new()).await;
+    failing.fail_next_schedules(1);
+    assert_eq!(l.reconcile(H1, Mode::Sync, Source::Presence).await, Outcome::Removed);
+    assert_eq!(l.role_calls(), vec![remove(H1, "Live role: stopped streaming")]);
+    assert_eq!(failing.failures(), 1);
 }

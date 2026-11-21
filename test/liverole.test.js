@@ -47,6 +47,11 @@ after(async () => {
 const S = { activities: [{ type: 1 }] };
 const P = { activities: [{ type: 0 }] };
 
+// No test writes a real ScheduledJob: the stream-stop re-check goes to this list (cleared by the tests that read it).
+const scheduled = [];
+const stubJobs = () => lr.__setJobImpl({ schedule: async (job) => { scheduled.push(job); return { id: 'j', runAt: job.runAt }; } });
+stubJobs();
+
 // ── 1. isStreaming ────────────────────────────────────────────────────────────
 
 test('ActivityType values the spec relies on', () => {
@@ -241,12 +246,112 @@ test('reconcileMember: streaming and role not held adds it, one string id, idemp
   assert.equal(w.calls.length, 1);
 });
 
-test('reconcileMember: not streaming and role held removes it', async () => {
+test('reconcileMember: not streaming and role held removes it (re-check), or waits for the re-check (presence)', async () => {
   const w = world({ roleHeld: true });
-  assert.equal(await rec(w), 'removed');
+  assert.equal(await rec(w, { source: 'recheck' }), 'removed');
   assert.deepEqual(w.calls, [['remove', 'L', REASONS.presenceRemove]]);
+  assert.equal(await rec(w, { source: 'recheck' }), 'none');
   assert.equal(await rec(w), 'none');
   assert.equal(w.calls.length, 1);
+});
+
+// ── Stream-stop grace: the flap seen live (Removed, then Added in the same minute, while still streaming) ──
+
+test('defersRemoval: only a presence-sourced stop of a member who still qualifies waits', () => {
+  assert.equal(lr.defersRemoval({ mode: 'sync', source: 'presence', streaming: false, qualifies: true }), true);
+  assert.equal(lr.defersRemoval({ mode: 'sync', source: 'presence', streaming: false, qualifies: false }), false, 'lost the required role');
+  assert.equal(lr.defersRemoval({ mode: 'sync', source: 'presence', streaming: true, qualifies: false }), false);
+  assert.equal(lr.defersRemoval({ mode: 'sync', source: 'sync', streaming: false, qualifies: true }), false);
+  assert.equal(lr.defersRemoval({ mode: 'sync', source: 'recheck', streaming: false, qualifies: true }), false);
+  assert.equal(lr.defersRemoval({ mode: 'clear', source: 'presence', streaming: false, qualifies: true }), false);
+  assert.equal(lr.recheckJobKey('G', 'U'), 'liverole.recheck:G:U');
+  assert.equal(lr.RECHECK_JOB_TYPE, 'liverole.recheck');
+  assert.equal(LIVEROLE.STOP_GRACE_MS, 3 * 60_000);
+});
+
+test('a stream stop keeps the role and schedules one re-check STOP_GRACE_MS later', async () => {
+  scheduled.length = 0;
+  const w = world({ roleHeld: true });
+  const before = Date.now();
+  assert.equal(await rec(w), 'pending');
+  assert.deepEqual(w.calls, [], 'no role call yet');
+  assert.equal(w.member.roles.cache.has('L'), true);
+  assert.equal(scheduled.length, 1);
+  const [job] = scheduled;
+  assert.deepEqual({ ...job, runAt: null }, {
+    guildId: 'G', type: 'liverole.recheck', payload: { userId: 'U' }, dedupeKey: 'liverole.recheck:G:U', runAt: null,
+  });
+  const due = job.runAt.getTime() - before;
+  assert.ok(due >= LIVEROLE.STOP_GRACE_MS && due < LIVEROLE.STOP_GRACE_MS + 5_000, `due in ${due} ms`);
+});
+
+test('flap: the Streaming activity drops and comes back before the re-check, so the role is never touched', async () => {
+  scheduled.length = 0;
+  const w = world({ roleHeld: true, streaming: true });
+  lr.__setJobImpl({
+    schedule: async (job) => { scheduled.push(job); return { id: 'j', runAt: job.runAt }; },
+    settings: async (guildId) => (guildId === 'G' ? w.settings : null),
+  });
+  try {
+    const live = w.guild.presences.cache.get('U');
+    w.guild.presences.cache.set('U', { activities: [] }); // Discord re-sends the presence without Streaming...
+    assert.equal(await rec(w), 'pending');
+    w.guild.presences.cache.set('U', live); // ...and puts it back moments later
+    assert.equal(await rec(w), 'none', 'still holds the role, nothing to add');
+    await lr.runRecheckJob({ payload: { userId: 'U' } }, { guild: w.guild });
+    assert.deepEqual(w.calls, [], 'neither Removed nor Added');
+    assert.equal(w.member.roles.cache.has('L'), true);
+    assert.equal(scheduled.length, 1);
+  } finally {
+    stubJobs();
+  }
+});
+
+test('a real stop: the re-check removes the role with the stopped-streaming reason', async () => {
+  const w = world({ roleHeld: true });
+  lr.__setJobImpl({
+    schedule: async (job) => { scheduled.push(job); return { id: 'j', runAt: job.runAt }; },
+    settings: async (guildId) => (guildId === 'G' ? w.settings : null),
+  });
+  try {
+    assert.equal(await rec(w), 'pending');
+    await lr.runRecheckJob({ payload: { userId: 'U' } }, { guild: w.guild });
+    assert.deepEqual(w.calls, [['remove', 'L', REASONS.presenceRemove]]);
+    await lr.runRecheckJob({ payload: { userId: 'U' } }, { guild: w.guild }); // a repeated claim is harmless
+    assert.equal(w.calls.length, 1);
+  } finally {
+    stubJobs();
+  }
+});
+
+test('the re-check never adds, and does nothing while the module is off or the payload is bad', async () => {
+  const w = world({ streaming: true });
+  assert.equal(await rec(w, { source: 'recheck' }), 'none');
+  const held = world({ roleHeld: true });
+  try {
+    for (const settings of [{ ...held.settings, liveRoleEnabled: false }, { ...held.settings, liveRoleId: null }]) {
+      lr.__setJobImpl({ settings: async () => settings });
+      await lr.runRecheckJob({ payload: { userId: 'U' } }, { guild: held.guild });
+    }
+    assert.deepEqual([...w.calls, ...held.calls], []);
+    lr.__setJobImpl({ settings: async () => null });
+    await assert.rejects(lr.runRecheckJob({ payload: { userId: 'U' } }, { guild: held.guild }), /settings unavailable/);
+    const { PermanentJobError } = await import('../src/services/scheduler.js');
+    await assert.rejects(lr.runRecheckJob({ payload: {} }, { guild: held.guild }), PermanentJobError);
+  } finally {
+    stubJobs();
+  }
+});
+
+test('a re-check that cannot be scheduled falls back to removing the role at once', async () => {
+  const w = world({ roleHeld: true });
+  lr.__setJobImpl({ schedule: async () => { throw new Error('db down'); } });
+  try {
+    assert.equal(await rec(w), 'removed');
+    assert.deepEqual(w.calls, [['remove', 'L', REASONS.presenceRemove]]);
+  } finally {
+    stubJobs();
+  }
 });
 
 test('reconcileMember: sync-sourced calls use the sync reasons, clear mode uses the clear reason', async () => {
@@ -268,7 +373,7 @@ test('reconcileMember: a dangerous role is never added but can be removed', asyn
   assert.equal(a.calls.length, 0);
   const b = world({ roleHeld: true });
   b.role.permissions.has = () => true;
-  assert.equal(await rec(b), 'removed');
+  assert.equal(await rec(b, { source: 'recheck' }), 'removed');
   assert.equal(b.calls.length, 1);
 });
 
@@ -278,7 +383,7 @@ test('reconcileMember: a bot role at or below the live role blocks both directio
   assert.equal(await rec(a), 'blocked');
   const b = world({ roleHeld: true });
   b.me.roles.highest.position = 0;
-  assert.equal(await rec(b), 'blocked');
+  assert.equal(await rec(b, { source: 'recheck' }), 'blocked');
   assert.equal(a.calls.length + b.calls.length, 0);
 });
 
@@ -368,8 +473,9 @@ test('reconcileMember: flapping presence is coalesced to one running and one wai
   assert.equal(await third, 'none');
   release();
   assert.equal(await first, 'added');
-  assert.equal(await second, 'removed');
-  assert.deepEqual(w.calls.map((c) => c[0]), ['add', 'remove']);
+  assert.equal(await second, 'pending', 'the stop waits for its re-check');
+  assert.deepEqual(w.calls.map((c) => c[0]), ['add']);
+  assert.equal(await rec(w, { source: 'recheck' }), 'removed');
   assert.equal(w.member.roles.cache.has('L'), false, 'final state matches the newest presence');
 });
 
@@ -475,7 +581,8 @@ test('plugin declaration', async () => {
   }
   assert.equal(plugin.hooks[1].timeoutMs, undefined, 'the startup sync is queued, so the hook returns at once');
   assert.deepEqual(plugin.components, []);
-  assert.deepEqual(plugin.jobs, []);
+  assert.deepEqual(plugin.jobs.map((j) => j.type), ['liverole.recheck']);
+  assert.equal(plugin.jobs[0].handler, lr.runRecheckJob);
   assert.deepEqual(plugin.provides, {});
   const { errors } = await collectPlugins();
   assert.deepEqual(errors.filter((e) => e.includes('liverole')), []);
@@ -501,11 +608,13 @@ test('hooks do nothing without a live role in the settings', async () => {
 });
 
 test('the presence hook reconciles the member from the settings the runner loaded', async () => {
+  scheduled.length = 0;
   const w = world({ roleHeld: true });
   await plugin.hooks[0].run({
     guild: w.guild, newPresence: { userId: 'U' }, member: w.member, getSettings: async () => w.settings,
   });
-  assert.deepEqual(w.calls, [['remove', 'L', REASONS.presenceRemove]]);
+  assert.deepEqual(w.calls, [], 'a stop waits for the re-check');
+  assert.deepEqual(scheduled.map((j) => j.dedupeKey), ['liverole.recheck:G:U']);
 });
 
 // ── Go-live posts ─────────────────────────────────────────────────────────────

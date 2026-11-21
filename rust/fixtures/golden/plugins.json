@@ -873,7 +873,9 @@
       }
     ],
     "components": [],
-    "jobs": [],
+    "jobs": [
+      "liverole.recheck"
+    ],
     "provides": [],
     "hasInit": false
   },

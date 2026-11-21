@@ -1,7 +1,8 @@
 // Events (module `events`): /event create posts an announcement with Going / Maybe / Can't go buttons, optionally mirrors it
 // as a Discord Scheduled Event (one-way: ours -> Discord, the bot has no scheduled-event intent), gives a role to the members
 // who are going, pings them shortly before the start (`event.remind`) and closes the event at its end (`event.end`), which
-// also takes the role back. Everything durable is in Postgres (GuildEvent, EventRsvp); the only in-process state is the render
+// also takes the role back. An event whose voice channel still has people in it at the end stays open (members can still
+// answer and get in) until the last one leaves. Everything durable is in Postgres (GuildEvent, EventRsvp); the only in-process state is the render
 // throttle and the per-member RSVP mutex, both allowed to vanish on a restart. Side-effect free at import (Maps only).
 //
 // Status: SCHEDULED and ACTIVE both count as open. Nothing writes ACTIVE (there is no start job): an open event whose start
@@ -53,7 +54,7 @@ export const EVENT = Object.freeze({
   STRIP_BATCH: 100, STRIP_CONCURRENCY: 3, STRIP_RUNS_MAX: 50, STRIP_RESUME_MS: 15_000,
   VOICE_LEAD_DEFAULT: 30, VOICE_LEAD_MAX: 1440, CATEGORY_NAME: 'Events', RENAME_MS: 2_000,
   EMPTY_GRACE_MS: 60_000,            // from the last leave to the delete: a dropped connection can come back
-  CLEANUP_RECHECK_MS: 10 * 60_000,   // how often `event.cleanup` looks at a voice channel that still has people in it
+  CLEANUP_RECHECK_MS: 10 * 60_000,   // how often `event.cleanup` and `event.end` look at a voice channel that still has people in it
 });
 
 export const REMIND_JOB_TYPE = 'event.remind';
@@ -106,6 +107,14 @@ export const RAW_SQL = Object.freeze([
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
 export const isOpen = (event) => OPEN_STATUSES.includes(event?.status);
+
+/**
+ * Whether the event's call keeps it open past its end: an open event whose voice channel has people in it.
+ * @param {number} humans people (not bots) in the event's voice channel
+ */
+export function callKeepsOpen(event, humans) {
+  return isOpen(event) && !!event?.voiceChannelId && humans > 0;
+}
 
 /** @returns {Date} when the event ends: its end, else start + 2 h (the end job's time). */
 export function eventEnd(event) {
@@ -413,8 +422,11 @@ const userMutex = createKeyedMutex();   // one RSVP (database + role) at a time 
 const renderState = new Map();
 const warnedAt = new Map();
 const categoryMutex = createKeyedMutex(); // one category made per guild, however many events are created at once
-// Voice channels of closed events with people still in them: id -> { eventId, guildId }. `event.cleanup` fills it again every
-// CLEANUP_RECHECK_MS, so a restart only delays the cleanup, and voice leaves elsewhere cost no database query.
+// Voice channels of events with people still in them: id -> { eventId, guildId, open }. `open`: the event is past its end and
+// stays open while the call has people (`event.end` fills it; the last leave queues `event.end`); otherwise the event is
+// closed and waits for `event.cleanup` (which fills it; the last leave queues the cleanup). Both jobs fill it again every
+// CLEANUP_RECHECK_MS, so a restart only delays the close or the cleanup (by up to 10 minutes), and voice leaves elsewhere cost
+// no database query.
 const waitingVoice = new Map();
 let renderImpl = renderEventMessage;
 
@@ -703,6 +715,19 @@ async function renameEventChannels(guild, event) {
 const queueCleanup = ({ eventId, guildId }, delayMs = 0) => jobs.schedule({
   guildId, type: CLEANUP_JOB_TYPE, runAt: new Date(Date.now() + delayMs), payload: { eventId }, dedupeKey: cleanupJobKey(eventId),
 });
+const queueEnd = ({ eventId, guildId }, delayMs = 0) => jobs.schedule({
+  guildId, type: END_JOB_TYPE, runAt: new Date(Date.now() + delayMs), payload: { eventId }, dedupeKey: endJobKey(eventId),
+});
+
+/**
+ * People in the event's voice channel: 0 when it has none, or the channel is gone or out of the bot's sight (so the event can
+ * still close; `event.cleanup` is the careful one). Never throws.
+ */
+async function callHumans(client, event) {
+  if (!event?.voiceChannelId) return 0;
+  const found = await resolveChannel(client, event.voiceChannelId).catch(() => ({}));
+  return countHumans(found.channel);
+}
 
 /**
  * Deletes one of the event's channels and forgets it. One that is already gone counts as deleted; one the bot may not delete
@@ -936,16 +961,18 @@ export function renderNow(client, eventId) {
 
 /**
  * Ends (reason 'expired') the guild's open events whose end passed more than 10 minutes ago, so a late end job never holds
- * the open-event cap.
+ * the open-event cap. An event with people still in its voice channel stays open.
  * @returns {Promise<number>} events ended
  */
 export async function reconcileOverdue(client, guildId) {
   const rows = await prisma.guildEvent.findMany({
-    where: { guildId, status: { in: [...OPEN_STATUSES] } }, select: { id: true, startsAt: true, endsAt: true },
+    where: { guildId, status: { in: [...OPEN_STATUSES] } },
+    select: { id: true, guildId: true, status: true, startsAt: true, endsAt: true, voiceChannelId: true },
   });
   let ended = 0;
   for (const r of rows) {
     if (eventEnd(r).getTime() + EVENT.OVERDUE_GRACE_MS > Date.now()) continue;
+    if (callKeepsOpen(r, await callHumans(client, r))) continue;
     const res = await closeEvent(client, r.id, { status: 'ENDED', reason: 'expired', guildId });
     if (res.ok) {
       ended += 1;
@@ -1725,13 +1752,17 @@ export async function onDiscordEventCancelled(ctx) {
 /** voiceStateUpdate filter (sync, no database): someone left a voice channel that is waiting to be cleaned up. */
 export const leftWaitingVoice = (ctx) => ctx?.change !== 'state' && waitingVoice.has(ctx?.oldState?.channelId);
 
-/** voiceStateUpdate: the last human left the voice channel of a closed event, so `event.cleanup` runs after the grace. */
+/**
+ * voiceStateUpdate: the last human left the voice channel of an event that is waiting on it, so after the grace `event.end`
+ * runs (an event kept open past its end by its call) or `event.cleanup` (a closed one). Each job looks at the call again.
+ */
 export async function onWaitingVoiceLeft(ctx) {
   const voiceId = ctx.oldState?.channelId;
   const waiting = waitingVoice.get(voiceId);
   if (!waiting || countHumans(ctx.oldState.channel) > 0) return;
   waitingVoice.delete(voiceId);
-  await queueCleanup(waiting, EVENT.EMPTY_GRACE_MS);
+  if (waiting.open) await queueEnd(waiting, EVENT.EMPTY_GRACE_MS);
+  else await queueCleanup(waiting, EVENT.EMPTY_GRACE_MS);
 }
 
 /** roleDelete: the event role or access role is gone, so events stop giving it. */
@@ -1791,6 +1822,9 @@ export async function handleRemindJob(job, ctx) {
 /**
  * Scheduler handler for `event.end`: ends the event (the status flip picks one winner), then takes the role back in batches;
  * a payload with `after` is the continuation of an earlier batch. A retry or a cancelled event still strips (idempotent).
+ * An open event whose end is still ahead (moved by an edit) waits for it; one with people in its voice channel stays open,
+ * so members can still answer while the event is going on: the last one out queues this job again after EMPTY_GRACE_MS,
+ * and until then it looks again every CLEANUP_RECHECK_MS (after a restart the voice hook has nothing to go on).
  */
 export async function handleEndJob(job, ctx) {
   const eventId = job.payload?.eventId;
@@ -1800,6 +1834,16 @@ export async function handleEndJob(job, ctx) {
 
   let event;
   if (after === null) {
+    const current = await prisma.guildEvent.findFirst({ where: { id: eventId, guildId: job.guildId } });
+    if (current && isOpen(current)) {
+      const end = eventEnd(current);
+      if (end.getTime() > Date.now()) return { nextRunAt: end };
+      if (callKeepsOpen(current, await callHumans(ctx.client, current))) {
+        waitingVoice.set(current.voiceChannelId, { eventId, guildId: current.guildId, open: true });
+        return { nextRunAt: new Date(Date.now() + EVENT.CLEANUP_RECHECK_MS) };
+      }
+      if (current.voiceChannelId) waitingVoice.delete(current.voiceChannelId);
+    }
     const res = await closeEvent(ctx.client, eventId, { status: 'ENDED', reason: 'timer', guildId: job.guildId });
     event = res.event;
   } else {
@@ -1889,7 +1933,7 @@ export async function handleCleanupJob(job, ctx) {
     const { channel, noAccess } = await resolveChannel(ctx.client, event.voiceChannelId);
     // A channel the bot cannot see counts as occupied: what the deletes below take cannot be brought back.
     if (noAccess || countHumans(channel) > 0) {
-      waitingVoice.set(event.voiceChannelId, { eventId, guildId: event.guildId });
+      waitingVoice.set(event.voiceChannelId, { eventId, guildId: event.guildId, open: false });
       return { nextRunAt: new Date(Date.now() + EVENT.CLEANUP_RECHECK_MS) };
     }
     waitingVoice.delete(event.voiceChannelId);
