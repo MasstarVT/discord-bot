@@ -111,7 +111,8 @@ async fn log_message_delete(ctx: &Arc<HookCtx<MessageDelete>>) {
     let bot_reason = was_deleted_by_bot(app, &message_id);
     let mut view = match &d.message {
         Some(m) => adapters::log_message(app, m),
-        None => LogMessage::partial(&message_id, Some(&channel_id)),
+        // discord.js reads createdTimestamp from the snowflake, so even a partial message says when it was sent.
+        None => LogMessage { created_timestamp: Some(bot_core::adapters::snowflake_ms(d.message_id.get()) as i64), ..LogMessage::partial(&message_id, Some(&channel_id)) },
     };
     let mut skip = false;
     if view.partial {

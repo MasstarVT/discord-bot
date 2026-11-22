@@ -1738,6 +1738,23 @@ test('snapshot: a partial delete with no snapshot still says not cached', async 
   } finally { r.restore(); }
 });
 
+test('snapshot: a partial delete with no snapshot still shows when the message was sent', async () => {
+  const { guild, channel, settings } = logSetup();
+  const r = fakeRedis();
+  try {
+    // discord.js reads createdTimestamp from the snowflake, so even a partial message knows when it was sent.
+    const id = '1573137071177211955';
+    const createdTimestamp = Number((BigInt(id) >> 22n) + 1420070400000n);
+    const message = { id, partial: true, channelId: channel.id, guild, createdTimestamp, createdAt: new Date(createdTimestamp) };
+    await hook('messageDelete').run(fakeCtx(guild, settings, { message }));
+    await flushLogQueue();
+    const e = firstEmbed(channel);
+    assert.match(e.description, /not cached/);
+    assert.equal(e.fields.find((f) => f.name === 'Sent').value, '<t:1795135505:R>');
+    assert.equal(e.footer.text, `Msg ID: ${id}`);
+  } finally { r.restore(); }
+});
+
 test('snapshot: an edit with an uncached old message uses the snapshot, then updates it', async () => {
   const { guild, channel, settings } = logSetup();
   const r = fakeRedis();

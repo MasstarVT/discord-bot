@@ -863,6 +863,13 @@ async fn message_delete_hook_ghost_ping_bot_deletion_bots_ignored_and_partials()
     s.t.run_hooks(del(None, "807")).await;
     s.flush().await;
     assert!(s.rec.embed(before)["description"].as_str().unwrap_or("").contains("not cached"));
+
+    // discord.js reads createdTimestamp from the snowflake: an uncached delete still says when the message was sent.
+    s.t.run_hooks(del(None, "1573137071177211955")).await;
+    s.flush().await;
+    assert!(s.rec.embed(before + 1)["description"].as_str().unwrap_or("").contains("not cached"));
+    assert_eq!(s.rec.field(before + 1, "Sent").as_deref(), Some("<t:1795135505:R>"));
+    assert_eq!(s.rec.embed(before + 1)["footer"]["text"], "Msg ID: 1573137071177211955");
 }
 
 // ── Redis message snapshots ───────────────────────────────────────────────────

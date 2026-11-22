@@ -102,6 +102,8 @@ const del = (name, a) => add(name, 'messageDelete', a, json(ev.buildMessageDelet
 del('delete plain with attachments', { message: msg({ content: 'see `this`', attachments: [{ name: 'cat.png', size: 2_500_000, url: 'u1' }, { name: 'a.txt', size: 1280, url: 'u2' }, { name: 'b.bin', size: 100 }] }), known: KNOWN });
 del('delete ghost ping', { message: msg({ content: 'hey', mentionUsers: [alice, bob, robot], mentionRoles: [{ id: '444444444444444444', name: 'Mods' }], mentionEveryone: true }) });
 del('delete partial', { message: { id: '8', partial: true, channelId: '700000000000000009' }, known: KNOWN });
+// discord.js reads createdTimestamp from the snowflake, so a partial message still says when it was sent.
+del('delete partial with sent time', { message: { id: '1573137071177211955', partial: true, channelId: '700000000000000009', createdTimestamp: Number((1573137071177211955n >> 22n) + 1420070400000n) }, known: KNOWN });
 del('delete by the bot', { message: msg({ mentionRoles: [{ id: '444444444444444444', name: 'Mods' }] }), botReason: 'automod', botId: '999' });
 del('delete by the bot without id', { message: msg({}), botReason: 'r'.repeat(150) });
 del('delete embeds only, old', { message: msg({ content: '', embedCount: 2, createdTimestamp: NOW - 2 * HOUR }) });

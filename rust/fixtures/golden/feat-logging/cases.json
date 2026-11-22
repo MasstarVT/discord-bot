@@ -44,7 +44,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.586Z",
+    "timestamp": "2026-11-22T00:24:51.790Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -134,7 +134,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.588Z",
+    "timestamp": "2026-11-22T00:24:51.791Z",
     "title": "👻 Ghost Ping Detected — Message Deleted",
     "author": {
      "name": "alice",
@@ -183,7 +183,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.588Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "description": "*Message was not cached — content unavailable.*",
     "footer": {
@@ -193,6 +193,43 @@
      {
       "name": "Channel",
       "value": "<#700000000000000009> (deleted channel)",
+      "inline": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "delete partial with sent time",
+   "fn": "messageDelete",
+   "args": {
+    "message": {
+     "id": "1573137071177211955",
+     "partial": true,
+     "channelId": "700000000000000009",
+     "createdTimestamp": 1795135505242
+    },
+    "known": [
+     "700000000000000001",
+     "700000000000000002"
+    ]
+   },
+   "out": {
+    "color": 15548997,
+    "timestamp": "2026-11-22T00:24:51.792Z",
+    "title": "🗑️ Message Deleted",
+    "description": "*Message was not cached — content unavailable.*",
+    "footer": {
+     "text": "Msg ID: 1573137071177211955"
+    },
+    "fields": [
+     {
+      "name": "Channel",
+      "value": "<#700000000000000009> (deleted channel)",
+      "inline": true
+     },
+     {
+      "name": "Sent",
+      "value": "<t:1795135505:R>",
       "inline": true
      }
     ]
@@ -229,7 +266,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.588Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -287,7 +324,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.588Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -345,7 +382,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.589Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -405,7 +442,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.589Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -699,7 +736,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.589Z",
+    "timestamp": "2026-11-22T00:24:51.792Z",
     "title": "🗑️ Message Deleted",
     "author": {
      "name": "alice",
@@ -1153,7 +1190,7 @@
    "out": {
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.590Z",
+     "timestamp": "2026-11-22T00:24:51.793Z",
      "title": "🧹 Messages Bulk-Deleted",
      "description": "**5** messages were deleted in <#700000000000000001> by <@999> (/purge by mod (3)).",
      "footer": {
@@ -1197,7 +1234,7 @@
    "out": {
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.590Z",
+     "timestamp": "2026-11-22T00:24:51.793Z",
      "title": "🧹 Messages Bulk-Deleted",
      "description": "**1** messages were deleted in <#7>.",
      "footer": {
@@ -1308,7 +1345,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.590Z",
+     "timestamp": "2026-11-22T00:24:51.793Z",
      "title": "🗑️ Message Deleted",
      "author": {
       "name": "alice",
@@ -1387,7 +1424,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.591Z",
+     "timestamp": "2026-11-22T00:24:51.794Z",
      "title": "🗑️ Message Deleted",
      "author": {
       "name": "alice",
@@ -1580,7 +1617,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.591Z",
+     "timestamp": "2026-11-22T00:24:51.794Z",
      "title": "🗑️ Message Deleted",
      "author": {
       "name": "alice",
@@ -1652,7 +1689,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.591Z",
+     "timestamp": "2026-11-22T00:24:51.794Z",
      "title": "🗑️ Message Deleted",
      "author": {
       "name": "alice"
@@ -1719,7 +1756,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.591Z",
+     "timestamp": "2026-11-22T00:24:51.794Z",
      "title": "🗑️ Message Deleted",
      "author": {
       "name": "robot#0420",
@@ -1777,7 +1814,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.591Z",
+    "timestamp": "2026-11-22T00:24:51.794Z",
     "title": "📨 Invite Posted",
     "author": {
      "name": "alice",
@@ -1866,7 +1903,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.591Z",
+    "timestamp": "2026-11-22T00:24:51.794Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -1930,7 +1967,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.803Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -2003,7 +2040,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -2076,7 +2113,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -2149,7 +2186,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -2222,7 +2259,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📥 Member Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/111111111111111111/a.webp"
@@ -2290,7 +2327,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.602Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "⚠️ New Account Joined",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -2353,7 +2390,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.603Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "🤖 Bot Added",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
@@ -2414,7 +2451,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.603Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📤 Member Left",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -2475,7 +2512,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.603Z",
+    "timestamp": "2026-11-22T00:24:51.804Z",
     "title": "📤 Member Left",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -3128,7 +3165,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.604Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "🎭 Member Roles Changed",
     "author": {
      "name": "bob_`x`",
@@ -3191,7 +3228,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.604Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "📝 Nickname Changed",
     "author": {
      "name": "bob_`x`",
@@ -3256,7 +3293,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.604Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -3314,7 +3351,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.604Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "🔊 Timeout Removed",
     "author": {
      "name": "bob_`x`",
@@ -3371,7 +3408,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.604Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "⏱️ Timeout Changed",
     "author": {
      "name": "bob_`x`",
@@ -3436,7 +3473,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -3495,7 +3532,7 @@
    },
    "out": {
     "color": 16750592,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "⏱️ Member Timed Out",
     "author": {
      "name": "bob_`x`",
@@ -3554,7 +3591,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "🖼️ Server Avatar Changed",
     "author": {
      "name": "bob_`x`",
@@ -3607,7 +3644,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.805Z",
     "title": "👤 User Updated",
     "author": {
      "name": "alice",
@@ -3683,7 +3720,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.806Z",
     "title": "🔨 Member Banned",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/embed/avatars/1.png"
@@ -3725,7 +3762,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.605Z",
+    "timestamp": "2026-11-22T00:24:51.806Z",
     "title": "✅ Member Unbanned",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/avatars/333333333333333333/a_x.gif"
@@ -3802,7 +3839,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.605Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "🔇 Left Voice",
      "description": "<@222222222222222222> left <#700000000000000009> (deleted channel)",
      "author": {
@@ -3864,7 +3901,7 @@
     },
     "embed": {
      "color": 5763719,
-     "timestamp": "2026-11-20T01:28:48.605Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "🔊 Joined Voice",
      "description": "<@222222222222222222> joined <#700000000000000001>",
      "author": {
@@ -3928,7 +3965,7 @@
     },
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.605Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "↔️ Moved Voice Channel",
      "description": "<@222222222222222222> moved from <#700000000000000002> → <#700000000000000003> (deleted channel)",
      "author": {
@@ -4004,7 +4041,7 @@
     },
     "embed": {
      "color": 10070709,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "🔔 Voice State Changed",
      "description": "<@222222222222222222> in <#A>\nServer muted, Server undeafened, Self-deafened, Self-unmuted, Started streaming",
      "author": {
@@ -4072,7 +4109,7 @@
     },
     "embed": {
      "color": 5763719,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "🔊 Joined Voice",
      "description": "<@222222222222222222> joined <#700000000000000001> `Temp Room`",
      "author": {
@@ -4142,7 +4179,7 @@
     },
     "embed": {
      "color": 15548997,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.806Z",
      "title": "🔇 Left Voice",
      "description": "<@222222222222222222> left <#700000000000000002> `Gaming`",
      "author": {
@@ -4212,7 +4249,7 @@
     },
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.807Z",
      "title": "↔️ Moved Voice Channel",
      "description": "<@222222222222222222> moved from <#700000000000000009> (deleted channel) → <#700000000000000001> `Temp Room`",
      "author": {
@@ -4286,7 +4323,7 @@
     },
     "embed": {
      "color": 10070709,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.807Z",
      "title": "🔔 Voice State Changed",
      "description": "<@222222222222222222> in <#700000000000000002> `Gaming`\nSelf-muted",
      "author": {
@@ -4354,7 +4391,7 @@
     },
     "embed": {
      "color": 5763719,
-     "timestamp": "2026-11-20T01:28:48.606Z",
+     "timestamp": "2026-11-22T00:24:51.807Z",
      "title": "🔊 Joined Voice",
      "description": "<@222222222222222222> joined <#700000000000000003> `a'b`",
      "author": {
@@ -4435,7 +4472,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.606Z",
+    "timestamp": "2026-11-22T00:24:51.807Z",
     "title": "📢 Channel Created",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -4574,7 +4611,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.607Z",
+     "timestamp": "2026-11-22T00:24:51.808Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `new-name`",
      "footer": {
@@ -4657,7 +4694,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.607Z",
+     "timestamp": "2026-11-22T00:24:51.808Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `general`",
      "footer": {
@@ -4744,7 +4781,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.607Z",
+     "timestamp": "2026-11-22T00:24:51.808Z",
      "title": "🛠️ Channel Updated",
      "description": "<#700000000000000001> `general`",
      "footer": {
@@ -4783,7 +4820,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.607Z",
+    "timestamp": "2026-11-22T00:24:51.808Z",
     "title": "🗑️ Channel Deleted",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -4833,7 +4870,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.608Z",
+    "timestamp": "2026-11-22T00:24:51.808Z",
     "title": "🗑️ Channel Deleted",
     "footer": {
      "text": "Channel ID: 700000000000000001"
@@ -4871,7 +4908,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.608Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "🧵 Thread Created",
     "footer": {
      "text": "Thread ID: 700000000000000777"
@@ -4921,7 +4958,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.608Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "🧵 Thread Created",
     "footer": {
      "text": "Thread ID: 9"
@@ -5010,7 +5047,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.608Z",
+     "timestamp": "2026-11-22T00:24:51.809Z",
      "title": "🧵 Thread Updated",
      "description": "<#700000000000000777> `solved`",
      "footer": {
@@ -5082,7 +5119,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.608Z",
+     "timestamp": "2026-11-22T00:24:51.809Z",
      "title": "🧵 Thread Updated",
      "description": "<#700000000000000777> `bug 'reports'`",
      "footer": {
@@ -5156,7 +5193,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.608Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "🗑️ Thread Deleted",
     "footer": {
      "text": "Thread ID: 700000000000000777"
@@ -5205,7 +5242,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.608Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "🗑️ Thread Deleted",
     "footer": {
      "text": "Thread ID: 9"
@@ -5248,7 +5285,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.609Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "➕ Role Created",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -5303,7 +5340,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.609Z",
+    "timestamp": "2026-11-22T00:24:51.809Z",
     "title": "➕ Role Created",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -5397,7 +5434,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.609Z",
+     "timestamp": "2026-11-22T00:24:51.810Z",
      "title": "🛠️ Role Updated",
      "description": "<@&444444444444444444> `Staff`",
      "footer": {
@@ -5489,7 +5526,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.609Z",
+    "timestamp": "2026-11-22T00:24:51.810Z",
     "title": "➖ Role Deleted",
     "footer": {
      "text": "Role ID: 444444444444444444"
@@ -5650,7 +5687,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.609Z",
+     "timestamp": "2026-11-22T00:24:51.810Z",
      "title": "🏠 Server Edited",
      "thumbnail": {
       "url": "https://cdn.discordapp.com/icons/9/abc.webp"
@@ -5817,7 +5854,7 @@
    },
    "out": {
     "color": 5763719,
-    "timestamp": "2026-11-20T01:28:48.609Z",
+    "timestamp": "2026-11-22T00:24:51.810Z",
     "title": "😀 Emoji Created",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -5880,7 +5917,7 @@
     ],
     "embed": {
      "color": 5793266,
-     "timestamp": "2026-11-20T01:28:48.610Z",
+     "timestamp": "2026-11-22T00:24:51.810Z",
      "title": "😀 Emoji Updated",
      "thumbnail": {
       "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -5943,7 +5980,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.610Z",
+    "timestamp": "2026-11-22T00:24:51.810Z",
     "title": "😶 Emoji Deleted",
     "thumbnail": {
      "url": "https://cdn.discordapp.com/emojis/1234.webp"
@@ -5981,7 +6018,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.610Z",
+    "timestamp": "2026-11-22T00:24:51.811Z",
     "title": "🔗 Invite Created",
     "footer": {
      "text": "Code: abc"
@@ -6033,7 +6070,7 @@
    },
    "out": {
     "color": 5793266,
-    "timestamp": "2026-11-20T01:28:48.610Z",
+    "timestamp": "2026-11-22T00:24:51.811Z",
     "title": "🔗 Invite Created",
     "footer": {
      "text": "Code: abc"
@@ -6082,7 +6119,7 @@
    },
    "out": {
     "color": 15548997,
-    "timestamp": "2026-11-20T01:28:48.610Z",
+    "timestamp": "2026-11-22T00:24:51.811Z",
     "title": "🔗 Invite Deleted / Expired",
     "footer": {
      "text": "Code: abc"
@@ -8217,8 +8254,8 @@
  ],
  "keys": {
   "snapshot": "guild:955007000000000001:invites",
-  "timeoutUntilSec": 1795145328,
-  "timeout": "log:timeout:955007000000000001:222222222222222222:1795145328",
+  "timeoutUntilSec": 1795314291,
+  "timeout": "log:timeout:955007000000000001:222222222222222222:1795314291",
   "linkCooldown": "invites:link:cd:955007000000000001:222222222222222222",
   "slowDown": [
    "⚠️  Slow Down"
