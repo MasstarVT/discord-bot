@@ -10,7 +10,7 @@ use bot_db::schema::{ClientDefault, ModelInfo};
 use bot_db::{DbError, GUILD_SETTINGS_INFO, GuildSettings, to_sql_value};
 use serde_json::{Map, Value, json};
 
-use super::{SettingsMutator, SettingsPatch, SettingsStore};
+use super::{SettingsMutator, SettingsPatch, SettingsPublish, SettingsStore};
 
 /// A new row of `info` as Prisma would create it (literal defaults, generated ids and dates, `[]` for lists, `null`
 /// for optional columns), with `fields` applied on top. Prisma field names, schema order.
@@ -145,16 +145,19 @@ impl SettingsStore for MemorySettingsStore {
         Ok(row)
     }
 
-    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator) -> anyhow::Result<GuildSettings> {
+    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator, publish: SettingsPublish) -> anyhow::Result<GuildSettings> {
         self.check()?;
         let _guard = self.lock.lock().await;
         let current = self.get_or_create(guild_id)?;
         let data = mutator(current.clone())?;
-        if data.is_empty() {
-            return Ok(current);
-        }
-        let row = apply(&current, &data)?;
-        self.put(row.clone());
+        let row = if data.is_empty() {
+            current
+        } else {
+            let row = apply(&current, &data)?;
+            self.put(row.clone());
+            row
+        };
+        publish(row.clone()).await; // under the lock, like the database store's row lock
         Ok(row)
     }
 }

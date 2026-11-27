@@ -129,6 +129,10 @@ impl From<Map<String, Value>> for SettingsPatch {
 /// unchanged.
 pub type SettingsMutator = Box<dyn FnOnce(GuildSettings) -> anyhow::Result<SettingsPatch> + Send>;
 
+/// Run by [`SettingsStore::update_with`] with the written row (or the unchanged one) while the row is still locked,
+/// before the commit, so concurrent writers publish to the memo and Redis in commit order.
+pub type SettingsPublish = Box<dyn FnOnce(GuildSettings) -> BoxFuture<()> + Send>;
+
 /// A settings failure (the database). Cheap to clone, so concurrent readers can share one load.
 #[derive(Debug, Clone, thiserror::Error)]
 #[error("{0}")]
@@ -158,8 +162,9 @@ pub trait SettingsStore: Send + Sync + 'static {
     /// `update({ where: { guildId }, data })`.
     async fn update(&self, guild_id: &str, data: &SettingsPatch) -> Result<GuildSettings, DbError>;
     /// The locked read-modify-write of `updateSettingsWith` (one transaction: insert if missing, lock, read, mutate,
-    /// update). The mutator's error is returned unchanged; database errors are `DbError`s inside the anyhow error.
-    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator) -> anyhow::Result<GuildSettings>;
+    /// update, `publish`, commit). The mutator's error is returned unchanged; database errors are `DbError`s inside
+    /// the anyhow error. `publish` runs once, before the commit, unless the mutator or a statement failed.
+    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator, publish: SettingsPublish) -> anyhow::Result<GuildSettings>;
 }
 
 type LoadFuture = Shared<BoxFuture<Result<Settings, SettingsError>>>;
@@ -435,11 +440,40 @@ impl SettingsService {
     where
         F: FnOnce(GuildSettings) -> anyhow::Result<SettingsPatch> + Send + 'static,
     {
-        let row = self.inner.store.update_with(guild_id, Box::new(mutator)).await?;
-        let published = row.clone();
-        let revived = self.write_through(guild_id, row);
-        self.publish_row(guild_id, &published).await;
-        Ok(revived)
+        // Published while the row is still locked, so concurrent writers reach the memo and Redis in commit order.
+        // Published after the commit, a writer holding an older row could SET Redis after a newer one, and reads
+        // would get the stale row until the key's TTL.
+        let slot: Arc<Mutex<Option<Settings>>> = Arc::new(Mutex::new(None));
+        let publish: SettingsPublish = {
+            let (svc, gid, slot) = (self.clone(), guild_id.to_string(), slot.clone());
+            Box::new(move |row| {
+                Box::pin(async move {
+                    let published = row.clone();
+                    let revived = svc.write_through(&gid, row);
+                    *slot.lock().unwrap_or_else(|e| e.into_inner()) = Some(revived);
+                    svc.publish_row(&gid, &published).await;
+                })
+            })
+        };
+        let outcome = self.inner.store.update_with(guild_id, Box::new(mutator), publish).await;
+        let revived = slot.lock().unwrap_or_else(|e| e.into_inner()).take();
+        match (outcome, revived) {
+            (Ok(_), Some(revived)) => Ok(revived),
+            (Ok(row), None) => {
+                // A store that did not call `publish`: publish after the commit, as before.
+                let published = row.clone();
+                let revived = self.write_through(guild_id, row);
+                self.publish_row(guild_id, &published).await;
+                Ok(revived)
+            }
+            (Err(e), revived) => {
+                // The commit failed after the row was published: drop what this process and Redis hold for the guild.
+                if revived.is_some() {
+                    self.invalidate_settings(guild_id).await;
+                }
+                Err(e)
+            }
+        }
     }
 
     /// `invalidateSettings(guildId)`: drops the memo entry, the ensured flag and the Redis key (guild join/leave

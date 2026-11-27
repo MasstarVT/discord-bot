@@ -5,7 +5,7 @@ use bot_db::query::SelectBuilder;
 use bot_db::{DbError, GUILD_SETTINGS_INFO, GuildSettings, InsertBuilder, PgPool, TxOptions, UpdateBuilder};
 use serde_json::{Value, json};
 
-use super::{SettingsMutator, SettingsPatch, SettingsStore};
+use super::{SettingsMutator, SettingsPatch, SettingsPublish, SettingsStore};
 
 /// `LOCK_ROW(guildId)`.
 pub const LOCK_ROW_SQL: &str = r#"SELECT 1 FROM "GuildSettings" WHERE "guildId" = $1 FOR UPDATE"#;
@@ -92,7 +92,7 @@ impl SettingsStore for PgSettingsStore {
         update_query(guild_id, data)?.fetch_one(&self.pool).await
     }
 
-    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator) -> anyhow::Result<GuildSettings> {
+    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator, publish: SettingsPublish) -> anyhow::Result<GuildSettings> {
         let guild_id = guild_id.to_string();
         bot_db::transaction(&self.pool, TxOptions::default(), move |tx| {
             Box::pin(async move {
@@ -100,10 +100,8 @@ impl SettingsStore for PgSettingsStore {
                 sqlx::query(LOCK_ROW_SQL).bind(&guild_id).fetch_optional(&mut *tx).await.map_err(DbError::from)?;
                 let current: GuildSettings = find_query(&guild_id)?.fetch_one(&mut *tx).await?;
                 let data = mutator(current.clone())?;
-                if data.is_empty() {
-                    return Ok(current);
-                }
-                let row: GuildSettings = update_query(&guild_id, &data)?.fetch_one(&mut *tx).await?;
+                let row: GuildSettings = if data.is_empty() { current } else { update_query(&guild_id, &data)?.fetch_one(&mut *tx).await? };
+                publish(row.clone()).await;
                 Ok::<_, anyhow::Error>(row)
             })
         })
