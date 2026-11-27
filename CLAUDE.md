@@ -19,6 +19,7 @@ JS paths below; the Rust crates mirror them.
 - Redis: cache only, always a TTL. No `setInterval` (recurring `ScheduledJob`). `logger`, never `console`. Signal handlers only in `index.js`.
 - Ack interactions within 3 s (`ackBudgetMs`, `peekSettings`). Nothing may reject unhandled.
 - Automod's Personal Info rule (anti-doxxing) uses `src/utils/personalInfo.js`; its regexes are copied verbatim into `bot_util::personal_info`, and `feat-automod`'s sweep test compares the two.
+- Dependencies: Dependabot (`.github/dependabot.yml`) covers npm, cargo (`rust/`), docker and actions, and skips majors, so a security fix that needs a major (or a parent that pins an old range) never gets a PR: bump it by hand, or pin a transitive one under `overrides` in `package.json`. Check with `npm audit` and `cargo audit` (from `rust/`). `rustls` 0.22 comes from serenity 0.12's gateway and waits on a serenity release.
 - User URLs via `safeFetch`, user regex via `safeRegex`, admin text via `placeholderParser`/`customEmbed`. Never parse `@everyone`. Caps come from `LIMITS` in `src/config/constants.js`.
 - New module: flag + migration, `DEFAULT_MODULE_SETTINGS`, `MODULES` entry, commands, plugin, README rows, a `docs/claude/modules.md` section, a registry row, `.env.example` keys, `src/dashboard/catalog.js` entries (category, description, two-letter code) and `fields.js` groups. `test/integration.test.js` checks they agree.
 
