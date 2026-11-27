@@ -11,7 +11,7 @@ use bot_config::ModuleKey;
 use bot_core::cache::{Cache, MemoryBackend, RedisBackend, RedisOptions};
 use bot_core::clock::{ManualClock, SharedClock};
 use bot_core::settings::{
-    CACHE_VERSION_FIELD, MemorySettingsStore, PgSettingsStore, SETTINGS_CACHE_VERSION, SettingsMutator, SettingsPatch, SettingsService, SettingsStore,
+    CACHE_VERSION_FIELD, MemorySettingsStore, PgSettingsStore, SETTINGS_CACHE_VERSION, SettingsMutator, SettingsPatch, SettingsPublish, SettingsService, SettingsStore,
     is_module_enabled, is_valid_cached_settings, revive_settings, settings_key, with_marker,
 };
 use bot_core::testing::load_golden;
@@ -256,9 +256,78 @@ impl SettingsStore for SlowStore {
     async fn update(&self, guild_id: &str, data: &SettingsPatch) -> Result<GuildSettings, DbError> {
         self.inner.update(guild_id, data).await
     }
-    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator) -> anyhow::Result<GuildSettings> {
-        self.inner.update_with(guild_id, mutator).await
+    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator, publish: SettingsPublish) -> anyhow::Result<GuildSettings> {
+        self.inner.update_with(guild_id, mutator, publish).await
     }
+}
+
+/// A store that records when the row is published and when the write commits, and can fail the commit.
+struct CommitStore {
+    inner: Arc<MemorySettingsStore>,
+    backend: Arc<MemoryBackend>,
+    events: Arc<std::sync::Mutex<Vec<String>>>,
+    fail_commit: bool,
+}
+
+#[async_trait]
+impl SettingsStore for CommitStore {
+    async fn find(&self, guild_id: &str) -> Result<Option<GuildSettings>, DbError> {
+        self.inner.find(guild_id).await
+    }
+    async fn create_if_missing(&self, guild_id: &str) -> Result<GuildSettings, DbError> {
+        self.inner.create_if_missing(guild_id).await
+    }
+    async fn upsert(&self, guild_id: &str, data: &SettingsPatch) -> Result<GuildSettings, DbError> {
+        self.inner.upsert(guild_id, data).await
+    }
+    async fn update(&self, guild_id: &str, data: &SettingsPatch) -> Result<GuildSettings, DbError> {
+        self.inner.update(guild_id, data).await
+    }
+    async fn update_with(&self, guild_id: &str, mutator: SettingsMutator, publish: SettingsPublish) -> anyhow::Result<GuildSettings> {
+        let row = self.inner.update_with(guild_id, mutator, publish).await?;
+        // What Redis holds at the moment of the commit.
+        let cached: Option<Value> = self.backend.raw(&settings_key(guild_id)).map(|r| serde_json::from_str(&r).unwrap());
+        let ids = cached.map(|c| c["modRoleIds"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect::<Vec<_>>().join(","));
+        self.events.lock().unwrap().push(format!("commit, redis has {}", ids.unwrap_or_else(|| "nothing".into())));
+        if self.fail_commit {
+            anyhow::bail!("commit failed");
+        }
+        Ok(row)
+    }
+}
+
+fn commit_fixture(fail_commit: bool) -> (SettingsService, Arc<MemoryBackend>, Arc<std::sync::Mutex<Vec<String>>>) {
+    let clock: SharedClock = Arc::new(ManualClock::new(1_800_000_000_000));
+    let backend = Arc::new(MemoryBackend::new(clock.clone()));
+    let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let store = CommitStore { inner: Arc::new(MemorySettingsStore::new()), backend: backend.clone(), events: events.clone(), fail_commit };
+    (SettingsService::new(Arc::new(store), Cache::new(backend.clone(), clock.clone()), clock), backend, events)
+}
+
+fn push_role(id: &'static str) -> impl FnOnce(GuildSettings) -> anyhow::Result<SettingsPatch> + Send + 'static {
+    move |cur: GuildSettings| {
+        let mut ids = cur.mod_role_ids.clone();
+        ids.push(id.into());
+        Ok(SettingsPatch::new().set("modRoleIds", json!(ids)))
+    }
+}
+
+#[tokio::test]
+async fn update_settings_with_publishes_before_the_commit_so_writers_reach_redis_in_commit_order() {
+    let (service, _backend, events) = commit_fixture(false);
+    service.update_settings_with("g6", push_role("a")).await.unwrap();
+    service.update_settings_with("g6", push_role("b")).await.unwrap();
+    assert_eq!(*events.lock().unwrap(), vec!["commit, redis has a", "commit, redis has a,b"]);
+    assert_eq!(service.peek_settings("g6").unwrap().mod_role_ids, vec!["a", "b"]);
+}
+
+#[tokio::test]
+async fn update_settings_with_drops_the_published_row_when_the_commit_fails() {
+    let (service, backend, _events) = commit_fixture(true);
+    let err = service.update_settings_with("g7", push_role("x")).await.unwrap_err();
+    assert_eq!(err.to_string(), "commit failed");
+    assert!(backend.raw(&settings_key("g7")).is_none(), "the uncommitted row is not left in Redis");
+    assert!(service.peek_settings("g7").is_none(), "nor in the memo");
 }
 
 #[tokio::test]

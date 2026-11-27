@@ -168,7 +168,7 @@ Job types (`src/config/jobTypes.js`; also test-checked here): `mod.unban` `mod.e
 **The only way to read or write `GuildSettings`** (never `prisma.guildSettings.*` elsewhere; never `cache.del('guild:…:settings')`; tests enforce both). Rows are cached in Redis (300 s, versioned by `_cacheV`), memoised per shard for 30 s and deep-frozen (copy arrays before editing).
 - `getSettings(guildId, { fresh })` memo → Redis → Postgres (row created on first use; throws only on Postgres failure); `getSettingsSafe` returns `null` instead; `peekSettings` is memo-only and synchronous.
 - `ensureGuildSettings(guildId)`: **call before creating any per-guild row** (every per-guild model has an FK to it).
-- `updateSettings(guildId, data)` upserts scalars with write-through; `updateSettingsWith(guildId, mutator)` is a locked (`FOR UPDATE`) read-modify-write for arrays and JSON, the mutator being pure; `invalidateSettings` is for guild join/leave only.
+- `updateSettings(guildId, data)` upserts scalars with write-through; `updateSettingsWith(guildId, mutator)` is a locked (`FOR UPDATE`) read-modify-write for arrays and JSON, the mutator being pure. It writes the memo and Redis before the commit, while the row is still locked, so concurrent writers publish in commit order (a failed commit then drops the guild's memo entry and key); `invalidateSettings` is for guild join/leave only.
 - A cache miss is never a deletion: if Redis or a lookup fails, keep the data and degrade.
 
 ### Data layer

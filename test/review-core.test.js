@@ -17,7 +17,7 @@ const { createHandlerMaps } = await import('../src/handlers/componentRegistry.js
 const { isBlockedAddress } = await import('../src/utils/safeFetch.js');
 const { default: redis, cache } = await import('../src/services/redis.js');
 const { default: prisma } = await import('../src/database/client.js');
-const { updateSettings, updateSettingsWith, settingsKey, getSettings, invalidateSettings, SETTINGS_CACHE_VERSION } =
+const { updateSettings, updateSettingsWith, settingsKey, getSettings, peekSettings, invalidateSettings, SETTINGS_CACHE_VERSION } =
   await import('../src/services/settingsService.js');
 
 const quiet = { error: console.error, warn: console.warn, log: console.log, debug: console.debug };
@@ -211,6 +211,68 @@ test('updateSettingsWith publishes through the same path (a failed SET drops the
   } finally {
     prisma.$transaction = realTx;
     prisma.guildSettings = realGs;
+    cache.set = realSet;
+    cache.del = realDel;
+    await invalidateSettings(guildId);
+  }
+});
+
+test('updateSettingsWith publishes before the commit, so concurrent writers reach Redis in commit order', async () => {
+  const guildId = 'g-review-settings-4';
+  const realSet = cache.set;
+  const realTx = prisma.$transaction;
+  const events = [];
+  let row = { guildId, modRoleIds: [] };
+  prisma.$transaction = async (fn) => {
+    const out = await fn({
+      $executeRaw: async () => 1,
+      $queryRaw: async () => [],
+      guildSettings: {
+        findUnique: async () => ({ ...row }),
+        update: async ({ data }) => { row = { ...row, ...data }; return { ...row }; },
+      },
+    });
+    events.push('commit');
+    return out;
+  };
+  cache.set = async (key, value) => { events.push(`set:${value.modRoleIds.join(',')}`); return true; };
+  try {
+    await updateSettingsWith(guildId, (cur) => ({ modRoleIds: [...cur.modRoleIds, 'a'] }));
+    await updateSettingsWith(guildId, (cur) => ({ modRoleIds: [...cur.modRoleIds, 'b'] }));
+    assert.deepEqual(events, ['set:a', 'commit', 'set:a,b', 'commit']);
+  } finally {
+    prisma.$transaction = realTx;
+    cache.set = realSet;
+    await invalidateSettings(guildId);
+  }
+});
+
+test('updateSettingsWith drops the published row when the commit fails', async () => {
+  const guildId = 'g-review-settings-5';
+  const realSet = cache.set;
+  const realDel = cache.del;
+  const realTx = prisma.$transaction;
+  const dels = [];
+  const boom = new Error('commit failed');
+  prisma.$transaction = async (fn) => {
+    await fn({
+      $executeRaw: async () => 1,
+      $queryRaw: async () => [],
+      guildSettings: {
+        findUnique: async () => ({ guildId, modRoleIds: [] }),
+        update: async ({ data }) => ({ guildId, modRoleIds: [], ...data }),
+      },
+    });
+    throw boom;
+  };
+  cache.set = async () => true;
+  cache.del = async (...keys) => { dels.push(...keys); return true; };
+  try {
+    await assert.rejects(updateSettingsWith(guildId, () => ({ modRoleIds: ['x'] })), (err) => err === boom);
+    assert.deepEqual(dels, [settingsKey(guildId)]);
+    assert.equal(peekSettings(guildId), null, 'the uncommitted row is not left in the memo');
+  } finally {
+    prisma.$transaction = realTx;
     cache.set = realSet;
     cache.del = realDel;
     await invalidateSettings(guildId);

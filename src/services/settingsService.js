@@ -261,17 +261,27 @@ export const RAW_SQL = Object.freeze([
  * @throws on DB failure or when the mutator throws
  */
 export async function updateSettingsWith(guildId, mutator) {
-  const row = await prisma.$transaction(async (tx) => {
-    await tx.$executeRaw(INSERT_IF_MISSING(guildId));
-    await tx.$queryRaw(LOCK_ROW(guildId));
-    const current = await tx.guildSettings.findUnique({ where: { guildId } });
-    const data = await mutator(structuredClone(current));
-    if (!data || Object.keys(data).length === 0) return current;
-    return tx.guildSettings.update({ where: { guildId }, data });
-  });
-  const revived = writeThrough(guildId, row);
-  await publishRow(guildId, row);
-  return revived;
+  let published = false;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw(INSERT_IF_MISSING(guildId));
+      await tx.$queryRaw(LOCK_ROW(guildId));
+      const current = await tx.guildSettings.findUnique({ where: { guildId } });
+      const data = await mutator(structuredClone(current));
+      const row = !data || Object.keys(data).length === 0 ? current : await tx.guildSettings.update({ where: { guildId }, data });
+      // Published while the row is still locked, so concurrent writers reach the memo and Redis in commit order.
+      // Published after the commit, a writer holding an older row could SET Redis after a newer one, and reads
+      // would get the stale row until the key's TTL.
+      published = true;
+      const revived = writeThrough(guildId, row);
+      await publishRow(guildId, row);
+      return revived;
+    });
+  } catch (err) {
+    // The commit failed after the row was published: drop what this process and Redis hold for the guild.
+    if (published) await invalidateSettings(guildId);
+    throw err;
+  }
 }
 
 /**
