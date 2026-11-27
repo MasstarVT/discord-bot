@@ -544,7 +544,9 @@ pub fn build_message_delete_embed(message: &LogMessage, bot_reason: Option<&str>
     if let Some(r) = bot_reason {
         fields.push(field("Deleted By", &deleted_by_bot(bot_id, r), true));
     }
-    let text = effective_text(message);
+    // A Personal Info automod delete must not repeat the phone number or address it removed.
+    let raw = effective_text(message);
+    let text = if bot_reason == Some(bot_util::personal_info::PERSONAL_INFO_DELETE_REASON) { bot_util::personal_info::redact_personal_info(&raw) } else { raw };
     e = if message.partial {
         e.desc("*Message was not cached — content unavailable.*")
     } else if !text.is_empty() {

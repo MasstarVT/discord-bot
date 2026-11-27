@@ -2,6 +2,9 @@
 
 What changed in Frost.Byte, newest first. Each entry is dated by when it landed on `main`; there are no version numbers yet. The full history is in the [commit log](https://github.com/MasstarVT/discord-bot/commits/main).
 
+## 2026-11-26 · Personal info filter in Automod
+- New Automod rule **Personal Info** (anti-doxxing): removes messages that share a phone number, street address, email address, social security number or card number. Turn it on with `/automod rule rule:Personal Info action:Delete & warn`, or on the dashboard's Auto-Moderation page. Ordinary numbers, dates, prices, Discord ids and links are left alone, and the mod log and deleted-message log blank the details out instead of repeating them.
+
 ## 2026-10-27 · Commands-only channels and maths in Counting
 - New Automations preset **Commands Only**: `/automation create preset:Commands Only channel:#bot-commands` deletes every message in that channel that does not start with your custom-command prefix, so only commands are used there. Slash commands keep working, and members with the moderator roles (or the `role` you pick) can still talk. Also on the dashboard's Automations page.
 - Counting accepts maths: `2+2`, `(3*4)-1` or `2^3` counts as the number it comes to. Sums that come to a fraction, such as `10/27`, are treated as chat and never reset the count.

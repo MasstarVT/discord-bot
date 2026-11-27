@@ -423,7 +423,7 @@ test('resolveRuleKey and the action tables', () => {
   assert.equal(resolveRuleKey(undefined), null);
   assert.equal(resolveRuleKey('__proto__'), null);
   for (const key of RULE_KEYS) assert.equal(resolveRuleKey(key), key);
-  assert.equal(RULE_KEYS.length, 10);
+  assert.equal(RULE_KEYS.length, 11);
   assert.equal(ACTIONS.length, 7);
   for (const action of ACTIONS) {
     const punishes = action in PUNISHMENTS;
@@ -1152,7 +1152,7 @@ test('autocomplete: rules answer synchronously, other fields answer [] when sett
   assert.ok(rules.out.choices[0].name.length <= 100);
   const all = fakeAutocomplete('rule', '');
   await automod.autocomplete(all.interaction);
-  assert.equal(all.out.choices.length, 10);
+  assert.equal(all.out.choices.length, 11);
   const byLabel = fakeAutocomplete('rule', 'excessive');
   await automod.autocomplete(byLabel.interaction);
   assert.deepEqual(byLabel.out.choices.map((c) => c.value), ['caps', 'emojis', 'spoilers', 'mentions']);

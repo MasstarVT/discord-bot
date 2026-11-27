@@ -18,6 +18,7 @@ JS paths below; the Rust crates mirror them.
 - Schema changes additive only; never edit an applied migration. Raw SQL: `SQL_NOW`/`sqlUtc`, `::bigint` maths, clamp Int columns with `XP_MAX`/`COIN_MAX`.
 - Redis: cache only, always a TTL. No `setInterval` (recurring `ScheduledJob`). `logger`, never `console`. Signal handlers only in `index.js`.
 - Ack interactions within 3 s (`ackBudgetMs`, `peekSettings`). Nothing may reject unhandled.
+- Automod's Personal Info rule (anti-doxxing) uses `src/utils/personalInfo.js`; its regexes are copied verbatim into `bot_util::personal_info`, and `feat-automod`'s sweep test compares the two.
 - User URLs via `safeFetch`, user regex via `safeRegex`, admin text via `placeholderParser`/`customEmbed`. Never parse `@everyone`. Caps come from `LIMITS` in `src/config/constants.js`.
 - New module: flag + migration, `DEFAULT_MODULE_SETTINGS`, `MODULES` entry, commands, plugin, README rows, a `docs/claude/modules.md` section, a registry row, `.env.example` keys, `src/dashboard/catalog.js` entries (category, description, two-letter code) and `fields.js` groups. `test/integration.test.js` checks they agree.
 
