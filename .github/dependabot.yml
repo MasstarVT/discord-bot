@@ -17,6 +17,24 @@ updates:
       - dependency-name: '*'
         update-types: [version-update:semver-major]
 
+  # The Rust bot in rust/ is what production runs, so its crates get the same treatment as npm.
+  - package-ecosystem: cargo
+    directory: /rust
+    schedule:
+      interval: monthly
+    # Wait a week after a release before proposing it, so a bad or hijacked version is usually caught and
+    # pulled first (these PRs merge and deploy on their own). Security updates are not delayed.
+    cooldown:
+      default-days: 7
+    groups:
+      cargo-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      # Major (and 0.x minor) versions are upgraded on purpose, not by Dependabot PRs.
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+
   - package-ecosystem: docker
     directory: /
     schedule:
