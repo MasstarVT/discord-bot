@@ -26,6 +26,7 @@ console.log = console.info = console.warn = console.error = console.debug = quie
 const am = await imp('src', 'services', 'automodService.js');
 const ar = await imp('src', 'services', 'antiRaidService.js');
 const amCmd = await imp('src', 'commands', 'admin', 'automod.js');
+const pi = await imp('src', 'utils', 'personalInfo.js');
 const { default: prisma } = await imp('src', 'database', 'client.js');
 const { default: redis, cache } = await imp('src', 'services', 'redis.js');
 const settingsService = await imp('src', 'services', 'settingsService.js');
@@ -58,6 +59,9 @@ const FNS = {
   duplicateFingerprint: (s) => am.duplicateFingerprint(s),
   isSpacelessWord: (s) => am.isSpacelessWord(s),
   resolveRuleKey: (s) => am.resolveRuleKey(s),
+  findPersonalInfo: (s) => pi.findPersonalInfo(s),
+  redactPersonalInfo: (s) => pi.redactPersonalInfo(s),
+  logContent: (matches, text) => am.logContent(am.resolveOutcome(matches), text),
   formatThreshold: (k, v) => am.formatThreshold(k, v),
   describeRuleLine: (k, raw) => { const c = am.normalizeConfig(raw); return am.describeRuleLine(k, c.rules[k], c); },
   describeHoneypot: (raw) => am.describeHoneypot(am.normalizeConfig(raw)),

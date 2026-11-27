@@ -1,5 +1,5 @@
 // ── Auto-moderation (pkg-automod.md) ───────────────────────────────────────────
-// The MEE6 rule set (bad words, repeated text, invites, links, caps, emojis, spoilers, mentions,
+// The MEE6 rule set (bad words, repeated text, invites, links, personal info, caps, emojis, spoilers, mentions,
 // zalgo, message-rate anti-spam), each with its own action and role/channel scope, plus honeypot channels
 // (whoever posts in one is punished at once).
 //
@@ -26,6 +26,9 @@ import { createThrottle } from '../utils/async.js';
 import { escapeRegex, compileSafeRegex, safeRegexFirstMatch, containsWord } from '../utils/safeRegex.js';
 import { markBotDeletion } from '../utils/deletionTracker.js';
 import { clampText, effectiveText, forwardedSnapshots } from '../utils/text.js';
+import {
+  findPersonalInfo, describePersonalInfo, redactPersonalInfo, PERSONAL_INFO_DELETE_REASON,
+} from '../utils/personalInfo.js';
 import { checkChannelUsable } from '../utils/interactionHelpers.js';
 import { warnEmbed, errorEmbed } from '../utils/embedBuilder.js';
 import { formatDurationLong } from '../utils/parseDuration.js';
@@ -56,7 +59,7 @@ export const DEFAULT_ALLOWED_DOMAINS = Object.freeze([
 
 /** Rule keys in display order (= tie-break order). */
 export const RULE_KEYS = Object.freeze([
-  'badWords', 'repeatedText', 'invites', 'links', 'caps', 'emojis', 'spoilers', 'mentions', 'zalgo', 'spam',
+  'badWords', 'repeatedText', 'invites', 'links', 'personalInfo', 'caps', 'emojis', 'spoilers', 'mentions', 'zalgo', 'spam',
 ]);
 
 const ruleMeta = (label, emoji, threshold, onEdit, description) => Object.freeze({
@@ -74,6 +77,8 @@ export const RULES = Object.freeze({
     'Catches the same message sent over and over.'),
   invites: ruleMeta('Server Invites', '📨', null, true, 'Catches invite links to other Discord servers.'),
   links: ruleMeta('External Links', '🔗', null, true, 'Catches links that are blocked, or not allowed when no domain is blocked.'),
+  personalInfo: ruleMeta('Personal Info', '🪪', null, true,
+    'Catches phone numbers, street addresses, emails and other personal details (anti-doxxing).'),
   caps: ruleMeta('Excessive Caps', '🔠', { min: 50, max: 100, default: 70, unit: '% capitals, messages with at least 10 letters' }, true,
     'Catches messages that are mostly capital letters.'),
   emojis: ruleMeta('Excessive Emojis', '😀', { min: 1, max: 50, default: 10, unit: 'emojis' }, true,
@@ -646,6 +651,8 @@ const RULE_ALIASES = Object.freeze({
   repeated: 'repeatedText', 'repeated text': 'repeatedText', duplicates: 'repeatedText', duplicate: 'repeatedText',
   invite: 'invites', 'server invites': 'invites',
   link: 'links', 'external links': 'links',
+  'personal info': 'personalInfo', personal: 'personalInfo', pii: 'personalInfo', dox: 'personalInfo', doxx: 'personalInfo',
+  doxxing: 'personalInfo', doxing: 'personalInfo', phone: 'personalInfo', 'phone numbers': 'personalInfo', address: 'personalInfo',
   capitals: 'caps', 'excessive caps': 'caps',
   emoji: 'emojis', 'excessive emojis': 'emojis',
   spoiler: 'spoilers', 'excessive spoilers': 'spoilers',
@@ -770,6 +777,10 @@ const CONTENT_DETECTORS = Object.freeze({
   badWords: (message, config, matchers) => checkBadWords(effectiveText(message), config, matchers),
   invites: (message, config, _matchers, guild) => checkInvites(effectiveText(message), config, guild),
   links: (message, config) => checkLinks(effectiveText(message), config),
+  personalInfo: (message, config) => {
+    const kinds = findPersonalInfo(effectiveText(message));
+    return kinds.length ? makeMatch(config, 'personalInfo', describePersonalInfo(kinds)) : null;
+  },
   caps: (message, config) => {
     const { letters, percent } = capsStats(effectiveText(message));
     return letters >= CAPS_MIN_LETTERS && percent >= config.rules.caps.threshold
@@ -894,6 +905,13 @@ export function honeypotOutcome(honeypot) {
 const metaOf = (key) => RULES[key] ?? (key === 'honeypot' ? HONEYPOT : null);
 const ruleLabel = (key) => metaOf(key)?.label ?? String(key);
 
+/** Whether an outcome matched the Personal Info rule (its logs must not repeat the details). */
+export const outcomeHasPersonalInfo = (outcome) => outcome?.primary?.rule === 'personalInfo'
+  || Boolean(outcome?.others?.some((m) => m.rule === 'personalInfo'));
+
+/** The message text as automod logs show it: personal details blanked out when the Personal Info rule matched. */
+export const logContent = (outcome, text) => (outcomeHasPersonalInfo(outcome) ? redactPersonalInfo(text) : text);
+
 /** The audit-log reason: "[Automod] Label: detail (also: …) in #channel", at most 500 characters. */
 export function buildReason(outcome, channelName) {
   const also = outcome.others.length ? ` (also: ${outcome.others.map((m) => ruleLabel(m.rule)).join(', ')})` : '';
@@ -950,7 +968,7 @@ export async function postModLog(guild, settings, embed) {
 
 function buildLogEmbed(kind, { title, message, isEdit, outcome, problem, footerExtra = '' }) {
   const author = message.author;
-  const content = effectiveText(message);
+  const content = logContent(outcome, effectiveText(message));
   const attachments = forwardedSnapshots(message).reduce((n, s) => n + (s.attachments?.size ?? 0), message.attachments?.size ?? 0);
   const primary = metaOf(outcome.primary.rule);
   const embed = (kind === 'warn' ? warnEmbed : errorEmbed)(
@@ -1009,7 +1027,7 @@ async function sendNotice(message, notice) {
 
 // ── Applying an outcome ───────────────────────────────────────────────────────
 
-async function deleteOffender(ctx, message, guild) {
+async function deleteOffender(ctx, message, guild, outcome) {
   const state = { deleted: false, gone: false, problem: null };
   const channel = message.channel;
   const me = guild.members?.me;
@@ -1019,7 +1037,8 @@ async function deleteOffender(ctx, message, guild) {
     warnOnce(`perm:${guild.id}:${channel?.id}`, `Automod cannot delete in #${channel?.name} (${guild.id}): missing Manage Messages`);
     return state;
   }
-  markBotDeletion(message.id, 'automod'); // always before the delete call, so log hooks can label it
+  // Always before the delete call, so log hooks can label it (and blank personal details out of the delete log).
+  markBotDeletion(message.id, outcomeHasPersonalInfo(outcome) ? PERSONAL_INFO_DELETE_REASON : 'automod');
   try {
     await message.delete();
     state.deleted = true;
@@ -1040,7 +1059,7 @@ async function deleteOffender(ctx, message, guild) {
 async function applyOutcome(ctx, { message, guild, member, settings, outcome, isEdit }) {
   const author = message.author;
   const channel = message.channel;
-  const del = outcome.deletes ? await deleteOffender(ctx, message, guild) : { deleted: false, gone: false, problem: null };
+  const del = outcome.deletes ? await deleteOffender(ctx, message, guild, outcome) : { deleted: false, gone: false, problem: null };
   const { deleted, gone } = del;
 
   // A message that is gone must not reach XP, triggers or translation. Never stop when it survived.
@@ -1069,7 +1088,7 @@ async function applyOutcome(ctx, { message, guild, member, settings, outcome, is
           logFields: buildPunishmentLogFields(
             `${metaOf(outcome.primary.rule)?.emoji ?? ''} ${ruleLabel(outcome.primary.rule)}${outcome.others.length ? ` (also: ${outcome.others.map((m) => ruleLabel(m.rule)).join(', ')})` : ''}`.trim(),
             outcome.primary.detail,
-            effectiveText(message),
+            logContent(outcome, effectiveText(message)),
             channel,
           ),
         });

@@ -1346,6 +1346,7 @@
     "automodRuleLinks",
     "automodBlockedDomains",
     "automodAllowedDomains",
+    "automodRulePersonalInfo",
     "automodRuleSpam",
     "automodRuleRepeatedText",
     "automodRuleCaps",
@@ -1694,6 +1695,7 @@
     "automodRuleLinks",
     "automodBlockedDomains",
     "automodAllowedDomains",
+    "automodRulePersonalInfo",
     "automodRuleSpam",
     "automodRuleRepeatedText",
     "automodRuleCaps",
@@ -2854,6 +2856,14 @@
        "channelMode": "except",
        "channelIds": []
       },
+      "personalInfo": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
       "caps": {
        "action": "timeout",
        "threshold": 70,
@@ -2969,6 +2979,14 @@
        "channelIds": []
       },
       "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "personalInfo": {
        "action": "off",
        "timeoutSeconds": 600,
        "roleMode": "except",
@@ -3236,6 +3254,14 @@
        "channelMode": "except",
        "channelIds": []
       },
+      "personalInfo": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
       "caps": {
        "action": "off",
        "threshold": 70,
@@ -3411,6 +3437,14 @@
        "channelIds": []
       },
       "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "personalInfo": {
        "action": "off",
        "timeoutSeconds": 600,
        "roleMode": "except",
@@ -3635,6 +3669,14 @@
        "channelMode": "except",
        "channelIds": []
       },
+      "personalInfo": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
       "caps": {
        "action": "delete",
        "threshold": 70,
@@ -3738,6 +3780,14 @@
        "channelIds": []
       },
       "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "personalInfo": {
        "action": "off",
        "timeoutSeconds": 600,
        "roleMode": "except",
@@ -3888,6 +3938,14 @@
        "channelMode": "except",
        "channelIds": []
       },
+      "personalInfo": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
       "caps": {
        "action": "off",
        "threshold": 70,
@@ -3990,6 +4048,14 @@
        "channelIds": []
       },
       "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "personalInfo": {
        "action": "off",
        "timeoutSeconds": 600,
        "roleMode": "except",

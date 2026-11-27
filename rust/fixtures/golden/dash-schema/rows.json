@@ -94,6 +94,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -402,6 +410,14 @@
      "channelIds": []
     },
     "links": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
+    "personalInfo": {
      "action": "off",
      "timeoutSeconds": 600,
      "roleMode": "except",
@@ -578,6 +594,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -886,6 +910,14 @@
      "channelIds": []
     },
     "links": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
+    "personalInfo": {
      "action": "off",
      "timeoutSeconds": 600,
      "roleMode": "except",
@@ -1260,6 +1292,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -1575,6 +1615,14 @@
      "channelMode": "except",
      "channelIds": []
     },
+    "personalInfo": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
     "caps": {
      "action": "off",
      "threshold": 70,
@@ -1739,6 +1787,14 @@
        "channelIds": []
       },
       "links": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "personalInfo": {
        "action": "off",
        "timeoutSeconds": 600,
        "roleMode": "except",
@@ -2567,6 +2623,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -2987,6 +3051,14 @@
      "channelMode": "except",
      "channelIds": []
     },
+    "personalInfo": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
     "caps": {
      "action": "off",
      "threshold": 70,
@@ -3222,6 +3294,14 @@
    },
    "automodBlockedDomains": [],
    "automodAllowedDomains": [],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -3517,6 +3597,14 @@
      "channelIds": []
     },
     "links": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
+    "personalInfo": {
      "action": "off",
      "timeoutSeconds": 600,
      "roleMode": "except",
@@ -3835,6 +3923,14 @@
     "tenor.com",
     "b.com"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -4190,6 +4286,14 @@
      "channelMode": "except",
      "channelIds": []
     },
+    "personalInfo": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
     "caps": {
      "action": "kick",
      "threshold": 80,
@@ -4368,6 +4472,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -4683,6 +4795,14 @@
      "channelMode": "except",
      "channelIds": []
     },
+    "personalInfo": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
     "caps": {
      "action": "off",
      "threshold": 70,
@@ -4907,6 +5027,14 @@
     "discordapp.com",
     "discordapp.net"
    ],
+   "automodRulePersonalInfo": {
+    "action": "off",
+    "timeoutSeconds": 600,
+    "roleMode": "except",
+    "roleIds": [],
+    "channelMode": "except",
+    "channelIds": []
+   },
    "automodRuleSpam": {
     "action": "off",
     "threshold": 6,
@@ -5233,6 +5361,14 @@
      "channelIds": []
     },
     "links": {
+     "action": "off",
+     "timeoutSeconds": 600,
+     "roleMode": "except",
+     "roleIds": [],
+     "channelMode": "except",
+     "channelIds": []
+    },
+    "personalInfo": {
      "action": "off",
      "timeoutSeconds": 600,
      "roleMode": "except",

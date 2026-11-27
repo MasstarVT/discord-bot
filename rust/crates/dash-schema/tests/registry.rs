@@ -607,7 +607,7 @@ fn restated_constants_agree_with_the_foundation() {
     let c = constants();
     assert_eq!(c.tier_actions.iter().map(|a| a.value.as_str()).collect::<Vec<_>>(), ["TIMEOUT", "MUTE", "KICK", "TEMPBAN", "BAN"]);
     assert_eq!(c.automod_honeypot.max_channels as usize, limits::AUTOMOD_HONEYPOTS);
-    assert_eq!(fields::automod_rule_keys().len(), 10);
+    assert_eq!(fields::automod_rule_keys().len(), 11);
     assert_eq!(c.number_limits.timeout_max_seconds, 2_419_200);
     assert_eq!(c.automod_defaults.max_timeout_seconds, c.number_limits.timeout_max_seconds);
     assert_eq!(c.log_events.len(), 32);

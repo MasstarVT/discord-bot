@@ -98,6 +98,8 @@ export const AUTOMOD_RULES = Object.freeze({
   invites: { label: 'Server Invites', threshold: null, description: 'Catches invite links to other Discord servers.' },
   links: { label: 'External Links', threshold: null,
     description: 'Catches links that are blocked, or not allowed when no domain is blocked.' },
+  personalInfo: { label: 'Personal Info', threshold: null,
+    description: 'Catches phone numbers, street addresses, emails and other personal details (anti-doxxing).' },
   caps: { label: 'Excessive Caps', threshold: { min: 50, max: 100, default: 70,
     unit: '% capitals, messages with at least 10 letters' },
     description: 'Catches messages that are mostly capital letters.' },
@@ -639,6 +641,13 @@ const AUTOMOD_GROUPS = [
     id: 'links',
     title: 'Invites & links',
     fields: [rule('invites'), rule('links'), automodList('automodBlockedDomains'), automodList('automodAllowedDomains')],
+  },
+  {
+    id: 'personal-info',
+    title: 'Personal info',
+    description: 'Removes phone numbers, street addresses, emails, social security and card numbers before anyone can be doxxed. '
+      + 'Logs blank the details out.',
+    fields: [rule('personalInfo')],
   },
   {
     id: 'spam',

@@ -11,6 +11,7 @@
 //! | imageSize.js | [`image_size`] |
 //! | logger.js | [`logger`] (macros `log_info!`, `log_warn!`, `log_error!`, `log_debug!`, `log_success!`) |
 //! | parseDuration.js | [`parse_duration`] |
+//! | personalInfo.js | [`personal_info`] |
 //! | placeholderParser.js | [`placeholder_parser`] |
 //! | restartBrake.js | [`restart_brake`] |
 //! | safeFetch.js | [`safe_fetch`] |
@@ -38,6 +39,7 @@ pub mod health_server;
 pub mod image_size;
 pub mod logger;
 pub mod parse_duration;
+pub mod personal_info;
 pub mod placeholder_parser;
 pub mod restart_brake;
 pub mod safe_fetch;

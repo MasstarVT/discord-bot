@@ -443,11 +443,13 @@ fn every_pure_function_agrees_with_the_js_on_a_sweep() {
         "discord.gg/abc discord\\.gg/x2 https://discord.com/invite/AbC", "go https://evil.com/x). www.Site.org/p <https://a.b.co>", "**https://x.com** ~~https://y.org~~ _https://z.net_",
         "😀😀😀 👨‍👩‍👧 🇬🇧 1️⃣ <:aa:123456789012345678>", "Z\u{353}\u{354}\u{355}\u{351}\u{352}o", "Tiếng Việt ❤\u{FE0F}", "||a|| ||b||", "İstanbul ΣΑΣ", "日本語のテキスト",
         "  Buy   NOW  ", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "  Foo  Bar ", "!!", "a", "https://bücher.de/x", "mydiscord.gg/abc", "<@123456789012345678> HI THERE EVERYONE",
+        "call 555-123-4567 or me@x.io", "I live at 742 Evergreen Terrace", "5 miles down the road", "card 4111 1111 1111 1111",
     ];
     let configs = [
         json!(null),
         json!({ "version": 2, "rules": { "badWords": { "action": "delete" }, "links": { "action": "warn" }, "invites": { "action": "ban" }, "caps": { "action": "timeout", "threshold": 60 },
-            "emojis": { "action": "delete", "threshold": 3 }, "spoilers": { "action": "delete", "threshold": 2 }, "mentions": { "action": "kick" }, "zalgo": { "action": "delete_warn" } },
+            "emojis": { "action": "delete", "threshold": 3 }, "spoilers": { "action": "delete", "threshold": 2 }, "mentions": { "action": "kick" }, "zalgo": { "action": "delete_warn" },
+            "personalInfo": { "action": "delete" } },
             "badWords": ["ass", "bad phrase", "日本", "x1"], "badWordPatterns": ["fr[e3]{2}\\s*n[i1]tro", "(a+)+$", "^hel+o$"], "blockedDomains": [], "allowedDomains": ["x.com"] }),
         json!({ "version": 2, "blockedDomains": ["evil.com", "Bücher.DE"], "rules": { "links": { "action": "delete", "roleMode": "only", "roleIds": ["123456789012345678"] } } }),
         json!({ "filterInvites": true, "filterLinks": true, "automodAction": "mute", "massMentionThreshold": 3, "badWords": ["Foo", 7] }),
@@ -513,10 +515,16 @@ fn every_pure_function_agrees_with_the_js_on_a_sweep() {
         vec![rm("caps", "delete"), rm("invites", "warn")],
         vec![rm("spam", "timeout"), rm("links", "timeout"), rm("badWords", "delete")],
         vec![rm("zalgo", "warn"), rm("mentions", "kick"), rm("emojis", "ban")],
+        vec![rm("personalInfo", "delete_warn"), rm("links", "delete")],
     ];
     for set in &match_sets {
         calls.push(json!(["buildReason", set.iter().map(match_json).collect::<Vec<_>>(), "général"]));
         expect.push(json!(svc::build_reason(&svc::resolve_outcome(set).expect("outcome"), "général")));
+    }
+    for set in &match_sets {
+        let text = "dox: 742 Evergreen Terrace, 555-123-4567, homer@springfield.com";
+        calls.push(json!(["logContent", set.iter().map(match_json).collect::<Vec<_>>(), text]));
+        expect.push(json!(svc::log_content(&svc::resolve_outcome(set).expect("outcome"), text)));
     }
     for action in ["softban", "ban", "kick", "timeout"] {
         let hp = svc::HoneypotConfig { channel_ids: vec![], action: action.into(), timeout_seconds: 3600 };
@@ -553,6 +561,50 @@ fn every_pure_function_agrees_with_the_js_on_a_sweep() {
         }
         assert_eq!(want, got, "{call}");
     }
+}
+
+#[test]
+fn personal_info_agrees_with_the_js() {
+    use bot_util::personal_info::{find_personal_info, redact_personal_info};
+    let texts = [
+        "call me at 555-123-4567", "my number is (555) 123 4567", "+1 (555) 123-4567", "1-555-234-5678", "+44 7700 900123", "07700 900123",
+        "06 12 34 56 78", "0412 345 678", "5552345678", "phone:555.234.5678", "5\u{200B}5\u{200B}5-123-4567", "\u{FF15}\u{FF15}\u{FF15}-123-4567",
+        "I live at 123 Main St", "4521 n main st apt 3", "12 Oak Street, Springfield", "1600 Pennsylvania Avenue NW", "221b Baker St.", "350 W 21st St",
+        "email me john.doe@gmail.com", "ssn 123-45-6789", "card 4111 1111 1111 1111", "4111111111111111", "3782-822463-10005",
+        "dox: 742 Evergreen Terrace, 555-123-4567, homer@springfield.com", "I have 3 cats in the way", "5 miles down the road", "2 hard drive",
+        "I bought 2 SSD drive", "88 Hard Drive", "score 1234567890", "id 123456789012345678", "<@123456789012345678> 555-123-4567", "<t:1764200000:R>",
+        "https://x.com/5552345678", "https://example.com/a@b.com", "2024-11-26", "26/11/2024", "$2,345,678,901", "v1.2.3.4",
+        "join 51.79.12.34:25565", "4111 1111 1111 1112", "order #5552345678", "999-99-9999", "@everyone hi", "user@localhost",
+        "Ünïcödé 12 Rue Straße St", "ſtreet 12 Main ſt", "12 Main St\n555 234 5678\tok", "",
+    ];
+    let mut calls: Vec<Value> = Vec::new();
+    let mut expect: Vec<Value> = Vec::new();
+    for t in texts {
+        calls.push(json!(["findPersonalInfo", t]));
+        expect.push(json!(find_personal_info(t)));
+        calls.push(json!(["redactPersonalInfo", t]));
+        expect.push(json!(redact_personal_info(t)));
+    }
+    let js = js_calls(&calls);
+    assert_eq!(js.len(), calls.len());
+    for ((call, want), got) in calls.iter().zip(&expect).zip(&js) {
+        assert_eq!(want, got, "{call}");
+    }
+}
+
+#[test]
+fn personal_info_rule_deletes_and_its_logs_redact() {
+    let c = cfg(json!({ "version": 2, "rules": { "personalInfo": { "action": "delete_warn" } } }));
+    let m = svc::build_matchers(&c);
+    let active = svc::active_rule_keys(&c);
+    let hits = svc::evaluate_content_rules(&msg("text me 555-123-4567"), &active, &c, &m, &GuildInvites::default());
+    assert_eq!(hits.iter().map(match_json).collect::<Vec<_>>(), vec![json!({ "rule": "personalInfo", "action": "delete_warn", "detail": "phone number", "timeoutSeconds": 600 })]);
+    assert!(svc::evaluate_content_rules(&msg("see you at 10:30"), &active, &c, &m, &GuildInvites::default()).is_empty());
+    let outcome = svc::resolve_outcome(&hits).expect("outcome");
+    assert!(svc::outcome_has_personal_info(&outcome));
+    assert_eq!(svc::log_content(&outcome, "text me 555-123-4567"), "text me [phone number]");
+    assert_eq!(svc::build_reason(&outcome, "general"), "[Automod] Personal Info: phone number in #general");
+    assert_eq!(svc::resolve_rule_key("doxxing"), Some("personalInfo"));
 }
 
 // ── Cache keys and declarations ───────────────────────────────────────────────
@@ -1188,7 +1240,7 @@ async fn autocomplete_rules_are_synchronous_and_other_fields_answer_from_the_set
     bot_core::router::route_interaction(&e.t, ac("rule", "excessive")).await;
     let choices = e.t.responses.calls().last().map(|c| c.choices()).unwrap_or_default();
     assert_eq!(choices.iter().map(|c| c["value"].clone()).collect::<Vec<_>>(), vec![json!("caps"), json!("emojis"), json!("spoilers"), json!("mentions")]);
-    assert_eq!(cmd::rule_choices("", None).len(), 10);
+    assert_eq!(cmd::rule_choices("", None).len(), 11);
     let c = cfg(json!({ "version": 2, "badWords": ["alpha", "beta"], "badWordPatterns": ["abc", "x+y"], "blockedDomains": ["evil.com"] }));
     assert_eq!(cmd::list_choices("word", "al", &c).len(), 1);
     assert_eq!(cmd::list_choices("pattern", "2", &c).iter().map(|x| x.value.clone()).collect::<Vec<_>>(), vec![json!("2")]);

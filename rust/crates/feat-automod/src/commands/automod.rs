@@ -1330,7 +1330,7 @@ mod tests {
     fn rule_names_reads_like_the_js() {
         assert_eq!(
             super::rule_names(),
-            "Bad Words, Repeated Text, Server Invites, External Links, Excessive Caps, Excessive Emojis, Excessive Spoilers, Excessive Mentions, Zalgo or Anti-Spam"
+            "Bad Words, Repeated Text, Server Invites, External Links, Personal Info, Excessive Caps, Excessive Emojis, Excessive Spoilers, Excessive Mentions, Zalgo or Anti-Spam"
         );
     }
 }

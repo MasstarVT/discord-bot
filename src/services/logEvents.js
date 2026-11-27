@@ -18,6 +18,7 @@ import { permissionNames } from '../utils/interactionHelpers.js';
 import { formatDurationLong } from '../utils/parseDuration.js';
 import { clampText, effectiveText, formatNumber, joinWithLimit } from '../utils/text.js';
 import { discordTimestamp } from '../utils/time.js';
+import { PERSONAL_INFO_DELETE_REASON, redactPersonalInfo } from '../utils/personalInfo.js';
 import { channelTypeLabel, extractMentions, fitEmbedData } from './loggingService.js';
 
 export const LOG_COLORS = Object.freeze({
@@ -181,8 +182,10 @@ export function buildMessageDeleteEmbed({ message, botReason = null, botId = nul
   fields.push(field('Channel', channelRef(message.guild, channelId), true));
   if (botReason) fields.push(field('Deleted By', deletedByBot(botId, botReason), true));
 
-  // A forward has no content of its own: its text comes from the forwarded snapshots.
-  const text = effectiveText(message);
+  // A forward has no content of its own: its text comes from the forwarded snapshots. A Personal Info automod delete
+  // must not repeat the phone number or address it removed.
+  const raw = effectiveText(message);
+  const text = botReason === PERSONAL_INFO_DELETE_REASON ? redactPersonalInfo(raw) : raw;
   if (message.partial) setDescription(embed, '*Message was not cached — content unavailable.*');
   else if (text) setDescription(embed, clampText(text, 4000));
   else setDescription(embed, NO_TEXT);

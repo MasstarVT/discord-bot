@@ -1,6 +1,6 @@
 //! Port of `src/services/automodService.js`: auto-moderation (pkg-automod.md).
 //!
-//! The MEE6 rule set (bad words, repeated text, invites, links, caps, emojis, spoilers, mentions, zalgo, message-rate
+//! The MEE6 rule set (bad words, repeated text, invites, links, personal info, caps, emojis, spoilers, mentions, zalgo, message-rate
 //! anti-spam), each with its own action and role/channel scope, plus honeypot channels (whoever posts in one is
 //! punished at once).
 //!
@@ -62,7 +62,7 @@ pub const EXEMPT_CAP: usize = bot_config::limits::AUTOMOD_EXEMPTIONS;
 pub const DEFAULT_ALLOWED_DOMAINS: [&str; 5] = ["tenor.com", "giphy.com", "discord.com", "discordapp.com", "discordapp.net"];
 
 /// Rule keys in display order (= tie-break order).
-pub const RULE_KEYS: [&str; 10] = ["badWords", "repeatedText", "invites", "links", "caps", "emojis", "spoilers", "mentions", "zalgo", "spam"];
+pub const RULE_KEYS: [&str; 11] = ["badWords", "repeatedText", "invites", "links", "personalInfo", "caps", "emojis", "spoilers", "mentions", "zalgo", "spam"];
 
 /// A rule's threshold: `{ min, max, default, unit }`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,11 +89,12 @@ const fn t(min: i64, max: i64, default: i64, unit: &'static str) -> Option<Thres
 }
 
 /// The rule registry, in [`RULE_KEYS`] order.
-pub const RULES: [RuleMeta; 10] = [
+pub const RULES: [RuleMeta; 11] = [
     RuleMeta { key: "badWords", label: "Bad Words", emoji: "🤬", threshold: None, on_edit: true, description: "Removes messages that contain a listed word, phrase or pattern." },
     RuleMeta { key: "repeatedText", label: "Repeated Text", emoji: "🔁", threshold: t(2, 20, 3, "identical messages within 30 s"), on_edit: false, description: "Catches the same message sent over and over." },
     RuleMeta { key: "invites", label: "Server Invites", emoji: "📨", threshold: None, on_edit: true, description: "Catches invite links to other Discord servers." },
     RuleMeta { key: "links", label: "External Links", emoji: "🔗", threshold: None, on_edit: true, description: "Catches links that are blocked, or not allowed when no domain is blocked." },
+    RuleMeta { key: "personalInfo", label: "Personal Info", emoji: "🪪", threshold: None, on_edit: true, description: "Catches phone numbers, street addresses, emails and other personal details (anti-doxxing)." },
     RuleMeta { key: "caps", label: "Excessive Caps", emoji: "🔠", threshold: t(50, 100, 70, "% capitals, messages with at least 10 letters"), on_edit: true, description: "Catches messages that are mostly capital letters." },
     RuleMeta { key: "emojis", label: "Excessive Emojis", emoji: "😀", threshold: t(1, 50, 10, "emojis"), on_edit: true, description: "Catches messages with too many emojis." },
     RuleMeta { key: "spoilers", label: "Excessive Spoilers", emoji: "🙈", threshold: t(1, 50, 5, "spoilers"), on_edit: true, description: "Catches messages with too many spoiler tags or spoiler attachments." },
@@ -1110,6 +1111,7 @@ fn rule_alias(s: &str) -> Option<&'static str> {
         "repeated" | "repeated text" | "duplicates" | "duplicate" => "repeatedText",
         "invite" | "server invites" => "invites",
         "link" | "external links" => "links",
+        "personal info" | "personal" | "pii" | "dox" | "doxx" | "doxxing" | "doxing" | "phone" | "phone numbers" | "address" => "personalInfo",
         "capitals" | "excessive caps" => "caps",
         "emoji" | "excessive emojis" => "emojis",
         "spoiler" | "excessive spoilers" => "spoilers",
@@ -1298,6 +1300,10 @@ fn run_detector(key: &str, message: &AutomodMessage, config: &AutomodConfig, mat
         "badWords" => check_bad_words(&text(), config, matchers),
         "invites" => check_invites(&text(), config, guild),
         "links" => check_links(&text(), config),
+        "personalInfo" => {
+            let kinds = bot_util::personal_info::find_personal_info(&text());
+            (!kinds.is_empty()).then(|| make_match(config, "personalInfo", &bot_util::personal_info::describe_personal_info(&kinds)))
+        }
         "caps" => {
             let s = caps_stats(&text());
             (s.letters >= CAPS_MIN_LETTERS && s.percent >= threshold()).then(|| make_match(config, "caps", &format!("{}% capitals", s.percent)))
@@ -1330,7 +1336,7 @@ fn run_detector(key: &str, message: &AutomodMessage, config: &AutomodConfig, mat
     }
 }
 
-const CONTENT_RULES: [&str; 8] = ["badWords", "invites", "links", "caps", "emojis", "spoilers", "mentions", "zalgo"];
+const CONTENT_RULES: [&str; 9] = ["badWords", "invites", "links", "personalInfo", "caps", "emojis", "spoilers", "mentions", "zalgo"];
 
 /// Runs the content rules in `active_keys`, in [`RULE_KEYS`] order. No I/O (patterns run in a bounded worker). No
 /// text skips every rule except spoilers (spoiler attachments). The text is the content plus every forwarded
@@ -1470,6 +1476,17 @@ fn meta_emoji(key: &str) -> Option<&'static str> {
     rule_meta(key).map(|m| m.emoji).or((key == "honeypot").then_some(HONEYPOT_EMOJI))
 }
 
+/// `outcomeHasPersonalInfo(outcome)`: whether the Personal Info rule matched (its logs must not repeat the details).
+pub fn outcome_has_personal_info(outcome: &Outcome) -> bool {
+    outcome.primary.rule == "personalInfo" || outcome.others.iter().any(|m| m.rule == "personalInfo")
+}
+
+/// `logContent(outcome, text)`: the message text as automod logs show it, personal details blanked out when the
+/// Personal Info rule matched.
+pub fn log_content(outcome: &Outcome, text: &str) -> String {
+    if outcome_has_personal_info(outcome) { bot_util::personal_info::redact_personal_info(text) } else { text.to_string() }
+}
+
 /// `ruleLabel(key)`.
 pub fn rule_label(key: &str) -> String {
     match rule_meta(key) {
@@ -1550,7 +1567,7 @@ pub struct LogEmbedInput<'a> {
 /// The mod-log embed: `warn` (yellow) or error (red).
 pub fn build_log_embed(warn: bool, input: &LogEmbedInput<'_>) -> CreateEmbed {
     let m = input.message;
-    let content = m.effective_text();
+    let content = log_content(input.outcome, &m.effective_text());
     let attachments = m.attachments.len() + m.snapshots.iter().map(|s| s.attachments.len()).sum::<usize>();
     let footer = clamp_text(&format!("User ID: {} • Message ID: {}{}", m.author_id, m.id, input.footer_extra), 2048);
     let embed = if warn { warn_embed(input.title, None, Some(&footer)) } else { error_embed(input.title, None, Some(&footer)) };
@@ -1640,7 +1657,7 @@ pub struct DeleteState {
     pub problem: Option<&'static str>,
 }
 
-async fn delete_offender(app: &App, guild_id: GuildId, message: &AutomodMessage, channel_name: &str) -> DeleteState {
+async fn delete_offender(app: &App, guild_id: GuildId, message: &AutomodMessage, channel_name: &str, outcome: &Outcome) -> DeleteState {
     let mut state = DeleteState::default();
     let (Some(channel), Some(msg_id)) = (parse_id(&message.channel_id).map(ChannelId::new), parse_id(&message.id).map(MessageId::new)) else {
         state.problem = Some("error");
@@ -1651,7 +1668,9 @@ async fn delete_offender(app: &App, guild_id: GuildId, message: &AutomodMessage,
         warn_once(app, &format!("perm:{guild_id}:{channel}"), format!("Automod cannot delete in #{channel_name} ({guild_id}): missing Manage Messages"));
         return state;
     }
-    bot_core::deletion_tracker::mark_bot_deletion(app, std::slice::from_ref(&message.id), Some("automod"), None); // always before the delete call
+    // Always before the delete call, so log hooks can label it (and blank personal details out of the delete log).
+    let reason = if outcome_has_personal_info(outcome) { bot_util::personal_info::PERSONAL_INFO_DELETE_REASON } else { "automod" };
+    bot_core::deletion_tracker::mark_bot_deletion(app, std::slice::from_ref(&message.id), Some(reason), None);
     let Some(http) = app.http() else {
         state.problem = Some("error");
         return state;
@@ -1737,7 +1756,7 @@ pub async fn apply_outcome(app: &App, sink: &dyn AutomodSink, input: ApplyInput<
     let g = guild_id.to_string();
     // `channel?.name ?? 'unknown'`: a channel known only by its id (not cached) has no name.
     let channel_name = channel.map(|c| c.name.clone()).filter(|n| !n.is_empty()).unwrap_or_else(|| "unknown".into());
-    let del = if outcome.deletes { delete_offender(app, guild_id, message, &channel_name).await } else { DeleteState::default() };
+    let del = if outcome.deletes { delete_offender(app, guild_id, message, &channel_name, outcome).await } else { DeleteState::default() };
     let mut applied = Applied { delete: del.clone(), ..Default::default() };
 
     // A message that is gone must not reach XP, triggers or translation. Never stop when it survived.
@@ -1775,7 +1794,7 @@ pub async fn apply_outcome(app: &App, sink: &dyn AutomodSink, input: ApplyInput<
                     bot_util::js::trim(&format!("{} {}{also}", meta_emoji(&outcome.primary.rule).unwrap_or(""), rule_label(&outcome.primary.rule))).to_string()
                 };
                 mod_input.log_fields =
-                    build_punishment_log_fields(&label, outcome.primary.detail.as_deref(), &message.effective_text(), Some(&message.channel_id));
+                    build_punishment_log_fields(&label, outcome.primary.detail.as_deref(), &log_content(outcome, &message.effective_text()), Some(&message.channel_id));
                 match execute_mod_action(app, mod_input).await {
                     Ok(_) => status = Some("applied"),
                     Err(e) => {

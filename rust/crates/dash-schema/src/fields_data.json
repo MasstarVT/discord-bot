@@ -60,6 +60,7 @@
   "automodRuleLinks",
   "automodBlockedDomains",
   "automodAllowedDomains",
+  "automodRulePersonalInfo",
   "automodRuleSpam",
   "automodRuleRepeatedText",
   "automodRuleCaps",
@@ -1218,6 +1219,160 @@
       "description": "Links to these sites are always fine. Adding a domain to one list takes it off the other.",
       "maxItems": 200,
       "itemMaxLength": 512
+     }
+    ]
+   },
+   {
+    "id": "personal-info",
+    "title": "Personal info",
+    "description": "Removes phone numbers, street addresses, emails, social security and card numbers before anyone can be doxxed. Logs blank the details out.",
+    "fields": [
+     {
+      "field": "automodRulePersonalInfo",
+      "type": "object",
+      "label": "Personal Info",
+      "description": "Catches phone numbers, street addresses, emails and other personal details (anti-doxxing).",
+      "default": {
+       "action": "off",
+       "timeoutSeconds": 600,
+       "roleMode": "except",
+       "roleIds": [],
+       "channelMode": "except",
+       "channelIds": []
+      },
+      "fields": [
+       {
+        "field": "action",
+        "type": "enum",
+        "label": "Action",
+        "options": [
+         {
+          "value": "off",
+          "label": "Off"
+         },
+         {
+          "value": "delete",
+          "label": "Delete message"
+         },
+         {
+          "value": "warn",
+          "label": "Warn member"
+         },
+         {
+          "value": "delete_warn",
+          "label": "Delete & warn"
+         },
+         {
+          "value": "timeout",
+          "label": "Delete & timeout"
+         },
+         {
+          "value": "kick",
+          "label": "Delete & kick"
+         },
+         {
+          "value": "ban",
+          "label": "Delete & ban"
+         }
+        ],
+        "default": "off"
+       },
+       {
+        "field": "timeoutSeconds",
+        "type": "int",
+        "label": "Timeout length (seconds)",
+        "description": "How long \"Delete & timeout\" times the member out (1 minute to 28 days).",
+        "default": 600,
+        "min": 60,
+        "max": 2419200,
+        "unit": "seconds",
+        "showWhen": {
+         "field": "action",
+         "in": [
+          "timeout"
+         ]
+        }
+       },
+       {
+        "field": "roleMode",
+        "type": "enum",
+        "label": "Applies to roles",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every role except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed roles"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "roleIds",
+        "type": "roles",
+        "label": "Roles",
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelMode",
+        "type": "enum",
+        "label": "Applies in channels",
+        "options": [
+         {
+          "value": "except",
+          "label": "Every channel except the listed ones"
+         },
+         {
+          "value": "only",
+          "label": "Only the listed channels"
+         }
+        ],
+        "default": "except",
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       },
+       {
+        "field": "channelIds",
+        "type": "channels",
+        "label": "Channels",
+        "channelTypes": [
+         "text",
+         "announcement",
+         "forum",
+         "media",
+         "voice",
+         "stage",
+         "category"
+        ],
+        "maxItems": 50,
+        "default": [],
+        "showWhen": {
+         "field": "action",
+         "notIn": [
+          "off"
+         ]
+        }
+       }
+      ]
      }
     ]
    },
@@ -4714,6 +4869,10 @@
    "normalize",
    "write"
   ],
+  "automodRulePersonalInfo": [
+   "read",
+   "write"
+  ],
   "automodRuleSpam": [
    "read",
    "write"
@@ -4919,6 +5078,7 @@
   "automodRuleLinks": "automodConfig",
   "automodBlockedDomains": "automodConfig",
   "automodAllowedDomains": "automodConfig",
+  "automodRulePersonalInfo": "automodConfig",
   "automodRuleSpam": "automodConfig",
   "automodRuleRepeatedText": "automodConfig",
   "automodRuleCaps": "automodConfig",
@@ -5175,6 +5335,11 @@
     "label": "External Links",
     "threshold": null,
     "description": "Catches links that are blocked, or not allowed when no domain is blocked."
+   },
+   "personalInfo": {
+    "label": "Personal Info",
+    "threshold": null,
+    "description": "Catches phone numbers, street addresses, emails and other personal details (anti-doxxing)."
    },
    "caps": {
     "label": "Excessive Caps",
